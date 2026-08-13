@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推理图谱可视化工具</title>
+<script>
+  // 根本修复：给全局 ResizeObserver 打补丁，把回调延迟到下一帧再执行。
+  // 这样能从源头掐断"同一帧内容器尺寸连环触发"的循环，而不是等报错发生了再去拦截
+  // （拦截 window 的 error 事件只能压掉浏览器的默认弹窗，压不掉控制台自己打印的 Uncaught 日志）。
+  (function () {
+    if (typeof window.ResizeObserver === 'undefined') return;
+    const OriginalResizeObserver = window.ResizeObserver;
+    window.ResizeObserver = class PatchedResizeObserver extends OriginalResizeObserver {
+      constructor(callback) {
+        super(function (entries, observer) {
+          window.requestAnimationFrame(function () {
+            callback(entries, observer);
+          });
+        });
+      }
+    };
+  })();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root {
+    --paper: #FAFAF6;
+    --panel: #F1EEE5;
+    --line: #DAD5C7;
+    --ink: #211F1B;
+    --ink-soft: #6B6558;
+    --conclusion: #2A5C8A;
+    --conclusion-bg: #E7EEF4;
+    --highlight: #3F8A5C;
+    --highlight-bg: #E9F3ED;
+    --weak: #B23A34;
+    --weak-bg: #F7E9E8;
+    --subproblem: #8A8578;
+    --subproblem-bg: #EFEDE6;
+    --factor: #6B4A8A;
+    --factor-bg: #ECE6F2;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --serif: Georgia, "Songti SC", "Noto Serif SC", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-rows: 56px 1fr;
+    grid-template-areas:
+      "header header"
+      "sidebar main";
+    height: 100vh;
+  }
+  header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header .paper-meta {
+    font-size: 12px;
+    color: #C9C4B5;
+    font-family: var(--mono);
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sidebar {
+    grid-area: sidebar;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-scroll {
+    overflow-y: auto;
+    padding: 16px;
+    flex: 1;
+  }
+  .sidebar h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ink-soft);
+    margin: 18px 0 8px;
+    font-weight: 700;
+  }
+  .sidebar h2:first-child { margin-top: 0; }
+  textarea {
+    width: 100%;
+    height: 160px;
+    resize: vertical;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  button {
+    flex: 1;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  .btn-primary { background: var(--conclusion); color: white; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+  #status { font-size: 11.5px; margin-top: 8px; min-height: 16px; }
+  #status.error { color: var(--weak); }
+  #status.ok { color: var(--highlight); }
+
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; margin-bottom: 6px; color: var(--ink);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .diamond { width: 10px; height: 10px; flex-shrink: 0; transform: rotate(45deg); }
+
+  .toggle-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle-row input { cursor: pointer; accent-color: var(--conclusion); width: 14px; height: 14px; }
+  .component-count {
+    font-size: 11.5px; color: var(--ink-soft);
+    margin-top: 6px; font-family: var(--mono);
+  }
+
+  .info-block {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .info-block summary { cursor: pointer; font-weight: 600; color: var(--ink-soft); font-size: 11px; }
+
+  main {
+    grid-area: main;
+    position: relative;
+    overflow: hidden;
+  }
+  #network {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0/24px 24px,
+      var(--paper);
+  }
+  .empty-state {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--ink-soft); text-align: center; padding: 40px;
+    pointer-events: none;
+  }
+  .empty-state .big { font-family: var(--serif); font-size: 20px; color: var(--ink); margin-bottom: 8px; }
+  .empty-state .small { font-size: 13px; max-width: 360px; line-height: 1.6; }
+
+  #detail-panel {
+    position: absolute;
+    top: 16px; right: 16px; bottom: 16px;
+    width: 380px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+  }
+  #detail-panel.visible { display: flex; }
+  #detail-panel .dp-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  }
+  #detail-panel .dp-kind-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  #detail-panel .dp-title {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  #detail-panel .dp-close {
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 18px; cursor: pointer; padding: 0 4px; flex: none;
+  }
+  #detail-panel .dp-body {
+    padding: 14px 16px;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  #detail-panel .dp-section-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink-soft);
+    font-weight: 700;
+    margin: 14px 0 6px;
+  }
+  #detail-panel .dp-section-label:first-child { margin-top: 0; }
+  #detail-panel .step-item {
+    border-left: 2px solid var(--line);
+    padding: 4px 0 4px 12px;
+    margin-bottom: 10px;
+    font-size: 12.5px;
+  }
+  #detail-panel .step-num {
+    font-family: var(--mono); color: var(--factor); font-weight: 700; margin-right: 6px;
+  }
+  #detail-panel .prior-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--conclusion-bg);
+    color: var(--conclusion);
+    font-weight: 700;
+  }
+  #detail-panel .ref-item {
+    font-size: 11.5px; color: var(--ink-soft); margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>推理图谱可视化工具</h1>
+    <div class="paper-meta" id="paper-meta-title">未加载论文</div>
+  </header>
+
+  <div class="sidebar">
+    <div class="sidebar-scroll">
+      <h2>1. 粘贴接口返回 JSON</h2>
+      <textarea id="json-input" placeholder="粘贴 POST /papers/graph 接口的完整返回 JSON..."></textarea>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="renderFromInput()">渲染图谱</button>
+        <button class="btn-ghost" onclick="loadSample()">载入示例</button>
+      </div>
+      <div id="status"></div>
+
+      <h2>布局</h2>
+      <label class="toggle-row">
+        <input type="checkbox" id="cluster-toggle" checked onchange="onClusterToggleChange()">
+        <span>按连通分支分区显示</span>
+      </label>
+      <div id="component-count" class="component-count">尚未加载数据</div>
+
+      <h2>图例</h2>
+      <div class="legend-item"><span class="dot" style="background:var(--conclusion)"></span>conclusion 结论</div>
+      <div class="legend-item"><span class="dot" style="background:var(--factor)"></span>reasoning_steps 推理链</div>
+      <div class="legend-item"><span class="dot" style="background:var(--highlight)"></span>highlight 亮点</div>
+      <div class="legend-item"><span class="dot" style="background:var(--weak)"></span>weak_point 弱点</div>
+      <div class="legend-item"><span class="dot" style="background:var(--subproblem)"></span>subproblem 背景问题</div>
+
+      <h2>论文信息</h2>
+      <div class="info-block" id="paper-info">尚未加载数据</div>
+
+      <h2>待解决问题</h2>
+      <details class="info-block" style="max-height:none;">
+        <summary>点击展开 addressed_problems</summary>
+        <div id="addressed-problems" style="margin-top:8px;"></div>
+      </details>
+
+      <h2>开放问题</h2>
+      <details class="info-block" style="max-height:none;">
+        <summary>点击展开 open_questions</summary>
+        <div id="open-questions" style="margin-top:8px;"></div>
+      </details>
+    </div>
+  </div>
+
+  <main>
+    <div id="network"></div>
+    <div class="empty-state" id="empty-state">
+      <div class="big">还没有图谱数据</div>
+      <div class="small">把 POST /papers/graph 接口返回的完整 JSON 粘贴到左侧文本框，点击"渲染图谱"；或者先点"载入示例"看效果。<br><br>
+      点击图中任意节点可以查看该节点的完整内容（结论原文 / 推理步骤 / 亮点或弱点说明）。</div>
+    </div>
+    <div id="detail-panel">
+      <div class="dp-header">
+        <div>
+          <span class="dp-kind-tag" id="dp-kind-tag"></span>
+          <div class="dp-title" id="dp-title"></div>
+        </div>
+        <button class="dp-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div class="dp-body" id="dp-body"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const KIND_STYLE = {
+  conclusion:   { color: '#2A5C8A', bg: '#E7EEF4', shape: 'box',    label: 'CONCLUSION' },
+  reasoning_steps: { color: '#6B4A8A', bg: '#ECE6F2', shape: 'diamond', label: 'REASONING STEPS' },
+  highlight:    { color: '#3F8A5C', bg: '#E9F3ED', shape: 'ellipse', label: 'HIGHLIGHT' },
+  weak_point:   { color: '#B23A34', bg: '#F7E9E8', shape: 'ellipse', label: 'WEAK POINT' },
+  subproblem:   { color: '#8A8578', bg: '#EFEDE6', shape: 'ellipse', label: 'SUBPROBLEM' }
+};
+
+const EDGE_STYLE = {
+  concludes:            { color: '#6B4A8A', dashes: false, label: '得出' },
+  highlight_of:         { color: '#3F8A5C', dashes: true,  label: '支持' },
+  weakpoint_of:         { color: '#B23A34', dashes: true,  label: '削弱' },
+  subproblem_of:        { color: '#8A8578', dashes: [2,4], label: '背景' },
+  previous_conclusion_of: { color: '#2A5C8A', dashes: [2,4], label: '前置' }
+};
+
+let network = null;
+let currentGraph = null;
+let currentComponents = null;   // 当前图按连通分支拆分后的结果，画完后用来画分区框和标签
+let clusterSeparationEnabled = true;
+
+function truncate(s, n) {
+  if (!s) return '';
+  s = s.replace(/\s+/g, ' ').trim();
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function nodeLabel(node) {
+  if (node.kind === 'reasoning_steps') {
+    const n = (node.steps || []).length;
+    return `推理链\n(${n} 步)`;
+  }
+  const title = node.title || truncate(node.content, 28);
+  return truncate(title, 30);
+}
+
+// 用广度优先遍历（BFS）把图拆成若干个连通分支：
+// 互相之间完全没有边相连的节点集合，各自算一个分支。纯图论算法，不涉及任何语义理解。
+function computeComponents(rawNodes, rawEdges) {
+  const adj = new Map();
+  rawNodes.forEach(n => adj.set(n.id, []));
+  (rawEdges || []).forEach(e => {
+    if (!adj.has(e.source) || !adj.has(e.target)) return; // 边指向的节点若不存在（脏数据）直接跳过
+    adj.get(e.source).push(e.target);
+    adj.get(e.target).push(e.source);
+  });
+
+  const visited = new Set();
+  const components = [];
+  rawNodes.forEach(n => {
+    if (visited.has(n.id)) return;
+    const comp = [];
+    const queue = [n.id];
+    visited.add(n.id);
+    while (queue.length) {
+      const cur = queue.shift();
+      comp.push(cur);
+      (adj.get(cur) || []).forEach(nb => {
+        if (!visited.has(nb)) { visited.add(nb); queue.push(nb); }
+      });
+    }
+    components.push(comp);
+  });
+
+  components.sort((a, b) => b.length - a.length); // 大分支排前面，网格布局更整齐
+  return components;
+}
+
+// 给每个连通分支分配一块独立的网格区域，分支内节点在该区域内环形散开，
+// 作为物理引擎的初始位置——之后引擎仍会在区域内部继续做力导向微调。
+function assignClusterPositions(components) {
+  const positionById = new Map();
+  if (components.length <= 1) return positionById; // 只有一个分支时不需要分区
+
+  const cols = Math.max(1, Math.ceil(Math.sqrt(components.length)));
+  const cellSizes = components.map(c => Math.max(260, Math.sqrt(c.length) * 170));
+
+  const colWidths = [];
+  const rowHeights = [];
+  components.forEach((comp, idx) => {
+    const row = Math.floor(idx / cols);
+    const col = idx % cols;
+    colWidths[col] = Math.max(colWidths[col] || 0, cellSizes[idx]);
+    rowHeights[row] = Math.max(rowHeights[row] || 0, cellSizes[idx]);
+  });
+
+  const colOffsets = [0];
+  colWidths.forEach(w => colOffsets.push(colOffsets[colOffsets.length - 1] + w + 90));
+  const rowOffsets = [0];
+  rowHeights.forEach(h => rowOffsets.push(rowOffsets[rowOffsets.length - 1] + h + 90));
+
+  components.forEach((comp, idx) => {
+    const row = Math.floor(idx / cols);
+    const col = idx % cols;
+    const cx = colOffsets[col] + colWidths[col] / 2;
+    const cy = rowOffsets[row] + rowHeights[row] / 2;
+    const radius = cellSizes[idx] / 2.4;
+    comp.forEach((nodeId, i) => {
+      const angle = (i / comp.length) * Math.PI * 2;
+      const r = comp.length === 1 ? 0 : radius * (0.35 + 0.5 * Math.random());
+      positionById.set(nodeId, {
+        x: cx + Math.cos(angle) * r + (Math.random() - 0.5) * 20,
+        y: cy + Math.sin(angle) * r + (Math.random() - 0.5) * 20
+      });
+    });
+  });
+  return positionById;
+}
+
+function buildVisData(paperEntry, separate) {
+  const graph = paperEntry.graph || { nodes: [], edges: [] };
+  const nodes = [];
+  const edges = [];
+
+  const components = computeComponents(graph.nodes || [], graph.edges || []);
+  const positionById = (separate && components.length > 1)
+    ? assignClusterPositions(components)
+    : new Map();
+
+  (graph.nodes || []).forEach(n => {
+    const kind = n.kind || 'subproblem';
+    const style = KIND_STYLE[kind] || KIND_STYLE.subproblem;
+    const pos = positionById.get(n.id);
+    nodes.push({
+      id: n.id,
+      label: nodeLabel(n),
+      shape: style.shape,
+      color: {
+        background: style.bg,
+        border: style.color,
+        highlight: { background: style.bg, border: style.color }
+      },
+      font: { color: '#211F1B', size: 12, face: 'sans-serif', multi: false },
+      borderWidth: 2,
+      margin: 10,
+      widthConstraint: { maximum: 170 },
+      ...(pos ? { x: pos.x, y: pos.y } : {}),
+      _raw: n
+    });
+  });
+
+  (graph.edges || []).forEach((e, i) => {
+    const style = EDGE_STYLE[e.type] || { color: '#999', dashes: false, label: e.type };
+    edges.push({
+      id: 'e' + i,
+      from: e.source,
+      to: e.target,
+      arrows: 'to',
+      color: { color: style.color, opacity: 0.7 },
+      dashes: style.dashes,
+      label: style.label,
+      font: { size: 9, color: style.color, strokeWidth: 0, background: '#FAFAF6' },
+      smooth: { type: 'continuous' }
+    });
+  });
+
+  return { nodes, edges, components };
+}
+
+function renderGraph(paperEntry) {
+  currentGraph = paperEntry;
+  document.getElementById('empty-state').style.display = 'none';
+
+  const paper = paperEntry.paper || {};
+  const titleText = paper.en_title || paper.zh_title || '(未命名论文)';
+  document.getElementById('paper-meta-title').textContent = titleText;
+
+  document.getElementById('paper-info').innerHTML = `
+    <div><strong>${escapeHtml(titleText)}</strong></div>
+    ${paper.authors ? `<div style="margin-top:4px;color:var(--ink-soft)">${escapeHtml(paper.authors)}</div>` : ''}
+    ${paper.doi ? `<div style="margin-top:4px;font-family:var(--mono);font-size:11px;">DOI: ${escapeHtml(paper.doi)}</div>` : ''}
+    ${paper.publication_name ? `<div style="margin-top:4px;color:var(--ink-soft)">${escapeHtml(paper.publication_name)}</div>` : ''}
+  `;
+
+  const ap = (paperEntry.addressed_problems || []).map(p => `<p>${escapeHtml(truncate(p.content, 600))}</p>`).join('');
+  document.getElementById('addressed-problems').innerHTML = ap || '<p style="color:var(--ink-soft)">无</p>';
+
+  const oq = (paperEntry.open_questions || []).map(p => `<p>${escapeHtml(truncate(p.content, 600))}</p>`).join('');
+  document.getElementById('open-questions').innerHTML = oq || '<p style="color:var(--ink-soft)">无</p>';
+
+  const separate = clusterSeparationEnabled;
+  const { nodes, edges, components } = buildVisData(paperEntry, separate);
+  currentComponents = components;
+
+  if (nodes.length === 0) {
+    setStatus('该论文图谱为空（可能对应错误码 290013：KB 侧尚未抽取出图谱内容）', true);
+    document.getElementById('empty-state').style.display = 'flex';
+    return;
+  }
+
+  const multiComponent = separate && components.length > 1;
+  document.getElementById('component-count').textContent =
+    components.length > 1 ? `共 ${components.length} 个连通分支` : '整张图连通，只有 1 个分支';
+
+  const container = document.getElementById('network');
+  const data = {
+    nodes: new vis.DataSet(nodes),
+    edges: new vis.DataSet(edges)
+  };
+  const options = {
+    physics: {
+      barnesHut: {
+        gravitationalConstant: -6000,
+        springLength: 140,
+        springConstant: 0.03,
+        // 分区模式下把"向中心聚拢"的力调到接近 0，避免各分支被拉回去挤在一起
+        centralGravity: multiComponent ? 0.02 : 0.3
+      },
+      stabilization: { iterations: 200 }
+    },
+    interaction: { hover: true, tooltipDelay: 100 },
+    layout: { improvedLayout: true }
+  };
+
+  if (network) network.destroy();
+  network = new vis.Network(container, data, options);
+
+  network.on('click', function(params) {
+    if (params.nodes.length > 0) {
+      const nodeId = params.nodes[0];
+      const nodeData = data.nodes.get(nodeId);
+      showDetail(nodeData._raw);
+    } else {
+      closeDetail();
+    }
+  });
+
+  // 分区模式下，每一帧在各连通分支周围画一个虚线框 + 编号标签，方便肉眼区分
+  network.on('afterDrawing', function (ctx) {
+    if (!multiComponent) return;
+    const palette = ['#2A5C8A', '#3F8A5C', '#B23A34', '#8A8578', '#6B4A8A', '#B8860B', '#4682B4', '#8B4789'];
+    currentComponents.forEach((comp, idx) => {
+      if (!comp.length) return;
+      const positions = network.getPositions(comp);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      comp.forEach(id => {
+        const p = positions[id];
+        if (!p) return;
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      });
+      if (!isFinite(minX)) return;
+      const pad = 45;
+      minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+      const color = palette[idx % palette.length];
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.35;
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+      ctx.globalAlpha = 0.9;
+      ctx.setLineDash([]);
+      ctx.fillStyle = color;
+      ctx.font = '12px sans-serif';
+      ctx.fillText(`分支 ${idx + 1} · ${comp.length} 节点`, minX + 6, minY + 15);
+      ctx.restore();
+    });
+  });
+}
+
+function showDetail(node) {
+  const kind = node.kind || 'unknown';
+  const style = KIND_STYLE[kind] || { color: '#666', bg: '#eee' };
+  const tag = document.getElementById('dp-kind-tag');
+  tag.textContent = style.label || kind.toUpperCase();
+  tag.style.background = style.bg;
+  tag.style.color = style.color;
+
+  document.getElementById('dp-title').textContent = node.title || (kind === 'reasoning_steps' ? '推理链详情' : '(无标题)');
+
+  let bodyHtml = '';
+
+  if (node.priors && node.priors.length) {
+    const v = node.priors[0].value;
+    bodyHtml += `<div class="dp-section-label">论文内部置信度 (priors，非检索分数)</div>
+      <span class="prior-badge">${v}</span>`;
+  }
+
+  if (node.content) {
+    bodyHtml += `<div class="dp-section-label">内容</div><div>${escapeHtml(node.content)}</div>`;
+  }
+
+  if (kind === 'reasoning_steps' && node.steps && node.steps.length) {
+    bodyHtml += `<div class="dp-section-label">推理步骤（共 ${node.steps.length} 步）</div>`;
+    node.steps.forEach(s => {
+      bodyHtml += `<div class="step-item"><span class="step-num">#${s.step_id}</span>${escapeHtml(s.reasoning)}</div>`;
+    });
+  }
+
+  if (node.metadata) {
+    const m = node.metadata;
+    if (m.narrative) bodyHtml += `<div class="dp-section-label">论证说明</div><div>${escapeHtml(m.narrative)}</div>`;
+    if (m.credit) bodyHtml += `<div class="dp-section-label">贡献说明</div><div>${escapeHtml(m.credit)}</div>`;
+    if (m.failure_mode) bodyHtml += `<div class="dp-section-label">失效条件</div><div>${escapeHtml(m.failure_mode)}</div>`;
+    if (m.weakness_reason) bodyHtml += `<div class="dp-section-label">弱点原因</div><div>${escapeHtml(m.weakness_reason)}</div>`;
+    if (m.refs && m.refs.length) {
+      bodyHtml += `<div class="dp-section-label">引用</div>`;
+      m.refs.forEach(r => bodyHtml += `<div class="ref-item">· ${escapeHtml(r.text)}</div>`);
+    }
+  }
+
+  document.getElementById('dp-body').innerHTML = bodyHtml;
+  document.getElementById('detail-panel').classList.add('visible');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('visible');
+}
+
+function setStatus(msg, isError) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = isError ? 'error' : 'ok';
+}
+
+// 用户切换"按连通分支分区显示"开关时，如果已经加载过数据，就用同一份数据立即重新渲染
+function onClusterToggleChange() {
+  clusterSeparationEnabled = document.getElementById('cluster-toggle').checked;
+  if (currentGraph) {
+    renderGraph(currentGraph);
+  }
+}
+
+function renderFromInput() {
+  const raw = document.getElementById('json-input').value.trim();
+  if (!raw) { setStatus('请先粘贴 JSON 内容', true); return; }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    setStatus('JSON 解析失败：' + e.message, true);
+    return;
+  }
+  try {
+    const papers = parsed?.data?.papers;
+    if (!papers || !papers.length) {
+      setStatus('未在 data.papers 中找到论文数据，请检查粘贴的是否为 /papers/graph 接口返回', true);
+      return;
+    }
+    renderGraph(papers[0]);
+    setStatus(`已渲染：${papers.length} 篇论文中的第 1 篇（如需切换其它篇，请单独粘贴该篇数据）`, false);
+  } catch (e) {
+    setStatus('渲染失败：' + e.message, true);
+  }
+}
+
+function loadSample() {
+  document.getElementById('json-input').value = JSON.stringify(SAMPLE_DATA, null, 2);
+  renderGraph(SAMPLE_DATA.data.papers[0]);
+  setStatus('已载入示例数据（域论文 graph 返回）', false);
+}
+
+const SAMPLE_DATA = {"code": 0, "data": {"papers": [{"paper": {"package_id": "paper:1000399181526859777", "id": "1000399181526859777", "doi": "10.48550/arxiv.2405.12771", "publication_id": "108545", "publication_name": "Logic _ Mathematics.math.LO", "zh_title": "域的全称-存在性理论", "en_title": "Universal-existential theories of fields", "authors": "Sylvy Anscombe | Arno Fehm", "publication_date": "2024-05-21", "available_online": "", "cover_date_start": "2024-05-21", "area": "arXiv-Mathematics", "research_categories": "[\"Mathematical Sciences\", \"Pure Mathematics\"]", "keywords": "", "created_at": "2024-05-23T05:53:19+08:00"}, "addressed_problems": [{"id": "paper:1000399181526859777::problem", "global_id": "gcn_cc4a057cc82b4bc2", "content": "The paper addresses universal-existential fragments of theories of fields, function fields, and equicharacteristic henselian valued fields, filling gaps left by classical Ax-Kochen-Ershov transfer principles which only handle full theories or pure existential fragments. Key gaps: lack of systematic many-one reductions for bounded-quantifier fragments; positive characteristic obstructions involving p-power coding; unclear transfer for valued-field fragments; and concrete negative obstructions on definable surjections."}], "open_questions": [{"id": "paper:1000399181526859777::open_question", "global_id": "gcn_4aaf5f16c1904c74", "content": "Open questions include: whether the residue-field to valued-field transfer generalizes to all standard fragments (Question 6.5); whether transfers can be made unconditional without hypothesis (R4); fragment-equality phenomena under elementary extensions of base fields; and definability of valuation rings determining many-one equivalences between ring-language and valued-language fragments."}], "graph": {"nodes": [{"id": "paper:1000399181526859777::conclusion_1_subproblem", "type": "question", "kind": "subproblem", "content": "Prior work lacked a uniform, computable translation replacing an arbitrary block of universal quantifiers over a field by a single universal quantifier plus existential quantifiers when a p-basis is available.", "global_id": "gcn_06f06ba93b0c4c69"}, {"id": "paper:1000399181526859777::conclusion_2_subproblem", "type": "question", "kind": "subproblem", "content": "There was no uniform, computable way to replace an arbitrary universal block by n+1 universal quantifiers without requiring explicit p-basis parameters.", "global_id": "gcn_91626e3792e64b37"}, {"id": "paper:1000399181526859777::conclusion_6_subproblem", "type": "question", "kind": "subproblem", "content": "It was unclear how to convert universal quantification over the function field into a combination of an existential statement with constant t and a universal property of the constant field, split by cardinality of k.", "global_id": "gcn_7514a5e5f3ee49c8"}, {"id": "paper:1000399181526859777::conclusion_7_subproblem", "type": "question", "kind": "subproblem", "content": "Prior results established existential reductions upward but not a general syntactic inversion producing a uniform sentence equivalent without the parameter t.", "global_id": "gcn_ef9a5515c819472c"}, {"id": "paper:1000399181526859777::conclusion_8_subproblem", "type": "question", "kind": "subproblem", "content": "Undecidability of universal-existential fragments was not established because existential undecidability might not imply undecidability without a translation back.", "global_id": "gcn_64f0c7dcf7494377"}, {"id": "paper:1000399181526859777::conclusion_10_subproblem", "type": "question", "kind": "subproblem", "content": "There was no uniform computable reduction producing forall-exists sentences of the residue field determining the original valued field theory.", "global_id": "gcn_dac6498644c04003"}, {"id": "paper:1000399181526859777::conclusion_11_subproblem", "type": "question", "kind": "subproblem", "content": "An analogous uniform computable control for the one-universal fragment in discrete equicharacteristic henselian fields was lacking.", "global_id": "gcn_907f35c9006940d3"}, {"id": "paper:1000399181526859777::conclusion_14_subproblem", "type": "question", "kind": "subproblem", "content": "It was not known whether exists-definable surjections K to K^2 exist over perfect base fields, an obstruction to constructing simpler many-one reductions.", "global_id": "gcn_e73a8907dd2a4261"}, {"id": "paper:1000399181526859777::conclusion_1", "type": "claim", "kind": "conclusion", "title": "用 p-基参数编码全称量词", "content": "For fields of characteristic p with a fixed p-basis, there exists a uniform computable map translating any forall-F formula into a forall_1[F] formula that is semantically equivalent, preserving free variables.", "order": 1, "global_id": "gcn_ebe3188ea4bb4094", "priors": [{"value": 0.95}]}, {"id": "paper:1000399181526859777::conclusion_2", "type": "claim", "kind": "conclusion", "title": "消除 p-基参数：全称到 (n+1)-全称的归约", "content": "There is a uniform computable map replacing an arbitrary universal block by n+1 universal quantifiers, without requiring explicit p-basis parameters, valid for any field of the given p-degree.", "order": 2, "global_id": "gcn_777ce0a18f0445a6", "priors": [{"value": 0.95}]}, {"id": "paper:1000399181526859777::conclusion_6", "type": "claim", "kind": "conclusion", "title": "拆分 forall_1[exists] 语句为带参数 t 的存在句与基域全称句", "content": "For each cardinal q there is a computable map splitting any forall_1[exists] sentence into an existential sentence with parameter t and a forall_1[exists] sentence over the base field k, uniform in q.", "order": 6, "global_id": "gcn_54e4ec6cf1934fe0", "priors": [{"value": 0.95}]}, {"id": "paper:1000399181526859777::conclusion_7", "type": "claim", "kind": "conclusion", "title": "在可定义性假设下，从带参数 t 的存在句到无参数一元全称句", "content": "Given an existential formula gamma(x) defining the constant field inside k(t), there is a computable map from existential formulas with parameter t to forall_1[exists] formulas without t, yielding a many-one equivalence under the stated hypothesis.", "order": 7, "global_id": "gcn_306caadc4e804ee7", "priors": [{"value": 0.95}]}, {"id": "paper:1000399181526859777::conclusion_8", "type": "claim", "kind": "conclusion", "title": "正特征下 forall_1exists(k(t)) 的不可判定性", "content": "If k is a field of positive characteristic not containing the algebraic closure of the prime field, and k is perfect or large, then Th_forall_1exists(k(t)) is undecidable.", "order": 8, "global_id": "gcn_492c36033ef04edb", "priors": [{"value": 0.75}]}, {"id": "paper:1000399181526859777::conclusion_10", "type": "claim", "kind": "conclusion", "title": "在假设 (R4) 下，残域到赋值域的 forall_k-exists 归约", "content": "Under hypothesis (R4), there is a computable translation reducing forall_k-exists sentences of equicharacteristic henselian valued fields to forall-exists sentences of their residue fields, unconditional in residue characteristic zero.", "order": 10, "global_id": "gcn_f631ba650b0e420c", "priors": [{"value": 0.5}]}, {"id": "paper:1000399181526859777::conclusion_11", "type": "claim", "kind": "conclusion", "title": "离散/等离散亨塞尔域的一元全称-存在理论转移", "content": "Assuming (R4), for discrete equicharacteristic henselian fields, inclusion of forall_1exists-theories of residue fields lifts to inclusion of forall_1exists-theories of the valued fields, via a computable map.", "order": 11, "global_id": "gcn_98854f05b4df4c54", "priors": [{"value": 0.5}]}, {"id": "paper:1000399181526859777::conclusion_14", "type": "claim", "kind": "conclusion", "title": "完美域上不存在 k((t)) 到其自身平方的存在可定义满射", "content": "For perfect k and K=k((t)), there is no surjective map from K to K times K definable by an exists-formula in the language with parameters from k.", "order": 14, "global_id": "gcn_b86365f1e1a04414", "priors": [{"value": 0.9}]}, {"id": "paper:1000399181526859777::P1", "type": "claim", "kind": "weak_point", "title": "Th_exists(k(t),t) 不可判定性的外部依赖", "content": "The undecidability of Th_forall_1exists(k(t)) depends on the cited external undecidability result for Th_exists(k(t),t) from Eisentrager-Shlapentokh 2017, which is not independently verified within this paper.", "global_id": "gcn_9cb4a0861d3640f0", "metadata": {"failure_mode": "If the cited undecidability does not hold for some field k satisfying the hypotheses, the conclusion that Th_forall_1exists(k(t)) is undecidable is unsupported, since the reduction only goes in the direction Th_exists(k(t),t) <=_m Th_forall_1exists(k(t)).", "weakness_reason": "The paper does not reproduce or verify the undecidability proof for Th_exists(k(t),t); it relies entirely on the cited theorem possibly having additional unstated conditions.", "refs": [{"text": "K. Eisentrager and A. Shlapentokh. Hilbert's Tenth Problem over function fields of positive characteristic. J. Eur. Math. Soc. 2017."}]}}, {"id": "paper:1000399181526859777::P3", "type": "claim", "kind": "weak_point", "title": "假设 (R4) 的状态未知", "content": "Hypothesis (R4) is a geometric assumption following from local uniformization/resolution of singularities in positive characteristic, and it is not known to hold in general.", "global_id": "gcn_56d02a6e180a41fe", "metadata": {"failure_mode": "If (R4) is false, the key existentially-closed embedding step in the proof may fail, breaking the chain of inclusions establishing the transfer of forall_k-exists theories.", "weakness_reason": "(R4) is an unproven hypothesis; resolution of singularities in positive characteristic remains a major open problem, so the reduction is conditional on a non-trivial open conjecture.", "refs": [{"text": "S. Anscombe, P. Dittmann and A. Fehm. Axiomatizing the existential theory of F_q((t)). Algebra & Number Theory 2023."}]}}, {"id": "paper:1000399181526859777::P5", "type": "claim", "kind": "weak_point", "title": "Proposition 6.26 证明中使用的外部引理", "content": "The proof that no exists-definable surjection exists relies on two external lemmas about perfect fields and existential closedness of the henselization, whose correctness in this exact context is not independently verified.", "global_id": "gcn_f92513cb1c904688", "metadata": {"failure_mode": "If either cited lemma fails for some perfect k or uniformizer, the contradiction argument breaks down and the non-existence conclusion would be unsupported.", "weakness_reason": "The paper does not reproduce the proofs of these lemmas or verify they apply exactly under the needed conditions.", "refs": [{"text": "S. Anscombe. One-dimensional F-definable sets in F((t)). 2024."}, {"text": "S. Anscombe and A. Fehm. The existential theory of equicharacteristic henselian valued fields. 2016."}]}}, {"id": "paper:1000399181526859777::H1", "type": "claim", "kind": "highlight", "title": "p-基满射与翻译的显式构造", "content": "For fields K of characteristic p with a p-basis, the paper constructs an explicit existential formula defining a surjection K to K^r, and a uniform computable translation tau mapping any forall-F formula to a forall_1[F] formula equivalent on any expansion of (K, p-basis).", "global_id": "gcn_d9d3dfaf5e79456b", "metadata": {"conclusion_id": "1", "credit": "This construction provides the first explicit, uniform, computable reduction of an arbitrary block of universal quantifiers to a single universal quantifier in positive characteristic fields with a p-basis parameter. It is load-bearing for the entire program of reducing quantifier complexity in positive characteristic."}}, {"id": "paper:1000399181526859777::H6", "type": "claim", "kind": "highlight", "title": "forall_1[exists] 语句的拆分", "content": "The paper provides a computable map splitting any forall_1[exists] sentence over k into an existential sentence with parameter t and a forall_1[exists] sentence over k, handling both infinite and finite fields uniformly via the cardinality q.", "global_id": "gcn_5231251277e247f4", "metadata": {"conclusion_id": "6", "credit": "This splitting connects the theory of k(t) to the existential theory of (k(t),t) and the theory of k, enabling many-one reductions used in later decidability transfers."}}, {"id": "paper:1000399181526859777::H7", "type": "claim", "kind": "highlight", "title": "从带参数 t 的存在句到无参数一元全称句的翻译", "content": "Given a definability hypothesis, the paper gives a computable map translating existential formulas with parameter t into forall_1[exists] formulas without t, yielding a many-one equivalence between Th_exists(k(t),t) and Th_forall_1exists(k(t)).", "global_id": "gcn_024fbfe42fdb4205", "metadata": {"conclusion_id": "7", "credit": "This is the key ingredient for the undecidability results and many-one equivalences; without it, undecidability of the target could not be deduced from the known undecidability of the source."}}, {"id": "paper:1000399181526859777::H10", "type": "claim", "kind": "highlight", "title": "(R4) 下 forall_k-exists 的显式翻译", "content": "Under hypothesis (R4), the paper constructs an explicit computable translation from forall_k-exists sentences of valued fields with a distinguished uniformizer to forall-exists sentences in the ring language of the residue field.", "global_id": "gcn_f1147ea3b4fe4c3b", "metadata": {"conclusion_id": "10", "credit": "This is the first explicit computable reduction of these fragments under (R4), extending prior existential-only reductions to the universal-existential level."}}, {"id": "paper:1000399181526859777::H12", "type": "claim", "kind": "highlight", "title": "不存在存在可定义满射的证明", "content": "For perfect k, the paper proves there is no exists-definable surjection from k((t)) onto k((t)) times k((t)), using automorphisms of k((t))/k and a three-case analysis.", "global_id": "gcn_6ce96c6924f44d86", "metadata": {"conclusion_id": "14", "credit": "This is a concrete negative result showing a natural approach to reducing quantifier complexity fails, justifying the need for the more sophisticated p-power based translations used elsewhere in the paper."}}, {"id": "lfac_3b18dfc698c46dbe", "type": "factor", "kind": "reasoning_steps", "global_id": "gfac_9aded1686b474a20", "steps": [{"step_id": "1", "reasoning": "Fix a prime p, integer n>=1, and a fragment F closed under existential quantification and containing quantifier-free formulas with n new constants."}, {"step_id": "2", "reasoning": "Every formula in forall-F can be put in prenex form with a single leading universal block of some arity r."}, {"step_id": "3", "reasoning": "Construct an existential formula chi_{p,n,r} that, given a p-basis, defines a surjection from a single variable w onto K^r."}, {"step_id": "4", "reasoning": "Use the uniqueness of the p-expansion with a fixed p-basis to ensure the projection from w to the tuple x is functional."}, {"step_id": "5", "reasoning": "Define tau(phi) := forall w exists x (chi(w,x,c) and psi(x,u)), which lies in forall_1[F]."}, {"step_id": "6", "reasoning": "Show phi implies tau(phi): given universal truth of psi over all x in K^r, surjectivity of chi guarantees a witnessing x for any w."}, {"step_id": "7", "reasoning": "Show tau(phi) implies phi: given tau(phi), uniqueness of the p-expansion forces the witness x to equal any target x0, so psi(x0,u) holds for all x0."}, {"step_id": "8", "reasoning": "Free variables are preserved and the construction is computable uniformly in the language, p and n."}]}, {"id": "lfac_38dc5da537e83cfa", "type": "factor", "kind": "reasoning_steps", "global_id": "gfac_9d9fdf15d0df40ac", "steps": [{"step_id": "1", "reasoning": "Fix a cardinal q. Let phi = forall x psi(x,u) be a forall_1[exists] formula."}, {"step_id": "2", "reasoning": "For q infinite, set tau(phi) = (psi(t,u), phi). For q finite, build an existential sentence enumerating all q elements of k and asserting psi holds at each."}, {"step_id": "3", "reasoning": "Verify: if a is in phi(k(t)) then psi(t,a) holds, so a is in psi_1((k(t),t)); the finite or infinite case gives a in psi_2(k) too."}, {"step_id": "4", "reasoning": "Conversely, if a is in psi_1 intersect psi_2, use the endomorphism argument for k(t) (every non-constant element is the image of t under some k-endomorphism) to show psi(b,a) holds for all b in k(t), hence a is in phi(k(t))."}, {"step_id": "5", "reasoning": "The construction is computable given a code for phi and the cardinal q."}]}, {"id": "lfac_56a64969776fd4ad", "type": "factor", "kind": "reasoning_steps", "global_id": "gfac_317ee95375f949f5", "steps": [{"step_id": "1", "reasoning": "Fix an existential formula gamma(x) singling out a subset of k(t) containing k but not t."}, {"step_id": "2", "reasoning": "Define tau(phi)(u) := forall x (psi(u,x) or gamma(x)), which lies in forall_1[exists]."}, {"step_id": "3", "reasoning": "Assume k satisfies k subseteq gamma(k(t)) subseteq k(t) minus {t}. Using the endomorphism argument, if phi holds at t then it holds at all x in k(t) minus k, and since gamma(k)=k, tau(phi) holds."}, {"step_id": "4", "reasoning": "Conversely, if tau(phi) holds, since t is not in gamma(k(t)) by hypothesis, this forces psi(a,t), so phi holds at t, i.e. a is in the original existential set."}, {"step_id": "5", "reasoning": "Conclude Th_exists(k(t),t) = tau^-1(Th_forall_1[exists](k(t))) under the hypothesis, with tau computable uniformly in gamma."}]}, {"id": "lfac_e4348bc4333db219", "type": "factor", "kind": "reasoning_steps", "global_id": "gfac_b73fb995ab3f45fd", "steps": [{"step_id": "1", "reasoning": "Work with equicharacteristic henselian valued fields, language L_val possibly with a constant for the uniformizer varpi. Hypothesis (R4) is assumed where indicated."}, {"step_id": "2", "reasoning": "Goal: produce a computable translation from forall_k-exists sentences with distinguished uniformizer to forall-exists sentences of the residue field."}, {"step_id": "3", "reasoning": "Using sections of the residue map (existing after passing to an elementary extension), extend to embeddings of henselized rational function fields with distinguished uniformizer, existentially closed under (R4)."}, {"step_id": "4", "reasoning": "Chain the existentially closed embeddings to compare forall-exists theories, obtaining the desired inclusion of forall_k-exists theories between the valued fields."}, {"step_id": "5", "reasoning": "In residue characteristic zero, classical Ax-Kochen/Ershov principles apply unconditionally, giving the translation without assuming (R4)."}, {"step_id": "6", "reasoning": "The construction is effective, using explicit relativizations and cited effective results on existentially closed embeddings."}]}, {"id": "lfac_3f60b24083cbb4cc", "type": "factor", "kind": "reasoning_steps", "global_id": "gfac_86755ffcca144283", "steps": [{"step_id": "1", "reasoning": "Assume (R4). Let (K,v) and (L,w) be discrete equicharacteristic henselian valued fields with distinguished uniformizer."}, {"step_id": "2", "reasoning": "Assume Th_forall_1exists(Kv) subseteq Th_forall_1exists(Lw); the goal is to lift this to the valued fields."}, {"step_id": "3", "reasoning": "By (R4), obtain an existentially closed embedding of the henselized rational function field of the residue field into (K,v)."}, {"step_id": "4", "reasoning": "Apply the base-field lifting lemma to go from residue-field inclusion to henselized-rational-function-field inclusion."}, {"step_id": "5", "reasoning": "Embed the henselized rational function field of Lw into (L,w) existentially closed, chaining inclusions to conclude Th_forall_1exists(K,v) subseteq Th_forall_1exists(L,w)."}, {"step_id": "6", "reasoning": "The argument is effective, yielding a computable map tau with Th_forall_1exists(K,v) = tau^-1(Th_forall_1exists(Kv))."}]}, {"id": "lfac_65b215d223c99f69", "type": "factor", "kind": "reasoning_steps", "global_id": "gfac_5f8ea4496104460e", "steps": [{"step_id": "1", "reasoning": "Let k be perfect and K = k((t)). Suppose towards contradiction that an exists-definable surjection f: K to K x K exists with parameters from k."}, {"step_id": "2", "reasoning": "Analyze images of points (t,s): claim that if f(x) = (t,s) then s lies in the henselization k(t)^h, a proper subfield of K."}, {"step_id": "3", "reasoning": "Case x in k: apply an endomorphism sending t to t^2; since the formula has parameters only from k, this yields a contradiction on the first coordinate."}, {"step_id": "4", "reasoning": "Case x not in k, v_t(x)>=0: write x = a+z, express z via a uniformizer u using a lemma for perfect fields, and use automorphisms sending u to t to show s lies in k(t)^h."}, {"step_id": "5", "reasoning": "Case v_t(x)<0: reduce to the previous case via x mapsto f(x^{-1})."}, {"step_id": "6", "reasoning": "Combining all cases, the image of f cannot contain (t,s) for arbitrary s in K, contradicting surjectivity; hence no such definable surjection exists."}]}], "edges": [{"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_1_subproblem", "target": "paper:1000399181526859777::conclusion_1"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_2_subproblem", "target": "paper:1000399181526859777::conclusion_2"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_6_subproblem", "target": "paper:1000399181526859777::conclusion_6"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_7_subproblem", "target": "paper:1000399181526859777::conclusion_7"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_8_subproblem", "target": "paper:1000399181526859777::conclusion_8"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_10_subproblem", "target": "paper:1000399181526859777::conclusion_10"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_11_subproblem", "target": "paper:1000399181526859777::conclusion_11"}, {"type": "subproblem_of", "source": "paper:1000399181526859777::conclusion_14_subproblem", "target": "paper:1000399181526859777::conclusion_14"}, {"type": "highlight_of", "source": "paper:1000399181526859777::H1", "target": "lfac_3b18dfc698c46dbe"}, {"type": "highlight_of", "source": "paper:1000399181526859777::H6", "target": "lfac_38dc5da537e83cfa"}, {"type": "highlight_of", "source": "paper:1000399181526859777::H7", "target": "lfac_56a64969776fd4ad"}, {"type": "highlight_of", "source": "paper:1000399181526859777::H10", "target": "lfac_e4348bc4333db219"}, {"type": "highlight_of", "source": "paper:1000399181526859777::H12", "target": "lfac_65b215d223c99f69"}, {"type": "weakpoint_of", "source": "paper:1000399181526859777::P1", "target": "lfac_56a64969776fd4ad"}, {"type": "weakpoint_of", "source": "paper:1000399181526859777::P3", "target": "lfac_e4348bc4333db219"}, {"type": "weakpoint_of", "source": "paper:1000399181526859777::P5", "target": "lfac_65b215d223c99f69"}, {"type": "concludes", "source": "lfac_3b18dfc698c46dbe", "target": "paper:1000399181526859777::conclusion_1"}, {"type": "concludes", "source": "lfac_38dc5da537e83cfa", "target": "paper:1000399181526859777::conclusion_6"}, {"type": "concludes", "source": "lfac_56a64969776fd4ad", "target": "paper:1000399181526859777::conclusion_7"}, {"type": "concludes", "source": "lfac_e4348bc4333db219", "target": "paper:1000399181526859777::conclusion_10"}, {"type": "concludes", "source": "lfac_3f60b24083cbb4cc", "target": "paper:1000399181526859777::conclusion_11"}, {"type": "concludes", "source": "lfac_65b215d223c99f69", "target": "paper:1000399181526859777::conclusion_14"}, {"type": "previous_conclusion_of", "source": "paper:1000399181526859777::conclusion_6", "target": "lfac_56a64969776fd4ad"}, {"type": "previous_conclusion_of", "source": "paper:1000399181526859777::conclusion_10", "target": "lfac_3f60b24083cbb4cc"}]}}]}};
+</script>
+</body>
+</html>

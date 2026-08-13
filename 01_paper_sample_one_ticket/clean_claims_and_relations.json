@@ -1,0 +1,462 @@
+{
+  "assertions": [
+    {
+      "id": "A001",
+      "text_en": "Winning-ticket initializations discovered by iterative magnitude pruning (iterative pruning rate 0.2, up to 30 pruning iterations; late resetting to early training iterations) on large, complex natural-image source datasets produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on other natural-image target datasets, frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets.",
+      "text_zh": "通过迭代量级剪枝（迭代剪枝率为0.2，最多30轮剪枝迭代；采用延迟重置至训练早期的迭代）在大型、复杂的自然图像源数据集上发现的中奖彩票初始化，在用于VGG19或ResNet50架构训练其他自然图像目标数据集时，往往能在目标任务上取得接近于直接在这些目标数据集上发现的中奖彩票所获得的测试准确率。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        }
+      ]
+    },
+    {
+      "id": "A002",
+      "text_en": "Winning-ticket initializations discovered by iterative magnitude pruning (iterative pruning rate 0.2, up to 30 pruning iterations; late resetting to early training iterations) on ImageNet and Places365, and to a lesser extent CIFAR-100, produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365, frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets.",
+      "text_zh": "通过迭代量级剪枝（迭代剪枝率为0.2，最多30轮剪枝迭代；采用延迟重置至训练早期的迭代）在ImageNet和Places365、以及在较小程度上的CIFAR-100上发现的中奖彩票初始化，在用于VGG19或ResNet50架构训练SVHN、Fashion-MNIST、CIFAR-10、CIFAR-100、ImageNet、Places365时，往往能在目标任务上取得接近于直接在这些目标数据集上发现的中奖彩票所获得的测试准确率。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        }
+      ]
+    },
+    {
+      "id": "A003",
+      "text_en": "The transferability (the phenomenon described by A002) is observed across a wide range of pruning fractions, including very high sparsity.",
+      "text_zh": "这种可迁移性（即A002所描述的现象）在广泛的剪枝比例范围内均可观察到，包括非常高的稀疏度。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        }
+      ]
+    },
+    {
+      "id": "A006",
+      "text_en": "Winning tickets discovered on larger source datasets—both in terms of number of training examples and number of output classes—transfer substantially better to other natural-image classification datasets than tickets discovered on smaller source datasets, for both VGG19 and ResNet50 architectures.",
+      "text_zh": "在训练样本数量和输出类别数量上都更大的源数据集上发现的中奖彩票，在VGG19和ResNet50架构下，都能比在更小的源数据集上发现的中奖彩票更好地迁移到其他自然图像分类数据集。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        },
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ]
+    },
+    {
+      "id": "A007",
+      "text_en": "Winning tickets discovered on larger source datasets—both in terms of number of training examples and number of output classes—transfer substantially better to SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365 than tickets discovered on smaller source datasets, for both VGG19 and ResNet50 architectures.",
+      "text_zh": "在训练样本数量和输出类别数量上都更大的源数据集上发现的中奖彩票，在VGG19和ResNet50架构下，都能比在更小的源数据集上发现的中奖彩票更好地迁移到SVHN、Fashion-MNIST、CIFAR-10、CIFAR-100、ImageNet、Places365。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        },
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ]
+    },
+    {
+      "id": "A008",
+      "text_en": "This effect (the effect described by A006) is not solely explained by raw training-set size.",
+      "text_zh": "这一效应（即A006所描述的效应）并不能仅用原始训练集大小来解释。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ]
+    },
+    {
+      "id": "A009",
+      "text_en": "Holding training-set size fixed, a source dataset with many classes produced tickets that generalized better across targets than one with few classes.",
+      "text_zh": "在训练集大小保持不变的情况下，类别数较多的源数据集所产生的中奖彩票，在各目标数据集上的泛化能力优于类别数较少的源数据集。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        },
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ]
+    },
+    {
+      "id": "A010",
+      "text_en": "Holding training-set size fixed, CIFAR-100 (100 classes) produced tickets that generalized better across targets than CIFAR-10 (10 classes).",
+      "text_zh": "在训练集大小保持不变的情况下，CIFAR-100（100个类别）产生的中奖彩票比CIFAR-10（10个类别）产生的中奖彩票在各目标数据集上具有更好的泛化能力。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        },
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ]
+    },
+    {
+      "id": "A011",
+      "text_en": "Winning-ticket initializations generated with one optimizer generalize to training with a different optimizer on natural-image classification datasets.",
+      "text_zh": "用一种优化器生成的中奖彩票初始化，能够泛化到使用另一种优化器在自然图像分类数据集上进行训练的场景。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_3",
+          "global_id": "gcn_d354352c21724714"
+        }
+      ]
+    },
+    {
+      "id": "A012",
+      "text_en": "VGG19 tickets found using SGD with momentum or using Adam, when re-used with the alternate optimizer, achieve high performance that is comparable to tickets discovered under the target optimizer.",
+      "text_zh": "使用带动量的SGD或Adam发现的VGG19中奖彩票，在改用另一种优化器重新使用时，能取得与在目标优化器下直接发现的中奖彩票相当的高性能。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_3",
+          "global_id": "gcn_d354352c21724714"
+        }
+      ]
+    },
+    {
+      "id": "A013",
+      "text_en": "There are optimizer-dependent nuances in behavior (the transfer behavior described by A011).",
+      "text_zh": "在这种（A011所描述的）迁移行为中，存在与优化器相关的细微差异。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_3",
+          "global_id": "gcn_d354352c21724714"
+        }
+      ]
+    },
+    {
+      "id": "A014",
+      "text_en": "Tickets transferred from SGD to Adam sometimes under-perform random tickets at low pruning fractions but outperform random tickets at high pruning fractions.",
+      "text_zh": "从SGD迁移到Adam的中奖彩票，在低剪枝比例下有时表现不及随机彩票，但在高剪枝比例下则优于随机彩票。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_3",
+          "global_id": "gcn_d354352c21724714"
+        }
+      ]
+    },
+    {
+      "id": "A015",
+      "text_en": "A winning ticket discovered on CIFAR-10a (a subset of the CIFAR-10 dataset containing 25,000 training images with 2,500 images per class) transfers to a disjoint subset CIFAR-10b from the same data distribution and improves training on that held-out subset relative to random sparse initializations.",
+      "text_zh": "在CIFAR-10a（CIFAR-10数据集的一个子集，包含25,000张训练图像，每个类别2,500张）上发现的中奖彩票，能够迁移到来自同一数据分布的不相交子集CIFAR-10b，并相对于随机稀疏初始化改善了该保留子集上的训练效果。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_4",
+          "global_id": "gcn_2cab68b8709b4d9f"
+        }
+      ]
+    },
+    {
+      "id": "A016",
+      "text_en": "This within-distribution transfer (the transfer described by A015) holds for both VGG19 and ResNet50.",
+      "text_zh": "这种（A015所描述的）分布内迁移在VGG19和ResNet50上都成立。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_4",
+          "global_id": "gcn_2cab68b8709b4d9f"
+        }
+      ]
+    },
+    {
+      "id": "A017",
+      "text_en": "ResNet50 showed sensitivity at low pruning fractions, occasionally under-performing random tickets when few weights are pruned.",
+      "text_zh": "ResNet50在低剪枝比例下表现出一定的敏感性，在剪枝权重较少时偶尔会不及随机彩票的表现。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_4",
+          "global_id": "gcn_2cab68b8709b4d9f"
+        }
+      ]
+    },
+    {
+      "id": "A018",
+      "text_en": "When performing magnitude pruning for winning-ticket discovery on VGG19 trained on CIFAR-10, globally ranking weights across all layers and pruning the smallest-magnitude weights globally yields higher-performing sparse subnetworks than pruning a fixed fraction per layer (\"layerwise pruning\").",
+      "text_zh": "在CIFAR-10上训练VGG19进行中奖彩票发现的量级剪枝过程中，跨所有层全局排序权重并全局剪除最小量级的权重，比按每层固定比例剪枝（“逐层剪枝”）产生了性能更高的稀疏子网络。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_5",
+          "global_id": "gcn_cdeb0e970f4042d0"
+        }
+      ]
+    },
+    {
+      "id": "A019",
+      "text_en": "Under global magnitude pruning the pruning fractions vary across layers: deeper convolutional layers are pruned more heavily while early layers (notably the first convolutional layer) retain a much larger fraction of their parameters.",
+      "text_zh": "在全局量级剪枝下，各层的剪枝比例存在差异：更深的卷积层被剪除得更多，而较早的层（尤其是第一个卷积层）保留了远大比例的参数。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_5",
+          "global_id": "gcn_cdeb0e970f4042d0"
+        }
+      ]
+    },
+    {
+      "id": "A020",
+      "text_en": "For VGG19 trained on CIFAR-10, the structure of the pruning mask contains substantial information useful for training sparse networks.",
+      "text_zh": "对于在CIFAR-10上训练的VGG19，剪枝掩码的结构包含了对训练稀疏网络有用的大量信息。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ]
+    },
+    {
+      "id": "A021",
+      "text_en": "For VGG19 trained on CIFAR-10, locally permuting a winning-ticket mask (permuting the mask only within each layer) degrades performance moderately, while globally permuting the winning-ticket mask (permuting the mask across all layers) degrades performance dramatically.",
+      "text_zh": "对于在CIFAR-10上训练的VGG19，局部置换中奖彩票掩码（即仅在每一层内部对掩码进行置换）会使性能出现中等程度的下降，而全局置换中奖彩票掩码（即跨所有层对掩码进行置换）则会使性能大幅下降。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ]
+    },
+    {
+      "id": "A022",
+      "text_en": "The structure of the pruning mask contains substantial information useful for training sparse networks.",
+      "text_zh": "剪枝掩码的结构本身包含了对训练稀疏网络有用的重要信息。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ]
+    },
+    {
+      "id": "A023",
+      "text_en": "Preserving mask statistics across layers transfers information from the discovered ticket.",
+      "text_zh": "跨层保留掩码统计信息，会将已发现彩票中的信息迁移过去。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ]
+    },
+    {
+      "id": "A024",
+      "text_en": "A fair \"random ticket\" baseline for evaluating a winning-ticket initialization should randomize both weight values and mask structure (global permutation).",
+      "text_zh": "用于评估中奖彩票初始化的公平“随机彩票”基线，应当同时随机化权重值和掩码结构（全局置换）。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ]
+    },
+    {
+      "id": "A025",
+      "text_en": "For obtaining competitive winning tickets in the large-model and large-dataset regime of natural-image classification, an iterative magnitude-pruning schedule with pruning fraction per iteration 0.2 (20% of remaining parameters) over up to 30 iterations combined with late resetting to parameters at a small early training iteration produced effective winning tickets; late resetting settings used were resetting to the parameters after 1 epoch for Fashion-MNIST, SVHN, CIFAR-10 and CIFAR-100, and after 3 epochs for ImageNet and Places365. Learning-rate annealing schedules and other hyperparameters were matched per model family (VGG19 trained 160 epochs with LR drops at epochs 80 and 120; ResNet50 trained 90 epochs with LR drops at epochs 50, 65, and 80).",
+      "text_zh": "为了在自然图像分类的大模型、大数据集范围内获得具有竞争力的中奖彩票，采用每轮剪枝比例为0.2（剩余参数的20%）、最多进行30轮迭代的迭代量级剪枝方案，并结合将参数延迟重置到训练早期某个较小迭代步的做法，能够产生有效的中奖彩票；所采用的延迟重置设置为：对于Fashion-MNIST、SVHN、CIFAR-10和CIFAR-100，重置到第1个epoch后的参数，对于ImageNet和Places365，重置到第3个epoch后的参数。学习率退火方案和其他超参数按模型系列进行了匹配（VGG19训练160个epoch，在第80和第120个epoch进行学习率下降；ResNet50训练90个epoch，在第50、65和80个epoch进行学习率下降）。",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_7",
+          "global_id": "gcn_1c4ea7e959814d8f"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "R001",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_1",
+          "global_id": "gcn_f22fc9a9f36d4b45"
+        }
+      ],
+      "related_assertions": [
+        "A001",
+        "A002"
+      ],
+      "relation_description": "A002是A001的具体举例版本，将A001中笼统的数据集描述替换为具体数据集名称。",
+      "relation_type": "举例",
+      "inference_type": "无"
+    },
+    {
+      "id": "R003",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ],
+      "related_assertions": [
+        "A006",
+        "A007"
+      ],
+      "relation_description": "A007是A006的具体举例版本，将A006中笼统的“其他自然图像分类数据集”替换为具体数据集名称（SVHN、Fashion-MNIST、CIFAR-10、CIFAR-100、ImageNet、Places365）。",
+      "relation_type": "举例",
+      "inference_type": "无"
+    },
+    {
+      "id": "R004",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ],
+      "related_assertions": [
+        "A009",
+        "A010"
+      ],
+      "relation_description": "A010是A009的具体举例版本，将A009中笼统的“类别数较多/较少的源数据集”替换为CIFAR-100与CIFAR-10的具体对比。",
+      "relation_type": "举例",
+      "inference_type": "无"
+    },
+    {
+      "id": "R005",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_2",
+          "global_id": "gcn_0fdc65dd973e495e"
+        }
+      ],
+      "related_assertions": [
+        "A009",
+        "A008"
+      ],
+      "relation_description": "A009所描述的实验证据（控制训练集大小后，类别数更多的源数据集迁移效果更好）推出A008的论断——即该效应不能仅用原始训练集大小来解释。",
+      "relation_type": "推出",
+      "inference_type": "演绎"
+    },
+    {
+      "id": "R006",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_3",
+          "global_id": "gcn_d354352c21724714"
+        }
+      ],
+      "related_assertions": [
+        "A011",
+        "A012"
+      ],
+      "relation_description": "A012是A011的具体举例，展示了VGG19在SGD与Adam之间互相迁移时取得的具体表现。",
+      "relation_type": "举例",
+      "inference_type": "无"
+    },
+    {
+      "id": "R007",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_3",
+          "global_id": "gcn_d354352c21724714"
+        }
+      ],
+      "related_assertions": [
+        "A013",
+        "A014"
+      ],
+      "relation_description": "A014是A013的具体举例，展示了从SGD迁移到Adam时随剪枝比例变化而出现的具体行为差异。",
+      "relation_type": "举例",
+      "inference_type": "无"
+    },
+    {
+      "id": "R008",
+      "raw_text": "though",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_4",
+          "global_id": "gcn_2cab68b8709b4d9f"
+        }
+      ],
+      "related_assertions": [
+        "A016",
+        "A017"
+      ],
+      "relation_description": "A017所描述的ResNet50在低剪枝比例下的例外表现，与A016中“该分布内迁移在两种架构上都成立”的一般性论断存在张力。",
+      "relation_type": "矛盾",
+      "inference_type": "无"
+    },
+    {
+      "id": "R009",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ],
+      "related_assertions": [
+        "A021",
+        "A020"
+      ],
+      "relation_description": "A021所描述的实验结果——局部置换中奖彩票掩码只造成中等程度的性能下降，而全局置换则造成大幅下降——推出A020的论断，即剪枝掩码的结构本身包含对训练稀疏网络有用的重要信息。",
+      "relation_type": "推出",
+      "inference_type": "演绎"
+    },
+    {
+      "id": "R010",
+      "raw_text": "Therefore,",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ],
+      "related_assertions": [
+        "A020",
+        "A022"
+      ],
+      "relation_description": "A020所描述的针对VGG19/CIFAR-10的具体实验发现，通过溯因推理被推广为A022的一般性论断——即剪枝掩码的结构本身包含对训练稀疏网络有用的重要信息。",
+      "relation_type": "推出",
+      "inference_type": "溯因"
+    },
+    {
+      "id": "R011",
+      "raw_text": "Therefore,",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ],
+      "related_assertions": [
+        "A022",
+        "A023"
+      ],
+      "relation_description": "A022（剪枝掩码结构包含重要信息）通过演绎推理得出A023——跨层保留掩码统计信息会将已发现彩票中的信息迁移过去。",
+      "relation_type": "推出",
+      "inference_type": "演绎"
+    },
+    {
+      "id": "R012",
+      "raw_text": "",
+      "sources": [
+        {
+          "conclusion_id": "paper:867771291879342656::conclusion_6",
+          "global_id": "gcn_764a16230b6b4c66"
+        }
+      ],
+      "related_assertions": [
+        "A023",
+        "A024"
+      ],
+      "relation_description": "A023所描述的机制——跨层保留掩码统计信息会迁移已发现彩票的信息——通过演绎推理得出A024的论断，即公平的“随机彩票”基线应当同时随机化权重值和掩码结构。",
+      "relation_type": "推出",
+      "inference_type": "演绎"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# JavaScript dependencies and build caches
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+
+# Editor and temporary files
+.idea/
+.vscode/
+*.swp
+*.tmp
+*~
