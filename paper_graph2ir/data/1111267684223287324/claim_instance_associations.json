@@ -1,0 +1,176 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 18,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 20,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 1,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 5,
+    "claim_label": "assertion",
+    "certain_instances": [
+      7
+    ],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 11,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 12,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 1,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 3,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 5,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 8,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_4",
+    "claim_number": 1,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_4",
+    "claim_number": 5,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_4",
+    "claim_number": 8,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 1,
+    "claim_label": "assertion",
+    "certain_instances": [
+      3
+    ],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 5,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 11,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 12,
+    "claim_label": "assertion",
+    "certain_instances": [
+      14
+    ],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 16,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 18,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 2,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 4,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 6,
+    "claim_label": "论据",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 8,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 10,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  }
+]

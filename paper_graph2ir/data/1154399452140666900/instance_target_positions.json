@@ -1,0 +1,78 @@
+[
+  {
+    "conclusion": "conclusion_7",
+    "instance_number": 4,
+    "instance_content": "the cheek and eye areas,",
+    "instance_span": {
+      "start": 259,
+      "end": 284
+    },
+    "targets": [
+      {
+        "term": "semantically meaningful facial regions",
+        "certainty": "certain",
+        "content": "semantically meaningful facial regions",
+        "start": 211,
+        "end": 249,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 3,
+    "instance_content": "ResNet-18 (11.7M parameters)",
+    "instance_span": {
+      "start": 37,
+      "end": 66
+    },
+    "targets": [
+      {
+        "term": "larger, deeper architectures",
+        "certainty": "certain",
+        "content": "Larger, deeper architectures",
+        "start": 0,
+        "end": 28,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 7,
+    "instance_content": "MesoNet (0.015M parameters)",
+    "instance_span": {
+      "start": 317,
+      "end": 345
+    },
+    "targets": [
+      {
+        "term": "Compact networks",
+        "certainty": "certain",
+        "content": "Compact networks",
+        "start": 292,
+        "end": 308,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_10",
+    "instance_number": 2,
+    "instance_content": "(zero-shot from OpenForensic to FaceForensics++)",
+    "instance_span": {
+      "start": 38,
+      "end": 86
+    },
+    "targets": [
+      {
+        "term": "cross-dataset transfer experiments",
+        "certainty": "certain",
+        "content": "cross-dataset transfer experiments",
+        "start": 3,
+        "end": 37,
+        "candidates": []
+      }
+    ]
+  }
+]

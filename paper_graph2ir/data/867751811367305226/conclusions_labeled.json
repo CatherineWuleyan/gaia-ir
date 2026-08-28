@@ -1,0 +1,238 @@
+[
+  {
+    "id": "paper:867751811367305226::conclusion_1",
+    "global_id": "gcn_fd39c27822b14af7",
+    "order": 1,
+    "title": "Pruning self-supervised pretraining preserves transfer feature quality up to high sparsity",
+    "content": "For networks pretrained with self-supervised tasks RotNet (rotation prediction) or Exemplar (instance-based classification), applying unstructured magnitude-based iterative pruning to the pretrained convnet and then evaluating the pruned representation by training linear classifiers on downstream datasets yields that pruning up to approximately 90% of weights (i.e. retaining ≈10% of weights) does not significantly deteriorate linear-transfer performance on Pascal VOC 2007, Places205 and ImageNet linear evaluation; in some cases (RotNet and Exemplar) moderate pruning yields a slight improvement in transfer metrics, whereas severe pruning below roughly 5% remaining weights causes a substantial drop in transfer quality.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For networks pretrained with self-supervised tasks RotNet (rotation prediction) or Exemplar (instance-based classification), applying unstructured magnitude-based iterative pruning to the pretrained convnet and then evaluating the pruned representation by training linear classifiers on downstream datasets yields that ",
+          "label": "other"
+        },
+        {
+          "text": "pruning up to approximately 90% of weights ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(i.e. retaining ≈10% of weights) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "does not significantly deteriorate linear-transfer performance on Pascal VOC 2007, Places205 and ImageNet linear evaluation; ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "in some cases ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(RotNet and Exemplar) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "moderate pruning yields a slight improvement in transfer metrics, ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "whereas ",
+          "label": "relation of the assertions [2,3]"
+        },
+        {
+          "text": "severe pruning below roughly 5% remaining weights causes a substantial drop in transfer quality.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867751811367305226::conclusion_2",
+    "global_id": "gcn_5349d1fd13ef4f95",
+    "order": 2,
+    "title": "Finetuning a pruned pretrained network outperforms pruning during transfer",
+    "content": "When transferring a self-supervised pretrained convnet to a supervised target (Pascal VOC07) and fully fine-tuning all network parameters, using a network that was pruned during the self-supervised pretraining phase (i.e. the pruned pretrained model is used as initialization and then all parameters are fine-tuned) yields higher downstream accuracy than performing pruning while fine-tuning directly on the target supervised objective (pruning during transfer).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "When transferring a self-supervised pretrained convnet to a supervised target (Pascal VOC07) and fully fine-tuning all network parameters, using a network that was pruned during the self-supervised pretraining phase (i.e. the pruned pretrained model is used as initialization and then all parameters are fine-tuned) yields higher downstream accuracy than performing pruning while fine-tuning directly on the target supervised objective (pruning during transfer).",
+          "label": "assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867751811367305226::conclusion_3",
+    "global_id": "gcn_8878762d85da4006",
+    "order": 3,
+    "title": "Self-supervised pruning yields masks that can be re-trained on labels; mask quality similar to supervised pruning but winning-ticket initializations differ",
+    "content": "Masks obtained by iterative magnitude-based pruning performed on self-supervised pretraining (RotNet or Exemplar) define sparse subnetworks that, when re-trained from random re-initialization, reach ImageNet and CIFAR-10 supervised accuracies comparable to subnetworks obtained by supervised pruning (i.e. random re-initialization of self-supervised masks matches supervised-pruned random-reinit performance). However, when using the \"winning tickets\" rewind initialization (resetting the retained parameters to their early-in-training values), subnetworks pruned with labels exhibit substantially better re-training performance than subnetworks pruned with self-supervised objectives; consequently, the pruned mask m (the binary sparsity pattern) from self-supervision is of similar quality to supervised masks, but the inherited early-in-training weight values $W$ from self-supervised pretraining are not as effective initializations for supervised re-training as those inherited from supervised pruning.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Masks obtained by iterative magnitude-based pruning performed on self-supervised pretraining (RotNet or Exemplar) define sparse subnetworks that, when re-trained from random re-initialization, reach ImageNet and CIFAR-10 supervised accuracies comparable to subnetworks obtained by supervised pruning ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(i.e. random re-initialization of self-supervised masks matches supervised-pruned random-reinit performance).",
+          "label": "elaboration"
+        },
+        {
+          "text": " However, ",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "when using the \"winning tickets\" rewind initialization ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(resetting the retained parameters to their early-in-training values), ",
+          "label": "elaboration"
+        },
+        {
+          "text": "subnetworks pruned with labels exhibit substantially better re-training performance than subnetworks pruned with self-supervised objectives; ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "consequently, ",
+          "label": "relation of the assertions [1,2,3,4]"
+        },
+        {
+          "text": "the pruned mask m ",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "(the binary sparsity pattern) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "from self-supervision is of similar quality to supervised masks, ",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "but ",
+          "label": "relation of the assertions [3,4]"
+        },
+        {
+          "text": "the inherited early-in-training weight values $W$ from self-supervised pretraining are not as effective initializations for supervised re-training as those inherited from supervised pruning.",
+          "label": "assertion [4]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867751811367305226::conclusion_4",
+    "global_id": "gcn_e8bde59e9b264801",
+    "order": 4,
+    "title": "Difference between supervised and self-supervised winning-ticket initializations increases with pruning depth (higher layers)",
+    "content": "Comparing winning-ticket initializations (rewind-to-early-training weights) obtained by pruning with labels versus pruning with self-supervised RotNet shows that the performance gap is small when pruning only early convolutional layers but increases substantially when pruning higher-level layers (e.g., when pruning through MLP/classifier layers), consistent with the observation that many self-supervised methods learn strong low- and mid-level features but comparatively weaker high-level semantic features needed for label classification.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Comparing winning-ticket initializations (rewind-to-early-training weights) obtained by pruning with labels versus pruning with self-supervised RotNet shows that the performance gap is small when pruning only early convolutional layers",
+          "label": "assertion [1]"
+        },
+        {
+          "text": " but increases substantially when pruning higher-level layers",
+          "label": "assertion [2]"
+        },
+        {
+          "text": " (e.g., when pruning through MLP/classifier layers),",
+          "label": "elaboration"
+        },
+        {
+          "text": " consistent with the observation that many self-supervised methods learn strong low- and mid-level features but comparatively weaker high-level semantic features needed for label classification.",
+          "label": "proof of the assertions [1,2]"
+        }
+      ]
+    },
+    "labeling_status": "ok_after_retry_opus5"
+  },
+  {
+    "id": "paper:867751811367305226::conclusion_5",
+    "global_id": "gcn_df9770278cd546c3",
+    "order": 5,
+    "title": "Limited label supervision during pruning improves winning-ticket initializations; semi-supervised pruning performs best",
+    "content": "Incorporating a small fraction of labeled data into the pruning/training process improves the quality of inherited initializations: using approximately 10% of ImageNet labels during pruning (either as simple supervised pruning on the 10% subset or via the S4L semi-supervised RotNet variant that combines RotNet and label loss) yields pruned subnetworks whose winning-ticket initializations re-trained on full ImageNet reach higher validation accuracy than purely unsupervised pruning. Among these, the S4L semi-supervised pruning (combining RotNet and labels on 10% of data) provides better resulting initializations than using 10% labels alone or purely unsupervised pruning, and sampling labeled data per class (keeping all classes represented) yields different effects than sampling a subset of classes, indicating winning-ticket initializations are somewhat task- or class-distribution dependent.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Incorporating a small fraction of labeled data into the pruning/training process improves the quality of inherited initializations: using approximately 10% of ImageNet labels during pruning (",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "either as simple supervised pruning on the 10% subset or via the S4L semi-supervised RotNet variant that combines RotNet and label loss)",
+          "label": "elaboration"
+        },
+        {
+          "text": " yields pruned subnetworks whose winning-ticket initializations re-trained on full ImageNet reach higher validation accuracy than purely unsupervised pruning.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": " Among these, the S4L semi-supervised pruning (",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "combining RotNet and labels on 10% of data)",
+          "label": "elaboration"
+        },
+        {
+          "text": " provides better resulting initializations than using 10% labels alone or purely unsupervised pruning,",
+          "label": "assertion [2]"
+        },
+        {
+          "text": " and sampling labeled data per class (",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "keeping all classes represented",
+          "label": "elaboration"
+        },
+        {
+          "text": ") yields different effects than sampling a subset of classes, indicating winning-ticket initializations are somewhat task- or class-distribution dependent.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867751811367305226::conclusion_6",
+    "global_id": "gcn_ac91cab2f0b94625",
+    "order": 6,
+    "title": "Deep networks trained on small datasets (CIFAR-10) exhibit high natural sparsity; pruning there can be trivial unless accounted for",
+    "content": "For common deep architectures trained on CIFAR-10 (e.g., VGG-19, ResNet-18), a large fraction of weights converge to zero during standard training (approximately 84.5% for VGG-19 and 80.3% for ResNet-18 in the reported experiments), so applying magnitude-based pruning at rates below this natural sparsity simply removes weights that were already zero and therefore can be trivially accomplished without affecting accuracy; consequently, random global pruning baselines must be adjusted to account for this natural sparsity when evaluating pruning on small datasets to avoid misleading conclusions.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For common deep architectures trained on CIFAR-10 (e.g., VGG-19, ResNet-18), a large fraction of weights converge to zero during standard training",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(approximately 84.5% for VGG-19 and 80.3% for ResNet-18 in the reported experiments)",
+          "label": "proof of the assertion [1]"
+        },
+        {
+          "text": ", so",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "applying magnitude-based pruning at rates below this natural sparsity simply removes weights that were already zero and therefore can be trivially accomplished without affecting accuracy",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "; consequently,",
+          "label": "relation of the assertions [2,3]"
+        },
+        {
+          "text": "random global pruning baselines must be adjusted to account for this natural sparsity when evaluating pruning on small datasets to avoid misleading conclusions.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

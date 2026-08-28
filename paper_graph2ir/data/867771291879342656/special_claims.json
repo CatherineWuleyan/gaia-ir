@@ -1,0 +1,49 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 1,
+    "text": "Winning-ticket initializations discovered by iterative magnitude pruning on ImageNet, Places365, and, to a lesser extent, CIFAR-100 produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, and Places365, frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets.",
+    "certain_instances_given": [
+      3,
+      4
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 5,
+    "text": "The transferability described in 【1】 is observed across a wide range of pruning fractions, including very high sparsity.",
+    "certain_instances_given": [
+      6
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 1,
+    "text": "Winning tickets discovered on larger source datasets—both in terms of number of training examples and number of output classes—transfer substantially better to SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, and Places365 than tickets discovered on smaller source datasets, for both VGG19 and ResNet50 architectures.",
+    "certain_instances_given": [
+      3
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 5,
+    "text": "Holding training-set size fixed, CIFAR-100, a source dataset with 100 classes, produced tickets that generalized better across targets than CIFAR-10, a source dataset with 10 classes.",
+    "certain_instances_given": [
+      6,
+      7
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 3,
+    "text": "Under global magnitude pruning the pruning fractions vary across layers: deeper convolutional layers are pruned more heavily while the first convolutional layer retains a much larger fraction of its parameters.",
+    "certain_instances_given": [
+      5
+    ],
+    "uncertain_instances_given": []
+  }
+]

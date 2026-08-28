@@ -1,0 +1,757 @@
+[
+  {
+    "id": "paper:1233032154137493546::conclusion_1",
+    "global_id": "gcn_c4838195ee01479d",
+    "order": 1,
+    "title": "Existence of winning lottery tickets in Bayesian neural networks",
+    "content": "Iterative Magnitude Pruning (IMP) applied to mean-field variational Bayesian neural networks (BNNs) trained on the CIFAR10 image classification dataset produces sparse subnetworks (mask-plus-original-initialization pairs) that match or in some cases surpass the dense unpruned Bayesian model's test accuracy across multiple architectures (ResNet-18, VGG11, ViT-tiny) for a wide sparsity range (matching performance observed up to roughly 90% sparsity), with performance degradation appearing only in very high sparsity regimes (e.g., beyond ≈98% sparsity or at the extreme final level where ≈1.2% of parameters remain). This indicates that Bayesian variants of the Lottery Ticket Hypothesis hold empirically for the evaluated models and dataset.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Iterative Magnitude Pruning ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "IMP",
+          "label": "elaboration",
+          "of_terms": [
+            "Iterative Magnitude Pruning"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " applied to mean-field variational Bayesian neural networks ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "BNNs",
+          "label": "elaboration",
+          "of_terms": [
+            "mean-field variational Bayesian neural networks"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " trained on the CIFAR10 image classification dataset produces sparse subnetworks ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "mask-plus-original-initialization pairs",
+          "label": "elaboration",
+          "of_terms": [
+            "sparse subnetworks"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " that match or in some cases surpass the dense unpruned Bayesian model's test accuracy across multiple architectures ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "ResNet-18, VGG11, ViT-tiny",
+          "label": "instance",
+          "of_terms": [
+            "multiple architectures"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " for a wide sparsity range ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "matching performance observed up to roughly 90% sparsity",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": ", with performance degradation appearing only in very high sparsity regimes ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "beyond ≈98% sparsity or at the extreme final level where ≈1.2% of parameters remain",
+          "label": "instance",
+          "of_terms": [
+            "very high sparsity regimes"
+          ]
+        },
+        {
+          "text": ").",
+          "label": "other"
+        },
+        {
+          "text": " This indicates that ",
+          "label": "论证",
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": "Bayesian variants of the Lottery Ticket Hypothesis hold empirically for the evaluated models and dataset.",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_2",
+    "global_id": "gcn_56c280268e53460b",
+    "order": 2,
+    "title": "Posterior mean magnitude is the dominant pruning criterion in mean-field Bayesian neural networks",
+    "content": "In Bayesian neural networks (BNNs) pruned under Iterative Magnitude Pruning (IMP), pruning based primarily on the absolute posterior mean $s_{mm}=|\\mu|$ (mu-magnitude) yields competitive ticket performance, with the signal-to-noise ratio score $s_{SNR}=|\\mu|/\\sigma$ performing similarly; by contrast the squared-sum score $s_{ss}=\\sqrt{\\mu^2+\\sigma^2}$ yields substantially worse results (notably on the Vision Transformer ViT-tiny model), causing earlier performance degradation at increasing sparsity. Thus, pruning decisions for mean-field variational BNNs should rely primarily on the posterior mean magnitude and only secondarily on posterior standard deviation.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "In Bayesian neural networks (BNNs) pruned under Iterative Magnitude Pruning (IMP), ",
+          "label": "elaboration",
+          "of": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "pruning based primarily on the absolute posterior mean",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " $s_{mm}=|\\mu|$ (mu-magnitude)",
+          "label": "elaboration",
+          "of_terms": [
+            "the absolute posterior mean"
+          ]
+        },
+        {
+          "text": " yields competitive ticket performance",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": ", with the signal-to-noise ratio score",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " $s_{SNR}=|\\mu|/\\sigma$",
+          "label": "elaboration",
+          "of_terms": [
+            "the signal-to-noise ratio score"
+          ]
+        },
+        {
+          "text": " performing similarly",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "; by contrast ",
+          "label": "connection"
+        },
+        {
+          "text": "the squared-sum score",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": " $s_{ss}=\\sqrt{\\mu^2+\\sigma^2}$",
+          "label": "elaboration",
+          "of_terms": [
+            "the squared-sum score"
+          ]
+        },
+        {
+          "text": " yields substantially worse results",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": " (notably on the Vision Transformer ViT-tiny model)",
+          "label": "elaboration",
+          "of": [
+            3
+          ]
+        },
+        {
+          "text": ", causing earlier performance degradation at increasing sparsity.",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " Thus, ",
+          "label": "relation",
+          "connects": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "expression": "([1] 且 [2] 且 [3] 且 [4]) 推出 [5]"
+        },
+        {
+          "text": "pruning decisions for mean-field variational BNNs should rely primarily on the posterior mean magnitude and only secondarily on posterior standard deviation.",
+          "label": "assertion",
+          "number": 5
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_3",
+    "global_id": "gcn_c552eb345da341fa",
+    "order": 3,
+    "title": "Layer-wise and architectural sparsity patterns in Bayesian winning tickets",
+    "content": "Across the evaluated architectures (ResNet, VGG, and Vision Transformer (ViT)) on the CIFAR10 dataset, winning tickets found through iterative magnitude pruning exhibit non-uniform layer-wise sparsity: deeper layers (those with more parameters) become substantially more sparse than early layers, and this skew is more pronounced in Bayesian models than in their deterministic counterparts; the ViT shows a modulated per-layer sparsity pattern reflecting its alternating attention and Multi-Layer Perceptron (MLP) stack, while convolutional models (ResNet and VGG) retain earlier-layer parameters more strongly.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Across the evaluated architectures ",
+          "label": "elaboration"
+        },
+        {
+          "text": "(ResNet, VGG, and Vision Transformer (ViT)) ",
+          "label": "elaboration",
+          "of_terms": [
+            "the evaluated architectures"
+          ]
+        },
+        {
+          "text": "on the CIFAR10 dataset, ",
+          "label": "elaboration"
+        },
+        {
+          "text": "winning tickets ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "found through iterative magnitude pruning ",
+          "label": "elaboration",
+          "of_terms": [
+            "winning tickets"
+          ]
+        },
+        {
+          "text": "exhibit non-uniform layer-wise sparsity: ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "deeper layers ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(those with more parameters) ",
+          "label": "elaboration",
+          "of_terms": [
+            "deeper layers"
+          ]
+        },
+        {
+          "text": "become substantially more sparse than early layers, ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "and ",
+          "label": "connection"
+        },
+        {
+          "text": "this skew is more pronounced in Bayesian models than in their deterministic counterparts; ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "the ViT shows a modulated per-layer sparsity pattern reflecting its alternating attention and Multi-Layer Perceptron ",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": "(MLP) ",
+          "label": "elaboration",
+          "of_terms": [
+            "Multi-Layer Perceptron"
+          ]
+        },
+        {
+          "text": "stack, ",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": "while ",
+          "label": "connection"
+        },
+        {
+          "text": "convolutional models ",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": "(ResNet and VGG) ",
+          "label": "instance",
+          "of_terms": [
+            "convolutional models"
+          ]
+        },
+        {
+          "text": "retain earlier-layer parameters more strongly.",
+          "label": "assertion",
+          "number": 5
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_4",
+    "global_id": "gcn_60507c5c70294886",
+    "order": 4,
+    "title": "Importance of mask structure and initialization for winning tickets depends on architecture",
+    "content": "The winning-ticket advantage over randomly-pruned tickets arises from both the binary mask structure and the specific initial weight values: for ResNet-18 and VGG11 much of the winning-ticket performance is attributable to preserving layerwise sparsity ratios and coarse mask structure (layerwise shuffling or weight reinitialization can retain comparable accuracy), whereas for Vision Transformer ViT-tiny the combination of the original mask and the original initialization is crucial and neither component alone suffices to match winning tickets found through Iterative Magnitude Pruning (IMP); globally or evenly shuffled masks remove the winning-ticket advantage in all models.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The winning-ticket advantage over randomly-pruned tickets arises from both the binary mask structure and the specific initial weight values:",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " for ResNet-18 and VGG11 much of the winning-ticket performance is attributable to preserving layerwise sparsity ratios and coarse mask structure ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(layerwise shuffling or weight reinitialization can retain comparable accuracy)",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2
+          ]
+        },
+        {
+          "text": ", whereas ",
+          "label": "connection"
+        },
+        {
+          "text": "for Vision Transformer ViT-tiny the combination of the original mask and the original initialization is crucial and neither component alone suffices to match winning tickets found through Iterative Magnitude Pruning (IMP);",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " globally or evenly shuffled masks remove the winning-ticket advantage in all models.",
+          "label": "assertion",
+          "number": 5
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_5",
+    "global_id": "gcn_69257839e514495f",
+    "order": 5,
+    "title": "Transplantation of deterministic tickets into Bayesian neural networks yields comparable performance and compute savings",
+    "content": "A transplantation procedure that takes a deterministic winning ticket (binary mask and deterministic weight values) and constructs a mean-field variational Bayesian neural network (BNN) by copying the pruned deterministic weights into the variational posterior means $\\mu$ (keeping posterior standard deviations $\\sigma$ at their initialization) yields Bayesian models whose test accuracies are comparable to fully Bayesian winning tickets for ResNet-18 and VGG11 across sparsity levels, but this transplantation is less effective for Vision Transformer ViT-tiny where the Bayesian winning tickets found through Iterative Magnitude Pruning (IMP) outperform the transplanted deterministic tickets. Transplantation reduces training compute because the expensive Variational Inference (VI)-based optimization is performed only in a final phase instead of repeatedly during IMP: observed per-level runtime shows Bayesian training is roughly 3--7× slower than deterministic, and using deterministic IMP plus a final VI transplant step can save up to ≈50% of the overall IMP compute in this experimental setup.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "A transplantation procedure",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " that takes a deterministic winning ticket (binary mask and deterministic weight values) and constructs a mean-field variational Bayesian neural network (BNN) by copying the pruned deterministic weights into the variational posterior means $\\mu$ (keeping posterior standard deviations $\\sigma$ at their initialization)",
+          "label": "elaboration",
+          "of_terms": [
+            "transplantation procedure"
+          ]
+        },
+        {
+          "text": " yields Bayesian models whose test accuracies are comparable to fully Bayesian winning tickets for ResNet-18 and VGG11 across sparsity levels",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": ", but ",
+          "label": "connection"
+        },
+        {
+          "text": "this transplantation is less effective for Vision Transformer ViT-tiny",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " where ",
+          "label": "other"
+        },
+        {
+          "text": "the Bayesian winning tickets found through Iterative Magnitude Pruning ",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2
+          ]
+        },
+        {
+          "text": "(IMP)",
+          "label": "elaboration",
+          "of_terms": [
+            "Iterative Magnitude Pruning"
+          ]
+        },
+        {
+          "text": " outperform the transplanted deterministic tickets.",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2
+          ]
+        },
+        {
+          "text": " Transplantation reduces training compute",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " because the expensive Variational Inference (VI)-based optimization is performed only in a final phase instead of repeatedly during IMP:",
+          "label": "论证",
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " observed per-level runtime shows ",
+          "label": "framing"
+        },
+        {
+          "text": "Bayesian training is roughly 3--7× slower than deterministic",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": ", and ",
+          "label": "connection"
+        },
+        {
+          "text": "using deterministic IMP plus a final VI transplant step can save up to ≈50% of the overall IMP compute in this experimental setup.",
+          "label": "论据",
+          "number": 6,
+          "supports": [
+            4
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_6",
+    "global_id": "gcn_3a91e3cc3aa64e4d",
+    "order": 6,
+    "title": "Calibration behavior of sparse Bayesian neural networks under pruning",
+    "content": "Calibration as measured by Mean Absolute Calibration Error (MACE) exhibits architecture-dependent trends under pruning in Bayesian neural networks (BNNs): for ResNet-18 and Vision Transformer ViT-tiny models MACE tends to decrease (models become overconfident with lowered accuracy) at very high sparsities, while VGG11 models show approximately constant MACE across sparsity levels; tickets obtained by transplanting deterministic lottery ticket parameters (mask and weight values) into the variational posterior means of a BNN largely mirror the MACE trends of fully Bayesian tickets.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Calibration",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " as measured by Mean Absolute Calibration Error (MACE)",
+          "label": "elaboration",
+          "of_terms": [
+            "Calibration"
+          ]
+        },
+        {
+          "text": " exhibits architecture-dependent trends under pruning in Bayesian neural networks (BNNs):",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " for ResNet-18 and Vision Transformer ViT-tiny models MACE tends to decrease ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(models become overconfident with lowered accuracy)",
+          "label": "elaboration",
+          "of": [
+            2
+          ]
+        },
+        {
+          "text": " at very high sparsities,",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " while ",
+          "label": "connection"
+        },
+        {
+          "text": "VGG11 models show approximately constant MACE across sparsity levels;",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " tickets",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " obtained by transplanting deterministic lottery ticket parameters (mask and weight values) into the variational posterior means of a BNN",
+          "label": "elaboration",
+          "of_terms": [
+            "tickets"
+          ]
+        },
+        {
+          "text": " largely mirror the MACE trends of fully Bayesian tickets.",
+          "label": "assertion",
+          "number": 4
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_7",
+    "global_id": "gcn_1792b7122ccc4725",
+    "order": 7,
+    "title": "Learning-rate rewinding outperforms iterative magnitude pruning at high sparsity in both deterministic and Bayesian neural networks",
+    "content": "Learning-rate rewinding (LRR), which continues training with learned weights after pruning and resets the learning rate schedule rather than rewinding weights to their initial values, achieves higher or more stable test accuracy than the standard Iterative Magnitude Pruning (IMP) approach at high sparsity across the evaluated architectures (ResNet-18, VGG11, and Vision Transformer ViT-tiny) on CIFAR10, for both deterministic and Bayesian neural network variants; LRR produces matching or surpassing accuracy in many cases and stabilizes performance up to the highest sparsity levels examined.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Learning-rate rewinding (LRR)",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": ", which continues training with learned weights after pruning and resets the learning rate schedule rather than rewinding weights to their initial values,",
+          "label": "elaboration",
+          "of_terms": [
+            "Learning-rate rewinding (LRR)"
+          ]
+        },
+        {
+          "text": " achieves higher or more stable test accuracy than the standard Iterative Magnitude Pruning (IMP) approach at high sparsity across the evaluated architectures",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (ResNet-18, VGG11, and Vision Transformer ViT-tiny)",
+          "label": "elaboration",
+          "of_terms": [
+            "the evaluated architectures"
+          ]
+        },
+        {
+          "text": " on CIFAR10, for both deterministic and Bayesian neural network variants;",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " LRR produces matching or surpassing accuracy in many cases",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " and ",
+          "label": "connection"
+        },
+        {
+          "text": "stabilizes performance up to the highest sparsity levels examined.",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1233032154137493546::conclusion_8",
+    "global_id": "gcn_25be0f4f68dd4b3f",
+    "order": 8,
+    "title": "Model scaling and learning rate effects on winning tickets in Bayesian neural networks mirror deterministic behavior with trade-offs",
+    "content": "Increasing model size (ResNet-110, VGG19, and ViT-base) improves absolute test accuracy of both deterministic and Bayesian models and preserves the qualitative existence of winning tickets across sparsity levels on CIFAR10; regarding learning-rate schedules, lower base learning rates and learning rate warmup can produce matching or sometimes surpassing tickets relative to the dense model, but this comes at the cost of a lower maximum accuracy overall (the dense model itself achieves lower accuracy), while higher learning rates tend to yield the best-performing tickets at high sparsity in this experimental setup.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Increasing model size ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "ResNet-110, VGG19, and ViT-base",
+          "label": "instance",
+          "of_terms": [
+            "model size"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " improves absolute test accuracy of both deterministic and Bayesian models",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " and ",
+          "label": "connection"
+        },
+        {
+          "text": "preserves the qualitative existence of winning tickets across sparsity levels on CIFAR10",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "; ",
+          "label": "other"
+        },
+        {
+          "text": "regarding learning-rate schedules, ",
+          "label": "framing"
+        },
+        {
+          "text": "lower base learning rates and learning rate warmup can produce matching or sometimes surpassing tickets relative to the dense model",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": ", but ",
+          "label": "connection"
+        },
+        {
+          "text": "this comes at the cost of a lower maximum accuracy overall ",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": "(",
+          "label": "other"
+        },
+        {
+          "text": "the dense model itself achieves lower accuracy",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": ", while ",
+          "label": "connection"
+        },
+        {
+          "text": "higher learning rates tend to yield the best-performing tickets at high sparsity in this experimental setup.",
+          "label": "assertion",
+          "number": 6
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

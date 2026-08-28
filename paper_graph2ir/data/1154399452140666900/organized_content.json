@@ -1,0 +1,1222 @@
+[
+  {
+    "id": "paper:1154399452140666900::conclusion_1",
+    "global_id": "gcn_bd476a97df60403f",
+    "order": 1,
+    "title": "MesoNet achieves 56.2% test accuracy at 80% sparsity on OpenForensic via IMP with global thresholds",
+    "content": "MesoNet, pruned using Iterative Magnitude Pruning (IMP) with global thresholds (20% weight removal per iteration for 8 rounds, applied uniformly across convolutional and MLP layers, Adam optimizer with learning rate $1\\times 10^{-4}$, early stopping patience 10), achieves 56.2% test accuracy at 80% sparsity on the OpenForensic dataset, using approximately 3,000 parameters (0.003M). This accuracy corresponds to 89.8% of the dense model's baseline accuracy (62.6%), demonstrating that a highly compressed MesoNet subnetwork preserves most of the original detection performance on this dataset.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "MesoNet, , achieves 56.2% test accuracy at 80% sparsity on the OpenForensic dataset, using approximately 3,000 parameters",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 9
+          },
+          {
+            "start": 262,
+            "end": 375
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "pruned using Iterative Magnitude Pruning (IMP) with global thresholds",
+        "source_spans": [
+          {
+            "start": 9,
+            "end": 79
+          }
+        ],
+        "of_terms": [
+          "MesoNet"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(20% weight removal per iteration for 8 rounds, applied uniformly across convolutional and MLP layers, Adam optimizer with learning rate $1\\times 10^{-4}$, early stopping patience 10)",
+        "source_spans": [
+          {
+            "start": 79,
+            "end": 262
+          }
+        ],
+        "of_terms": [
+          "global thresholds"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(0.003M).",
+        "source_spans": [
+          {
+            "start": 375,
+            "end": 385
+          }
+        ],
+        "of_terms": [
+          "approximately 3,000 parameters"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "This accuracy corresponds to 89.8% of the dense model's baseline accuracy",
+        "source_spans": [
+          {
+            "start": 385,
+            "end": 459
+          }
+        ],
+        "supports": [
+          8
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(62.6%)",
+        "source_spans": [
+          {
+            "start": 459,
+            "end": 466
+          }
+        ],
+        "of_terms": [
+          "the dense model's baseline accuracy"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "论证",
+        "content": ", demonstrating that",
+        "source_spans": [
+          {
+            "start": 466,
+            "end": 487
+          }
+        ],
+        "supports": [
+          8
+        ]
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "a highly compressed MesoNet subnetwork preserves most of the original detection performance on this dataset.",
+        "source_spans": [
+          {
+            "start": 487,
+            "end": 595
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_2",
+    "global_id": "gcn_6c733ea8599c4d29",
+    "order": 2,
+    "title": "CNN-5, ResNet-18, and XceptionNet maintain near-baseline accuracy at 80% sparsity on OpenForensic via IMP with global thresholds",
+    "content": "For CNN-5, ResNet-18, and XceptionNet on the OpenForensic dataset, Iterative Magnitude Pruning (IMP) with global thresholds (20% weight removal per iteration for 8 rounds, uniformly across layers, Adam lr=$1\\times 10^{-4}$, early stopping patience 10) yields 80%-sparsity test accuracies of 90.88% (99.4% of the dense baseline 91.41%), 94.29% (99.9% of the dense baseline 94.3%), and 96.11% (99.9% of the dense baseline 96.20%), respectively. Thus, at 80% sparsity on this dataset, these architectures contain sparse subnetworks that preserve almost all original performance.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "论据",
+        "content": "For CNN-5, ResNet-18, and XceptionNet on the OpenForensic dataset, Iterative Magnitude Pruning (IMP) with global thresholds yields 80%-sparsity test accuracies of 90.88% , 94.29% , and 96.11% , respectively.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 124
+          },
+          {
+            "start": 252,
+            "end": 298
+          },
+          {
+            "start": 334,
+            "end": 343
+          },
+          {
+            "start": 378,
+            "end": 391
+          },
+          {
+            "start": 427,
+            "end": 443
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(20% weight removal per iteration for 8 rounds, uniformly across layers, Adam lr=$1\\times 10^{-4}$, early stopping patience 10)",
+        "source_spans": [
+          {
+            "start": 124,
+            "end": 252
+          }
+        ],
+        "of_terms": [
+          "global thresholds",
+          "Iterative Magnitude Pruning (IMP)"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(99.4% of the dense baseline 91.41%)",
+        "source_spans": [
+          {
+            "start": 298,
+            "end": 334
+          }
+        ],
+        "of_terms": [
+          "90.88%"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(99.9% of the dense baseline 94.3%)",
+        "source_spans": [
+          {
+            "start": 343,
+            "end": 378
+          }
+        ],
+        "of_terms": [
+          "94.29%"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(99.9% of the dense baseline 96.20%)",
+        "source_spans": [
+          {
+            "start": 391,
+            "end": 427
+          }
+        ],
+        "of_terms": [
+          "96.11%"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 443,
+            "end": 449
+          }
+        ],
+        "connects": [
+          1,
+          7
+        ],
+        "expression": "[1] 推出 [7]"
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "at 80% sparsity on this dataset, these architectures contain sparse subnetworks that preserve almost all original performance.",
+        "source_spans": [
+          {
+            "start": 449,
+            "end": 575
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_3",
+    "global_id": "gcn_4553039df4ca4f2f",
+    "order": 3,
+    "title": "ResNet-18 achieves 83% accuracy at 80% sparsity on FaceForensics++ with IMP-local, outperforming dense baseline and IMP-global",
+    "content": "For the FaceForensics++ dataset (a dataset of 11,600 training images from face-cropped frames of 400 videos with varied compression and deepfake generation artifacts), ResNet-18 pruned with Iterative Magnitude Pruning (IMP) using local (per-layer) thresholds (20% weight removal per iteration for 8 rounds, Adam lr=$1\\times 10^{-4}$, early stopping patience 10) retains 83% test accuracy at 80% sparsity, outperforming both its dense baseline and the same network pruned using global thresholds. Thus, local pruning yields superior preservation of critical layer-specific features on compressed, challenging datasets.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For the FaceForensics++ dataset (a dataset of 11,600 training images from face-cropped frames of 400 videos with varied compression and deepfake generation artifacts), ResNet-18 pruned with Iterative Magnitude Pruning (IMP) using local (per-layer) thresholds (20% weight removal per iteration for 8 rounds, Adam lr=$1\\times 10^{-4}$, early stopping patience 10) retains 83% test accuracy at 80% sparsity, outperforming both its dense baseline and the same network pruned using global thresholds. Thus, local pruning yields superior preservation of critical layer-specific features on compressed, challenging datasets.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 617
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_4",
+    "global_id": "gcn_fd04e9f7d65c4d64",
+    "order": 4,
+    "title": "Iterative Magnitude Pruning (IMP) procedure and operational configuration for deepfake detection",
+    "content": "Iterative Magnitude Pruning (IMP) for deepfake detection is implemented as follows: initialize binary mask $\\mathbf{m}^{(0)} = \\mathbf{1}$; for each pruning round $j=1,\\dots,J$ (with $J=8$ rounds) train the network $\\mathcal{F}(\\mathbf{x}; \\mathbf{m}^{(j-1)} \\odot \\theta^{(j-1)})$ for one cycle, compute a pruning threshold $\\alpha^{(j)}$, and update the mask per-global or per-layer rules:\n      $$\n      \\mathbf{m}_l^{(j)}[i] =\n      \\begin{cases}\n      0 & \\text{if } |\\theta_l^{(j-1)}[i]| \\leq \\alpha^{(j)} \\text{ (global) or } \\alpha_l^{(j)} \\text{ (local)},\\\\\n      1 & \\text{otherwise},\n      \\end{cases}\n      $$\n      then set $\\theta^{(j)} = \\mathbf{m}^{(j)} \\odot \\theta^{(j-1)}$. Experimentally, the pruning schedule removes 20% of weights per iteration (cumulative up to 80%), applied uniformly to convolutional and MLP layers; training uses Adam with learning rate $1\\times 10^{-4}$, early stopping patience 10, and experiments are performed on a NVIDIA V4090 GPU. One-shot pruning corresponds to applying $\\mathbf{m}^{(1)}$ after one full training cycle.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "Iterative Magnitude Pruning (IMP) for deepfake detection",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 57
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "framing",
+        "content": "is implemented as follows:",
+        "source_spans": [
+          {
+            "start": 57,
+            "end": 84
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "initialize binary mask $\\mathbf{m}^{(0)} = \\mathbf{1}$; for each pruning round $j=1,\\dots,J$ (with $J=8$ rounds) train the network $\\mathcal{F}(\\mathbf{x}; \\mathbf{m}^{(j-1)} \\odot \\theta^{(j-1)})$ for one cycle, compute a pruning threshold $\\alpha^{(j)}$, and update the mask per-global or per-layer rules:",
+        "source_spans": [
+          {
+            "start": 84,
+            "end": 398
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "$$ \\mathbf{m}_l^{(j)}[i] = \\begin{cases} 0 & \\text{if } |\\theta_l^{(j-1)}[i]| \\leq \\alpha^{(j)} \\text{ (global) or } \\alpha_l^{(j)} \\text{ (local)},\\\\ 1 & \\text{otherwise}, \\end{cases} $$",
+        "source_spans": [
+          {
+            "start": 398,
+            "end": 628
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "then set $\\theta^{(j)} = \\mathbf{m}^{(j)} \\odot \\theta^{(j-1)}$.",
+        "source_spans": [
+          {
+            "start": 628,
+            "end": 693
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "Experimentally,",
+        "source_spans": [
+          {
+            "start": 693,
+            "end": 709
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "the pruning schedule removes 20% of weights per iteration (cumulative up to 80%), applied uniformly to convolutional and MLP layers;",
+        "source_spans": [
+          {
+            "start": 709,
+            "end": 842
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "training uses Adam with learning rate $1\\times 10^{-4}$, early stopping patience 10, and experiments are performed on a NVIDIA V4090 GPU.",
+        "source_spans": [
+          {
+            "start": 842,
+            "end": 980
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "other",
+        "content": "One-shot pruning",
+        "source_spans": [
+          {
+            "start": 980,
+            "end": 997
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "corresponds to applying $\\mathbf{m}^{(1)}$ after one full training cycle.",
+        "source_spans": [
+          {
+            "start": 997,
+            "end": 1070
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_5",
+    "global_id": "gcn_755990a703b24317",
+    "order": 5,
+    "title": "IMP, especially local IMP, consistently outperforms one-shot pruning at high sparsity across architectures and datasets",
+    "content": "Iterative Magnitude Pruning (IMP), and in particular IMP with local (per-layer) thresholds, consistently outperforms one-shot magnitude pruning (pruning all weights in a single step after one full training cycle) across MesoNet, CNN-5, ResNet-18, and XceptionNet on the OpenForensic and FaceForensics++ datasets. The performance gap increases at sparsity levels above 70%: at 80% sparsity, IMP-Local yields a 1–2 percentage-point accuracy advantage over one-shot pruning on OpenForensic and up to a 2–3 percentage-point advantage on FaceForensics++ across these models. This indicates that iterative refinement better preserves subtle discriminative features needed for deepfake detection.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Iterative Magnitude Pruning , and in particular IMP with local thresholds, consistently outperforms one-shot magnitude pruning across MesoNet, CNN-5, ResNet-18, and XceptionNet on the OpenForensic and FaceForensics++ datasets.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 28
+          },
+          {
+            "start": 33,
+            "end": 68
+          },
+          {
+            "start": 80,
+            "end": 144
+          },
+          {
+            "start": 213,
+            "end": 313
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 28,
+            "end": 33
+          }
+        ],
+        "of_terms": [
+          "Iterative Magnitude Pruning"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(per-layer)",
+        "source_spans": [
+          {
+            "start": 68,
+            "end": 80
+          }
+        ],
+        "of_terms": [
+          "local"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(pruning all weights in a single step after one full training cycle)",
+        "source_spans": [
+          {
+            "start": 144,
+            "end": 213
+          }
+        ],
+        "of_terms": [
+          "one-shot magnitude pruning"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "The performance gap increases at sparsity levels above 70%:",
+        "source_spans": [
+          {
+            "start": 313,
+            "end": 373
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "at 80% sparsity, IMP-Local yields a 1–2 percentage-point accuracy advantage over one-shot pruning on OpenForensic and up to a 2–3 percentage-point advantage on FaceForensics++ across these models.",
+        "source_spans": [
+          {
+            "start": 373,
+            "end": 570
+          }
+        ],
+        "supports": [
+          1,
+          5
+        ]
+      },
+      {
+        "number": 7,
+        "label": "relation",
+        "content": "This indicates that",
+        "source_spans": [
+          {
+            "start": 570,
+            "end": 590
+          }
+        ],
+        "connects": [
+          5,
+          6,
+          8
+        ],
+        "expression": "([5] 且 [6]) 推出 [8]"
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "iterative refinement better preserves subtle discriminative features needed for deepfake detection.",
+        "source_spans": [
+          {
+            "start": 590,
+            "end": 689
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_6",
+    "global_id": "gcn_260784b6e6fc4a54",
+    "order": 6,
+    "title": "Pruning strategy effectiveness is dataset-dependent: global better on OpenForensic, local better on FaceForensics++",
+    "content": "The effectiveness of global versus local pruning criteria in Iterative Magnitude Pruning (IMP) is dataset-dependent. Global pruning (using a single threshold based on all weights) generalizes better and is more stable on the cleaner, less compressed OpenForensic dataset (140,000 training images, no face cropping). Local pruning (using per-layer thresholds) better preserves accuracy on the challenging, heavily compressed FaceForensics++ dataset (11,600 training images from 400 face-cropped videos with varied compression artifacts). This indicates that dataset statistics and compression artifacts determine which pruning strategy best preserves manipulation-sensitive features.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The effectiveness of global versus local pruning criteria in Iterative Magnitude Pruning is dataset-dependent.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 89
+          },
+          {
+            "start": 95,
+            "end": 117
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 89,
+            "end": 95
+          }
+        ],
+        "of_terms": [
+          "Iterative Magnitude Pruning"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "论据",
+        "content": "Global pruning generalizes better and is more stable on the cleaner, less compressed OpenForensic dataset .",
+        "source_spans": [
+          {
+            "start": 117,
+            "end": 132
+          },
+          {
+            "start": 180,
+            "end": 271
+          },
+          {
+            "start": 314,
+            "end": 316
+          }
+        ],
+        "supports": [
+          1,
+          10
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(using a single threshold based on all weights)",
+        "source_spans": [
+          {
+            "start": 132,
+            "end": 180
+          }
+        ],
+        "of_terms": [
+          "Global pruning"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(140,000 training images, no face cropping)",
+        "source_spans": [
+          {
+            "start": 271,
+            "end": 314
+          }
+        ],
+        "of_terms": [
+          "OpenForensic dataset"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "Local pruning better preserves accuracy on the challenging, heavily compressed FaceForensics++ dataset .",
+        "source_spans": [
+          {
+            "start": 316,
+            "end": 330
+          },
+          {
+            "start": 359,
+            "end": 448
+          },
+          {
+            "start": 535,
+            "end": 537
+          }
+        ],
+        "supports": [
+          1,
+          10
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(using per-layer thresholds)",
+        "source_spans": [
+          {
+            "start": 330,
+            "end": 359
+          }
+        ],
+        "of_terms": [
+          "Local pruning"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(11,600 training images from 400 face-cropped videos with varied compression artifacts)",
+        "source_spans": [
+          {
+            "start": 448,
+            "end": 535
+          }
+        ],
+        "of_terms": [
+          "FaceForensics++ dataset"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "relation",
+        "content": "This indicates that",
+        "source_spans": [
+          {
+            "start": 537,
+            "end": 557
+          }
+        ],
+        "connects": [
+          3,
+          6,
+          10
+        ],
+        "expression": "[3] 且 [6] 推出 [10]"
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "dataset statistics and compression artifacts determine which pruning strategy best preserves manipulation-sensitive features.",
+        "source_spans": [
+          {
+            "start": 557,
+            "end": 682
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_7",
+    "global_id": "gcn_cf7a98a2c9304b2c",
+    "order": 7,
+    "title": "Grad-CAM shows pruned ResNet-18 models preserve attention on facial regions and shift toward high-frequency/temporal artifacts as sparsity increases",
+    "content": "Gradient-weighted Class Activation Mapping (Grad-CAM) comparisons between dense (0% sparsity) and pruned (60% and 80% sparsity) ResNet-18 models reveal that pruned subnetworks maintain concentrated attention on semantically meaningful facial regions, notably the cheek and eye areas, even at 80% sparsity, while the attention maps contract and focus on smaller regions. The attention difference is quantified via the Frobenius norm $\\Delta L^c(p)=\\| L_{\\text{original}}^c - L_p^c \\|_F$, where $L_{\\text{original}}^c$ is the Grad-CAM heatmap for class $c$ from the original dense model and $L_p^c$ is the heatmap from the model at pruning rate $p$. Additionally, qualitative analysis of Grad-CAM heatmaps indicates that pruned networks increasingly emphasize high-frequency artifacts and temporal inconsistencies over broader semantic features as sparsity increases.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Gradient-weighted Class Activation Mapping (Grad-CAM) comparisons between dense (0% sparsity) and pruned (60% and 80% sparsity) ResNet-18 models reveal that",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 157
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "pruned subnetworks maintain concentrated attention on semantically meaningful facial regions even at 80% sparsity,",
+        "source_spans": [
+          {
+            "start": 157,
+            "end": 249
+          },
+          {
+            "start": 284,
+            "end": 306
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": ", notably",
+        "source_spans": [
+          {
+            "start": 249,
+            "end": 259
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "instance",
+        "content": "the cheek and eye areas,",
+        "source_spans": [
+          {
+            "start": 259,
+            "end": 284
+          }
+        ],
+        "of_terms": [
+          "semantically meaningful facial regions"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "connection",
+        "content": "while",
+        "source_spans": [
+          {
+            "start": 306,
+            "end": 312
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "the attention maps contract and focus on smaller regions.",
+        "source_spans": [
+          {
+            "start": 312,
+            "end": 370
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "The attention difference is quantified via the Frobenius norm $\\Delta L^c(p)=\\| L_{\\text{original}}^c - L_p^c \\|_F$, where $L_{\\text{original}}^c$ is the Grad-CAM heatmap for class $c$ from the original dense model and $L_p^c$ is the heatmap from the model at pruning rate $p$.",
+        "source_spans": [
+          {
+            "start": 370,
+            "end": 648
+          }
+        ],
+        "of": [
+          2,
+          6
+        ]
+      },
+      {
+        "number": 8,
+        "label": "connection",
+        "content": "Additionally,",
+        "source_spans": [
+          {
+            "start": 648,
+            "end": 662
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "framing",
+        "content": "qualitative analysis of Grad-CAM heatmaps indicates that",
+        "source_spans": [
+          {
+            "start": 662,
+            "end": 719
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "pruned networks increasingly emphasize high-frequency artifacts and temporal inconsistencies over broader semantic features as sparsity increases.",
+        "source_spans": [
+          {
+            "start": 719,
+            "end": 865
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_8",
+    "global_id": "gcn_969994f644fc4a65",
+    "order": 8,
+    "title": "Sparse subnetworks discovered via IMP on OpenForensic transfer to FaceForensics++ with minor accuracy degradation or modest improvement",
+    "content": "Sparse subnetworks (winning tickets) discovered via Iterative Magnitude Pruning (IMP) on the larger OpenForensic dataset transfer effectively to the smaller FaceForensics++ dataset when evaluated directly (zero-shot) with no fine-tuning. At 60% sparsity, an IMP-pruned MesoNet achieves 61.2% accuracy on FaceForensics++, compared to its dense baseline accuracy on FaceForensics++ of 59.9%. At 80% sparsity, an IMP-pruned CNN-5 subnetwork achieves 74.5% accuracy (dense baseline on FaceForensics++: 76.2%) and an IMP-pruned ResNet-18 subnetwork achieves 83.7% accuracy (dense baseline: 85.3%). Thus, subnetworks found on a larger source dataset can be reused on a smaller target dataset with minor accuracy degradation or, in some cases, modest improvement.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Sparse subnetworks discovered via Iterative Magnitude Pruning on the larger OpenForensic dataset transfer effectively to the smaller FaceForensics++ dataset when evaluated directly with no fine-tuning.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 19
+          },
+          {
+            "start": 37,
+            "end": 80
+          },
+          {
+            "start": 86,
+            "end": 205
+          },
+          {
+            "start": 217,
+            "end": 238
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(winning tickets)",
+        "source_spans": [
+          {
+            "start": 19,
+            "end": 37
+          }
+        ],
+        "of_terms": [
+          "Sparse subnetworks"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 80,
+            "end": 86
+          }
+        ],
+        "of_terms": [
+          "Iterative Magnitude Pruning"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(zero-shot)",
+        "source_spans": [
+          {
+            "start": 205,
+            "end": 217
+          }
+        ],
+        "of_terms": [
+          "directly"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "At 60% sparsity, an IMP-pruned MesoNet achieves 61.2% accuracy on FaceForensics++, compared to its dense baseline accuracy on FaceForensics++ of 59.9%.",
+        "source_spans": [
+          {
+            "start": 238,
+            "end": 390
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "At 80% sparsity, an IMP-pruned CNN-5 subnetwork achieves 74.5% accuracy (dense baseline on FaceForensics++: 76.2%)",
+        "source_spans": [
+          {
+            "start": 390,
+            "end": 505
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 7,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 505,
+            "end": 509
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "论据",
+        "content": "an IMP-pruned ResNet-18 subnetwork achieves 83.7% accuracy (dense baseline: 85.3%).",
+        "source_spans": [
+          {
+            "start": 509,
+            "end": 593
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 9,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 593,
+            "end": 599
+          }
+        ],
+        "connects": [
+          1,
+          5,
+          6,
+          8,
+          10
+        ],
+        "expression": "([1] 且 [5] 且 [6] 且 [8]) 推出 [10]"
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "subnetworks found on a larger source dataset can be reused on a smaller target dataset with minor accuracy degradation or, in some cases, modest improvement.",
+        "source_spans": [
+          {
+            "start": 599,
+            "end": 756
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_9",
+    "global_id": "gcn_3bc85253dba14160",
+    "order": 9,
+    "title": "ResNet-18 exhibits greater redundancy and stronger lottery-ticket behavior than MesoNet under iterative magnitude pruning",
+    "content": "Larger, deeper architectures such as ResNet-18 (11.7M parameters) exhibit greater redundancy and stronger lottery-ticket behavior (retaining near-original performance at high sparsity) on both the OpenForensic and FaceForensics++ datasets when pruned using Iterative Magnitude Pruning (IMP). Compact networks such as MesoNet (0.015M parameters) are more sensitive to pruning and degrade more quickly. This establishes an architecture-dependent trade-off between base model compactness and compressibility: starting with a larger model yields subnetworks that are both small and robust, while very compact models may lack sufficient redundancy to tolerate extreme pruning.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "论据",
+        "content": "Larger, deeper architectures exhibit greater redundancy and stronger lottery-ticket behavior on both the OpenForensic and FaceForensics++ datasets when pruned using Iterative Magnitude Pruning (IMP).",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 29
+          },
+          {
+            "start": 66,
+            "end": 130
+          },
+          {
+            "start": 185,
+            "end": 292
+          }
+        ],
+        "supports": [
+          9,
+          10
+        ]
+      },
+      {
+        "number": 2,
+        "label": "framing",
+        "content": "such as",
+        "source_spans": [
+          {
+            "start": 29,
+            "end": 37
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "instance",
+        "content": "ResNet-18 (11.7M parameters)",
+        "source_spans": [
+          {
+            "start": 37,
+            "end": 66
+          }
+        ],
+        "of_terms": [
+          "larger, deeper architectures"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(retaining near-original performance at high sparsity)",
+        "source_spans": [
+          {
+            "start": 130,
+            "end": 185
+          }
+        ],
+        "of_terms": [
+          "stronger lottery-ticket behavior"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "Compact networks are more sensitive to pruning and degrade more quickly.",
+        "source_spans": [
+          {
+            "start": 292,
+            "end": 309
+          },
+          {
+            "start": 345,
+            "end": 401
+          }
+        ],
+        "supports": [
+          9,
+          12
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "such as",
+        "source_spans": [
+          {
+            "start": 309,
+            "end": 317
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "instance",
+        "content": "MesoNet (0.015M parameters)",
+        "source_spans": [
+          {
+            "start": 317,
+            "end": 345
+          }
+        ],
+        "of_terms": [
+          "Compact networks"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "framing",
+        "content": "This establishes",
+        "source_spans": [
+          {
+            "start": 401,
+            "end": 418
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "an architecture-dependent trade-off between base model compactness and compressibility:",
+        "source_spans": [
+          {
+            "start": 418,
+            "end": 506
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "starting with a larger model yields subnetworks that are both small and robust",
+        "source_spans": [
+          {
+            "start": 506,
+            "end": 584
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "connection",
+        "content": ", while",
+        "source_spans": [
+          {
+            "start": 584,
+            "end": 592
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "very compact models may lack sufficient redundancy to tolerate extreme pruning.",
+        "source_spans": [
+          {
+            "start": 592,
+            "end": 671
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1154399452140666900::conclusion_10",
+    "global_id": "gcn_0c35f3a574024196",
+    "order": 10,
+    "title": "IMP yields better transferability than one-shot pruning across architectures and sparsity levels in zero-shot cross-dataset evaluation",
+    "content": "In cross-dataset transfer experiments (zero-shot from OpenForensic to FaceForensics++), subnetworks produced by Iterative Magnitude Pruning (IMP) consistently outperform one-shot-pruned subnetworks at both 60% and 80% sparsity across MesoNet, CNN-5, and ResNet-18. This indicates that iterative pruning produces subnetworks with superior generalization across datasets.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "In cross-dataset transfer experiments , subnetworks produced by Iterative Magnitude Pruning consistently outperform one-shot-pruned subnetworks at both 60% and 80% sparsity across MesoNet, CNN-5, and ResNet-18.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 38
+          },
+          {
+            "start": 86,
+            "end": 140
+          },
+          {
+            "start": 146,
+            "end": 265
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "instance",
+        "content": "(zero-shot from OpenForensic to FaceForensics++)",
+        "source_spans": [
+          {
+            "start": 38,
+            "end": 86
+          }
+        ],
+        "of_terms": [
+          "cross-dataset transfer experiments"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 140,
+            "end": 146
+          }
+        ],
+        "of_terms": [
+          "Iterative Magnitude Pruning"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "relation",
+        "content": "This indicates that",
+        "source_spans": [
+          {
+            "start": 265,
+            "end": 285
+          }
+        ],
+        "connects": [
+          1,
+          5
+        ],
+        "expression": "[1] 推出 [5]"
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "iterative pruning produces subnetworks with superior generalization across datasets.",
+        "source_spans": [
+          {
+            "start": 285,
+            "end": 369
+          }
+        ]
+      }
+    ]
+  }
+]

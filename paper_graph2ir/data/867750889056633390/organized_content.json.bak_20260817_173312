@@ -1,0 +1,741 @@
+[
+  {
+    "id": "paper:867750889056633390::conclusion_1",
+    "global_id": "gcn_866af248db6d47cb",
+    "order": 1,
+    "title": "Elastic Lottery Ticket Hypothesis (E-LTH) for networks in the same design family",
+    "content": "Elastic Lottery Ticket Hypothesis (E-LTH): For networks within the same design family (architectures that share stage structure and repeating blocks, e.g., ResNets or VGGs), a winning ticket (a subnetwork characterized by a binary mask and weights rewound to an early training point) found by Iterative Magnitude-based Pruning (IMP) on one network (the source) can be transformed into a competitive winning ticket for another network in the same family (the target) of different depth by mindfully replicating (for deeper targets), dropping (for shallower targets), and re-ordering the source network's layers/blocks and their corresponding binary mask, producing a subnetwork for the target that attains performance nearly as high as a winning ticket obtained by running IMP directly on the target.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Elastic Lottery Ticket Hypothesis (E-LTH): For networks within the same design family , a winning ticket found by Iterative Magnitude-based Pruning (IMP) on one network can be transformed into a competitive winning ticket for another network in the same family of different depth by mindfully replicating , dropping , and re-ordering the source network's layers/blocks and their corresponding binary mask, producing a subnetwork for the target that attains performance nearly as high as a winning ticket obtained by running IMP directly on the target.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 87
+          },
+          {
+            "start": 171,
+            "end": 192
+          },
+          {
+            "start": 282,
+            "end": 349
+          },
+          {
+            "start": 359,
+            "end": 454
+          },
+          {
+            "start": 464,
+            "end": 511
+          },
+          {
+            "start": 529,
+            "end": 542
+          },
+          {
+            "start": 563,
+            "end": 799
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(architectures that share stage structure and repeating blocks, e.g., ResNets or VGGs)",
+        "source_spans": [
+          {
+            "start": 87,
+            "end": 171
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(a subnetwork characterized by a binary mask and weights rewound to an early training point)",
+        "source_spans": [
+          {
+            "start": 192,
+            "end": 282
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(the source)",
+        "source_spans": [
+          {
+            "start": 349,
+            "end": 359
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(the target)",
+        "source_spans": [
+          {
+            "start": 454,
+            "end": 464
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(for deeper targets)",
+        "source_spans": [
+          {
+            "start": 511,
+            "end": 529
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(for shallower targets)",
+        "source_spans": [
+          {
+            "start": 542,
+            "end": 563
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_2",
+    "global_id": "gcn_f10b53d122ad4794",
+    "order": 2,
+    "title": "Elastic Ticket Transformations (ETTs): a concrete set of mappings for transferring winning tickets across depths",
+    "content": "Elastic Ticket Transformations (ETTs) are a concrete set of transformation mappings \\(g(\\cdot,\\cdot)\\) and \\(h(\\cdot,\\cdot)\\) that take a source winning ticket's rewound weights (weights from an early training stage, i.e., after a small number of training steps) and binary mask (a binary vector indicating retained weights) and construct target-network weights and mask by (a) choosing a minimal replication unit (residual block in ResNets, convolution+normalization layer in VGG), (b) preserving invariant components (number of stages, down-sampling blocks, and input/output layers), (c) replicating selected source units to deepen the network or dropping selected units to shorten it, and (d) choosing replication ordering strategies (appending or interpolation). ETTs keep the source mask structure for existing units and copy masks/weights into replicated units; they aim to approximately preserve per-stage sparsity (fraction of zero weights per stage) while producing target masks usable without running Iterative Magnitude-based Pruning (IMP) on the target.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "Elastic Ticket Transformations (ETTs) are a concrete set of transformation mappings \\(g(\\cdot,\\cdot)\\) and \\(h(\\cdot,\\cdot)\\) that take a source winning ticket's rewound weights (weights from an early training stage, i.e., after a small number of training steps) and binary mask (a binary vector indicating retained weights) and construct target-network weights and mask by (a) choosing a minimal replication unit (residual block in ResNets, convolution+normalization layer in VGG), (b) preserving invariant components (number of stages, down-sampling blocks, and input/output layers), (c) replicating selected source units to deepen the network or dropping selected units to shorten it, and (d) choosing replication ordering strategies (appending or interpolation).",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 767
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "ETTs keep the source mask structure for existing units and copy masks/weights into replicated units; they aim to approximately preserve per-stage sparsity (fraction of zero weights per stage) while producing target masks usable without running Iterative Magnitude-based Pruning (IMP) on the target.",
+        "source_spans": [
+          {
+            "start": 767,
+            "end": 1065
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_3",
+    "global_id": "gcn_e98cb8d892fc4179",
+    "order": 3,
+    "title": "ETT-transferred winning tickets closely match IMP performance on CIFAR-10 across ResNet and VGG models",
+    "content": "Applying Elastic Ticket Transformations (ETTs) to transform Iterative Magnitude-based Pruning (IMP)-found winning tickets across ResNet and VGG depths on CIFAR-10 yields transferred tickets whose trained accuracies are nearly the same as those of IMP-found winning tickets on the target models across a wide range of sparsities (fraction of zero weights). Representative numerical outcomes: for ResNet-32 at 90% sparsity, the dense model accuracy is 93.83%; E-LTH transferred tickets incur an accuracy drop of -0.96% relative to the dense model (i.e., achieve approximately 92.87%). For ResNet-56 at 90% sparsity, dense accuracy is 94.51% and E-LTH drop is -0.50% (i.e., approximately 94.01%). Across multiple ResNet depths and VGG-13/16/19 transforms, ETTs consistently outperform alternative pruning-at-initialization methods (e.g., SNIP and GraSP), particularly at high sparsities.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Applying Elastic Ticket Transformations (ETTs) to transform Iterative Magnitude-based Pruning (IMP)-found winning tickets across ResNet and VGG depths on CIFAR-10 yields transferred tickets whose trained accuracies are nearly the same as those of IMP-found winning tickets on the target models across a wide range of sparsities .",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 328
+          },
+          {
+            "start": 354,
+            "end": 356
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(fraction of zero weights)",
+        "source_spans": [
+          {
+            "start": 328,
+            "end": 354
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "example of the assertion [1]",
+        "content": "Representative numerical outcomes: for ResNet-32 at 90% sparsity, the dense model accuracy is 93.83%; E-LTH transferred tickets incur an accuracy drop of -0.96% relative to the dense model (i.e., achieve approximately 92.87%). For ResNet-56 at 90% sparsity, dense accuracy is 94.51% and E-LTH drop is -0.50% (i.e., approximately 94.01%).",
+        "source_spans": [
+          {
+            "start": 356,
+            "end": 694
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "Across multiple ResNet depths and VGG-13/16/19 transforms, ETTs consistently outperform alternative pruning-at-initialization methods , particularly at high sparsities.",
+        "source_spans": [
+          {
+            "start": 694,
+            "end": 828
+          },
+          {
+            "start": 850,
+            "end": 884
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(e.g., SNIP and GraSP)",
+        "source_spans": [
+          {
+            "start": 828,
+            "end": 850
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_4",
+    "global_id": "gcn_bfd214f8a7d44f92",
+    "order": 4,
+    "title": "ETT-transferred tickets approach IMP performance on ImageNet at 73.79% sparsity",
+    "content": "On ImageNet at sparsity 73.79% (fraction of zero weights), Elastic Ticket Transformation (ETT)-transferred tickets for ResNet architectures attain top-1 accuracies close to Iterative Magnitude-based Pruning (IMP)-found tickets and substantially above pruning-at-initialization baselines (e.g., SNIP and GraSP). The reported accuracies are: dense model top-1 accuracies: ResNet-18 69.96%, ResNet-26 72.56%, ResNet-34 73.77%; IMP accuracies: 70.22%, 72.94%, 74.20% respectively; ETTs transferred from ResNet-26 yield ResNet-18: 68.17%, ResNet-34: 73.37%; ETTs transferred from ResNet-18 yield ResNet-26: 71.29%, ResNet-34: 71.86%. Compared to SNIP (e.g., 62.23%, 67.51%, 69.35%) and GraSP (62.85%, 67.24%, 69.23%), ETTs are much closer to IMP.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "On ImageNet at sparsity 73.79% (fraction of zero weights), Elastic Ticket Transformation (ETT)-transferred tickets for ResNet architectures attain top-1 accuracies close to Iterative Magnitude-based Pruning (IMP)-found tickets and substantially above pruning-at-initialization baselines (e.g., SNIP and GraSP).",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 311
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "proof of the assertion [1]",
+        "content": "The reported accuracies are: dense model top-1 accuracies: ResNet-18 69.96%, ResNet-26 72.56%, ResNet-34 73.77%; IMP accuracies: 70.22%, 72.94%, 74.20% respectively; ETTs transferred from ResNet-26 yield ResNet-18: 68.17%, ResNet-34: 73.37%; ETTs transferred from ResNet-18 yield ResNet-26: 71.29%, ResNet-34: 71.86%.",
+        "source_spans": [
+          {
+            "start": 311,
+            "end": 629
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [1]",
+        "content": "Compared to SNIP (e.g., 62.23%, 67.51%, 69.35%) and GraSP (62.85%, 67.24%, 69.23%), ETTs are much closer to IMP.",
+        "source_spans": [
+          {
+            "start": 629,
+            "end": 741
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_5",
+    "global_id": "gcn_6e1fe8ba5eaa4833",
+    "order": 5,
+    "title": "ETT-transferred tickets substantially outperform pruning-at-initialization baselines across CIFAR-10 and ImageNet",
+    "content": "Across CIFAR-10 and ImageNet experiments, transferred tickets produced by Elastic Ticket Transformations (ETTs) substantially outperform state-of-the-art pruning-at-initialization methods (e.g., SNIP, GraSP) and one-shot magnitude pruning baselines at matched sparsity levels (fraction of zero weights). Example ImageNet numbers: for ResNet-26 at 73.79% sparsity, SNIP = 67.51%, GraSP = 67.24%, one-shot magnitude pruning = 68.51%, while ETTs transferred from ResNet-18 achieve 71.29% and Iterative Magnitude-based Pruning (IMP) = 72.94%. On CIFAR-10, similar superior performance gaps are observed across multiple ResNet and VGG depth transforms at sparsities above 80%.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Across CIFAR-10 and ImageNet experiments, transferred tickets produced by Elastic Ticket Transformations (ETTs) substantially outperform state-of-the-art pruning-at-initialization methods and one-shot magnitude pruning baselines at matched sparsity levels",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 188
+          },
+          {
+            "start": 208,
+            "end": 276
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(e.g., SNIP, GraSP)",
+        "source_spans": [
+          {
+            "start": 188,
+            "end": 208
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(fraction of zero weights).",
+        "source_spans": [
+          {
+            "start": 276,
+            "end": 304
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "example of the assertion [1]",
+        "content": "Example ImageNet numbers: for ResNet-26 at 73.79% sparsity, SNIP = 67.51%, GraSP = 67.24%, one-shot magnitude pruning = 68.51%, while ETTs transferred from ResNet-18 achieve 71.29% and Iterative Magnitude-based Pruning (IMP) = 72.94%.",
+        "source_spans": [
+          {
+            "start": 304,
+            "end": 539
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "example of the assertion [1]",
+        "content": "On CIFAR-10, similar superior performance gaps are observed across multiple ResNet and VGG depth transforms at sparsities above 80%.",
+        "source_spans": [
+          {
+            "start": 539,
+            "end": 671
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_6",
+    "global_id": "gcn_38f3445f5d754862",
+    "order": 6,
+    "title": "E-LTH achieves comparable accuracy to dynamic sparse training at competitive amortized computational cost",
+    "content": "When comparing total computational cost (FLOPs) and accuracy over a suite of target models, Elastic Lottery Ticket Hypothesis (E-LTH)—where Iterative Magnitude-based Pruning (IMP) is run once on a source model and Elastic Ticket Transformations (ETTs) produce tickets for multiple targets—achieves comparable accuracies to dynamic sparse training (DST) methods while being cost-competitive or cheaper when amortized across multiple target architectures. Representative comparisons on ImageNet with ResNet-18/26/34 at 73.79% sparsity (using ResNet-26 as source) show E-LTH accuracies: ResNet-18 68.17%, ResNet-26 72.94%, ResNet-34 73.37%, versus RigL (a DST method) with 5x training (RigL-5x) accuracies: 69.59%, 72.66%, 73.88%. FLOPs normalized by the FLOPs of one-pass standard dense training on ResNet-34: RigL requires up to 1.30x normalized FLOPs for ResNet-34, while E-LTH uses 2.77x FLOPs once for source IMP plus small per-target training (0.14x for ResNet-18, 0.20x for ResNet-26, 0.26x for ResNet-34), making E-LTH comparable overall and more favorable as the number of target architectures increases. Against DPF (dynamic model pruning with feedback) on CIFAR-10, E-LTH matches or slightly improves accuracy drops at 90% and 95% sparsity and uses lower total FLOPs (1.26 billion FLOPs vs 1.49 billion FLOPs) to obtain sparse models across five ResNet variants (ResNet-14, -20, -32, -44, -56).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "When comparing total computational cost (FLOPs) and accuracy over a suite of target models, Elastic Lottery Ticket Hypothesis (E-LTH) achieves comparable accuracies to dynamic sparse training (DST) methods while being cost-competitive or cheaper when amortized across multiple target architectures.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 133
+          },
+          {
+            "start": 289,
+            "end": 454
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "—where Iterative Magnitude-based Pruning (IMP) is run once on a source model and Elastic Ticket Transformations (ETTs) produce tickets for multiple targets—",
+        "source_spans": [
+          {
+            "start": 133,
+            "end": 289
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [1]",
+        "content": "Representative comparisons on ImageNet with ResNet-18/26/34 at 73.79% sparsity (using ResNet-26 as source) show E-LTH accuracies: ResNet-18 68.17%, ResNet-26 72.94%, ResNet-34 73.37%, versus RigL (a DST method) with 5x training (RigL-5x) accuracies: 69.59%, 72.66%, 73.88%.",
+        "source_spans": [
+          {
+            "start": 454,
+            "end": 728
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "proof of the assertion [1]",
+        "content": "FLOPs normalized by the FLOPs of one-pass standard dense training on ResNet-34: RigL requires up to 1.30x normalized FLOPs for ResNet-34, while E-LTH uses 2.77x FLOPs once for source IMP plus small per-target training (0.14x for ResNet-18, 0.20x for ResNet-26, 0.26x for ResNet-34), making E-LTH comparable overall and more favorable as the number of target architectures increases.",
+        "source_spans": [
+          {
+            "start": 728,
+            "end": 1111
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "Against DPF (dynamic model pruning with feedback) on CIFAR-10, E-LTH matches or slightly improves accuracy drops at 90% and 95% sparsity and uses lower total FLOPs (1.26 billion FLOPs vs 1.49 billion FLOPs) to obtain sparse models across five ResNet variants (ResNet-14, -20, -32, -44, -56).",
+        "source_spans": [
+          {
+            "start": 1111,
+            "end": 1402
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_7",
+    "global_id": "gcn_d35c80781e2d49da",
+    "order": 7,
+    "title": "Ablation-derived design rules for effective ETT construction on ResNets",
+    "content": "Empirical ablations on CIFAR-10 using ResNet-32 and ResNet-56 yield actionable design rules for Elastic Ticket Transformations (ETTs) when transferring winning tickets across ResNet depths: (a) choose minimal replication units consistent with model structure (residual blocks for ResNets; convolutional layer plus normalization layer for VGG); (b) preserve number of stages (groups of blocks delimited by down-sampling), down-sampling blocks, and input/output layers; (c) when stretching (deepening), prefer replicating more distinct source blocks fewer times (i.e., replicate unique units) rather than repeating the same unit many times to better preserve per-stage sparsity (fraction of zero weights per stage); (d) replication ordering can be interpolation (replicated block inserted immediately after its source block) or appending (replicated blocks appended after the last block) with comparable performance; (e) prefer replicating or dropping later blocks less aggressively and avoid dropping too many early blocks (dropping many early blocks degrades accuracy); (f) these choices matter more at high sparsity levels.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Empirical ablations on CIFAR-10 using ResNet-32 and ResNet-56 yield actionable design rules for Elastic Ticket Transformations (ETTs) when transferring winning tickets across ResNet depths:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 190
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "(a) choose minimal replication units consistent with model structure",
+        "source_spans": [
+          {
+            "start": 190,
+            "end": 259
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(residual blocks for ResNets; convolutional layer plus normalization layer for VGG);",
+        "source_spans": [
+          {
+            "start": 259,
+            "end": 344
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "(b) preserve number of stages down-sampling blocks, and input/output layers;",
+        "source_spans": [
+          {
+            "start": 344,
+            "end": 374
+          },
+          {
+            "start": 421,
+            "end": 468
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(groups of blocks delimited by down-sampling),",
+        "source_spans": [
+          {
+            "start": 374,
+            "end": 421
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "(c) when stretching prefer replicating more distinct source blocks fewer times rather than repeating the same unit many times to better preserve per-stage sparsity",
+        "source_spans": [
+          {
+            "start": 468,
+            "end": 488
+          },
+          {
+            "start": 501,
+            "end": 560
+          },
+          {
+            "start": 591,
+            "end": 676
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(deepening),",
+        "source_spans": [
+          {
+            "start": 488,
+            "end": 501
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(i.e., replicate unique units)",
+        "source_spans": [
+          {
+            "start": 560,
+            "end": 591
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(fraction of zero weights per stage);",
+        "source_spans": [
+          {
+            "start": 676,
+            "end": 714
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "(d) replication ordering can be interpolation or appending with comparable performance;",
+        "source_spans": [
+          {
+            "start": 714,
+            "end": 760
+          },
+          {
+            "start": 823,
+            "end": 836
+          },
+          {
+            "start": 886,
+            "end": 915
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "(replicated block inserted immediately after its source block)",
+        "source_spans": [
+          {
+            "start": 760,
+            "end": 823
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "(replicated blocks appended after the last block)",
+        "source_spans": [
+          {
+            "start": 836,
+            "end": 886
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "assertion",
+        "content": "(e) prefer replicating or dropping later blocks less aggressively and avoid dropping too many early blocks",
+        "source_spans": [
+          {
+            "start": 915,
+            "end": 1022
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "proof of the assertion [13]",
+        "content": "(dropping many early blocks degrades accuracy);",
+        "source_spans": [
+          {
+            "start": 1022,
+            "end": 1070
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "assertion",
+        "content": "(f) these choices matter more at high sparsity levels.",
+        "source_spans": [
+          {
+            "start": 1070,
+            "end": 1124
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_8",
+    "global_id": "gcn_3dd9defe60c449a1",
+    "order": 8,
+    "title": "E-LTH generalizes to fully-connected layers and shows partial robustness across dataset shifts in preliminary tests",
+    "content": "Preliminary experiments show Elastic Ticket Transformations (ETTs) can transfer winning tickets that include fully-connected (FC) layers and can be combined with dataset transfer. (a) For VGG variants with differing numbers of FC layers (VGG-13-2, VGG-13-3, VGG-13-5) and for multi-layer perceptrons (MLPs) of varying widths on MNIST, E-LTH (the Elastic Lottery Ticket Hypothesis approach) transfers at 89.26% sparsity (fraction of zero weights) with ≤0.21% accuracy differences relative to directly trained winning tickets. (b) Transferring tickets across datasets and architectures shows that dataset shifts cause an accuracy drop and architectural shifts cause another drop, but these drops do not simply add linearly. For example, transferring a ResNet-20 winning ticket from SVHN to CIFAR-10 and from ResNet-20 to ResNet-32 simultaneously yields a 3.55% net accuracy drop compared to the Iterative Magnitude-based Pruning (IMP) baseline on the target (ResNet-32 on CIFAR-10: IMP accuracy 92.22% versus transferred accuracy 88.67%), demonstrating partial robustness. (c) For ImageNet to CIFAR-10 transfer, ETTs from ResNet-18 to ResNet-18 achieve 95.40% top-1 accuracy (dense model: 95.21%, IMP: 95.42%), and ETTs from ResNet-18 to ResNet-26 achieve 95.16%, showing small drops.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Preliminary experiments show Elastic Ticket Transformations (ETTs) can transfer winning tickets that include fully-connected (FC) layers and can be combined with dataset transfer.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 180
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "proof of the assertion [1]",
+        "content": "(a) For VGG variants with differing numbers of FC layers (VGG-13-2, VGG-13-3, VGG-13-5) and for multi-layer perceptrons (MLPs) of varying widths on MNIST, E-LTH (the Elastic Lottery Ticket Hypothesis approach) transfers at 89.26% sparsity (fraction of zero weights) with ≤0.21% accuracy differences relative to directly trained winning tickets.",
+        "source_spans": [
+          {
+            "start": 180,
+            "end": 525
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "(b) Transferring tickets across datasets and architectures shows that dataset shifts cause an accuracy drop and architectural shifts cause another drop, but these drops do not simply add linearly.",
+        "source_spans": [
+          {
+            "start": 525,
+            "end": 722
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "example of the assertion [3]",
+        "content": "For example, transferring a ResNet-20 winning ticket from SVHN to CIFAR-10 and from ResNet-20 to ResNet-32 simultaneously yields a 3.55% net accuracy drop compared to the Iterative Magnitude-based Pruning (IMP) baseline on the target (ResNet-32 on CIFAR-10: IMP accuracy 92.22% versus transferred accuracy 88.67%), demonstrating partial robustness.",
+        "source_spans": [
+          {
+            "start": 722,
+            "end": 1071
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "proof of the assertion [1]",
+        "content": "(c) For ImageNet to CIFAR-10 transfer, ETTs from ResNet-18 to ResNet-18 achieve 95.40% top-1 accuracy (dense model: 95.21%, IMP: 95.42%), and ETTs from ResNet-18 to ResNet-26 achieve 95.16%, showing small drops.",
+        "source_spans": [
+          {
+            "start": 1071,
+            "end": 1282
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867750889056633390::conclusion_9",
+    "global_id": "gcn_1aefe6318cf94ee9",
+    "order": 9,
+    "title": "Linear mode connectivity of ETT-transferred tickets degrades with larger depth gaps",
+    "content": "Transferred tickets via Elastic Ticket Transformations (ETTs) can exhibit linear mode connectivity (the property that a linear interpolation of the parameters of two independently trained models achieves test accuracy comparable to the endpoints) similar to Iterative Magnitude-based Pruning (IMP)-found winning tickets when the source and target are close in depth, but connectivity stability degrades as depth difference increases. Quantitatively: ETTs transferred from ResNet-20 to ResNet-32 on CIFAR-10 at 90% sparsity show a maximum interpolation accuracy drop of 8.72%, whereas ETTs from ResNet-14 to ResNet-32 show a much larger maximal drop of 69.72%. IMP-found tickets remain stable under linear interpolation (maximal drop near zero). Thus, ETTs better preserve linear connectivity when source and target belong to the same loss basin (smaller depth gap).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Transferred tickets via Elastic Ticket Transformations (ETTs) can exhibit linear mode connectivity similar to Iterative Magnitude-based Pruning (IMP)-found winning tickets when the source and target are close in depth, but connectivity stability degrades as depth difference increases.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 99
+          },
+          {
+            "start": 247,
+            "end": 434
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(the property that a linear interpolation of the parameters of two independently trained models achieves test accuracy comparable to the endpoints)",
+        "source_spans": [
+          {
+            "start": 99,
+            "end": 247
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [1]",
+        "content": "Quantitatively: ETTs transferred from ResNet-20 to ResNet-32 on CIFAR-10 at 90% sparsity show a maximum interpolation accuracy drop of 8.72%, whereas ETTs from ResNet-14 to ResNet-32 show a much larger maximal drop of 69.72%.",
+        "source_spans": [
+          {
+            "start": 434,
+            "end": 660
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "IMP-found tickets remain stable under linear interpolation (maximal drop near zero).",
+        "source_spans": [
+          {
+            "start": 660,
+            "end": 745
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "relation of the assertions [1,4]",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 745,
+            "end": 751
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "ETTs better preserve linear connectivity when source and target belong to the same loss basin",
+        "source_spans": [
+          {
+            "start": 751,
+            "end": 845
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(smaller depth gap).",
+        "source_spans": [
+          {
+            "start": 845,
+            "end": 865
+          }
+        ]
+      }
+    ]
+  }
+]

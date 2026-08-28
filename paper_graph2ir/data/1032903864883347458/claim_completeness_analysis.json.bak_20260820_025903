@@ -1,0 +1,292 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 1,
+    "label": "assertion",
+    "text": "The implicit mirror potential induced by the overparameterization $x=m\\odot w$ with initialization satisfying $m_{0,i} > |w_{0,i}|$ for all $i\\in[n]$ equals $$ R(x) \\;=\\; \\frac{1}{4}\\sum_{i=1}^n x_i\\,\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{2u_{0,i}v_{0,i}}\\right)\\;-\\;\\sqrt{x_i^2+4u_{0,i}^2v_{0,i}^2}\\;-\\;x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right), $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 4,
+    "label": "assertion",
+    "text": "The function $R$ is a Bregman potential",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 6,
+    "label": "assertion",
+    "text": "its smoothness depends on the initialization via the factor $2u_{0,i}v_{0,i}$.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 6,
+    "label": "assertion",
+    "text": "in the regime $a\\to 0$ and $|x_i/a|\\to\\infty$ one has $$ R(x)\\sim \\log\\!\\left(\\frac{1}{a}\\right)\\,||x||_{L_1}, $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 10,
+    "label": "assertion",
+    "text": "obtaining this $L_1$-dominant regime requires $a$ to be exponentially small relative to relevant magnitudes",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 11,
+    "label": "assertion",
+    "text": "(making zero or near-zero initializations numerically problematic and potentially causing saddle-point slowdowns)",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 1,
+    "label": "assertion",
+    "text": "Let $f:\\mathbb{R}^n\\to\\mathbb{R}$ be continuously differentiable and satisfy the Polyak-Łojasiewicz (PL) inequality: $||\\nabla f(x)||_{L_2}^2 \\ge \\lambda\\,(f(x)-f(x^*))$ for some $\\lambda>0$ and global minimizer $x^*$. If the Bregman potential $R$ satisfies the matrix lower bound $$ z^\\top\\!\\big(\\nabla^2 R(x)\\big)^{-1} z \\;\\ge\\; \\sigma\\,||z||_{L_2}^2\\quad\\forall x,z\\in\\mathbb{R}^n $$ for some $\\sigma>0$, then the mirror flow $d\\nabla R(x_t)=-\\nabla f(x_t)dt$ converges to a minimizer of $f$ and the loss decays linearly with rate $\\sigma\\lambda$.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 1,
+    "label": "assertion",
+    "text": "For underdetermined linear regression problems $f(x)=\\tilde f(Zx-Y)$ with $n>d$, if $f$ is quasi-convex, $\\nabla f$ is locally Lipschitz, and $\\operatorname{argmin}_{x\\in\\mathbb{R}^n} f(x)$ is non-empty, then gradient flow on the overparameterized variables $(m,w)$ converges to a limit $x^*$ that solves $$ x^* \\;=\\; \\operatorname{argmin}_{Zx=Y} R(x), $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 1,
+    "label": "assertion",
+    "text": "Adding weight decay regularization $h(m,w)=\\sum_{i=1}^n(m_i^2+w_i^2)$ with time-varying coefficient $\\alpha_t\\ge 0$ to gradient flow on $(m,w)$ yields a time-dependent mirror potential governing the dynamics in $x=m\\odot w$: $$ R_{a_t}(x) \\;=\\; \\frac{1}{2}\\sum_{i=1}^n x_i\\,\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a_{t,i}}\\right) - \\sqrt{x_i^2 + a_{t,i}^2} - x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right), $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 4,
+    "label": "assertion",
+    "text": "the dynamics satisfy the time-dependent mirror-flow identity $$ d\\!\\big(\\nabla R_{a_t}(x_t)\\big) \\;=\\; -\\nabla f(x_t)\\,dt,\\qquad x_0=m_0\\odot w_0. $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 6,
+    "label": "assertion",
+    "text": "a decaying schedule for $\\alpha_t$ directly controls the scale $a_{t}$ of the mirror potential and thereby the strength and position of the implicit bias.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 3,
+    "label": "assertion",
+    "text": "Then the time-dependent mirror flow converges to a critical point $x^*$;",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 5,
+    "label": "assertion",
+    "text": "if $f$ is convex or satisfies PL then $x^*$ is an interpolating minimizer of $f$.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 6,
+    "label": "assertion",
+    "text": "In the PL case the loss satisfies the finite-time bound $$ f(x_t)-f(x^*) \\le B\\exp\\!\\big(-\\lambda a_\\infty t\\big), $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 1,
+    "label": "assertion",
+    "text": "For underdetermined linear regression $f(x)=\\tilde f(Zx-Y)$, under the conditions of the convergence theorem for time-dependent potentials , the limit $x^*$ of the time-dependent mirror flow satisfies $$ x^* \\;=\\; \\operatorname{argmin}_{Zx=Y} R_{a_\\infty}(x), $$",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 7,
+    "label": "assertion",
+    "text": "This combination yields a time-dependent Bregman potential $R_{a_t}$ that can be driven towards an $L_1$-like regime without requiring zero initialization, thereby providing a tunable implicit $L_1$-regularization while preserving convergence of the loss and the optimal interpolator selection property for underdetermined linear regression",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_9",
+    "number": 3,
+    "label": "assertion",
+    "text": "the proposed PILoT initialization together with a strongly decaying $\\alpha_t$ schedule recovers the ground-truth $x^*$ faster and more accurately than baselines including",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_9",
+    "number": 8,
+    "label": "assertion",
+    "text": "Spred initialization with $2u_{0}v_{0}=0$ fails to approach the ground truth for all regularization strengths tested.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 1,
+    "label": "assertion",
+    "text": "In one-shot pruning experiments on CIFAR-10 and CIFAR-100 , the $m\\odot w$ parameterization with PILoT regularization achieves higher validation accuracy than standard baselines and alternative continuous parameterizations across sparsity levels and is particularly robust in the high-sparsity regime",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 4,
+    "label": "assertion",
+    "text": "simple $L_1$ on $x$ can perform well at some settings,",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 5,
+    "label": "assertion",
+    "text": "it is less robust to regularization strength and degrades more severely at extreme sparsities than PILoT.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_11",
+    "number": 1,
+    "label": "assertion",
+    "text": "When combined with iterative pruning protocols on CIFAR-10 and CIFAR-100, training the networks with the $m\\odot w$ parameterization and PILoT regularization produces higher final accuracies at high sparsity compared to the same iterative schemes using the standard parameterization;",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_11",
+    "number": 3,
+    "label": "assertion",
+    "text": "LRR with PILoT identifies the sparsest winning tickets",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_11",
+    "number": 5,
+    "label": "assertion",
+    "text": "IMP with PILoT becomes competitive with LRR, outperforming it at some sparsity levels.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_12",
+    "number": 1,
+    "label": "assertion",
+    "text": "Weight decay applied symmetrically to both $m$ and $w$ commutes with the $m\\odot w$ parameterization",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_12",
+    "number": 3,
+    "label": "assertion",
+    "text": "is necessary to obtain the derived time-dependent mirror-flow description",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_12",
+    "number": 5,
+    "label": "论据",
+    "text": "regularizing only $m$ does not satisfy the necessary Lie-bracket commutation condition",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_12",
+    "number": 8,
+    "label": "assertion",
+    "text": "neuronwise mask parameterizations violate the same Lie-bracket condition",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_12",
+    "number": 11,
+    "label": "assertion",
+    "text": "do not induce a mirror-flow implicit bias of the same form.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  }
+]

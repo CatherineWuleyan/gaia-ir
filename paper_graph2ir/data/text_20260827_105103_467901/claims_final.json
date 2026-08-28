@@ -1,0 +1,13 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "The observed performance comparison was made at extreme pruning fractions for ResNet50 models in the CIFAR-10a to CIFAR-10b transfer setting.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    }
+  ],
+  "note": [],
+  "relation": []
+}

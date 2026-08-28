@@ -1,0 +1,1378 @@
+[
+  {
+    "id": "paper:867752822639165809::conclusion_1",
+    "global_id": "gcn_9ec8db18b26049e8",
+    "order": 1,
+    "title": "Empirical characterization: three-stage training dynamics of out-of-distribution metrics",
+    "content": "The trajectory of out-of-distribution (OOD) detection performance, measured by the area under the receiver operating characteristic curve (AUROC) and related metrics, during supervised training decomposes into three distinct stages: (A) an initial stage where training and test error fall and AUROC improves; (B) a subsequent overfitting stage where the training error approaches zero and test error can continue to decrease while AUROC decreases (i.e., OOD performance degrades as the model memorizes and learns redundant features); and (C) a final instability stage where classification test error is stable but AUROC (and other OOD metrics) varies sharply across nearby checkpoints, making final-checkpoint selection unreliable.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The trajectory of out-of-distribution (OOD) detection performance, during supervised training decomposes into three distinct stages: (A) an initial stage where training and test error fall and AUROC improves; (B) a subsequent overfitting stage where the training error approaches zero and test error can continue to decrease while AUROC decreases ; and (C) a final instability stage where classification test error is stable but AUROC varies sharply across nearby checkpoints, making final-checkpoint selection unreliable.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 67
+          },
+          {
+            "start": 167,
+            "end": 447
+          },
+          {
+            "start": 532,
+            "end": 620
+          },
+          {
+            "start": 644,
+            "end": 731
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "measured by the area under the receiver operating characteristic curve (AUROC) and related metrics,",
+        "source_spans": [
+          {
+            "start": 67,
+            "end": 167
+          }
+        ],
+        "of_terms": [
+          "out-of-distribution (OOD) detection performance"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "(i.e., )",
+        "source_spans": [
+          {
+            "start": 447,
+            "end": 454
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(OOD performance degrades as the model memorizes and learns redundant features)",
+        "source_spans": [
+          {
+            "start": 454,
+            "end": 532
+          }
+        ],
+        "of": [
+          1
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(and other OOD metrics)",
+        "source_spans": [
+          {
+            "start": 620,
+            "end": 644
+          }
+        ],
+        "of_terms": [
+          "AUROC"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_2",
+    "global_id": "gcn_2884f4217b4f4f9f",
+    "order": 2,
+    "title": "Instability source and remedy: model fragility under small weight perturbations; model averaging stabilizes out-of-distribution metrics",
+    "content": "The instability of out-of-distribution (OOD) metrics near the final checkpoint arises from the trained solution being fragile to small perturbations of network weights: evaluating the area under the receiver operating characteristic curve (AUROC) and the false positive rate at 95% true positive rate (FPR95) as the weights are moved along random normalized directions \\(d\\) with small scalar magnitude \\(\\alpha\\) (i.e., \\(\\theta(d,\\alpha)=\\theta_{\\text{final}}+\\alpha\\cdot d\\)) shows narrow optima in the weight space causing sharp metric changes for small \\(\\alpha\\). Applying exponential moving-weight averaging (Model Averaging, MA) stabilizes OOD performance by producing a smoother / wider optimum: MA is implemented as the exponential moving average of parameters after an epoch \\(t_0\\),\n      \\[\n      \\theta_{t+1}^{\\mathrm{MA}}=\\begin{cases}\n      \\theta_t, & t<t_0,\\\\[4pt]\n      \\tau\\cdot \\theta_t^{\\mathrm{MA}} + (1-\\tau)\\cdot \\theta_{t+1}, & t\\ge t_0,\n      \\end{cases}\n      \\]\n      with \\(\\tau=\\dfrac{t-t_0}{t-t_0+1}\\). The averaged parameters \\(\\theta^{\\mathrm{MA}}\\) yield substantially reduced AUROC and FPR95 sensitivity to small weight perturbations and smoother AUROC curves during training across scoring functions.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The instability of out-of-distribution (OOD) metrics near the final checkpoint arises from the trained solution being fragile to small perturbations of network weights:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 169
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "evaluating the area under the receiver operating characteristic curve (AUROC) and the false positive rate at 95% true positive rate (FPR95) as the weights are moved along random normalized directions \\(d\\) with small scalar magnitude \\(\\alpha\\) shows narrow optima in the weight space causing sharp metric changes for small \\(\\alpha\\).",
+        "source_spans": [
+          {
+            "start": 169,
+            "end": 414
+          },
+          {
+            "start": 479,
+            "end": 570
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(i.e., \\(\\theta(d,\\alpha)=\\theta_{\\text{final}}+\\alpha\\cdot d\\))",
+        "source_spans": [
+          {
+            "start": 414,
+            "end": 479
+          }
+        ],
+        "of_terms": [
+          "moved along random normalized directions \\(d\\) with small scalar magnitude \\(\\alpha\\)"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "Applying exponential moving-weight averaging (Model Averaging, MA) stabilizes OOD performance by producing a smoother / wider optimum:",
+        "source_spans": [
+          {
+            "start": 570,
+            "end": 705
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "MA is implemented as the exponential moving average of parameters after an epoch \\(t_0\\), \\[ \\theta_{t+1}^{\\mathrm{MA}}=\\begin{cases} \\theta_t, & t<t_0,\\\\[4pt] \\tau\\cdot \\theta_t^{\\mathrm{MA}} + (1-\\tau)\\cdot \\theta_{t+1}, & t\\ge t_0, \\end{cases} \\] with \\(\\tau=\\dfrac{t-t_0}{t-t_0+1}\\).",
+        "source_spans": [
+          {
+            "start": 705,
+            "end": 1035
+          }
+        ],
+        "of_terms": [
+          "MA"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "The averaged parameters \\(\\theta^{\\mathrm{MA}}\\) yield substantially reduced AUROC and FPR95 sensitivity to small weight perturbations and smoother AUROC curves during training across scoring functions.",
+        "source_spans": [
+          {
+            "start": 1035,
+            "end": 1237
+          }
+        ],
+        "supports": [
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_3",
+    "global_id": "gcn_923b4eb3c7ad4069",
+    "order": 3,
+    "title": "Linear-Gaussian risk formulas and LASSO solution: analytic link between common features, in-distribution accuracy and out-of-distribution risk",
+    "content": "For a simplified linear-Gaussian model that isolates a special discriminative feature and \\(d\\) abundant weak common features, the Bayes classifier and its in-distribution (ID) classification risk and out-of-distribution (OOD) detection (rejection) risk admit closed-form expressions: let ID feature vectors \\(\\boldsymbol{x}\\in\\mathbb{R}^{d+1}\\) be drawn as \\(\\boldsymbol{x} \\sim \\mathcal{N}(y \\cdot \\boldsymbol{\\mu}_\\text{ID}, \\sigma^2 \\boldsymbol{I})\\) with \\(y\\stackrel{u.a.r.}{\\sim}\\{-1,+1\\}\\) and \\(\\boldsymbol{\\mu}_\\text{ID}=(1,\\eta,\\dots,\\eta)\\), and OOD feature vectors be drawn as \\(\\boldsymbol{x} \\sim \\mathcal{N}(q \\cdot \\boldsymbol{\\mu}_\\text{OOD}, \\sigma^2 \\boldsymbol{I})\\) with \\(q\\stackrel{u.a.r.}{\\sim}\\{-1,+1\\}\\) and \\(\\boldsymbol{\\mu}_\\text{OOD}=(0,\\eta,\\dots,\\eta)\\), with isotropic noise variance \\(\\sigma^2\\). The Bayes logit is\n      \\[\n      f_{\\mathrm{Bayes}}(\\boldsymbol{x}) = x_1 + \\eta\\sum_{i=2}^{d+1} x_i,\n      \\]\n      and the resulting risks simplify to\n      \\[\n      \\mathcal{R}_{\\mathrm{ID}}(f_{\\mathrm{Bayes}})=\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\sqrt{1+d\\eta^2}}{\\sigma}\\right\\},\n      \\]\n      \\[\n      \\mathcal{R}_{\\mathrm{OOD}}(f_{\\mathrm{Bayes}})=\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\delta-d\\eta^2}{\\sigma\\sqrt{1+d\\eta^2}}\\right\\}+\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\delta+d\\eta^2}{\\sigma\\sqrt{1+d\\eta^2}}\\right\\},\n      \\]\n      where \\(\\delta\\) is the rejection threshold. These formulas show that increasing the number \\(d\\) of common weak features (with \\(0<\\eta\\ll1\\) and \\(d\\gg1\\)) can markedly increase OOD risk while only slowly improving ID classification. Further, solving the squared-error empirical risk with least absolute shrinkage and selection operator (LASSO) regularization parameter \\(\\lambda\\),\n      \\[\n      \\min_{\\boldsymbol{w}}\\ \\mathbb{E}_{(x,y)\\sim\\mathcal{D}_\\text{ID}}\\!\\left\\{\\tfrac{1}{2}\\left(\\frac{\\boldsymbol{w}^\\top\\boldsymbol{x}}{\\sigma}-y\\right)^2+\\lambda\\|\\boldsymbol{w}\\|_1\\right\\},\n      \\]\n      yields the closed-form trimmed coefficient vector\n      \\[\n      f_{\\text{LASSO}}(\\boldsymbol{x}) = (1-\\lambda)_+\\,x_1 + \\sum_{i=2}^{d+1} (\\eta-\\lambda)_+\\, x_i,\n      \\]\n      where \\((\\cdot)_+\\) denotes the positive part. This analytic solution demonstrates that an \\(L_1\\) penalty (feature selection) can suppress coefficients on abundant weak common features (by choosing \\(\\lambda\\approx\\eta\\)), thereby reducing OOD detection risk at controlled cost to ID accuracy.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For a simplified linear-Gaussian model the Bayes classifier and its in-distribution (ID) classification risk and out-of-distribution (OOD) detection (rejection) risk admit closed-form expressions:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 39
+          },
+          {
+            "start": 127,
+            "end": 285
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "that isolates a special discriminative feature and \\(d\\) abundant weak common features,",
+        "source_spans": [
+          {
+            "start": 39,
+            "end": 127
+          }
+        ],
+        "of_terms": [
+          "linear-Gaussian model"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "let ID feature vectors \\(\\boldsymbol{x}\\in\\mathbb{R}^{d+1}\\) be drawn as \\(\\boldsymbol{x} \\sim \\mathcal{N}(y \\cdot \\boldsymbol{\\mu}_\\text{ID}, \\sigma^2 \\boldsymbol{I})\\) with \\(y\\stackrel{u.a.r.}{\\sim}\\{-1,+1\\}\\) and \\(\\boldsymbol{\\mu}_\\text{ID}=(1,\\eta,\\dots,\\eta)\\), and OOD feature vectors be drawn as \\(\\boldsymbol{x} \\sim \\mathcal{N}(q \\cdot \\boldsymbol{\\mu}_\\text{OOD}, \\sigma^2 \\boldsymbol{I})\\) with \\(q\\stackrel{u.a.r.}{\\sim}\\{-1,+1\\}\\) and \\(\\boldsymbol{\\mu}_\\text{OOD}=(0,\\eta,\\dots,\\eta)\\), with isotropic noise variance \\(\\sigma^2\\).",
+        "source_spans": [
+          {
+            "start": 285,
+            "end": 832
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "论据",
+        "content": "The Bayes logit is \\[ f_{\\mathrm{Bayes}}(\\boldsymbol{x}) = x_1 + \\eta\\sum_{i=2}^{d+1} x_i, \\] and the resulting risks simplify to \\[ \\mathcal{R}_{\\mathrm{ID}}(f_{\\mathrm{Bayes}})=\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\sqrt{1+d\\eta^2}}{\\sigma}\\right\\}, \\] \\[ \\mathcal{R}_{\\mathrm{OOD}}(f_{\\mathrm{Bayes}})=\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\delta-d\\eta^2}{\\sigma\\sqrt{1+d\\eta^2}}\\right\\}+\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\delta+d\\eta^2}{\\sigma\\sqrt{1+d\\eta^2}}\\right\\}, \\]",
+        "source_spans": [
+          {
+            "start": 832,
+            "end": 1370
+          }
+        ],
+        "supports": [
+          7,
+          10
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "where \\(\\delta\\) is the rejection threshold.",
+        "source_spans": [
+          {
+            "start": 1370,
+            "end": 1415
+          }
+        ],
+        "of_terms": [
+          "\\delta"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "These formulas show that",
+        "source_spans": [
+          {
+            "start": 1415,
+            "end": 1440
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "increasing the number \\(d\\) of common weak features can markedly increase OOD risk",
+        "source_spans": [
+          {
+            "start": 1440,
+            "end": 1492
+          },
+          {
+            "start": 1528,
+            "end": 1559
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(with \\(0<\\eta\\ll1\\) and \\(d\\gg1\\))",
+        "source_spans": [
+          {
+            "start": 1492,
+            "end": 1528
+          }
+        ],
+        "of": [
+          7
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": "while",
+        "source_spans": [
+          {
+            "start": 1559,
+            "end": 1565
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "only slowly improving ID classification.",
+        "source_spans": [
+          {
+            "start": 1565,
+            "end": 1606
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "connection",
+        "content": "Further,",
+        "source_spans": [
+          {
+            "start": 1606,
+            "end": 1615
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "solving the squared-error empirical risk with least absolute shrinkage and selection operator (LASSO) regularization parameter \\(\\lambda\\), \\[ \\min_{\\boldsymbol{w}}\\ \\mathbb{E}_{(x,y)\\sim\\mathcal{D}_\\text{ID}}\\!\\left\\{\\tfrac{1}{2}\\left(\\frac{\\boldsymbol{w}^\\top\\boldsymbol{x}}{\\sigma}-y\\right)^2+\\lambda\\|\\boldsymbol{w}\\|_1\\right\\}, \\]",
+        "source_spans": [
+          {
+            "start": 1615,
+            "end": 1975
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "论据",
+        "content": "yields the closed-form trimmed coefficient vector \\[ f_{\\text{LASSO}}(\\boldsymbol{x}) = (1-\\lambda)_+\\,x_1 + \\sum_{i=2}^{d+1} (\\eta-\\lambda)_+\\, x_i, \\]",
+        "source_spans": [
+          {
+            "start": 1975,
+            "end": 2152
+          }
+        ],
+        "supports": [
+          16,
+          20
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "where \\((\\cdot)_+\\) denotes the positive part.",
+        "source_spans": [
+          {
+            "start": 2152,
+            "end": 2199
+          }
+        ],
+        "of_terms": [
+          "(\\cdot)_+"
+        ],
+        "of_terms_self_only": [
+          "(\\cdot)_+"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "framing",
+        "content": "This analytic solution demonstrates that",
+        "source_spans": [
+          {
+            "start": 2199,
+            "end": 2240
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "an \\(L_1\\) penalty can suppress coefficients on abundant weak common features",
+        "source_spans": [
+          {
+            "start": 2240,
+            "end": 2259
+          },
+          {
+            "start": 2279,
+            "end": 2338
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "label": "elaboration",
+        "content": "(feature selection)",
+        "source_spans": [
+          {
+            "start": 2259,
+            "end": 2279
+          }
+        ],
+        "of_terms": [
+          "\\(L_1\\) penalty"
+        ]
+      },
+      {
+        "number": 18,
+        "label": "elaboration",
+        "content": "(by choosing \\(\\lambda\\approx\\eta\\))",
+        "source_spans": [
+          {
+            "start": 2338,
+            "end": 2374
+          }
+        ],
+        "of": [
+          16
+        ]
+      },
+      {
+        "number": 19,
+        "label": "relation",
+        "content": ", thereby",
+        "source_spans": [
+          {
+            "start": 2374,
+            "end": 2384
+          }
+        ],
+        "connects": [
+          16,
+          20
+        ],
+        "expression": "[16] 推出 [20]"
+      },
+      {
+        "number": 20,
+        "label": "assertion",
+        "content": "reducing OOD detection risk at controlled cost to ID accuracy.",
+        "source_spans": [
+          {
+            "start": 2384,
+            "end": 2446
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_4",
+    "global_id": "gcn_c26479c7bc77476e",
+    "order": 4,
+    "title": "Algorithmic contribution: Average of Pruning (AoP) — combine iterative magnitude pruning with model averaging as a pluggable out-of-distribution module",
+    "content": "Average of Pruning (AoP) is a practical, architecture-agnostic pipeline combining iterative magnitude pruning with parameter averaging to mitigate overfitting and instability for out-of-distribution (OOD) detection. Operationally, AoP comprises three steps: (1) apply iterative magnitude pruning (IMP) with weight-rewinding (the Lottery Ticket Hypothesis with rewind protocol): initialize mask \\(m = 1^n\\) (all weights retained), train from \\(\\theta_0\\) to \\(\\theta_k\\), then iteratively train \\(m \\odot \\theta_k\\) to \\(m \\odot \\theta_T\\), prune the lowest-magnitude 20% of weights globally to update \\(m\\), and rewind weights to \\(\\theta_k\\), repeating for a number of iterations \\(N\\) (with 20% pruning per iteration and 9 iterations reaching approximately 86% sparsity in CIFAR experiments); (2) during or after pruning, compute an exponential moving average of parameters per\n      \\[\n      \\theta_{t+1}^{\\mathrm{MA}}=\\begin{cases}\n      \\theta_t, & t<t_0,\\\\[4pt]\n      \\tau\\cdot \\theta_t^{\\mathrm{MA}} + (1-\\tau)\\cdot \\theta_{t+1}, & t\\ge t_0,\n      \\end{cases}\n      \\]\n      with \\(t_0=100\\) epochs for CIFAR training and \\(\\tau = (t-t_0)/(t-t_0+1)\\); (3) use the averaged, pruned model \\(f(x; m\\odot \\theta^{\\mathrm{MA}})\\) as a drop-in replacement for any post-hoc OOD scoring method (e.g., Maximum Softmax Probability (MSP), Out-of-DIstribution detector for Neural networks (ODIN), energy-based scoring (Energy), Virtual-Logit Matching (ViM), K-Nearest Neighbors (KNN)). AoP is designed to be low-barrier: pruning reduces learned common features (addressing overfitting), and model averaging widens optima (addressing instability); the combined module is applied without modifying existing scoring functions.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "Average of Pruning (AoP) is a practical, architecture-agnostic pipeline combining iterative magnitude pruning with parameter averaging",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 135
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "motivation",
+        "content": "to mitigate overfitting and instability for out-of-distribution (OOD) detection.",
+        "source_spans": [
+          {
+            "start": 135,
+            "end": 216
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "Operationally, AoP comprises three steps: (1) apply iterative magnitude pruning (IMP) with weight-rewinding",
+        "source_spans": [
+          {
+            "start": 216,
+            "end": 324
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(the Lottery Ticket Hypothesis with rewind protocol)",
+        "source_spans": [
+          {
+            "start": 324,
+            "end": 376
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning (IMP) with weight-rewinding"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "other",
+        "content": ": initialize mask \\(m = 1^n\\)",
+        "source_spans": [
+          {
+            "start": 376,
+            "end": 406
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(all weights retained)",
+        "source_spans": [
+          {
+            "start": 406,
+            "end": 428
+          }
+        ],
+        "of_terms": [
+          "mask \\(m = 1^n\\)"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "other",
+        "content": ", train from \\(\\theta_0\\) to \\(\\theta_k\\), then iteratively train \\(m \\odot \\theta_k\\) to \\(m \\odot \\theta_T\\), prune the lowest-magnitude 20% of weights globally to update \\(m\\), and rewind weights to \\(\\theta_k\\), repeating for a number of iterations \\(N\\)",
+        "source_spans": [
+          {
+            "start": 428,
+            "end": 687
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(with 20% pruning per iteration and 9 iterations reaching approximately 86% sparsity in CIFAR experiments)",
+        "source_spans": [
+          {
+            "start": 687,
+            "end": 793
+          }
+        ],
+        "of_terms": [
+          "repeating for a number of iterations \\(N\\)"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "other",
+        "content": "; (2) during or after pruning, compute an exponential moving average of parameters per \\[ \\theta_{t+1}^{\\mathrm{MA}}=\\begin{cases} \\theta_t, & t<t_0,\\\\[4pt] \\tau\\cdot \\theta_t^{\\mathrm{MA}} + (1-\\tau)\\cdot \\theta_{t+1}, & t\\ge t_0, \\end{cases} \\]",
+        "source_spans": [
+          {
+            "start": 793,
+            "end": 1082
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "with \\(t_0=100\\) epochs for CIFAR training and \\(\\tau = (t-t_0)/(t-t_0+1)\\);",
+        "source_spans": [
+          {
+            "start": 1082,
+            "end": 1159
+          }
+        ],
+        "of_terms": [
+          "exponential moving average of parameters"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "other",
+        "content": "(3) use the averaged, pruned model \\(f(x; m\\odot \\theta^{\\mathrm{MA}})\\) as a drop-in replacement for any post-hoc OOD scoring method",
+        "source_spans": [
+          {
+            "start": 1159,
+            "end": 1293
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "framing",
+        "content": "(e.g., )",
+        "source_spans": [
+          {
+            "start": 1293,
+            "end": 1300
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "instance",
+        "content": "(Maximum Softmax Probability (MSP), Out-of-DIstribution detector for Neural networks (ODIN), energy-based scoring (Energy), Virtual-Logit Matching (ViM), K-Nearest Neighbors (KNN)).",
+        "source_spans": [
+          {
+            "start": 1300,
+            "end": 1481
+          }
+        ],
+        "of_terms": [
+          "post-hoc OOD scoring method"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "framing",
+        "content": "AoP is designed to be low-barrier:",
+        "source_spans": [
+          {
+            "start": 1481,
+            "end": 1516
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "assertion",
+        "content": "pruning reduces learned common features",
+        "source_spans": [
+          {
+            "start": 1516,
+            "end": 1556
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "motivation",
+        "content": "(addressing overfitting),",
+        "source_spans": [
+          {
+            "start": 1556,
+            "end": 1582
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1582,
+            "end": 1586
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "label": "assertion",
+        "content": "model averaging widens optima",
+        "source_spans": [
+          {
+            "start": 1586,
+            "end": 1616
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "label": "motivation",
+        "content": "(addressing instability);",
+        "source_spans": [
+          {
+            "start": 1616,
+            "end": 1642
+          }
+        ]
+      },
+      {
+        "number": 20,
+        "label": "assertion",
+        "content": "the combined module is applied without modifying existing scoring functions.",
+        "source_spans": [
+          {
+            "start": 1642,
+            "end": 1718
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_5",
+    "global_id": "gcn_9aec3c7bf65845af",
+    "order": 5,
+    "title": "Empirical efficacy: Average of Pruning consistently improves out-of-distribution detection metrics across datasets, scoring functions and architectures",
+    "content": "Applying Average of Pruning (AoP) as a plug-in improves out-of-distribution (OOD) detection performance across multiple benchmarks and scoring methods. Representative results: on ResNet-18 trained on CIFAR-10, applying AoP to K-Nearest Neighbors (KNN) increases average area under the receiver operating characteristic curve (AUROC) across six OOD datasets from 94.39% to 95.04% and reduces average false positive rate at 95% true positive rate (FPR95) from 34.42% to 25.30% (a 9.1 percentage-point decrease); applying AoP to Virtual-Logit Matching (ViM) on the same backbone/dataset increases average AUROC from 94.18% to 95.69% and reduces FPR95 from 32.27% to 25.3%. AoP also improves multiple scoring functions (e.g., Maximum Softmax Probability (MSP), MaxLogit) and scales to larger datasets: on Tiny-ImageNet, AoP improves MSP AUROC by 1.5–3.3 percentage points on Textures, LSUN, and iSUN; on ImageNet, AoP yields AUROC improvements of 0.3–0.7 percentage points across scoring functions on Places, SUN, and Textures. The improvements hold across backbones (ResNet variants, WideResNet, VGG, MobileNet) and remain when combining AoP with Outlier Exposure (OE).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Applying Average of Pruning (AoP) as a plug-in improves out-of-distribution (OOD) detection performance across multiple benchmarks and scoring methods.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 152
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "framing",
+        "content": "Representative results:",
+        "source_spans": [
+          {
+            "start": 152,
+            "end": 176
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "example",
+        "content": "on ResNet-18 trained on CIFAR-10, applying AoP to K-Nearest Neighbors (KNN) increases average area under the receiver operating characteristic curve (AUROC) across six OOD datasets from 94.39% to 95.04% and reduces average false positive rate at 95% true positive rate (FPR95) from 34.42% to 25.30%",
+        "source_spans": [
+          {
+            "start": 176,
+            "end": 475
+          }
+        ],
+        "illustrates": [
+          1
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(a 9.1 percentage-point decrease)",
+        "source_spans": [
+          {
+            "start": 475,
+            "end": 508
+          }
+        ],
+        "of": [
+          3
+        ]
+      },
+      {
+        "number": 5,
+        "label": "example",
+        "content": "; applying AoP to Virtual-Logit Matching (ViM) on the same backbone/dataset increases average AUROC from 94.18% to 95.69% and reduces FPR95 from 32.27% to 25.3%.",
+        "source_spans": [
+          {
+            "start": 508,
+            "end": 670
+          }
+        ],
+        "illustrates": [
+          1
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "AoP also improves multiple scoring functions",
+        "source_spans": [
+          {
+            "start": 670,
+            "end": 715
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "framing",
+        "content": "(e.g.,)",
+        "source_spans": [
+          {
+            "start": 715,
+            "end": 722
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "instance",
+        "content": "( Maximum Softmax Probability (MSP), MaxLogit)",
+        "source_spans": [
+          {
+            "start": 722,
+            "end": 767
+          }
+        ],
+        "of_terms": [
+          "multiple scoring functions"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 767,
+            "end": 771
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "scales to larger datasets:",
+        "source_spans": [
+          {
+            "start": 771,
+            "end": 798
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "example",
+        "content": "on Tiny-ImageNet, AoP improves MSP AUROC by 1.5–3.3 percentage points on Textures, LSUN, and iSUN;",
+        "source_spans": [
+          {
+            "start": 798,
+            "end": 897
+          }
+        ],
+        "illustrates": [
+          6,
+          10
+        ]
+      },
+      {
+        "number": 12,
+        "label": "example",
+        "content": "on ImageNet, AoP yields AUROC improvements of 0.3–0.7 percentage points across scoring functions on Places, SUN, and Textures.",
+        "source_spans": [
+          {
+            "start": 897,
+            "end": 1024
+          }
+        ],
+        "illustrates": [
+          6,
+          10
+        ]
+      },
+      {
+        "number": 13,
+        "label": "assertion",
+        "content": "The improvements hold across backbones",
+        "source_spans": [
+          {
+            "start": 1024,
+            "end": 1063
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "instance",
+        "content": "(ResNet variants, WideResNet, VGG, MobileNet)",
+        "source_spans": [
+          {
+            "start": 1063,
+            "end": 1109
+          }
+        ],
+        "of_terms": [
+          "backbones"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1109,
+            "end": 1113
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "remain when combining AoP with Outlier Exposure (OE).",
+        "source_spans": [
+          {
+            "start": 1113,
+            "end": 1166
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_6",
+    "global_id": "gcn_30477c4c38ae4f3f",
+    "order": 6,
+    "title": "Pruning reduces out-of-distribution overfitting and produces feature separation; non-monotone sparsity dependence",
+    "content": "Iterative magnitude pruning (Lottery Ticket Hypothesis (LTH) style with weight rewinding) reduces the late-stage overfitting of out-of-distribution (OOD) detection: as global sparsity is increased from dense toward moderate sparsity, the area under the receiver operating characteristic curve (AUROC) on OOD tasks first increases (pruning removes redundant common features that induce in-distribution (ID) / OOD overlap) and then eventually decreases if pruning becomes too aggressive and removes discriminative capacity. Visualization of final-layer features shows pruned models produce larger ID-versus-OOD feature differences than dense models. Different pruning schedules and methods matter: LTH with weight rewind outperforms random pruning and naive fine-tuning based pruning in OOD metrics, and among during-training pruning methods evaluated (Gradual Magnitude Pruning (GMP), Rigging the Lottery (RigL), Gradual Network with neuroregeneration (GraNet)), iterative/post-training LTH performed best for OOD tasks in CIFAR-10 experiments with ResNet-18.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Iterative magnitude pruning reduces the late-stage overfitting of out-of-distribution (OOD) detection:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 28
+          },
+          {
+            "start": 90,
+            "end": 165
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(Lottery Ticket Hypothesis (LTH) style with weight rewinding)",
+        "source_spans": [
+          {
+            "start": 28,
+            "end": 90
+          }
+        ],
+        "of_terms": [
+          "Iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "as global sparsity is increased from dense toward moderate sparsity, the area under the receiver operating characteristic curve (AUROC) on OOD tasks first increases and then eventually decreases if pruning becomes too aggressive and removes discriminative capacity.",
+        "source_spans": [
+          {
+            "start": 165,
+            "end": 330
+          },
+          {
+            "start": 421,
+            "end": 522
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "论证",
+        "content": "(pruning removes redundant common features that induce in-distribution (ID) / OOD overlap)",
+        "source_spans": [
+          {
+            "start": 330,
+            "end": 421
+          }
+        ],
+        "supports": [
+          3
+        ]
+      },
+      {
+        "number": 5,
+        "label": "framing",
+        "content": "Visualization of final-layer features shows",
+        "source_spans": [
+          {
+            "start": 522,
+            "end": 566
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "pruned models produce larger ID-versus-OOD feature differences than dense models.",
+        "source_spans": [
+          {
+            "start": 566,
+            "end": 648
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "Different pruning schedules and methods matter:",
+        "source_spans": [
+          {
+            "start": 648,
+            "end": 696
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "论据",
+        "content": "LTH with weight rewind outperforms random pruning and naive fine-tuning based pruning in OOD metrics",
+        "source_spans": [
+          {
+            "start": 696,
+            "end": 796
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 796,
+            "end": 802
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "论据",
+        "content": "among during-training pruning methods evaluated , iterative/post-training LTH performed best for OOD tasks in CIFAR-10 experiments with ResNet-18.",
+        "source_spans": [
+          {
+            "start": 802,
+            "end": 850
+          },
+          {
+            "start": 960,
+            "end": 1058
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 11,
+        "label": "instance",
+        "content": "(Gradual Magnitude Pruning (GMP), Rigging the Lottery (RigL), Gradual Network with neuroregeneration (GraNet))",
+        "source_spans": [
+          {
+            "start": 850,
+            "end": 960
+          }
+        ],
+        "of_terms": [
+          "during-training pruning methods evaluated"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_7",
+    "global_id": "gcn_350802c4180246cd",
+    "order": 7,
+    "title": "Ablation: both model averaging and pruning are necessary to realize full Average of Pruning gains",
+    "content": "Ablation experiments establish that both components—model averaging (MA) and pruning—are required: (i) pruning alone improves the area under the receiver operating characteristic curve (AUROC) relative to the dense baseline, and (ii) combining pruning with MA (Average of Pruning, AoP) yields the best performance. For example on CIFAR-10 with ResNet-18: baseline AUROC = 91.63%; with pruning alone AUROC increases to 92.94%; with pruning plus MA (AoP) AUROC further increases to 93.32%. Similar trends hold for WideResNet-28-10 and other metrics (area under the precision-recall curve (AUPR), false positive rate at 95% true positive rate (FPR95)), showing complementary roles: pruning reduces overfitting and MA stabilizes the weights/landscape for more reliable scoring.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Ablation experiments establish that",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 36
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "both components are required:",
+        "source_spans": [
+          {
+            "start": 36,
+            "end": 51
+          },
+          {
+            "start": 85,
+            "end": 99
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "—model averaging (MA) and pruning—",
+        "source_spans": [
+          {
+            "start": 51,
+            "end": 85
+          }
+        ],
+        "of_terms": [
+          "both components"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "论据",
+        "content": "(i) pruning alone improves the area under the receiver operating characteristic curve relative to the dense baseline",
+        "source_spans": [
+          {
+            "start": 99,
+            "end": 185
+          },
+          {
+            "start": 193,
+            "end": 223
+          }
+        ],
+        "supports": [
+          2
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(AUROC)",
+        "source_spans": [
+          {
+            "start": 185,
+            "end": 193
+          }
+        ],
+        "of_terms": [
+          "the area under the receiver operating characteristic curve"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 223,
+            "end": 229
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "论据",
+        "content": "(ii) combining pruning with MA yields the best performance.",
+        "source_spans": [
+          {
+            "start": 229,
+            "end": 260
+          },
+          {
+            "start": 286,
+            "end": 315
+          }
+        ],
+        "supports": [
+          2
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(Average of Pruning, AoP)",
+        "source_spans": [
+          {
+            "start": 260,
+            "end": 286
+          }
+        ],
+        "of_terms": [
+          "combining pruning with MA"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "framing",
+        "content": "For example",
+        "source_spans": [
+          {
+            "start": 315,
+            "end": 327
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "example",
+        "content": "on CIFAR-10 with ResNet-18: baseline AUROC = 91.63%; with pruning alone AUROC increases to 92.94%; with pruning plus MA (AoP) AUROC further increases to 93.32%.",
+        "source_spans": [
+          {
+            "start": 327,
+            "end": 488
+          }
+        ],
+        "illustrates": [
+          2,
+          4,
+          7
+        ]
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "Similar trends hold for WideResNet-28-10 and other metrics",
+        "source_spans": [
+          {
+            "start": 488,
+            "end": 547
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "instance",
+        "content": "(area under the precision-recall curve (AUPR), false positive rate at 95% true positive rate (FPR95))",
+        "source_spans": [
+          {
+            "start": 547,
+            "end": 648
+          }
+        ],
+        "of_terms": [
+          "other metrics"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "framing",
+        "content": ", showing complementary roles:",
+        "source_spans": [
+          {
+            "start": 648,
+            "end": 679
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "论据",
+        "content": "pruning reduces overfitting",
+        "source_spans": [
+          {
+            "start": 679,
+            "end": 707
+          }
+        ],
+        "supports": [
+          2,
+          4,
+          7,
+          11
+        ]
+      },
+      {
+        "number": 15,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 707,
+            "end": 711
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "论据",
+        "content": "MA stabilizes the weights/landscape for more reliable scoring.",
+        "source_spans": [
+          {
+            "start": 711,
+            "end": 773
+          }
+        ],
+        "supports": [
+          2,
+          4,
+          7,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867752822639165809::conclusion_8",
+    "global_id": "gcn_4369dce469034295",
+    "order": 8,
+    "title": "Average of Pruning improves misclassification (error) detection as well as out-of-distribution detection",
+    "content": "Average of Pruning (AoP) not only improves out-of-distribution (OOD) detection but also enhances misclassification detection (detecting when the classifier will be wrong on in-distribution inputs). On WideResNet-40-2 trained on CIFAR-10, applying AoP to Maximum Softmax Probability (MSP) improves the area under the receiver operating characteristic curve (AUROC) for misclassification detection from 92.51% to 93.23%, reduces the area under the risk-coverage curve (AURC) from \\(7.55\\times 10^{-3}\\) to \\(6.41\\times 10^{-3}\\), and reduces the false positive rate at 95% true positive rate (FPR95) from 40.87% to 38.47%. Similar improvements are observed when AoP is combined with other confidence estimators (e.g., Confidence-aware Learning (CRL)).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Average of Pruning (AoP) not only improves out-of-distribution (OOD) detection but also enhances misclassification detection",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 125
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(detecting when the classifier will be wrong on in-distribution inputs).",
+        "source_spans": [
+          {
+            "start": 125,
+            "end": 198
+          }
+        ],
+        "of_terms": [
+          "misclassification detection"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "论据",
+        "content": "On WideResNet-40-2 trained on CIFAR-10, applying AoP to Maximum Softmax Probability (MSP) improves the area under the receiver operating characteristic curve (AUROC) for misclassification detection from 92.51% to 93.23%, reduces the area under the risk-coverage curve (AURC) from \\(7.55\\times 10^{-3}\\) to \\(6.41\\times 10^{-3}\\), and reduces the false positive rate at 95% true positive rate (FPR95) from 40.87% to 38.47%.",
+        "source_spans": [
+          {
+            "start": 198,
+            "end": 621
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "Similar improvements are observed when AoP is combined with other confidence estimators",
+        "source_spans": [
+          {
+            "start": 621,
+            "end": 709
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "framing",
+        "content": "(e.g., )",
+        "source_spans": [
+          {
+            "start": 709,
+            "end": 716
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "instance",
+        "content": "(Confidence-aware Learning (CRL)).",
+        "source_spans": [
+          {
+            "start": 716,
+            "end": 749
+          }
+        ],
+        "of_terms": [
+          "other confidence estimators"
+        ]
+      }
+    ]
+  }
+]

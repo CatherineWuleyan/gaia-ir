@@ -1,0 +1,986 @@
+[
+  {
+    "id": "paper:1029605232763469828::conclusion_1",
+    "global_id": "gcn_8cda88d72c94497c",
+    "order": 1,
+    "title": "MTI-based complexity regularization provides epistemic justification for generalization in overparameterized neural networks",
+    "content": "Complexity regularization that satisfies Norton's Material Theory of Induction (MTI) by localizing the inductive risk to local facts in the given domain — exemplified by the Lottery Ticket Hypothesis (LTH) and its iterative magnitude pruning (IMP) — provides an epistemic justification for inductive generalizations learned by overparameterized artificial neural networks. Unlike global uniformities such as simplicity or compression, MTI-based regularization avoids epistemic circularity because the inductive risk is transferred from a generic schema to the actual local facts present in the training data, making the resulting generalization epistemically justifiable without appealing to non-local facts.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Complexity regularization that satisfies Norton's Material Theory of Induction (MTI) by localizing the inductive risk to local facts in the given domain — exemplified by the Lottery Ticket Hypothesis (LTH) and its iterative magnitude pruning (IMP) — provides an epistemic justification for inductive generalizations learned by overparameterized artificial neural networks. Unlike global uniformities such as simplicity or compression, MTI-based regularization avoids epistemic circularity because the inductive risk is transferred from a generic schema to the actual local facts present in the training data, making the resulting generalization epistemically justifiable without appealing to non-local facts.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 708
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1029605232763469828::conclusion_2",
+    "global_id": "gcn_8e08c9f0ee464a75",
+    "order": 2,
+    "title": "No-Go-ERM trivialization for overparameterized neural networks and its blocking by MTI",
+    "content": "For overparameterized neural networks, Empirical Risk Minimization (ERM) can suffer from a No-Go-ERM trivialization: the two-sided uniform convergence of empirical risk to risk, which is necessary for ERM's asymptotic stability, fails because both data-distribution-independent bounds (based on Vapnik-Chervonenkis (VC) dimension) and data-distribution-dependent bounds (based on weight norms) become uninformative. This results in the absence of asymptotic stability, analogous to Norton's No-Go theorem for inductive logic. The collapse to trivialization can be blocked by adopting a local stability provided by the Material Theory of Induction (MTI): the strengths of inductive support for ERM are derived from the local context (e.g., a winning ticket, i.e., a sparse subnetwork of an overparameterized network that achieves the same test accuracy as the dense network when trained from the same initialization) rather than from a global asymptotic requirement. Thus, MTI replaces the unavailable asymptotic uniform convergence with a strictly local convergence of empirical risk to risk.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For overparameterized neural networks, Empirical Risk Minimization (ERM) can suffer from a No-Go-ERM trivialization:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 117
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "the two-sided uniform convergence of empirical risk to risk fails",
+        "source_spans": [
+          {
+            "start": 117,
+            "end": 176
+          },
+          {
+            "start": 229,
+            "end": 235
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": ", which is necessary for ERM's asymptotic stability,",
+        "source_spans": [
+          {
+            "start": 176,
+            "end": 229
+          }
+        ],
+        "of_terms": [
+          "the two-sided uniform convergence of empirical risk to risk"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "relation",
+        "content": "because",
+        "source_spans": [
+          {
+            "start": 235,
+            "end": 243
+          }
+        ],
+        "connects": [
+          2,
+          5
+        ],
+        "expression": "[5] 推出 [2]"
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "both data-distribution-independent bounds and data-distribution-dependent bounds become uninformative.",
+        "source_spans": [
+          {
+            "start": 243,
+            "end": 285
+          },
+          {
+            "start": 331,
+            "end": 370
+          },
+          {
+            "start": 394,
+            "end": 416
+          }
+        ],
+        "supports": [
+          2
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(based on Vapnik-Chervonenkis (VC) dimension)",
+        "source_spans": [
+          {
+            "start": 285,
+            "end": 331
+          }
+        ],
+        "of_terms": [
+          "data-distribution-independent bounds"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(based on weight norms)",
+        "source_spans": [
+          {
+            "start": 370,
+            "end": 394
+          }
+        ],
+        "of_terms": [
+          "data-distribution-dependent bounds"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "This results in the absence of asymptotic stability",
+        "source_spans": [
+          {
+            "start": 416,
+            "end": 467
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": ", analogous to Norton's No-Go theorem for inductive logic.",
+        "source_spans": [
+          {
+            "start": 467,
+            "end": 526
+          }
+        ],
+        "of_terms": [
+          "the absence of asymptotic stability"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "The collapse to trivialization can be blocked by adopting a local stability provided by the Material Theory of Induction (MTI):",
+        "source_spans": [
+          {
+            "start": 526,
+            "end": 654
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "the strengths of inductive support for ERM are derived from the local context rather than from a global asymptotic requirement.",
+        "source_spans": [
+          {
+            "start": 654,
+            "end": 732
+          },
+          {
+            "start": 916,
+            "end": 966
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "framing",
+        "content": "(e.g., )",
+        "source_spans": [
+          {
+            "start": 732,
+            "end": 739
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "instance",
+        "content": "(a winning ticket)",
+        "source_spans": [
+          {
+            "start": 739,
+            "end": 755
+          }
+        ],
+        "of_terms": [
+          "the local context"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "framing",
+        "content": "(, i.e., )",
+        "source_spans": [
+          {
+            "start": 755,
+            "end": 763
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "elaboration",
+        "content": "(a sparse subnetwork of an overparameterized network that achieves the same test accuracy as the dense network when trained from the same initialization)",
+        "source_spans": [
+          {
+            "start": 763,
+            "end": 916
+          }
+        ],
+        "of_terms": [
+          "a winning ticket"
+        ]
+      },
+      {
+        "number": 16,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 966,
+            "end": 972
+          }
+        ],
+        "connects": [
+          10,
+          11,
+          17
+        ],
+        "expression": "([10] 且 [11]) 推出 [17]"
+      },
+      {
+        "number": 17,
+        "label": "assertion",
+        "content": "MTI replaces the unavailable asymptotic uniform convergence with a strictly local convergence of empirical risk to risk.",
+        "source_spans": [
+          {
+            "start": 972,
+            "end": 1092
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1029605232763469828::conclusion_3",
+    "global_id": "gcn_7b7405ec56a34b4b",
+    "order": 3,
+    "title": "Condition for local stability: matching subnetworks via linear mode connectivity",
+    "content": "For overparameterized neural networks, local stability of Empirical Risk Minimization (ERM) under the Lottery Ticket Hypothesis (LTH) is achieved when iterative magnitude pruning (IMP) identifies matching subnetworks that are robust to stochastic gradient descent (SGD) noise. Robustness to SGD noise is characterized by linear mode connectivity: two sets of network weights are linearly mode-connected if they are connected in weight space by a line along which test error does not increase. The epsilon-linearly connected sublevel set (LCSS) of a network \\(f(X;W)\\) with weights \\(W\\) is the set of all weight vectors \\(W'\\) whose test error \\(\\mathcal{E}(W')\\) is within \\(\\epsilon\\) of \\(\\mathcal{E}(W)\\) and which are linearly mode-connected to \\(W\\). A matching sparse subnetwork is a subnetwork \\(f(X; m \\odot W)\\) produced by applying pruning mask \\(m\\) (a binary vector indicating which weights are retained) such that its test error \\(\\mathcal{E}(m \\odot W) \\leq \\mathcal{E}(W) + \\epsilon\\). At each round \\(n\\) of IMP, if the axial subspace defined by the refined pruning mask \\(m_{n+1}\\) (i.e., the subspace of weight space where components corresponding to pruned weights are zero) intersects the LCSS of the current weights \\(W_n\\), then rewinding the remaining weights to their values at an early training step \\(k\\) (obtaining \\(W_k\\)) and training the subnetwork \\(f(X; m_{n+1} \\odot W_k)\\) to convergence produces updated weights \\(W_{n+1}\\) that are linearly mode-connected to \\(W_n\\) and have test error within \\(\\epsilon\\) of the original dense network. This geometric condition is necessary and sufficient for IMP to find a matching subnetwork at round \\(n\\), and it provides the local stability that de-trivializes ERM.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For overparameterized neural networks, local stability of Empirical Risk Minimization under the Lottery Ticket Hypothesis is achieved when iterative magnitude pruning identifies matching subnetworks that are robust to stochastic gradient descent noise.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 86
+          },
+          {
+            "start": 92,
+            "end": 128
+          },
+          {
+            "start": 134,
+            "end": 179
+          },
+          {
+            "start": 185,
+            "end": 264
+          },
+          {
+            "start": 270,
+            "end": 277
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(ERM)",
+        "source_spans": [
+          {
+            "start": 86,
+            "end": 92
+          }
+        ],
+        "of_terms": [
+          "Empirical Risk Minimization"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(LTH)",
+        "source_spans": [
+          {
+            "start": 128,
+            "end": 134
+          }
+        ],
+        "of_terms": [
+          "Lottery Ticket Hypothesis"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 179,
+            "end": 185
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(SGD)",
+        "source_spans": [
+          {
+            "start": 264,
+            "end": 270
+          }
+        ],
+        "of_terms": [
+          "stochastic gradient descent"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "Robustness to SGD noise is characterized by linear mode connectivity:",
+        "source_spans": [
+          {
+            "start": 277,
+            "end": 347
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "framing",
+        "content": "two sets of network weights are linearly mode-connected if",
+        "source_spans": [
+          {
+            "start": 347,
+            "end": 406
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "they are connected in weight space by a line along which test error does not increase.",
+        "source_spans": [
+          {
+            "start": 406,
+            "end": 493
+          }
+        ],
+        "of_terms": [
+          "linearly mode-connected"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "framing",
+        "content": "The epsilon-linearly connected sublevel set (LCSS) of a network \\(f(X;W)\\) with weights \\(W\\) is",
+        "source_spans": [
+          {
+            "start": 493,
+            "end": 590
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "the set of all weight vectors \\(W'\\) whose test error \\(\\mathcal{E}(W')\\) is within \\(\\epsilon\\) of \\(\\mathcal{E}(W)\\) and which are linearly mode-connected to \\(W\\).",
+        "source_spans": [
+          {
+            "start": 590,
+            "end": 757
+          }
+        ],
+        "of_terms": [
+          "epsilon-linearly connected sublevel set"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "framing",
+        "content": "A matching sparse subnetwork is",
+        "source_spans": [
+          {
+            "start": 757,
+            "end": 789
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "a subnetwork \\(f(X; m \\odot W)\\) produced by applying pruning mask \\(m\\)",
+        "source_spans": [
+          {
+            "start": 789,
+            "end": 862
+          }
+        ],
+        "of_terms": [
+          "matching sparse subnetwork"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "elaboration",
+        "content": "(a binary vector indicating which weights are retained)",
+        "source_spans": [
+          {
+            "start": 862,
+            "end": 918
+          }
+        ],
+        "of_terms": [
+          "pruning mask \\(m\\)"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "such that its test error \\(\\mathcal{E}(m \\odot W) \\leq \\mathcal{E}(W) + \\epsilon\\).",
+        "source_spans": [
+          {
+            "start": 918,
+            "end": 1002
+          }
+        ],
+        "of_terms": [
+          "matching sparse subnetwork"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "assertion",
+        "content": "At each round \\(n\\) of IMP, if the axial subspace defined by the refined pruning mask \\(m_{n+1}\\) intersects the LCSS of the current weights \\(W_n\\), then rewinding the remaining weights to their values at an early training step \\(k\\) and training the subnetwork \\(f(X; m_{n+1} \\odot W_k)\\) to convergence produces updated weights \\(W_{n+1}\\) that are linearly mode-connected to \\(W_n\\) and have test error within \\(\\epsilon\\) of the original dense network.",
+        "source_spans": [
+          {
+            "start": 1002,
+            "end": 1100
+          },
+          {
+            "start": 1195,
+            "end": 1332
+          },
+          {
+            "start": 1352,
+            "end": 1575
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "elaboration",
+        "content": "(i.e., the subspace of weight space where components corresponding to pruned weights are zero)",
+        "source_spans": [
+          {
+            "start": 1100,
+            "end": 1195
+          }
+        ],
+        "of_terms": [
+          "axial subspace defined by the refined pruning mask \\(m_{n+1}\\)"
+        ]
+      },
+      {
+        "number": 17,
+        "label": "elaboration",
+        "content": "(obtaining \\(W_k\\))",
+        "source_spans": [
+          {
+            "start": 1332,
+            "end": 1352
+          }
+        ],
+        "of_terms": [
+          "early training step \\(k\\)"
+        ]
+      },
+      {
+        "number": 18,
+        "label": "assertion",
+        "content": "This geometric condition is necessary and sufficient for IMP to find a matching subnetwork at round \\(n\\),",
+        "source_spans": [
+          {
+            "start": 1575,
+            "end": 1682
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1682,
+            "end": 1686
+          }
+        ]
+      },
+      {
+        "number": 20,
+        "label": "assertion",
+        "content": "it provides the local stability that de-trivializes ERM.",
+        "source_spans": [
+          {
+            "start": 1686,
+            "end": 1742
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1029605232763469828::conclusion_4",
+    "global_id": "gcn_544f76d448b149da",
+    "order": 4,
+    "title": "Application of LTH beyond original setting demonstrates localization of inductive risk",
+    "content": "The Lottery Ticket Hypothesis (LTH) has been empirically confirmed for neural network architectures used in natural language processing (Chen et al. 2020; Yu et al. 2020), computer vision (Chen et al. 2021; Morcos et al. 2019), and reinforcement learning (Yu et al. 2020), as well as for pre-trained models. The successful identification of winning subnetworks (sparse subnetworks that, when their weights are reset to their initial values, can be trained to match the test accuracy of the original dense network) or matching subnetworks (sparse subnetworks found by iterative magnitude pruning with weight rewinding that achieve test accuracy within a small tolerance of the dense network) in these diverse empirical domains supports the claim that LTH-based pruning localizes inductive risk by adapting the network's structure to local facts in each domain, validating the Material Theory of Induction (MTI) framework across different contexts.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The Lottery Ticket Hypothesis has been empirically confirmed for neural network architectures used in natural language processing , computer vision , and reinforcement learning , as well as for pre-trained models.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 30
+          },
+          {
+            "start": 36,
+            "end": 136
+          },
+          {
+            "start": 170,
+            "end": 188
+          },
+          {
+            "start": 226,
+            "end": 255
+          },
+          {
+            "start": 271,
+            "end": 308
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(LTH)",
+        "source_spans": [
+          {
+            "start": 30,
+            "end": 36
+          }
+        ],
+        "of_terms": [
+          "The Lottery Ticket Hypothesis"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "(Chen et al. 2020; Yu et al. 2020)",
+        "source_spans": [
+          {
+            "start": 136,
+            "end": 170
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "framing",
+        "content": "(Chen et al. 2021; Morcos et al. 2019)",
+        "source_spans": [
+          {
+            "start": 188,
+            "end": 226
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "framing",
+        "content": "(Yu et al. 2020)",
+        "source_spans": [
+          {
+            "start": 255,
+            "end": 271
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "The successful identification of winning subnetworks or matching subnetworks in these diverse empirical domains",
+        "source_spans": [
+          {
+            "start": 308,
+            "end": 361
+          },
+          {
+            "start": 514,
+            "end": 538
+          },
+          {
+            "start": 691,
+            "end": 726
+          }
+        ],
+        "supports": [
+          1,
+          10,
+          11
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(sparse subnetworks that, when their weights are reset to their initial values, can be trained to match the test accuracy of the original dense network)",
+        "source_spans": [
+          {
+            "start": 361,
+            "end": 514
+          }
+        ],
+        "of_terms": [
+          "winning subnetworks"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(sparse subnetworks found by iterative magnitude pruning with weight rewinding that achieve test accuracy within a small tolerance of the dense network)",
+        "source_spans": [
+          {
+            "start": 538,
+            "end": 691
+          }
+        ],
+        "of_terms": [
+          "matching subnetworks"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "论证",
+        "content": "supports the claim that",
+        "source_spans": [
+          {
+            "start": 726,
+            "end": 750
+          }
+        ],
+        "supports": [
+          10
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "LTH-based pruning localizes inductive risk by adapting the network's structure to local facts in each domain,",
+        "source_spans": [
+          {
+            "start": 750,
+            "end": 860
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "validating the Material Theory of Induction framework across different contexts.",
+        "source_spans": [
+          {
+            "start": 860,
+            "end": 904
+          },
+          {
+            "start": 910,
+            "end": 946
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "(MTI)",
+        "source_spans": [
+          {
+            "start": 904,
+            "end": 910
+          }
+        ],
+        "of_terms": [
+          "Material Theory of Induction"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1029605232763469828::conclusion_5",
+    "global_id": "gcn_4ee96ed2cf5245cf",
+    "order": 5,
+    "title": "Division of labor between MTI and optimality justifications in machine learning",
+    "content": "The epistemic justification provided by Material Theory of Induction (MTI)-based complexity regularization holds only when the training data are independent and identically distributed (i.i.d.) from a fixed distribution and the local facts remain stable across the training and deployment domains. If these conditions are violated (e.g., under distribution shifts), the MTI justification fails, and the inductive risk must be managed by a different type of justification — specifically, optimality-based meta-induction (Schurz's multiple-favorite meta-induction), which does not require assumptions about data uniformity. Thus, in machine learning, there is a division of labor: MTI provides local justification when data are stationary, while optimality justifications provide global justification for model selection under non-stationary conditions.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The epistemic justification provided by Material Theory of Induction -based complexity regularization holds only when the training data are independent and identically distributed from a fixed distribution and the local facts remain stable across the training and deployment domains.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 69
+          },
+          {
+            "start": 74,
+            "end": 185
+          },
+          {
+            "start": 194,
+            "end": 298
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(MTI)",
+        "source_spans": [
+          {
+            "start": 69,
+            "end": 74
+          }
+        ],
+        "of_terms": [
+          "Material Theory of Induction"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(i.i.d.)",
+        "source_spans": [
+          {
+            "start": 185,
+            "end": 194
+          }
+        ],
+        "of_terms": [
+          "independent and identically distributed"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "If these conditions are violated , the MTI justification fails,",
+        "source_spans": [
+          {
+            "start": 298,
+            "end": 331
+          },
+          {
+            "start": 364,
+            "end": 395
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "other",
+        "content": "",
+        "source_spans": [
+          {
+            "start": 331,
+            "end": 332
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "(e.g., )",
+        "source_spans": [
+          {
+            "start": 332,
+            "end": 338
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "instance",
+        "content": "(under distribution shifts)",
+        "source_spans": [
+          {
+            "start": 338,
+            "end": 363
+          }
+        ],
+        "of_terms": [
+          "these conditions are violated"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "other",
+        "content": "",
+        "source_spans": [
+          {
+            "start": 363,
+            "end": 364
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 395,
+            "end": 399
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "the inductive risk must be managed by a different type of justification optimality-based meta-induction",
+        "source_spans": [
+          {
+            "start": 399,
+            "end": 471
+          },
+          {
+            "start": 487,
+            "end": 519
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "framing",
+        "content": "— specifically,",
+        "source_spans": [
+          {
+            "start": 471,
+            "end": 487
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "(Schurz's multiple-favorite meta-induction)",
+        "source_spans": [
+          {
+            "start": 519,
+            "end": 562
+          }
+        ],
+        "of_terms": [
+          "optimality-based meta-induction"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "assertion",
+        "content": ", which does not require assumptions about data uniformity.",
+        "source_spans": [
+          {
+            "start": 562,
+            "end": 622
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 622,
+            "end": 628
+          }
+        ],
+        "connects": [
+          1,
+          4,
+          10,
+          13,
+          15,
+          16,
+          18
+        ],
+        "expression": "([1] 且 [4] 且 [10] 且 [13]) 推出 ([15] 且 [16] 且 [18])"
+      },
+      {
+        "number": 15,
+        "label": "assertion",
+        "content": "in machine learning, there is a division of labor:",
+        "source_spans": [
+          {
+            "start": 628,
+            "end": 679
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "MTI provides local justification when data are stationary,",
+        "source_spans": [
+          {
+            "start": 679,
+            "end": 738
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "label": "connection",
+        "content": "while",
+        "source_spans": [
+          {
+            "start": 738,
+            "end": 744
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "label": "assertion",
+        "content": "optimality justifications provide global justification for model selection under non-stationary conditions.",
+        "source_spans": [
+          {
+            "start": 744,
+            "end": 851
+          }
+        ]
+      }
+    ]
+  }
+]

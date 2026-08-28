@@ -1,0 +1,47 @@
+[
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 6,
+    "text": "AoP also improves Maximum Softmax Probability (MSP) and MaxLogit.",
+    "certain_instances_given": [
+      8
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 13,
+    "text": "The improvements in out-of-distribution (OOD) detection performance achieved by applying Average of Pruning (AoP) as a plug-in hold across the ResNet variants, WideResNet, VGG, and MobileNet backbones.",
+    "certain_instances_given": [
+      14
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 10,
+    "text": "Among the three during-training pruning methods evaluated—Gradual Magnitude Pruning (GMP), Rigging the Lottery (RigL), and Gradual Network with neuroregeneration (GraNet)—iterative/post-training LTH performed best for OOD tasks in CIFAR-10 experiments with ResNet-18.",
+    "certain_instances_given": [
+      11
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_7",
+    "claim_number": 11,
+    "text": "Similar trends hold for WideResNet-28-10 and the other two metrics, area under the precision-recall curve (AUPR) and false positive rate at 95% true positive rate (FPR95).",
+    "certain_instances_given": [
+      12
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_8",
+    "claim_number": 4,
+    "text": "Similar improvements to those described in 【1, 3】 are observed when AoP is combined with the other confidence estimator Confidence-aware Learning (CRL).",
+    "certain_instances_given": [
+      6
+    ],
+    "uncertain_instances_given": []
+  }
+]

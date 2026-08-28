@@ -1,0 +1,1547 @@
+[
+  {
+    "id": "paper:1129114189869088809::conclusion_1",
+    "global_id": "gcn_e4d3ae57822f4d8a",
+    "order": 1,
+    "title": "Permutation-based mask alignment via activation matching and REPAIR for sparse training from a different random initialization",
+    "content": "A practical procedure to reuse a sparse mask $\\mathfrak{m}_A$ (obtained via iterative magnitude pruning, IMP, on one fully trained dense model $A$) for training another model $B$ from a different random initialization is to (a) compute a layerwise permutation mapping $\\pi=\\{\\pi_l\\}_{l=1}^L$ by activation matching between the activations of models $A$ and $B$, and (b) apply the same permutation to the mask and, when evaluating linear interpolation between the two models, correct interpolated activations for variance collapse via REPAIR (REnormalizing Permuted Activations for Interpolation Repair). The activation-matching permutation for layer $l$ is defined by the objective\n      $$\n      \\pi_l=\\underset{\\pi\\in S_{d_l}}{\\operatorname{argmax}}\\langle \\pi,\\, Z_l^{B}\\left(Z_l^{A}\\right)^{\\top}\\rangle_{F},\n      $$\n      where $Z_l^{A},Z_l^{B}\\in\\mathbb{R}^{d_l\\times n}$ are the activations of layer $l$ for models $A$ and $B$ over $n$ training samples, $\\langle\\cdot,\\cdot\\rangle_F$ is the Frobenius inner-product, and $S_{d_l}$ is the permutation group on $d_l$ units. Once $\\pi_l$ is obtained for each layer, the weights and biases are permuted as\n      $$\n      W_l^{p}=\\pi_l\\,W_l\\,\\pi_{l-1}^{\\top},\\qquad b_l^{p}=\\pi_l\\,b_l,\n      $$\n      and the sparse mask $\\mathfrak{m}_A$ is permuted as $\\pi(\\mathfrak{m}_A)$ for training the new initialization of model $B$. When evaluating the loss barrier along a linear interpolation between the models, the REPAIR renormalization corrects variance collapse in interpolated activations before computing losses. This procedure defines the \"permuted\" sparse-training protocol contrasted with the \"naive\" protocol that applies $\\mathfrak{m}_A$ without permutation.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "A practical procedure to reuse a sparse mask $\\mathfrak{m}_A$",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 62
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(obtained via iterative magnitude pruning, IMP, on one fully trained dense model $A$)",
+        "source_spans": [
+          {
+            "start": 62,
+            "end": 148
+          }
+        ],
+        "of_terms": [
+          "$\\mathfrak{m}_A$"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "for training another model $B$ from a different random initialization is to (a) compute a layerwise permutation mapping $\\pi=\\{\\pi_l\\}_{l=1}^L$ by activation matching between the activations of models $A$ and $B$, and (b) apply the same permutation to the mask and, when evaluating linear interpolation between the two models, correct interpolated activations for variance collapse via REPAIR",
+        "source_spans": [
+          {
+            "start": 148,
+            "end": 541
+          }
+        ],
+        "of_terms": [
+          "\"permuted\" sparse-training protocol"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(REnormalizing Permuted Activations for Interpolation Repair).",
+        "source_spans": [
+          {
+            "start": 541,
+            "end": 604
+          }
+        ],
+        "of_terms": [
+          "REPAIR"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "framing",
+        "content": "The activation-matching permutation for layer $l$ is defined by the objective",
+        "source_spans": [
+          {
+            "start": 604,
+            "end": 688
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "$$ \\pi_l=\\underset{\\pi\\in S_{d_l}}{\\operatorname{argmax}}\\langle \\pi,\\, Z_l^{B}\\left(Z_l^{A}\\right)^{\\top}\\rangle_{F}, $$",
+        "source_spans": [
+          {
+            "start": 688,
+            "end": 828
+          }
+        ],
+        "of_terms": [
+          "activation-matching permutation"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "framing",
+        "content": "where",
+        "source_spans": [
+          {
+            "start": 828,
+            "end": 834
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "other",
+        "content": "$Z_l^{A},Z_l^{B}\\in\\mathbb{R}^{d_l\\times n}$",
+        "source_spans": [
+          {
+            "start": 834,
+            "end": 879
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "are the activations of layer $l$ for models $A$ and $B$ over $n$ training samples",
+        "source_spans": [
+          {
+            "start": 879,
+            "end": 960
+          }
+        ],
+        "of_terms": [
+          "$Z_l^{A},Z_l^{B}\\in\\mathbb{R}^{d_l\\times n}$"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "other",
+        "content": ",",
+        "source_spans": [
+          {
+            "start": 960,
+            "end": 962
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "other",
+        "content": "$\\langle\\cdot,\\cdot\\rangle_F$",
+        "source_spans": [
+          {
+            "start": 962,
+            "end": 992
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "is the Frobenius inner-product",
+        "source_spans": [
+          {
+            "start": 992,
+            "end": 1022
+          }
+        ],
+        "of_terms": [
+          "$\\langle\\cdot,\\cdot\\rangle_F$"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 1022,
+            "end": 1028
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "other",
+        "content": "$S_{d_l}$",
+        "source_spans": [
+          {
+            "start": 1028,
+            "end": 1038
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "elaboration",
+        "content": "is the permutation group on $d_l$ units.",
+        "source_spans": [
+          {
+            "start": 1038,
+            "end": 1079
+          }
+        ],
+        "of_terms": [
+          "$S_{d_l}$"
+        ]
+      },
+      {
+        "number": 16,
+        "label": "other",
+        "content": "Once $\\pi_l$ is obtained for each layer, the weights and biases are permuted as",
+        "source_spans": [
+          {
+            "start": 1079,
+            "end": 1165
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "label": "elaboration",
+        "content": "$$ W_l^{p}=\\pi_l\\,W_l\\,\\pi_{l-1}^{\\top},\\qquad b_l^{p}=\\pi_l\\,b_l, $$",
+        "source_spans": [
+          {
+            "start": 1165,
+            "end": 1253
+          }
+        ],
+        "of_terms": [
+          "weights and biases"
+        ]
+      },
+      {
+        "number": 18,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1253,
+            "end": 1257
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "label": "elaboration",
+        "content": "the sparse mask $\\mathfrak{m}_A$ is permuted as $\\pi(\\mathfrak{m}_A)$ for training the new initialization of model $B$.",
+        "source_spans": [
+          {
+            "start": 1257,
+            "end": 1377
+          }
+        ],
+        "of_terms": [
+          "\"permuted\" sparse-training protocol"
+        ]
+      },
+      {
+        "number": 20,
+        "label": "other",
+        "content": "When evaluating the loss barrier along a linear interpolation between the models,",
+        "source_spans": [
+          {
+            "start": 1377,
+            "end": 1459
+          }
+        ]
+      },
+      {
+        "number": 21,
+        "label": "other",
+        "content": "the REPAIR renormalization",
+        "source_spans": [
+          {
+            "start": 1459,
+            "end": 1486
+          }
+        ]
+      },
+      {
+        "number": 22,
+        "label": "elaboration",
+        "content": "corrects variance collapse in interpolated activations before computing losses.",
+        "source_spans": [
+          {
+            "start": 1486,
+            "end": 1566
+          }
+        ],
+        "of_terms": [
+          "the REPAIR renormalization"
+        ]
+      },
+      {
+        "number": 23,
+        "label": "framing",
+        "content": "This procedure defines the",
+        "source_spans": [
+          {
+            "start": 1566,
+            "end": 1593
+          }
+        ]
+      },
+      {
+        "number": 24,
+        "label": "other",
+        "content": "\"permuted\" sparse-training protocol",
+        "source_spans": [
+          {
+            "start": 1593,
+            "end": 1629
+          }
+        ]
+      },
+      {
+        "number": 25,
+        "label": "elaboration",
+        "content": "contrasted with the \"naive\" protocol",
+        "source_spans": [
+          {
+            "start": 1629,
+            "end": 1666
+          }
+        ],
+        "of_terms": [
+          "\"permuted\" sparse-training protocol"
+        ]
+      },
+      {
+        "number": 26,
+        "label": "elaboration",
+        "content": "that applies $\\mathfrak{m}_A$ without permutation.",
+        "source_spans": [
+          {
+            "start": 1666,
+            "end": 1716
+          }
+        ],
+        "of_terms": [
+          "\"naive\" protocol"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1129114189869088809::conclusion_2",
+    "global_id": "gcn_01c4572e1dde47c2",
+    "order": 2,
+    "title": "Permuted mask sparse training improves generalization over non-permuted mask across CIFAR-10/100 and ImageNet",
+    "content": "For sparse training of a model (model $B$) from a random initialization independent of the initialization used to discover the LTH (Lottery Ticket Hypothesis) mask $\\mathfrak{m}_A$, using the permuted mask $\\pi(\\mathfrak{m}_A)$ yields consistently higher test accuracy than using the non-permuted mask $\\mathfrak{m}_A$ across architectures (ResNet20, VGG11, ResNet50), datasets (CIFAR-10, CIFAR-100, ImageNet), sparsity levels $S\\in\\{0.80,0.90,0.95,0.97\\}$, and rewind points $k$ (the epoch from which weights are reset before sparse training). The LTH baseline (training the original initialization with $\\mathfrak{m}_A$ after weight rewinding) serves as an upper bound. On CIFAR-10 and CIFAR-100 with ResNet20, the permuted solution outperforms the naive (non-permuted) solution at all four sparsity levels and all tested rewind points ($k\\in\\{0,5,10,15,20,25,50,75,100\\}$). On CIFAR-10 with VGG11, the permuted solution outperforms naive at all tested rewind points ($k\\in\\{0,5,10,15,20,25,50\\}$) for 80% and 90% sparsity. For ResNet20×1 on CIFAR-10 at 90% sparsity and $k=75$, permuted test accuracy is 90.03% versus naive 88.81% and LTH 91.36%; permuted reduces the LTH–naive accuracy gap from 2.55 to 1.33 percentage points. On ImageNet with ResNet50 at 90% sparsity and $k=25$, the permuted Top-1 accuracy is 66.37% versus naive 64.77%, a difference of 1.6 percentage points; at 95% sparsity and $k=25$, permuted Top-1 is 62.77% versus naive 60.77%, a difference of 2.0 percentage points.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For sparse training of a model from a random initialization independent of the initialization used to discover the LTH mask $\\mathfrak{m}_A$, using the permuted mask $\\pi(\\mathfrak{m}_A)$ yields consistently higher test accuracy than using the non-permuted mask $\\mathfrak{m}_A$ across architectures , datasets , sparsity levels , and rewind points $k$ .",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 31
+          },
+          {
+            "start": 43,
+            "end": 131
+          },
+          {
+            "start": 159,
+            "end": 340
+          },
+          {
+            "start": 367,
+            "end": 378
+          },
+          {
+            "start": 409,
+            "end": 427
+          },
+          {
+            "start": 456,
+            "end": 480
+          },
+          {
+            "start": 543,
+            "end": 545
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(model $B$)",
+        "source_spans": [
+          {
+            "start": 31,
+            "end": 43
+          }
+        ],
+        "of_terms": [
+          "model"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(Lottery Ticket Hypothesis)",
+        "source_spans": [
+          {
+            "start": 131,
+            "end": 159
+          }
+        ],
+        "of_terms": [
+          "LTH"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "instance",
+        "content": "(ResNet20, VGG11, ResNet50)",
+        "source_spans": [
+          {
+            "start": 340,
+            "end": 367
+          }
+        ],
+        "of_terms": [
+          "architectures"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "instance",
+        "content": "(CIFAR-10, CIFAR-100, ImageNet)",
+        "source_spans": [
+          {
+            "start": 378,
+            "end": 409
+          }
+        ],
+        "of_terms": [
+          "datasets"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "$S\\in\\{0.80,0.90,0.95,0.97\\}$",
+        "source_spans": [
+          {
+            "start": 427,
+            "end": 456
+          }
+        ],
+        "of_terms": [
+          "sparsity levels"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(the epoch from which weights are reset before sparse training)",
+        "source_spans": [
+          {
+            "start": 480,
+            "end": 543
+          }
+        ],
+        "of_terms": [
+          "rewind points $k$"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "The LTH baseline serves as an upper bound.",
+        "source_spans": [
+          {
+            "start": 545,
+            "end": 562
+          },
+          {
+            "start": 646,
+            "end": 672
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(training the original initialization with $\\mathfrak{m}_A$ after weight rewinding)",
+        "source_spans": [
+          {
+            "start": 562,
+            "end": 646
+          }
+        ],
+        "of_terms": [
+          "LTH baseline"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "On CIFAR-10 and CIFAR-100 with ResNet20, the permuted solution outperforms the naive solution at all four sparsity levels and all tested rewind points .",
+        "source_spans": [
+          {
+            "start": 672,
+            "end": 757
+          },
+          {
+            "start": 772,
+            "end": 838
+          },
+          {
+            "start": 875,
+            "end": 877
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "(non-permuted)",
+        "source_spans": [
+          {
+            "start": 757,
+            "end": 772
+          }
+        ],
+        "of_terms": [
+          "naive"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "($k\\in\\{0,5,10,15,20,25,50,75,100\\}$)",
+        "source_spans": [
+          {
+            "start": 838,
+            "end": 875
+          }
+        ],
+        "of_terms": [
+          "rewind points"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "assertion",
+        "content": "On CIFAR-10 with VGG11, the permuted solution outperforms naive at all tested rewind points for 80% and 90% sparsity.",
+        "source_spans": [
+          {
+            "start": 877,
+            "end": 969
+          },
+          {
+            "start": 1000,
+            "end": 1026
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "($k\\in\\{0,5,10,15,20,25,50\\}$)",
+        "source_spans": [
+          {
+            "start": 969,
+            "end": 1000
+          }
+        ],
+        "of_terms": [
+          "rewind points"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "论据",
+        "content": "For ResNet20×1 on CIFAR-10 at 90% sparsity and $k=75$, permuted test accuracy is 90.03% versus naive 88.81% and LTH 91.36%;",
+        "source_spans": [
+          {
+            "start": 1026,
+            "end": 1150
+          }
+        ],
+        "supports": [
+          1,
+          8,
+          10
+        ]
+      },
+      {
+        "number": 16,
+        "label": "论据",
+        "content": "permuted reduces the LTH–naive accuracy gap from 2.55 to 1.33 percentage points.",
+        "source_spans": [
+          {
+            "start": 1150,
+            "end": 1231
+          }
+        ],
+        "supports": [
+          1,
+          8,
+          10
+        ]
+      },
+      {
+        "number": 17,
+        "label": "论据",
+        "content": "On ImageNet with ResNet50 at 90% sparsity and $k=25$, the permuted Top-1 accuracy is 66.37% versus naive 64.77%, a difference of 1.6 percentage points;",
+        "source_spans": [
+          {
+            "start": 1231,
+            "end": 1383
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 18,
+        "label": "论据",
+        "content": "at 95% sparsity and $k=25$, permuted Top-1 is 62.77% versus naive 60.77%, a difference of 2.0 percentage points.",
+        "source_spans": [
+          {
+            "start": 1383,
+            "end": 1495
+          }
+        ],
+        "supports": [
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1129114189869088809::conclusion_3",
+    "global_id": "gcn_fedc24b9101e47d3",
+    "order": 3,
+    "title": "Permuted-mask trained sparse models exhibit greater functional diversity and improved ensemble gains than LTH retraining",
+    "content": "Across repeated runs at 90% sparsity, ensembles formed from independently trained permuted-mask models exhibit larger function-space diversity than ensembles of LTH (Lottery Ticket Hypothesis) models retrained with the same mask and initialization. The permuted ensemble uses 5 different permutations of the same mask $\\mathfrak{m}_A$ with 5 different random weight initializations; the LTH ensemble uses the same mask and initialization with 5 different data orders. Diversity is measured by disagreement (fraction of test samples where predictions differ), Kullback–Leibler divergence (average KL divergence between predicted distributions), and Jensen–Shannon divergence (average JS divergence between predicted distributions). For ResNet20×1 on CIFAR-10, the permuted ensemble accuracy is 91.75% versus LTH ensemble 91.43% despite the LTH single-model mean (91.15%) being higher than the permuted single-model mean (89.38%); disagreement is 0.107 for permuted vs 0.035 for LTH, KL divergence is 0.273 vs 0.038, and JS divergence is 0.091 vs 0.011. For ResNet20×4 on CIFAR-100, the permuted ensemble accuracy is 77.85% versus LTH ensemble 75.99%; disagreement is 0.278 for permuted vs 0.117 for LTH, KL divergence is 0.918 vs 0.134, and JS divergence is 0.327 vs 0.038.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Across repeated runs at 90% sparsity, ensembles formed from independently trained permuted-mask models exhibit larger function-space diversity than ensembles of LTH models retrained with the same mask and initialization.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 165
+          },
+          {
+            "start": 193,
+            "end": 249
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(Lottery Ticket Hypothesis)",
+        "source_spans": [
+          {
+            "start": 165,
+            "end": 193
+          }
+        ],
+        "of_terms": [
+          "LTH"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "The permuted ensemble uses 5 different permutations of the same mask $\\mathfrak{m}_A$ with 5 different random weight initializations; the LTH ensemble uses the same mask and initialization with 5 different data orders.",
+        "source_spans": [
+          {
+            "start": 249,
+            "end": 468
+          }
+        ],
+        "of": [
+          1
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "Diversity is measured by disagreement (fraction of test samples where predictions differ), Kullback–Leibler divergence (average KL divergence between predicted distributions), and Jensen–Shannon divergence (average JS divergence between predicted distributions).",
+        "source_spans": [
+          {
+            "start": 468,
+            "end": 731
+          }
+        ],
+        "of": [
+          1
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "For ResNet20×1 on CIFAR-10, the permuted ensemble accuracy is 91.75% versus LTH ensemble 91.43%",
+        "source_spans": [
+          {
+            "start": 731,
+            "end": 827
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "connection",
+        "content": "despite",
+        "source_spans": [
+          {
+            "start": 827,
+            "end": 835
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "the LTH single-model mean being higher than the permuted single-model mean",
+        "source_spans": [
+          {
+            "start": 835,
+            "end": 861
+          },
+          {
+            "start": 870,
+            "end": 919
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(91.15%)",
+        "source_spans": [
+          {
+            "start": 861,
+            "end": 870
+          }
+        ],
+        "of_terms": [
+          "the LTH single-model mean"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(89.38%)",
+        "source_spans": [
+          {
+            "start": 919,
+            "end": 927
+          }
+        ],
+        "of_terms": [
+          "the permuted single-model mean"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "论据",
+        "content": "; disagreement is 0.107 for permuted vs 0.035 for LTH",
+        "source_spans": [
+          {
+            "start": 927,
+            "end": 980
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 11,
+        "label": "论据",
+        "content": ", KL divergence is 0.273 vs 0.038,",
+        "source_spans": [
+          {
+            "start": 980,
+            "end": 1015
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 12,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1015,
+            "end": 1019
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "论据",
+        "content": "JS divergence is 0.091 vs 0.011.",
+        "source_spans": [
+          {
+            "start": 1019,
+            "end": 1052
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 14,
+        "label": "assertion",
+        "content": "For ResNet20×4 on CIFAR-100, the permuted ensemble accuracy is 77.85% versus LTH ensemble 75.99%",
+        "source_spans": [
+          {
+            "start": 1052,
+            "end": 1148
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "论据",
+        "content": "; disagreement is 0.278 for permuted vs 0.117 for LTH",
+        "source_spans": [
+          {
+            "start": 1148,
+            "end": 1201
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 16,
+        "label": "论据",
+        "content": ", KL divergence is 0.918 vs 0.134,",
+        "source_spans": [
+          {
+            "start": 1201,
+            "end": 1236
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 17,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1236,
+            "end": 1240
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "label": "论据",
+        "content": "JS divergence is 0.327 vs 0.038.",
+        "source_spans": [
+          {
+            "start": 1240,
+            "end": 1272
+          }
+        ],
+        "supports": [
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1129114189869088809::conclusion_4",
+    "global_id": "gcn_761bff05fd414c29",
+    "order": 4,
+    "title": "Dense solution and LTH sparse solution are linearly mode connected after REPAIR correction of variance collapse",
+    "content": "After correcting interpolation-induced variance collapse via the REPAIR (REnormalizing Permuted Activations for Interpolation Repair) renormalization, the loss barrier $\\mathcal{B}(\\theta_1,\\theta_2)$ (defined as $\\sup_{\\alpha\\in[0,1]}[\\mathcal{L}((1-\\alpha)\\theta_1+\\alpha\\theta_2)-((1-\\alpha)\\mathcal{L}(\\theta_1)+\\alpha\\mathcal{L}(\\theta_2))]$) between a dense trained solution $\\mathbf{w}_A^{t=T}$ (model $A$ trained to convergence) and the corresponding sparse LTH (Lottery Ticket Hypothesis) solution (obtained by retraining the original initialization with mask $\\mathfrak{m}_A$ after weight rewinding) remains small across iterative magnitude pruning (IMP) iterations even at high sparsity, demonstrating linear mode connectivity modulo variance collapse. For ResNet20×4 on CIFAR-10 at 90% sparsity, the error barrier between the dense and sparse solutions after applying REPAIR is near zero across IMP iterations.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "After correcting interpolation-induced variance collapse via the REPAIR",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 72
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(REnormalizing Permuted Activations for Interpolation Repair)",
+        "source_spans": [
+          {
+            "start": 72,
+            "end": 134
+          }
+        ],
+        "of_terms": [
+          "REPAIR"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "renormalization,",
+        "source_spans": [
+          {
+            "start": 134,
+            "end": 151
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "the loss barrier $\\mathcal{B}(\\theta_1,\\theta_2)$ between a dense trained solution $\\mathbf{w}_A^{t=T}$ and the corresponding sparse LTH solution remains small across iterative magnitude pruning iterations even at high sparsity,",
+        "source_spans": [
+          {
+            "start": 151,
+            "end": 201
+          },
+          {
+            "start": 348,
+            "end": 402
+          },
+          {
+            "start": 437,
+            "end": 470
+          },
+          {
+            "start": 498,
+            "end": 507
+          },
+          {
+            "start": 610,
+            "end": 659
+          },
+          {
+            "start": 665,
+            "end": 699
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(defined as $\\sup_{\\alpha\\in[0,1]}[\\mathcal{L}((1-\\alpha)\\theta_1+\\alpha\\theta_2)-((1-\\alpha)\\mathcal{L}(\\theta_1)+\\alpha\\mathcal{L}(\\theta_2))]$)",
+        "source_spans": [
+          {
+            "start": 201,
+            "end": 348
+          }
+        ],
+        "of_terms": [
+          "loss barrier $\\mathcal{B}(\\theta_1,\\theta_2)$"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(model $A$ trained to convergence)",
+        "source_spans": [
+          {
+            "start": 402,
+            "end": 437
+          }
+        ],
+        "of_terms": [
+          "$\\mathbf{w}_A^{t=T}$"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(Lottery Ticket Hypothesis)",
+        "source_spans": [
+          {
+            "start": 470,
+            "end": 498
+          }
+        ],
+        "of_terms": [
+          "LTH"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(obtained by retraining the original initialization with mask $\\mathfrak{m}_A$ after weight rewinding)",
+        "source_spans": [
+          {
+            "start": 507,
+            "end": 610
+          }
+        ],
+        "of_terms": [
+          "solution"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 659,
+            "end": 665
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "demonstrating linear mode connectivity modulo variance collapse.",
+        "source_spans": [
+          {
+            "start": 699,
+            "end": 764
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "论据",
+        "content": "For ResNet20×4 on CIFAR-10 at 90% sparsity, the error barrier between the dense and sparse solutions after applying REPAIR is near zero across IMP iterations.",
+        "source_spans": [
+          {
+            "start": 764,
+            "end": 922
+          }
+        ],
+        "supports": [
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1129114189869088809::conclusion_5",
+    "global_id": "gcn_2ba1777ca2334dbf",
+    "order": 5,
+    "title": "Permutation matching accuracy and permuted-mask transfer effectiveness improve with model width",
+    "content": "The quality of activation-based permutation matching improves as network layer widths increase, producing smaller interpolation loss barriers between permuted and independently trained dense models and yielding permuted-mask sparse training results that approach the LTH (Lottery Ticket Hypothesis) baseline for wider models. For ResNet20 on CIFAR-10 with width multipliers $w\\in\\{1,4,8,16\\}$, the loss barrier after permutation and REPAIR (REnormalizing Permuted Activations for Interpolation Repair) decreases with width, and the gap between the permuted and LTH test accuracies at 90% sparsity and rewind point $k=75$ shrinks from 1.33 percentage points ($w=1$: LTH 91.36%, permuted 90.03%) to 0.01 percentage points ($w=16$: LTH 96.18%, permuted 96.17%). Similar trends are observed on CIFAR-100.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The quality of activation-based permutation matching improves as network layer widths increase,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 96
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "producing smaller interpolation loss barriers between permuted and independently trained dense models",
+        "source_spans": [
+          {
+            "start": 96,
+            "end": 198
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 198,
+            "end": 202
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "yielding permuted-mask sparse training results that approach the LTH baseline for wider models.",
+        "source_spans": [
+          {
+            "start": 202,
+            "end": 271
+          },
+          {
+            "start": 299,
+            "end": 326
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(Lottery Ticket Hypothesis)",
+        "source_spans": [
+          {
+            "start": 271,
+            "end": 299
+          }
+        ],
+        "of_terms": [
+          "LTH"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "For ResNet20 on CIFAR-10 with width multipliers $w\\in\\{1,4,8,16\\}$, the loss barrier after permutation and REPAIR decreases with width,",
+        "source_spans": [
+          {
+            "start": 326,
+            "end": 440
+          },
+          {
+            "start": 502,
+            "end": 524
+          }
+        ],
+        "supports": [
+          1,
+          2
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(REnormalizing Permuted Activations for Interpolation Repair)",
+        "source_spans": [
+          {
+            "start": 440,
+            "end": 502
+          }
+        ],
+        "of_terms": [
+          "REPAIR"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 524,
+            "end": 528
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "论据",
+        "content": "the gap between the permuted and LTH test accuracies at 90% sparsity and rewind point $k=75$ shrinks from 1.33 percentage points to 0.01 percentage points",
+        "source_spans": [
+          {
+            "start": 528,
+            "end": 657
+          },
+          {
+            "start": 694,
+            "end": 720
+          }
+        ],
+        "supports": [
+          1,
+          4
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "($w=1$: LTH 91.36%, permuted 90.03%)",
+        "source_spans": [
+          {
+            "start": 657,
+            "end": 694
+          }
+        ],
+        "of_terms": [
+          "1.33 percentage points"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "($w=16$: LTH 96.18%, permuted 96.17%)",
+        "source_spans": [
+          {
+            "start": 720,
+            "end": 757
+          }
+        ],
+        "of_terms": [
+          "0.01 percentage points"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "other",
+        "content": ".",
+        "source_spans": [
+          {
+            "start": 757,
+            "end": 759
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "论据",
+        "content": "Similar trends are observed on CIFAR-100.",
+        "source_spans": [
+          {
+            "start": 759,
+            "end": 800
+          }
+        ],
+        "supports": [
+          1,
+          2,
+          4
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1129114189869088809::conclusion_6",
+    "global_id": "gcn_7310b742879f4f76",
+    "order": 6,
+    "title": "Early matching of permutations reduces alignment cost while maintaining improvement over naive sparse training",
+    "content": "It is feasible to compute the activation-matching permutation $\\pi$ by aligning a fully trained model $A$ (trained to convergence, $T=200$ epochs) to an early checkpoint $\\mathbf{w}_B^{t=i}$ ($i\\in\\{5,20,50,100\\}$) of the target model $B$, and using that $\\pi$ to permute the mask for sparse training of model $B$ from rewind point $k=20$. For ResNet20×1 on CIFAR-10, full matching ($t=200$) at 95% sparsity yields 88.29% test accuracy, early matching at $t=5$ yields 87.37%, at $t=20$ yields 87.68%, at $t=50$ yields 87.43%, at $t=100$ yields 87.54%; all early-matching permuted solutions outperform the naive baseline (87.31%). At 90% sparsity, full matching yields 89.50%, early matching at $t=5$ yields 89.16% (naive: 88.83%). At 80% sparsity, full matching yields 90.68%, early matching at $t=5$ yields 90.49% (naive: 90.13%). Permutations obtained by matching to early training iterations thus enable the permuted solution to outperform the naive baseline at typical rewind points, providing a practical option to amortize or reduce the extra cost of training two full models to convergence before alignment.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "It is feasible to compute the activation-matching permutation $\\pi$ by aligning a fully trained model $A$ to an early checkpoint $\\mathbf{w}_B^{t=i}$ of the target model $B$, and using that $\\pi$ to permute the mask for sparse training of model $B$ from rewind point $k=20$.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 106
+          },
+          {
+            "start": 147,
+            "end": 191
+          },
+          {
+            "start": 215,
+            "end": 340
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(trained to convergence, $T=200$ epochs)",
+        "source_spans": [
+          {
+            "start": 106,
+            "end": 147
+          }
+        ],
+        "of_terms": [
+          "fully trained model $A$"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "($i\\in\\{5,20,50,100\\}$)",
+        "source_spans": [
+          {
+            "start": 191,
+            "end": 215
+          }
+        ],
+        "of_terms": [
+          "early checkpoint $\\mathbf{w}_B^{t=i}$"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "论据",
+        "content": "For ResNet20×1 on CIFAR-10, full matching at 95% sparsity yields 88.29% test accuracy,",
+        "source_spans": [
+          {
+            "start": 340,
+            "end": 382
+          },
+          {
+            "start": 392,
+            "end": 437
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "($t=200$)",
+        "source_spans": [
+          {
+            "start": 382,
+            "end": 392
+          }
+        ],
+        "of_terms": [
+          "full matching"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "early matching at $t=5$ yields 87.37%,",
+        "source_spans": [
+          {
+            "start": 437,
+            "end": 476
+          }
+        ],
+        "supports": [
+          1,
+          10,
+          18
+        ]
+      },
+      {
+        "number": 7,
+        "label": "论据",
+        "content": "at $t=20$ yields 87.68%,",
+        "source_spans": [
+          {
+            "start": 476,
+            "end": 501
+          }
+        ],
+        "supports": [
+          1,
+          10,
+          18
+        ]
+      },
+      {
+        "number": 8,
+        "label": "论据",
+        "content": "at $t=50$ yields 87.43%,",
+        "source_spans": [
+          {
+            "start": 501,
+            "end": 526
+          }
+        ],
+        "supports": [
+          1,
+          10,
+          18
+        ]
+      },
+      {
+        "number": 9,
+        "label": "论据",
+        "content": "at $t=100$ yields 87.54%;",
+        "source_spans": [
+          {
+            "start": 526,
+            "end": 552
+          }
+        ],
+        "supports": [
+          1,
+          10,
+          18
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "all early-matching permuted solutions outperform the naive baseline",
+        "source_spans": [
+          {
+            "start": 552,
+            "end": 620
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "(87.31%).",
+        "source_spans": [
+          {
+            "start": 620,
+            "end": 630
+          }
+        ],
+        "of_terms": [
+          "the naive baseline"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "论据",
+        "content": "At 90% sparsity, full matching yields 89.50%,",
+        "source_spans": [
+          {
+            "start": 630,
+            "end": 676
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 13,
+        "label": "论据",
+        "content": "early matching at $t=5$ yields 89.16%",
+        "source_spans": [
+          {
+            "start": 676,
+            "end": 714
+          }
+        ],
+        "supports": [
+          1,
+          18
+        ]
+      },
+      {
+        "number": 14,
+        "label": "论据",
+        "content": "(naive: 88.83%).",
+        "source_spans": [
+          {
+            "start": 714,
+            "end": 731
+          }
+        ],
+        "supports": [
+          18
+        ]
+      },
+      {
+        "number": 15,
+        "label": "论据",
+        "content": "At 80% sparsity, full matching yields 90.68%,",
+        "source_spans": [
+          {
+            "start": 731,
+            "end": 777
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 16,
+        "label": "论据",
+        "content": "early matching at $t=5$ yields 90.49%",
+        "source_spans": [
+          {
+            "start": 777,
+            "end": 815
+          }
+        ],
+        "supports": [
+          1,
+          18
+        ]
+      },
+      {
+        "number": 17,
+        "label": "论据",
+        "content": "(naive: 90.13%).",
+        "source_spans": [
+          {
+            "start": 815,
+            "end": 832
+          }
+        ],
+        "supports": [
+          18
+        ]
+      },
+      {
+        "number": 18,
+        "label": "assertion",
+        "content": "Permutations obtained by matching to early training iterations enable the permuted solution to outperform the naive baseline at typical rewind points,",
+        "source_spans": [
+          {
+            "start": 832,
+            "end": 895
+          },
+          {
+            "start": 900,
+            "end": 988
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "label": "relation",
+        "content": "thus",
+        "source_spans": [
+          {
+            "start": 895,
+            "end": 900
+          }
+        ],
+        "connects": [
+          6,
+          7,
+          8,
+          9,
+          10,
+          13,
+          14,
+          16,
+          17,
+          18
+        ],
+        "expression": "([6] 且 [7] 且 [8] 且 [9] 且 [10] 且 [13] 且 [14] 且 [16] 且 [17]) 推出 [18]"
+      },
+      {
+        "number": 20,
+        "label": "motivation",
+        "content": "providing a practical option to amortize or reduce the extra cost of training two full models to convergence before alignment.",
+        "source_spans": [
+          {
+            "start": 988,
+            "end": 1114
+          }
+        ]
+      }
+    ]
+  }
+]

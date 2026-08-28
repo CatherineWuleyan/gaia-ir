@@ -1,0 +1,262 @@
+[
+  {
+    "id": "paper:867758731482366166::conclusion_1",
+    "global_id": "gcn_3de7d8458793449d",
+    "order": 1,
+    "title": "Adversarial data-free minimax framework for combined distillation, quantization and pruning",
+    "content": "A unified data-free training framework jointly trains a compact student network with quantization or pruning constraints and an auxiliary generator in a minimax (adversarial) formulation. The framework optimizes the minimax objective\n      $$\n      \\min_{\\theta_s}\\max_{\\theta_g}\\ \\mathbb{E}_{z\\sim\\mathcal{N}(0,I)}\\; \\mathcal{D}\\big(z;\\theta_g,\\theta_s\\big),\n      $$\n      where the divergence term is defined as\n      $$\n      \\mathcal{D}(z;\\theta_g,\\theta_s)=D\\big(T(G(z;\\theta_g))\\,\\|\\,S(G(z;\\theta_g);\\theta_s)\\big),\n      $$\n      with $T(x;\\theta_0)$ a fixed pre-trained teacher network, $S(x;\\theta_s)$ the compact student network, $G(z;\\theta_g)$ the auxiliary generator taking input $z\\sim\\mathcal{N}(0,I)$, and $D(\\cdot\\|\\cdot)$ a probability divergence between teacher and student outputs (e.g., Kullback-Leibler divergence $D_{KL}$ or symmetric Jensen–Shannon divergence $D_{JS}$). The full training loss includes a spatial-attention regularizer\n      $$\n      \\mathcal{R}_a(z;\\theta_s)=\\beta\\sum_{l\\in\\mathcal{S}_a}\\Big\\|\\frac{f(s_l)}{\\|f(s_l)\\|}-\\frac{f(t_l)}{\\|f(t_l)\\|}\\Big\\|,\n      $$\n      with $f(x)=\\frac{1}{N_c}\\sum_c (x^{(c)})^2$ the per-layer spatial attention map averaged over channels, and a pruning sparsity regularizer\n      $$\n      \\mathcal{R}_p(\\theta_s)=\\sum_{l=1}^L \\gamma_l\\|s_l\\|_1 + \\lambda\\|W_l\\|_F^2 + \\lambda\\|b_l\\|^2,\n      $$\n      where $s_l\\in\\mathbb{R}^{n_l}$ are trainable per-filter scaling factors for layer $l$ and $W_l,b_l$ are the layer weights and biases. Quantization is implemented via a BinaryConnect-like scheme: (a) a full-precision buffer $\\theta_b$ is maintained, (b) the gradient is computed from the binary weights $\\delta\\operatorname{sign}(\\theta_b)$, (c) the buffer is updated via gradient descent and then projected onto the infinity-norm ball of radius $\\delta$ (clipped to $[-\\delta,\\delta]$). After training, the binary weights are set to $\\delta\\operatorname{sign}(\\theta_b)$. This formulation integrates knowledge distillation, adversarial synthetic-data generation, BinaryConnect quantization, and structured pruning with $\\ell_1$ penalties on per-filter scaling factors into a single practical training procedure.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "A unified data-free training framework jointly trains a compact student network with quantization or pruning constraints and an auxiliary generator in a minimax (adversarial) formulation.",
+          "label": "other"
+        },
+        {
+          "text": "The framework optimizes the minimax objective\n      $$\n      \\min_{\\theta_s}\\max_{\\theta_g}\\ \\mathbb{E}_{z\\sim\\mathcal{N}(0,I)}\\; \\mathcal{D}\\big(z;\\theta_g,\\theta_s\\big),\n      $$\n      where the divergence term is defined as\n      $$\n      \\mathcal{D}(z;\\theta_g,\\theta_s)=D\\big(T(G(z;\\theta_g))\\,\\|\\,S(G(z;\\theta_g);\\theta_s)\\big),\n      $$\n      with $T(x;\\theta_0)$ a fixed pre-trained teacher network, $S(x;\\theta_s)$ the compact student network, $G(z;\\theta_g)$ the auxiliary generator taking input $z\\sim\\mathcal{N}(0,I)$, and $D(\\cdot\\|\\cdot)$ a probability divergence between teacher and student outputs (e.g., Kullback-Leibler divergence $D_{KL}$ or symmetric Jensen–Shannon divergence $D_{JS}$).",
+          "label": "elaboration"
+        },
+        {
+          "text": "The full training loss includes a spatial-attention regularizer\n      $$\n      \\mathcal{R}_a(z;\\theta_s)=\\beta\\sum_{l\\in\\mathcal{S}_a}\\Big\\|\\frac{f(s_l)}{\\|f(s_l)\\|}-\\frac{f(t_l)}{\\|f(t_l)\\|}\\Big\\|,\n      $$\n      with $f(x)=\\frac{1}{N_c}\\sum_c (x^{(c)})^2$ the per-layer spatial attention map averaged over channels, and a pruning sparsity regularizer\n      $$\n      \\mathcal{R}_p(\\theta_s)=\\sum_{l=1}^L \\gamma_l\\|s_l\\|_1 + \\lambda\\|W_l\\|_F^2 + \\lambda\\|b_l\\|^2,\n      $$\n      where $s_l\\in\\mathbb{R}^{n_l}$ are trainable per-filter scaling factors for layer $l$ and $W_l,b_l$ are the layer weights and biases.",
+          "label": "elaboration"
+        },
+        {
+          "text": "Quantization is implemented via a BinaryConnect-like scheme: (a) a full-precision buffer $\\theta_b$ is maintained, (b) the gradient is computed from the binary weights $\\delta\\operatorname{sign}(\\theta_b)$, (c) the buffer is updated via gradient descent and then projected onto the infinity-norm ball of radius $\\delta$ (clipped to $[-\\delta,\\delta]$). After training, the binary weights are set to $\\delta\\operatorname{sign}(\\theta_b)$.",
+          "label": "elaboration"
+        },
+        {
+          "text": "This formulation integrates knowledge distillation, adversarial synthetic-data generation, BinaryConnect quantization, and structured pruning with $\\ell_1$ penalties on per-filter scaling factors into a single practical training procedure.",
+          "label": "other"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_2",
+    "global_id": "gcn_b23264670a22484a",
+    "order": 2,
+    "title": "Data-free binary quantization achieves high CIFAR-10 accuracy",
+    "content": "Using the adversarial data-free minimax framework with BinaryConnect-style quantization (binary weights in intermediate layers, full-precision first and final layers, and a fixed per-layer scale factor $\\delta$), a binary-weight student Wide ResNet WRN-16-2 distilled from a WRN-40-2 teacher on the CIFAR-10 dataset attains a test accuracy of 88.14% in the data-free setting. Initializing the binary student weights as $\\theta_s(0)=\\delta\\operatorname{sign}(\\theta_0)$ where $\\theta_0$ are pretrained weights improves the data-free binary accuracy to 88.98%. For reference, a full-precision WRN-16-2 trained in the same data-free setting achieves 89.71%, and a WRN-16-2 trained with supervised BinaryConnect and data augmentation reaches 92.97%. These empirical numbers demonstrate that extreme low-bit (binary) quantization of intermediate layers can be achieved without access to training data while preserving most of the full-precision data-free performance.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Using the adversarial data-free minimax framework with BinaryConnect-style quantization (",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "binary weights in intermediate layers, full-precision first and final layers, and a fixed per-layer scale factor $\\delta$",
+          "label": "elaboration"
+        },
+        {
+          "text": "), a binary-weight student Wide ResNet WRN-16-2 distilled from a WRN-40-2 teacher on the CIFAR-10 dataset attains a test accuracy of 88.14% in the data-free setting.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Initializing the binary student weights as $\\theta_s(0)=\\delta\\operatorname{sign}(\\theta_0)$",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "where $\\theta_0$ are pretrained weights",
+          "label": "elaboration"
+        },
+        {
+          "text": "improves the data-free binary accuracy to 88.98%.",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "For reference, a full-precision WRN-16-2 trained in the same data-free setting achieves 89.71%, and",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "a WRN-16-2 trained with supervised BinaryConnect and data augmentation reaches 92.97%.",
+          "label": "assertion [4]"
+        },
+        {
+          "text": "These empirical numbers demonstrate that extreme low-bit (binary) quantization of intermediate layers can be achieved without access to training data while preserving most of the full-precision data-free performance.",
+          "label": "assertion [5]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_3",
+    "global_id": "gcn_1ef8d7c1affa4dd5",
+    "order": 3,
+    "title": "Data-free structured pruning achieves strong compression–accuracy tradeoffs",
+    "content": "Applying the adversarial data-free minimax framework with per-filter scaling factors $s_l$ and $\\ell_1$ sparsity penalties $\\gamma_l$ plus weight decay $\\lambda$ to a WRN-16-2 network on CIFAR-10 yields substantial parameter and floating-point operation (FLOP) reductions while retaining high test accuracy. Varying $\\lambda$ from $1\\times10^{-5}$ to $6\\times10^{-5}$ (with $\\gamma=2\\times10^{-3}$ and pruning threshold $t_s=0.1$) reduces the number of parameters from $570,000$ to $323,000$ and test accuracy from $92.77\\%$ to $89.17\\%$. With grid-searched pruning hyperparameters, a data-free pruned WRN-16-2 with approximately $339,000$ parameters and $52.3\\text{ million}$ FLOPs achieves $90.57\\%$ accuracy; a \"Data-free + Warm up\" schedule yields $254,000$ parameters and $48.2\\text{ million}$ FLOPs with $89.19\\%$ accuracy. Increasing weight decay by a factor of 6 leads to roughly a $43\\%$ reduction in parameter count in the examined setting. The generator's synthesized images become visually sharper as $\\lambda$ increases, correlating with higher compression ratios.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Applying the adversarial data-free minimax framework with per-filter scaling factors $s_l$ and $\\ell_1$ sparsity penalties $\\gamma_l$ plus weight decay $\\lambda$ to a WRN-16-2 network on CIFAR-10 yields substantial parameter and floating-point operation (FLOP) reductions while retaining high test accuracy.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Varying $\\lambda$ from $1\\times10^{-5}$ to $6\\times10^{-5}$ (with $\\gamma=2\\times10^{-3}$ and pruning threshold $t_s=0.1$) reduces the number of parameters from $570,000$ to $323,000$ and test accuracy from $92.77\\%$ to $89.17\\%$.",
+          "label": "proof of the assertion [1]"
+        },
+        {
+          "text": "With grid-searched pruning hyperparameters, a data-free pruned WRN-16-2 with approximately $339,000$ parameters and $52.3\\text{ million}$ FLOPs achieves $90.57\\%$ accuracy; a \"Data-free + Warm up\" schedule yields $254,000$ parameters and $48.2\\text{ million}$ FLOPs with $89.19\\%$ accuracy.",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "Increasing weight decay by a factor of 6 leads to roughly a $43\\%$ reduction in parameter count in the examined setting.",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "The generator's synthesized images become visually sharper as $\\lambda$ increases, correlating with higher compression ratios.",
+          "label": "assertion [4]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_4",
+    "global_id": "gcn_4cd0d3c1a87d4ba4",
+    "order": 4,
+    "title": "Convergence guarantee for data-free quantization with O(1/√k) duality-gap bound",
+    "content": "For the quantized minimax optimization with variables $x$ (quantized student parameters) and $y$ (generator parameters), consider the stochastic alternating update scheme\n      $$\n      \\begin{aligned}\n      \\hat{x}_{k+1} &= \\hat{x}_k - \\alpha_k g_x(x_k,y_k),\\\\\n      x_{k+1} &= \\mathcal{Q}(\\hat{x}_{k+1}),\\\\\n      y_{k+1} &= y_k + \\beta_k g_y(x_{k+1},y_k),\n      \\end{aligned}\n      $$\n      where $\\mathbb{E}[g_x]=\\nabla_x\\mathcal{F}$, $\\mathbb{E}[g_y]=\\nabla_y\\mathcal{F}$, $\\mathcal{Q}(x)=\\delta\\operatorname{sign}(x)$ is the quantization operator, and $P(x,y)=\\mathcal{F}(x,y^\\star)-\\mathcal{F}(x^\\star,y)$ is the primal–dual gap relative to an assumed saddle $(x^\\star,y^\\star)$. If $\\mathcal{F}$ is convex in $x$, concave in $y$, Lipschitz in function values (constant $L$), has Lipschitz partial gradients (constants $L_x$, $L_y$), and stochastic gradients have bounded second moments (bounds $G_x^2$, $G_y^2$), and if the distances to the optimal solution are bounded ($\\mathbb{E}\\|x_k-x^\\star\\|^2\\leq D_x^2$, $\\mathbb{E}\\|y_k-y^\\star\\|^2\\leq D_y^2$), then choosing step sizes $\\alpha_k=C_\\alpha/\\sqrt{k}$ and $\\beta_k=C_\\beta/\\sqrt{k}$ yields the expected duality-gap bound\n      $$\n      \\begin{aligned}\n      \\mathbb{E}\\big[P(\\bar{x}^l,\\bar{y}^l)\\big] \\le&\\; \\frac{1}{2\\sqrt{l}}\\Big(\\frac{D_x^2}{C_\\alpha}+\\frac{D_y^2}{C_\\beta}\\Big) \\\\\n      &+\\frac{\\sqrt{l+1}}{2l}\\Big(C_\\alpha G_x^2 + C_\\alpha L_y G_x^2 + C_\\alpha L_y D_y^2 + C_\\beta G_y^2\\Big) \\\\\n      &+ (L_x D_x + L D_x + 2 L_y D_y)\\sqrt{d}\\,\\Delta,\n      \\end{aligned}\n      $$\n      where $\\bar{x}^l=\\frac{1}{l}\\sum_{k=1}^l x^k$, $\\bar{y}^l=\\frac{1}{l}\\sum_{k=1}^l y^k$, $d$ is the parameter dimension, $\\Delta$ is the quantization grain (so $\\|\\mathcal{Q}(x)-x\\|\\le\\sqrt{d}\\Delta$), and $L, L_x, L_y, G_x, G_y, D_x, D_y$ are the Lipschitz, gradient-variance, and distance constants defined in the assumptions. The bound implies an $O(1/\\sqrt{k})$ convergence rate of the expected duality gap down to a neighborhood determined by the quantization resolution $\\Delta$.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For the quantized minimax optimization with variables $x$ (quantized student parameters) and $y$ (generator parameters), consider the stochastic alternating update scheme",
+          "label": "other"
+        },
+        {
+          "text": "$$\n      \\begin{aligned}\n      \\hat{x}_{k+1} &= \\hat{x}_k - \\alpha_k g_x(x_k,y_k),\\\\\n      x_{k+1} &= \\mathcal{Q}(\\hat{x}_{k+1}),\\\\\n      y_{k+1} &= y_k + \\beta_k g_y(x_{k+1},y_k),\n      \\end{aligned}\n      $$",
+          "label": "elaboration"
+        },
+        {
+          "text": "where $\\mathbb{E}[g_x]=\\nabla_x\\mathcal{F}$, $\\mathbb{E}[g_y]=\\nabla_y\\mathcal{F}$, $\\mathcal{Q}(x)=\\delta\\operatorname{sign}(x)$ is the quantization operator, and $P(x,y)=\\mathcal{F}(x,y^\\star)-\\mathcal{F}(x^\\star,y)$ is the primal–dual gap relative to an assumed saddle $(x^\\star,y^\\star)$.",
+          "label": "elaboration"
+        },
+        {
+          "text": "If $\\mathcal{F}$ is convex in $x$, concave in $y$, Lipschitz in function values (constant $L$), has Lipschitz partial gradients (constants $L_x$, $L_y$), and stochastic gradients have bounded second moments (bounds $G_x^2$, $G_y^2$), and if the distances to the optimal solution are bounded ($\\mathbb{E}\\|x_k-x^\\star\\|^2\\leq D_x^2$, $\\mathbb{E}\\|y_k-y^\\star\\|^2\\leq D_y^2$), then choosing step sizes $\\alpha_k=C_\\alpha/\\sqrt{k}$ and $\\beta_k=C_\\beta/\\sqrt{k}$ yields the expected duality-gap bound",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "$$\n      \\begin{aligned}\n      \\mathbb{E}\\big[P(\\bar{x}^l,\\bar{y}^l)\\big] \\le&\\; \\frac{1}{2\\sqrt{l}}\\Big(\\frac{D_x^2}{C_\\alpha}+\\frac{D_y^2}{C_\\beta}\\Big) \\\\\n      &+\\frac{\\sqrt{l+1}}{2l}\\Big(C_\\alpha G_x^2 + C_\\alpha L_y G_x^2 + C_\\alpha L_y D_y^2 + C_\\beta G_y^2\\Big) \\\\\n      &+ (L_x D_x + L D_x + 2 L_y D_y)\\sqrt{d}\\,\\Delta,\n      \\end{aligned}\n      $$",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "where $\\bar{x}^l=\\frac{1}{l}\\sum_{k=1}^l x^k$, $\\bar{y}^l=\\frac{1}{l}\\sum_{k=1}^l y^k$, $d$ is the parameter dimension, $\\Delta$ is the quantization grain (so $\\|\\mathcal{Q}(x)-x\\|\\le\\sqrt{d}\\Delta$), and $L, L_x, L_y, G_x, G_y, D_x, D_y$ are the Lipschitz, gradient-variance, and distance constants defined in the assumptions.",
+          "label": "elaboration"
+        },
+        {
+          "text": "The bound implies an $O(1/\\sqrt{k})$ convergence rate of the expected duality gap down to a neighborhood determined by the quantization resolution $\\Delta$.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_5",
+    "global_id": "gcn_60475070b5b74e76",
+    "order": 5,
+    "title": "Linear convergence to stationary points for data-free pruning under two-sided PL condition",
+    "content": "For the pruning minimax problem with full (deterministic) gradient access, let $\\mathcal{F}(x,y)$ be $L$-smooth, possess at least one stationary point, and satisfy the two-sided Polyak–Łojasiewicz (PL) condition: there exist $\\mu_1,\\mu_2>0$ such that\n      $$\n      \\tfrac{1}{2}\\|\\nabla_x\\mathcal{F}(x,y)\\|^2 \\ge \\mu_1\\big[\\mathcal{F}(x,y)-\\min_x\\mathcal{F}(x,y)\\big],\\quad\n      \\tfrac{1}{2}\\|\\nabla_y\\mathcal{F}(x,y)\\|^2 \\ge \\mu_2\\big[\\max_y\\mathcal{F}(x,y)-\\mathcal{F}(x,y)\\big].\n      $$\n      With alternating gradient updates\n      $$\n      x_{k+1}=x_k-\\alpha_k\\nabla_x\\mathcal{F}(x_k,y_k),\\qquad\n      y_{k+1}=y_k+\\beta_k\\nabla_y\\mathcal{F}(x_{k+1},y_k),\n      $$\n      and constant step sizes $\\alpha=\\frac{\\mu_2^2}{18L^3}$, $\\beta=1/L$, the potential\n      $$\n      P_k := a_k + \\lambda b_k,\\quad a_k=h(x_k)-h^\\star,\\ b_k=h(x_k)-\\mathcal{F}(x_k,y_k),\\ h(x)=\\max_y\\mathcal{F}(x,y),\\ h^\\star=\\min_x h(x),\n      $$\n      contracts linearly for a suitable constant $\\lambda$:\n      $$\n      P_k \\le \\Big(1-\\frac{\\mu_1\\mu_2^2}{36L^3}\\Big)^k P_0.\n      $$\n      Consequently, the stationary residual $\\|\\nabla_x\\mathcal{F}(x_k,y_k)\\|^2+\\|\\nabla_y\\mathcal{F}(x_k,y_k)\\|^2$ decays at the same exponential rate up to problem-dependent constants.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For the pruning minimax problem with full (deterministic) gradient access, let $\\mathcal{F}(x,y)$ be $L$-smooth, possess at least one stationary point, and satisfy the two-sided Polyak–Łojasiewicz (PL) condition: there exist $\\mu_1,\\mu_2>0$ such that\n      $$\n      \\tfrac{1}{2}\\|\\nabla_x\\mathcal{F}(x,y)\\|^2 \\ge \\mu_1\\big[\\mathcal{F}(x,y)-\\min_x\\mathcal{F}(x,y)\\big],\\quad\n      \\tfrac{1}{2}\\|\\nabla_y\\mathcal{F}(x,y)\\|^2 \\ge \\mu_2\\big[\\max_y\\mathcal{F}(x,y)-\\mathcal{F}(x,y)\\big].\n      $$",
+          "label": "other"
+        },
+        {
+          "text": "With alternating gradient updates\n      $$\n      x_{k+1}=x_k-\\alpha_k\\nabla_x\\mathcal{F}(x_k,y_k),\\qquad\n      y_{k+1}=y_k+\\beta_k\\nabla_y\\mathcal{F}(x_{k+1},y_k),\n      $$\n      and constant step sizes $\\alpha=\\frac{\\mu_2^2}{18L^3}$, $\\beta=1/L$, the potential\n      $$\n      P_k := a_k + \\lambda b_k,\\quad a_k=h(x_k)-h^\\star,\\ b_k=h(x_k)-\\mathcal{F}(x_k,y_k),\\ h(x)=\\max_y\\mathcal{F}(x,y),\\ h^\\star=\\min_x h(x),\n      $$",
+          "label": "elaboration"
+        },
+        {
+          "text": "contracts linearly for a suitable constant $\\lambda$:\n      $$\n      P_k \\le \\Big(1-\\frac{\\mu_1\\mu_2^2}{36L^3}\\Big)^k P_0.\n      $$",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Consequently,",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "the stationary residual $\\|\\nabla_x\\mathcal{F}(x_k,y_k)\\|^2+\\|\\nabla_y\\mathcal{F}(x_k,y_k)\\|^2$ decays at the same exponential rate up to problem-dependent constants.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_6",
+    "global_id": "gcn_8c6d4158c8634271",
+    "order": 6,
+    "title": "Symmetric Jensen–Shannon divergence improves pruning stability and pseudo-data quality",
+    "content": "Empirically for pruning, using the symmetric Jensen–Shannon divergence $D_{JS}(x\\|y)=\\tfrac{1}{2}D_{KL}(x\\|y)+\\tfrac{1}{2}D_{KL}(y\\|x)$ as the distillation/divergence loss for the adversarial generator yields improved stability and better compression results compared with using $D_{KL}$ alone. Under comparable hyperparameter settings, the average teacher entropy on generated batches is lower with JSD (e.g., entropy $0.87$) than with KLD (e.g., entropy $0.93$), and JSD configurations produce equal-or-higher compression ratios and more stable accuracies (KLD sometimes collapsed to $73.48\\%$ accuracy when $\\gamma$ increased while JSD maintained accuracy).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Empirically for pruning, using the symmetric Jensen–Shannon divergence ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "$D_{JS}(x\\|y)=\\tfrac{1}{2}D_{KL}(x\\|y)+\\tfrac{1}{2}D_{KL}(y\\|x)$",
+          "label": "elaboration"
+        },
+        {
+          "text": " as the distillation/divergence loss for the adversarial generator yields improved stability and better compression results compared with using $D_{KL}$ alone.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Under comparable hyperparameter settings, the average teacher entropy on generated batches is lower with JSD (e.g., entropy $0.87$) than with KLD (e.g., entropy $0.93$), and JSD configurations produce equal-or-higher compression ratios and more stable accuracies (KLD sometimes collapsed to $73.48\\%$ accuracy when $\\gamma$ increased while JSD maintained accuracy).",
+          "label": "proof of the assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_7",
+    "global_id": "gcn_0bf378913935403a",
+    "order": 7,
+    "title": "Winning lottery tickets from supervised training transfer to data-free training",
+    "content": "Subnetworks (\"winning tickets\") discovered by iterative magnitude pruning in a supervised setting, when trained under the data-free adversarial minimax framework with their original initializations, achieve higher CIFAR-10 test accuracies than the same pruned structures initialized randomly. For a WRN-16-2 pruned to 53.0K parameters, the ticket initialization attains 77.03% test accuracy under data-free training versus 75.48% for a random initialization; for a 45.5K-parameter ticket, the ticket initialization yields 74.66% versus 73.56% for random initialization. These results indicate that the inductive bias encapsulated by winning-ticket initializations improves generalization even when the training procedure is data-free and the optimizer and hyperparameters differ from the supervised discovery process.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Subnetworks (\"winning tickets\") discovered by iterative magnitude pruning in a supervised setting, when trained under the data-free adversarial minimax framework with their original initializations, achieve higher CIFAR-10 test accuracies than the same pruned structures initialized randomly.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "For a WRN-16-2 pruned to 53.0K parameters, the ticket initialization attains 77.03% test accuracy under data-free training versus 75.48% for a random initialization; for a 45.5K-parameter ticket, the ticket initialization yields 74.66% versus 73.56% for random initialization.",
+          "label": "example of the assertion [1]"
+        },
+        {
+          "text": "These results indicate that the inductive bias encapsulated by winning-ticket initializations improves generalization even when the training procedure is data-free and the optimizer and hyperparameters differ from the supervised discovery process.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867758731482366166::conclusion_8",
+    "global_id": "gcn_a417bf7a88074fe6",
+    "order": 8,
+    "title": "Spatial-attention regularization stabilizes data-free distillation for quantization and pruning",
+    "content": "Incorporating spatial-attention matching regularization between student and teacher feature maps,\n      $$\n      \\mathcal{R}_a(z;\\theta_s)=\\beta\\sum_{l\\in\\mathcal{S}_a}\\Big\\|\\frac{f(s_l)}{\\|f(s_l)\\|}-\\frac{f(t_l)}{\\|f(t_l)\\|}\\Big\\|,\n      $$\n      where $\\mathcal{S}_a$ is a selected subset of layers (e.g., layers before spatial down-sampling), $\\beta$ is a scaling coefficient, $s_l$ and $t_l$ are the feature maps of the student and teacher networks at layer $l$, and $f(x)=\\frac{1}{N_c}\\sum_c (x^{(c)})^2$ computes the spatial attention map as the mean of squared features over channels, empirically improves stability and performance of the adversarial data-free training for both quantization and pruning. Including this attention regularizer alongside the adversarial divergence and sparsity penalties leads to more stable student training in the experiments.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Incorporating spatial-attention matching regularization between student and teacher feature maps,\n      $$\n      \\mathcal{R}_a(z;\\theta_s)=\\beta\\sum_{l\\in\\mathcal{S}_a}\\Big\\|\\frac{f(s_l)}{\\|f(s_l)\\|}-\\frac{f(t_l)}{\\|f(t_l)\\|}\\Big\\|,\n      $$\n      where $\\mathcal{S}_a$ is a selected subset of layers (e.g., layers before spatial down-sampling), $\\beta$ is a scaling coefficient, $s_l$ and $t_l$ are the feature maps of the student and teacher networks at layer $l$, and $f(x)=\\frac{1}{N_c}\\sum_c (x^{(c)})^2$ computes the spatial attention map as the mean of squared features over channels,",
+          "label": "elaboration"
+        },
+        {
+          "text": "empirically improves stability and performance of the adversarial data-free training for both quantization and pruning.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Including this attention regularizer alongside the adversarial divergence and sparsity penalties leads to more stable student training in the experiments.",
+          "label": "proof of the assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

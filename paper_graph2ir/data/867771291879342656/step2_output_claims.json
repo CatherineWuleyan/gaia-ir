@@ -1,0 +1,200 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 1,
+    "label": "assertion",
+    "text": "Winning-ticket initializations discovered by iterative magnitude pruning on large, complex natural-image source datasets produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on other natural-image target datasets, frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 5,
+    "label": "assertion",
+    "text": "The transferability described in 【1】 is observed across a wide range of pruning fractions.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": true
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 8,
+    "label": "assertion",
+    "text": "Larger / more class-rich source datasets produced stronger cross-dataset transfer than smaller sources.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 10,
+    "label": "example",
+    "illustrates": [
+      8
+    ],
+    "text": "CIFAR-100 tickets generalize better than CIFAR-10 tickets despite both having 50,000 training examples.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 1,
+    "label": "assertion",
+    "text": "Winning tickets discovered on larger source datasets—both in terms of number of training examples and number of output classes—transfer substantially better to other natural-image classification datasets than tickets discovered on smaller source datasets, for both VGG19 and ResNet50 architectures.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": true
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 4,
+    "label": "assertion",
+    "text": "The effect described in 【1】, whereby winning tickets discovered on larger source datasets transfer substantially better to other natural-image classification datasets than tickets discovered on smaller source datasets, is not solely explained by raw training-set size.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 5,
+    "label": "论据",
+    "supports": [
+      4
+    ],
+    "text": "Holding training-set size fixed, a source dataset with many classes produced tickets that generalized better across targets than one with few classes.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": true
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 1,
+    "label": "assertion",
+    "text": "Winning-ticket initializations generated with one optimizer generalize to training with a different optimizer on natural-image classification datasets.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 2,
+    "label": "example",
+    "illustrates": [
+      1
+    ],
+    "text": "VGG19 tickets found using SGD with momentum or using Adam, when re-used with the alternate optimizer, achieve high performance that is comparable to tickets discovered under the target optimizer.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 3,
+    "label": "assertion",
+    "text": "There are optimizer-dependent nuances in behavior in the transfer described in 【1】.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 4,
+    "label": "论据",
+    "supports": [
+      3
+    ],
+    "text": "Tickets transferred from SGD to Adam sometimes under-perform random tickets at low pruning fractions but outperform random tickets at high pruning fractions.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 1,
+    "label": "assertion",
+    "text": "A winning ticket discovered on CIFAR-10a (a subset of the CIFAR-10 dataset containing 25,000 training images with 2,500 images per class), transfers to a disjoint subset CIFAR-10b from the same data distribution and improves training on that held-out subset relative to random sparse initializations.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 3,
+    "label": "assertion",
+    "text": "The within-distribution transfer described in 【1】 holds for both VGG19 and ResNet50.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 5,
+    "label": "assertion",
+    "text": "ResNet50 showed sensitivity at low pruning fractions, occasionally under-performing random tickets when few weights are pruned.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 1,
+    "label": "assertion",
+    "text": "When performing magnitude pruning for winning-ticket discovery on VGG19 trained on CIFAR-10, globally ranking weights across all layers and pruning the smallest-magnitude weights globally yields higher-performing sparse subnetworks than pruning a fixed fraction per layer.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 3,
+    "label": "论据",
+    "supports": [
+      1
+    ],
+    "text": "Under global magnitude pruning the pruning fractions vary across layers: deeper convolutional layers are pruned more heavily while early layers retain a much larger fraction of their parameters.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 1,
+    "label": "assertion",
+    "text": "For VGG19 trained on CIFAR-10, the structure of the pruning mask contains substantial information useful for training sparse networks.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 2,
+    "label": "论据",
+    "supports": [
+      1
+    ],
+    "text": "Comparing (a) preserved winning-ticket masks, (b) masks permuted only within layers (local permutation), and (c) masks permuted across all layers (global permutation) shows that locally permuting a mask degrades performance moderately while globally permuting the mask degrades performance dramatically.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 6,
+    "label": "assertion",
+    "text": "A fair \"random ticket\" baseline for evaluating a winning-ticket initialization should randomize both weight values and mask structure (global permutation).",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 2,
+    "label": "assertion",
+    "text": "For obtaining competitive winning tickets in the large-model and large-dataset regime of natural-image classification, an iterative magnitude-pruning schedule with pruning fraction per iteration 0.2 (20% of remaining parameters) over up to 30 iterations combined with late resetting to parameters at a small early training iteration—resetting to the parameters after 1 epoch for Fashion-MNIST, SVHN, CIFAR-10 and CIFAR-100, and after 3 epochs for ImageNet and Places365—produced effective winning tickets, with learning-rate annealing schedules and other hyperparameters matched per model family.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  }
+]

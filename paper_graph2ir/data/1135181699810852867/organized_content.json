@@ -1,0 +1,1210 @@
+[
+  {
+    "id": "paper:1135181699810852867::conclusion_1",
+    "global_id": "gcn_de7695b390de4070",
+    "order": 1,
+    "title": "Connectivity-only lottery tickets for neural-network quantum states",
+    "content": "A version of the Lottery Ticket Hypothesis for neural-network quantum states is established in which high-performing sparse subnetworks are characterized by their connectivity pattern alone: a sparse mask $m_{\\mathrm{imp}}\\in\\{0,1\\}^{n_{\\mathrm{init}}}$ obtained by iterative magnitude pruning with weight rewinding (IMP-WR) yields a sparse ticket $T(\\theta,m_{\\mathrm{imp}})$ that, when trained in isolation from a randomly initialized parameter vector $\\theta_{\\mathrm{rand}}$, attains variational energies and relative errors $\\epsilon_{\\mathrm{rel}}(E)=\\left|\\frac{E_{\\mathrm{exact}}-\\langle\\hat{H}\\rangle_{\\theta}}{E_{\\mathrm{exact}}}\\right|$ statistically indistinguishable from those obtained when the same mask is trained from the original IMP-WR rewinding parameters $\\theta_{\\mathrm{init}}$. Thus, for the studied Hamiltonians (two-dimensional transverse-field Ising model (TFIM) and the toric code (TC)) and architectures (shallow FFNN, shallow CNN, ResCNN), winning-ticket performance depends primarily on the sparse connectivity $m_{\\mathrm{imp}}$ and not on the specific initial values of the remaining weights.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "A version of the Lottery Ticket Hypothesis for neural-network quantum states is established in which high-performing sparse subnetworks are characterized by their connectivity pattern alone:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 191
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "a sparse mask yields a sparse ticket that, when trained in isolation from a randomly initialized parameter vector , attains variational energies and relative errors statistically indistinguishable from those obtained when the same mask is trained from the original IMP-WR rewinding parameters .",
+        "source_spans": [
+          {
+            "start": 191,
+            "end": 205
+          },
+          {
+            "start": 325,
+            "end": 348
+          },
+          {
+            "start": 377,
+            "end": 454
+          },
+          {
+            "start": 478,
+            "end": 529
+          },
+          {
+            "start": 648,
+            "end": 776
+          },
+          {
+            "start": 800,
+            "end": 802
+          }
+        ],
+        "supports": [
+          1,
+          11
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "$m_{\\mathrm{imp}}\\in\\{0,1\\}^{n_{\\mathrm{init}}}$",
+        "source_spans": [
+          {
+            "start": 205,
+            "end": 254
+          }
+        ],
+        "of_terms": [
+          "a sparse mask"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "obtained by iterative magnitude pruning with weight rewinding",
+        "source_spans": [
+          {
+            "start": 254,
+            "end": 316
+          }
+        ],
+        "of_terms": [
+          "a sparse mask"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(IMP-WR)",
+        "source_spans": [
+          {
+            "start": 316,
+            "end": 325
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning with weight rewinding"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "$T(\\theta,m_{\\mathrm{imp}})$",
+        "source_spans": [
+          {
+            "start": 348,
+            "end": 377
+          }
+        ],
+        "of_terms": [
+          "a sparse ticket"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "$\\theta_{\\mathrm{rand}}$",
+        "source_spans": [
+          {
+            "start": 454,
+            "end": 478
+          }
+        ],
+        "of_terms": [
+          "a randomly initialized parameter vector"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "$\\epsilon_{\\mathrm{rel}}(E)=\\left|\\frac{E_{\\mathrm{exact}}-\\langle\\hat{H}\\rangle_{\\theta}}{E_{\\mathrm{exact}}}\\right|$",
+        "source_spans": [
+          {
+            "start": 529,
+            "end": 648
+          }
+        ],
+        "of_terms": [
+          "relative errors"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "$\\theta_{\\mathrm{init}}$",
+        "source_spans": [
+          {
+            "start": 776,
+            "end": 800
+          }
+        ],
+        "of_terms": [
+          "the original IMP-WR rewinding parameters"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 802,
+            "end": 808
+          }
+        ],
+        "connects": [
+          2,
+          11
+        ],
+        "expression": "[2] 推出 [11]"
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "for the studied Hamiltonians and architectures , winning-ticket performance depends primarily on the sparse connectivity and not on the specific initial values of the remaining weights.",
+        "source_spans": [
+          {
+            "start": 808,
+            "end": 837
+          },
+          {
+            "start": 915,
+            "end": 933
+          },
+          {
+            "start": 968,
+            "end": 1042
+          },
+          {
+            "start": 1061,
+            "end": 1125
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "(two-dimensional transverse-field Ising model (TFIM) and the toric code (TC))",
+        "source_spans": [
+          {
+            "start": 837,
+            "end": 915
+          }
+        ],
+        "of_terms": [
+          "the studied Hamiltonians"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "elaboration",
+        "content": "(shallow FFNN, shallow CNN, ResCNN)",
+        "source_spans": [
+          {
+            "start": 933,
+            "end": 968
+          }
+        ],
+        "of_terms": [
+          "architectures"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "$m_{\\mathrm{imp}}$",
+        "source_spans": [
+          {
+            "start": 1042,
+            "end": 1061
+          }
+        ],
+        "of_terms": [
+          "the sparse connectivity"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1135181699810852867::conclusion_2",
+    "global_id": "gcn_ff6f990688b14369",
+    "order": 2,
+    "title": "Universal three-regime scaling of variational error under pruning",
+    "content": "Pruned shallow feed-forward neural-network quantum states (NQS) exhibit three distinct, reproducible scaling regimes of variational error as a function of remaining parameters per spin $\\rho=n/N$: (i) a low-error plateau (LEP) at large $\\rho$ where accuracy saturates and depends on initial network size, (ii) an approximate power-law region (APL) at intermediate $\\rho$ where the relative error increases roughly as a power law with decreasing $\\rho$, and (iii) a high-error plateau (HEP) at small $\\rho$ where the error saturates at a large value. When plotted versus $\\rho$, error curves for different initial network widths coalesce in the HEP and APL, demonstrating a collapse (scale invariance) across initial model sizes; the boundaries between these regimes depend on the physical phase of the target Hamiltonian (TFIM ferromagnet, critical point, paramagnet).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Pruned shallow feed-forward neural-network quantum states (NQS) exhibit three distinct, reproducible scaling regimes of variational error as a function of remaining parameters per spin $\\rho=n/N$: (i) a low-error plateau (LEP) , (ii) an approximate power-law region (APL) , and (iii) a high-error plateau (HEP)",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 227
+          },
+          {
+            "start": 303,
+            "end": 348
+          },
+          {
+            "start": 451,
+            "end": 490
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "at large $\\rho$ where accuracy saturates and depends on initial network size",
+        "source_spans": [
+          {
+            "start": 227,
+            "end": 303
+          }
+        ],
+        "of_terms": [
+          "low-error plateau (LEP)"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "at intermediate $\\rho$ where the relative error increases roughly as a power law with decreasing $\\rho$",
+        "source_spans": [
+          {
+            "start": 348,
+            "end": 451
+          }
+        ],
+        "of_terms": [
+          "approximate power-law region (APL)"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "at small $\\rho$ where the error saturates at a large value.",
+        "source_spans": [
+          {
+            "start": 490,
+            "end": 550
+          }
+        ],
+        "of_terms": [
+          "high-error plateau (HEP)"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "When plotted versus $\\rho$, error curves for different initial network widths coalesce in the HEP and APL, demonstrating a collapse (scale invariance) across initial model sizes;",
+        "source_spans": [
+          {
+            "start": 550,
+            "end": 729
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "the boundaries between these regimes depend on the physical phase of the target Hamiltonian",
+        "source_spans": [
+          {
+            "start": 729,
+            "end": 821
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "instance",
+        "content": "(TFIM ferromagnet, critical point, paramagnet).",
+        "source_spans": [
+          {
+            "start": 821,
+            "end": 868
+          }
+        ],
+        "of_terms": [
+          "the physical phase of the target Hamiltonian"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1135181699810852867::conclusion_3",
+    "global_id": "gcn_3fea5f3993324cb9",
+    "order": 3,
+    "title": "Sparsity-induced quantum phase transitions in pruned NQS; first-order transition in shallow FFNNs for TFIM",
+    "content": "Varying the number of parameters per spin $\\rho=n/N$ acts as a control parameter that can drive qualitative changes in the many-body quantum state represented by the neural-network quantum state (NQS): in shallow depth $d=1$ feed-forward neural networks (FFNNs) approximating the ground state of the transverse-field Ising model (TFIM) at the critical transverse field $\\kappa=\\kappa_{c}$, there is a sharp transition at a critical parameter density $\\rho_{c}\\approx 3\\text{--}5$ characterized by a rapid drop in fidelity $F(\\rho)=\\langle\\Psi^{NN}(\\rho)|\\Psi^{NN}(\\rho+\\epsilon)\\rangle$, a kink in the variational energy (discontinuity in $\\mathrm{d}E/\\mathrm{d}\\rho$), and abrupt changes in global order parameters such as total magnetization in the $x$-direction $M_{x}^{\\mathrm{tot}}=\\langle\\sum_{i}\\sigma_{i}^{x}\\rangle/N$ and total magnetization in the $z$-direction $M_{z}^{\\mathrm{tot}}=\\langle\\sum_{i}\\sigma_{i}^{z}\\rangle/N$. These signatures are consistent with a first-order sparsity-induced phase transition between a phase that encodes the target critical TFIM ground state (the low-error plateau, LEP) and a different, symmetry-broken phase realized at lower $\\rho$ (the high-error plateau, HEP). A similar fidelity drop is observed in the toric code (TC) at a larger critical density $\\rho_{c}\\approx 16$.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Varying the number of parameters per spin acts as a control parameter that can drive qualitative changes in the many-body quantum state represented by the neural-network quantum state",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 42
+          },
+          {
+            "start": 53,
+            "end": 195
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "$\\rho=n/N$",
+        "source_spans": [
+          {
+            "start": 42,
+            "end": 53
+          }
+        ],
+        "of_terms": [
+          "number of parameters per spin"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(NQS)",
+        "source_spans": [
+          {
+            "start": 195,
+            "end": 200
+          }
+        ],
+        "of_terms": [
+          "neural-network quantum state"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "other",
+        "content": ":",
+        "source_spans": [
+          {
+            "start": 200,
+            "end": 202
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "in shallow depth $d=1$ feed-forward neural networks approximating the ground state of the transverse-field Ising model at the critical transverse field $\\kappa=\\kappa_{c}$, there is a sharp transition at a critical parameter density $\\rho_{c}\\approx 3\\text{--}5$ characterized by a rapid drop in fidelity , a kink in the variational energy , and abrupt changes in global order parameters",
+        "source_spans": [
+          {
+            "start": 202,
+            "end": 254
+          },
+          {
+            "start": 262,
+            "end": 329
+          },
+          {
+            "start": 336,
+            "end": 522
+          },
+          {
+            "start": 586,
+            "end": 621
+          },
+          {
+            "start": 668,
+            "end": 716
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(FFNNs)",
+        "source_spans": [
+          {
+            "start": 254,
+            "end": 262
+          }
+        ],
+        "of_terms": [
+          "feed-forward neural networks"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(TFIM)",
+        "source_spans": [
+          {
+            "start": 329,
+            "end": 336
+          }
+        ],
+        "of_terms": [
+          "transverse-field Ising model"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "$F(\\rho)=\\langle\\Psi^{NN}(\\rho)|\\Psi^{NN}(\\rho+\\epsilon)\\rangle$",
+        "source_spans": [
+          {
+            "start": 522,
+            "end": 586
+          }
+        ],
+        "of_terms": [
+          "fidelity"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(discontinuity in $\\mathrm{d}E/\\mathrm{d}\\rho$)",
+        "source_spans": [
+          {
+            "start": 621,
+            "end": 668
+          }
+        ],
+        "of_terms": [
+          "kink in the variational energy"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "framing",
+        "content": "such as",
+        "source_spans": [
+          {
+            "start": 716,
+            "end": 724
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "instance",
+        "content": "total magnetization in the $x$-direction",
+        "source_spans": [
+          {
+            "start": 724,
+            "end": 765
+          }
+        ],
+        "of_terms": [
+          "global order parameters"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "$M_{x}^{\\mathrm{tot}}=\\langle\\sum_{i}\\sigma_{i}^{x}\\rangle/N$",
+        "source_spans": [
+          {
+            "start": 765,
+            "end": 827
+          }
+        ],
+        "of_terms": [
+          "total magnetization in the $x$-direction"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 827,
+            "end": 831
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "instance",
+        "content": "total magnetization in the $z$-direction",
+        "source_spans": [
+          {
+            "start": 831,
+            "end": 872
+          }
+        ],
+        "of_terms": [
+          "global order parameters"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "elaboration",
+        "content": "$M_{z}^{\\mathrm{tot}}=\\langle\\sum_{i}\\sigma_{i}^{z}\\rangle/N$",
+        "source_spans": [
+          {
+            "start": 872,
+            "end": 933
+          }
+        ],
+        "of_terms": [
+          "total magnetization in the $z$-direction"
+        ]
+      },
+      {
+        "number": 16,
+        "label": "other",
+        "content": ".",
+        "source_spans": [
+          {
+            "start": 933,
+            "end": 935
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "label": "assertion",
+        "content": "These signatures are consistent with a first-order sparsity-induced phase transition between a phase that encodes the target critical TFIM ground state and a different, symmetry-broken phase realized at lower $\\rho$",
+        "source_spans": [
+          {
+            "start": 935,
+            "end": 1087
+          },
+          {
+            "start": 1116,
+            "end": 1180
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "label": "elaboration",
+        "content": "(the low-error plateau, LEP)",
+        "source_spans": [
+          {
+            "start": 1087,
+            "end": 1116
+          }
+        ],
+        "of_terms": [
+          "a phase that encodes the target critical TFIM ground state"
+        ]
+      },
+      {
+        "number": 19,
+        "label": "elaboration",
+        "content": "(the high-error plateau, HEP)",
+        "source_spans": [
+          {
+            "start": 1180,
+            "end": 1209
+          }
+        ],
+        "of_terms": [
+          "a different, symmetry-broken phase realized at lower $\\rho$"
+        ]
+      },
+      {
+        "number": 20,
+        "label": "other",
+        "content": ".",
+        "source_spans": [
+          {
+            "start": 1209,
+            "end": 1211
+          }
+        ]
+      },
+      {
+        "number": 21,
+        "label": "assertion",
+        "content": "A similar fidelity drop is observed in the toric code at a larger critical density $\\rho_{c}\\approx 16$.",
+        "source_spans": [
+          {
+            "start": 1211,
+            "end": 1265
+          },
+          {
+            "start": 1270,
+            "end": 1320
+          }
+        ]
+      },
+      {
+        "number": 22,
+        "label": "elaboration",
+        "content": "(TC)",
+        "source_spans": [
+          {
+            "start": 1265,
+            "end": 1270
+          }
+        ],
+        "of_terms": [
+          "toric code"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1135181699810852867::conclusion_4",
+    "global_id": "gcn_ef200ef627e94f51",
+    "order": 4,
+    "title": "Pruning discovers an asymptotically exact, interpretable sparse solution to the toric code",
+    "content": "Iterative magnitude pruning with weight rewinding applied to single-hidden-layer feed-forward neural networks (FFNNs) yields sparse subnetworks whose connectivity and weight-sign structure implement \"odd-parity plaquette filters\" that realize an asymptotically exact variational representation of the toric code ground state. Concretely, for a plaquette $p$ the toric-code plaquette condition is $\\lambda_{B_{p}}(\\sigma)=\\prod_{i\\in\\mathcal{P}}\\sigma_{i}^{z}=1\\ \\forall p$. A pruned single-hidden neuron with a plaquette-shaped receptive field and weights of magnitude $W$ arranged as three positive and one negative weight (or vice versa) produces a post-activation contribution proportional to $\\exp(\\text{ReLU}(f\\cdot\\sigma))$, and summing over eight filter orientations yields a multiplicative amplitude factor $\\exp(8W)$ for configurations satisfying the plaquette condition and $\\exp(4W)$ for configurations violating it. Each violated plaquette thus suppresses contributions by a factor $\\exp(4W)$; in the limit $W\\to\\infty$ the excited-state contributions vanish and the variational wavefunction becomes the exact toric-code ground state. The observed critical density for the solution corresponds to approximately $16$ weights per spin (or $32$ weights per plaquette), and empirical tests show exponential convergence of the energy and vanishing variance as $W$ increases.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Iterative magnitude pruning with weight rewinding applied to single-hidden-layer feed-forward neural networks (FFNNs) yields sparse subnetworks whose connectivity and weight-sign structure implement \"odd-parity plaquette filters\" that realize an asymptotically exact variational representation of the toric code ground state.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 326
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "framing",
+        "content": "Concretely, for a plaquette $p$ the toric-code plaquette condition is",
+        "source_spans": [
+          {
+            "start": 326,
+            "end": 396
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "$\\lambda_{B_{p}}(\\sigma)=\\prod_{i\\in\\mathcal{P}}\\sigma_{i}^{z}=1\\ \\forall p$.",
+        "source_spans": [
+          {
+            "start": 396,
+            "end": 474
+          }
+        ],
+        "of_terms": [
+          "toric-code plaquette condition"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "A pruned single-hidden neuron with a plaquette-shaped receptive field and weights of magnitude $W$ arranged as three positive and one negative weight (or vice versa) produces a post-activation contribution proportional to $\\exp(\\text{ReLU}(f\\cdot\\sigma))$,",
+        "source_spans": [
+          {
+            "start": 474,
+            "end": 731
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 731,
+            "end": 735
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "summing over eight filter orientations yields a multiplicative amplitude factor $\\exp(8W)$ for configurations satisfying the plaquette condition and $\\exp(4W)$ for configurations violating it.",
+        "source_spans": [
+          {
+            "start": 735,
+            "end": 928
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "Each violated plaquette suppresses contributions by a factor $\\exp(4W)$;",
+        "source_spans": [
+          {
+            "start": 928,
+            "end": 952
+          },
+          {
+            "start": 957,
+            "end": 1006
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "relation",
+        "content": "thus",
+        "source_spans": [
+          {
+            "start": 952,
+            "end": 957
+          }
+        ],
+        "connects": [
+          6,
+          7
+        ],
+        "expression": "[6] 推出 [7]"
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "in the limit $W\\to\\infty$ the excited-state contributions vanish",
+        "source_spans": [
+          {
+            "start": 1006,
+            "end": 1071
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1071,
+            "end": 1075
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "the variational wavefunction becomes the exact toric-code ground state.",
+        "source_spans": [
+          {
+            "start": 1075,
+            "end": 1147
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "论据",
+        "content": "The observed critical density for the solution corresponds to approximately $16$ weights per spin (or $32$ weights per plaquette),",
+        "source_spans": [
+          {
+            "start": 1147,
+            "end": 1278
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 13,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 1278,
+            "end": 1282
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "framing",
+        "content": "empirical tests show",
+        "source_spans": [
+          {
+            "start": 1282,
+            "end": 1303
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "论据",
+        "content": "exponential convergence of the energy and vanishing variance as $W$ increases.",
+        "source_spans": [
+          {
+            "start": 1303,
+            "end": 1381
+          }
+        ],
+        "supports": [
+          9,
+          11
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1135181699810852867::conclusion_5",
+    "global_id": "gcn_60404166c1e643ff",
+    "order": 5,
+    "title": "IMP-WR outperforms IMP-CT and IRP-WR for FFNNs on TFIM and toric code",
+    "content": "For the ground-state search of the transverse-field Ising model (TFIM) at its critical point on a $10\\times10$ lattice using a shallow feed-forward neural network (FFNN) of depth $d=1$ and width $w=5N$, the iterative magnitude pruning with weight rewinding (IMP-WR) protocol (with rewinding to the pre-trained parameters $\\theta_{wr}$) produces sparse masks that lead to lower variational energies upon isolated retraining than (a) iterative magnitude pruning with continued training (IMP-CT) and (b) iterative random pruning with weight rewinding (IRP-WR). In shallow FFNNs trained on the TFIM, IMP-WR converges to lower-energy minima at each pruning iteration compared to IMP-CT and substantially outperforms IRP-WR; this indicates that magnitude-based selection together with rewinding uncovers nontrivial, physically relevant connectivity structure in masks $m_{\\mathrm{imp}}$ that random pruning fails to find.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "For the ground-state search of the transverse-field Ising model",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 64
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(TFIM)",
+        "source_spans": [
+          {
+            "start": 64,
+            "end": 71
+          }
+        ],
+        "of_terms": [
+          "transverse-field Ising model"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "at its critical point on a $10\\times10$ lattice using a shallow feed-forward neural network",
+        "source_spans": [
+          {
+            "start": 71,
+            "end": 163
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(FFNN)",
+        "source_spans": [
+          {
+            "start": 163,
+            "end": 170
+          }
+        ],
+        "of_terms": [
+          "shallow feed-forward neural network"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "of depth $d=1$ and width $w=5N$,",
+        "source_spans": [
+          {
+            "start": 170,
+            "end": 203
+          }
+        ],
+        "of_terms": [
+          "shallow feed-forward neural network"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "the iterative magnitude pruning with weight rewinding protocol produces sparse masks that lead to lower variational energies upon isolated retraining than (a) iterative magnitude pruning with continued training and (b) iterative random pruning with weight rewinding .",
+        "source_spans": [
+          {
+            "start": 203,
+            "end": 257
+          },
+          {
+            "start": 266,
+            "end": 275
+          },
+          {
+            "start": 336,
+            "end": 484
+          },
+          {
+            "start": 493,
+            "end": 548
+          },
+          {
+            "start": 556,
+            "end": 558
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(IMP-WR)",
+        "source_spans": [
+          {
+            "start": 257,
+            "end": 266
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning with weight rewinding"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(with rewinding to the pre-trained parameters $\\theta_{wr}$)",
+        "source_spans": [
+          {
+            "start": 275,
+            "end": 336
+          }
+        ],
+        "of_terms": [
+          "weight rewinding"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(IMP-CT)",
+        "source_spans": [
+          {
+            "start": 484,
+            "end": 493
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning with continued training"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "(IRP-WR)",
+        "source_spans": [
+          {
+            "start": 548,
+            "end": 556
+          }
+        ],
+        "of_terms": [
+          "iterative random pruning with weight rewinding"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "other",
+        "content": "In shallow FFNNs trained on the TFIM,",
+        "source_spans": [
+          {
+            "start": 558,
+            "end": 596
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "IMP-WR converges to lower-energy minima at each pruning iteration compared to IMP-CT",
+        "source_spans": [
+          {
+            "start": 596,
+            "end": 681
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 681,
+            "end": 685
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "assertion",
+        "content": "substantially outperforms IRP-WR;",
+        "source_spans": [
+          {
+            "start": 685,
+            "end": 719
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "relation",
+        "content": "this indicates that",
+        "source_spans": [
+          {
+            "start": 719,
+            "end": 739
+          }
+        ],
+        "connects": [
+          12,
+          14,
+          16
+        ],
+        "expression": "[12] 和 [14] 推出 [16]"
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "magnitude-based selection together with rewinding uncovers nontrivial, physically relevant connectivity structure in masks $m_{\\mathrm{imp}}$ that random pruning fails to find.",
+        "source_spans": [
+          {
+            "start": 739,
+            "end": 915
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1135181699810852867::conclusion_6",
+    "global_id": "gcn_7a39c914f88f48cd",
+    "order": 6,
+    "title": "Energy-variance scaling corroborates error-scaling regimes",
+    "content": "The sample energy variance per spin $\\sigma^{2}/N$, where $\\sigma^{2}=\\langle\\hat{H}^{2}\\rangle-\\langle\\hat{H}\\rangle^{2}$, follows the same three-regime scaling behavior as the relative energy error under pruning: a low-error plateau (LEP), an approximate power-law region (APL), and a high-error plateau (HEP). The variance across different initial network widths collapses in the same $\\rho$-dependent manner (where $\\rho=n/N$ is the number of remaining parameters per spin) as the mean error, confirming that the observed error-scaling regimes reflect genuine changes in representational accuracy rather than artifacts of Monte Carlo sampling noise, and that statistical uncertainties in estimated energies decrease in the regimes where the variational ansatz becomes an increasingly accurate eigenstate.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The sample energy variance per spin $\\sigma^{2}/N$, follows the same three-regime scaling behavior as the relative energy error under pruning:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 52
+          },
+          {
+            "start": 124,
+            "end": 215
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "where $\\sigma^{2}=\\langle\\hat{H}^{2}\\rangle-\\langle\\hat{H}\\rangle^{2}$,",
+        "source_spans": [
+          {
+            "start": 52,
+            "end": 124
+          }
+        ],
+        "of_terms": [
+          "$\\sigma^{2}/N$"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "a low-error plateau (LEP), an approximate power-law region (APL), and a high-error plateau (HEP).",
+        "source_spans": [
+          {
+            "start": 215,
+            "end": 313
+          }
+        ],
+        "of_terms": [
+          "three-regime scaling behavior"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "论据",
+        "content": "The variance across different initial network widths collapses in the same $\\rho$-dependent manner as the mean error,",
+        "source_spans": [
+          {
+            "start": 313,
+            "end": 412
+          },
+          {
+            "start": 478,
+            "end": 497
+          }
+        ],
+        "supports": [
+          7,
+          9
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(where $\\rho=n/N$ is the number of remaining parameters per spin)",
+        "source_spans": [
+          {
+            "start": 412,
+            "end": 478
+          }
+        ],
+        "of_terms": [
+          "$\\rho$-dependent manner"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "confirming that",
+        "source_spans": [
+          {
+            "start": 497,
+            "end": 513
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "the observed error-scaling regimes reflect genuine changes in representational accuracy rather than artifacts of Monte Carlo sampling noise",
+        "source_spans": [
+          {
+            "start": 513,
+            "end": 652
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 652,
+            "end": 658
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "that statistical uncertainties in estimated energies decrease in the regimes where the variational ansatz becomes an increasingly accurate eigenstate.",
+        "source_spans": [
+          {
+            "start": 658,
+            "end": 808
+          }
+        ]
+      }
+    ]
+  }
+]

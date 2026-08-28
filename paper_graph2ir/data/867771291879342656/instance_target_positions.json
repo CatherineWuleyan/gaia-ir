@@ -1,0 +1,154 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "instance_number": 3,
+    "instance_content": "(ImageNet and Places365, and to a lesser extent CIFAR-100)",
+    "instance_span": {
+      "start": 224,
+      "end": 283
+    },
+    "targets": [
+      {
+        "term": "large, complex natural-image source datasets",
+        "certainty": "certain",
+        "content": "large, complex natural-image source datasets",
+        "start": 179,
+        "end": 223,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_1",
+    "instance_number": 4,
+    "instance_content": "(SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365)",
+    "instance_span": {
+      "start": 411,
+      "end": 474
+    },
+    "targets": [
+      {
+        "term": "other natural-image target datasets",
+        "certainty": "certain",
+        "content": "other natural-image target datasets",
+        "start": 375,
+        "end": 410,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_1",
+    "instance_number": 6,
+    "instance_content": "(including very high sparsity)",
+    "instance_span": {
+      "start": 711,
+      "end": 741
+    },
+    "targets": [
+      {
+        "term": "a wide range of pruning fractions",
+        "certainty": "certain",
+        "content": "a wide range of pruning fractions",
+        "start": 677,
+        "end": 710,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_2",
+    "instance_number": 3,
+    "instance_content": "(SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365)",
+    "instance_span": {
+      "start": 204,
+      "end": 268
+    },
+    "targets": [
+      {
+        "term": "other natural-image classification datasets",
+        "certainty": "certain",
+        "content": "other natural-image classification datasets",
+        "start": 160,
+        "end": 203,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_2",
+    "instance_number": 6,
+    "instance_content": "(CIFAR-100, 100 classes)",
+    "instance_span": {
+      "start": 493,
+      "end": 518
+    },
+    "targets": [
+      {
+        "term": "a source dataset with many classes",
+        "certainty": "certain",
+        "content": "a source dataset with many classes",
+        "start": 458,
+        "end": 492,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_2",
+    "instance_number": 7,
+    "instance_content": "(CIFAR-10, 10 classes).",
+    "instance_span": {
+      "start": 600,
+      "end": 623
+    },
+    "targets": [
+      {
+        "term": "one with few classes",
+        "certainty": "certain",
+        "content": "one with few classes",
+        "start": 579,
+        "end": 599,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_5",
+    "instance_number": 5,
+    "instance_content": "(the first convolutional layer)",
+    "instance_span": {
+      "start": 448,
+      "end": 479
+    },
+    "targets": [
+      {
+        "term": "early layers",
+        "certainty": "certain",
+        "content": "early layers",
+        "start": 426,
+        "end": 438,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_7",
+    "instance_number": 6,
+    "instance_content": "(VGG19 trained 160 epochs with LR drops at epochs 80 and 120; ResNet50 trained 90 epochs with LR drops at epochs 50, 65, and 80).",
+    "instance_span": {
+      "start": 631,
+      "end": 760
+    },
+    "targets": [
+      {
+        "term": "model family",
+        "certainty": "certain",
+        "content": "model family",
+        "start": 618,
+        "end": 630,
+        "candidates": []
+      }
+    ]
+  }
+]

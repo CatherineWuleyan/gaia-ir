@@ -1,0 +1,1698 @@
+[
+  {
+    "id": "paper:1174682106345816107::conclusion_1",
+    "global_id": "gcn_821e7ef8fbe54750",
+    "order": 1,
+    "title": "Weak Lottery Ticket Hypothesis holds for variational quantum circuits on small classification tasks with iterative magnitude pruning",
+    "content": "The weak Lottery Ticket Hypothesis (LTH) holds for variational quantum circuits (VQCs) on small classification tasks: after training, iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration), resetting the remaining weights to their initial random values, and retraining, multi-class VQCs (MVQCs) and binary VQCs (BVQCs) on the Iris dataset (150 instances, 4 features, 3 classes), the simplified Iris dataset (binary, 2 classes), the Wine dataset (178 instances, 13 features, 3 classes), and the simplified Wine dataset (binary) produce sparse subnetworks ('winning tickets') that match or closely approach the unpruned validation accuracy while retaining substantially fewer parameters. Specifically, the winning-ticket pruning levels are: MVQC on Iris 26.0% of 198 parameters (preserving 97.5% accuracy), MVQC on simplified Iris 26.1% of 184 parameters (preserving 100% accuracy), BVQC on simplified Iris 33.3% of 122 parameters (preserving 100% accuracy), MVQC on Wine 32.7% of 630 parameters (achieving 80% accuracy vs. 45% unpruned), BVQC on simplified Wine 51.3% of 548 parameters; no winning ticket was found for the MVQC on simplified Wine.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The weak Lottery Ticket Hypothesis holds for variational quantum circuits on small classification tasks: after training, iterative magnitude pruning , resetting the remaining weights to their initial random values, and retraining, multi-class VQCs and binary VQCs on the Iris dataset , the simplified Iris dataset , the Wine dataset , and the simplified Wine dataset produce sparse subnetworks that match or closely approach the unpruned validation accuracy while retaining substantially fewer parameters.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 35
+          },
+          {
+            "start": 41,
+            "end": 80
+          },
+          {
+            "start": 87,
+            "end": 162
+          },
+          {
+            "start": 222,
+            "end": 321
+          },
+          {
+            "start": 329,
+            "end": 345
+          },
+          {
+            "start": 353,
+            "end": 373
+          },
+          {
+            "start": 411,
+            "end": 441
+          },
+          {
+            "start": 460,
+            "end": 479
+          },
+          {
+            "start": 518,
+            "end": 552
+          },
+          {
+            "start": 561,
+            "end": 588
+          },
+          {
+            "start": 608,
+            "end": 720
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(LTH)",
+        "source_spans": [
+          {
+            "start": 35,
+            "end": 41
+          }
+        ],
+        "of_terms": [
+          "weak Lottery Ticket Hypothesis"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(VQCs)",
+        "source_spans": [
+          {
+            "start": 80,
+            "end": 87
+          }
+        ],
+        "of_terms": [
+          "variational quantum circuits"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(removing 20% of the lowest-magnitude weights per iteration)",
+        "source_spans": [
+          {
+            "start": 162,
+            "end": 222
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(MVQCs)",
+        "source_spans": [
+          {
+            "start": 321,
+            "end": 329
+          }
+        ],
+        "of_terms": [
+          "multi-class VQCs"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(BVQCs)",
+        "source_spans": [
+          {
+            "start": 345,
+            "end": 353
+          }
+        ],
+        "of_terms": [
+          "binary VQCs"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(150 instances, 4 features, 3 classes)",
+        "source_spans": [
+          {
+            "start": 373,
+            "end": 411
+          }
+        ],
+        "of_terms": [
+          "the Iris dataset"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(binary, 2 classes)",
+        "source_spans": [
+          {
+            "start": 441,
+            "end": 460
+          }
+        ],
+        "of_terms": [
+          "the simplified Iris dataset"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(178 instances, 13 features, 3 classes)",
+        "source_spans": [
+          {
+            "start": 479,
+            "end": 518
+          }
+        ],
+        "of_terms": [
+          "the Wine dataset"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "(binary)",
+        "source_spans": [
+          {
+            "start": 552,
+            "end": 561
+          }
+        ],
+        "of_terms": [
+          "the simplified Wine dataset"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "('winning tickets')",
+        "source_spans": [
+          {
+            "start": 588,
+            "end": 608
+          }
+        ],
+        "of_terms": [
+          "sparse subnetworks"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "framing",
+        "content": "Specifically, the winning-ticket pruning levels are:",
+        "source_spans": [
+          {
+            "start": 720,
+            "end": 773
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "论据",
+        "content": "MVQC on Iris 26.0% of 198 parameters (preserving 97.5% accuracy),",
+        "source_spans": [
+          {
+            "start": 773,
+            "end": 839
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 14,
+        "label": "论据",
+        "content": "MVQC on simplified Iris 26.1% of 184 parameters (preserving 100% accuracy),",
+        "source_spans": [
+          {
+            "start": 839,
+            "end": 915
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 15,
+        "label": "论据",
+        "content": "BVQC on simplified Iris 33.3% of 122 parameters (preserving 100% accuracy),",
+        "source_spans": [
+          {
+            "start": 915,
+            "end": 991
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 16,
+        "label": "论据",
+        "content": "MVQC on Wine 32.7% of 630 parameters (achieving 80% accuracy vs. 45% unpruned),",
+        "source_spans": [
+          {
+            "start": 991,
+            "end": 1071
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 17,
+        "label": "论据",
+        "content": "BVQC on simplified Wine 51.3% of 548 parameters;",
+        "source_spans": [
+          {
+            "start": 1071,
+            "end": 1120
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 18,
+        "label": "assertion",
+        "content": "no winning ticket was found for the MVQC on simplified Wine.",
+        "source_spans": [
+          {
+            "start": 1120,
+            "end": 1180
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_2",
+    "global_id": "gcn_2613936687474f02",
+    "order": 2,
+    "title": "MVQC on Iris retains 26.0% of parameters with preserved accuracy",
+    "content": "A multi-class variational quantum circuit (MVQC) using angle encoding, strongly entangling layers, Pauli-Z expectation readout on the first $n$ qubits (with $n=3$ for the Iris dataset, the number of classes), softmax classification, cross-entropy loss, and Adam optimization preserves its unpruned validation accuracy of 97.5% on the Iris dataset (150 instances, 4 features, 3 classes) after iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration) and retraining, when only 26.0% of the original 198 parameters remain.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "A multi-class variational quantum circuit (MVQC) preserves its unpruned validation accuracy of 97.5% on the Iris dataset after iterative magnitude pruning and retraining, when only 26.0% of the original 198 parameters remain.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 49
+          },
+          {
+            "start": 275,
+            "end": 347
+          },
+          {
+            "start": 386,
+            "end": 420
+          },
+          {
+            "start": 481,
+            "end": 551
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "using angle encoding, strongly entangling layers, Pauli-Z expectation readout on the first $n$ qubits",
+        "source_spans": [
+          {
+            "start": 49,
+            "end": 151
+          }
+        ],
+        "of_terms": [
+          "MVQC"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "instance",
+        "content": "(with $n=3$ for the Iris dataset, the number of classes)",
+        "source_spans": [
+          {
+            "start": 151,
+            "end": 207
+          }
+        ],
+        "of_terms": [
+          "the first $n$ qubits"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": ", softmax classification, cross-entropy loss, and Adam optimization",
+        "source_spans": [
+          {
+            "start": 207,
+            "end": 275
+          }
+        ],
+        "of_terms": [
+          "MVQC"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(150 instances, 4 features, 3 classes)",
+        "source_spans": [
+          {
+            "start": 347,
+            "end": 386
+          }
+        ],
+        "of_terms": [
+          "the Iris dataset"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(removing 20% of the lowest-magnitude weights per iteration)",
+        "source_spans": [
+          {
+            "start": 420,
+            "end": 481
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_3",
+    "global_id": "gcn_7f19a57cd4934b0e",
+    "order": 3,
+    "title": "BVQC on simplified Iris retains 33.3% of parameters with preserved accuracy",
+    "content": "A binary variational quantum circuit (BVQC) using angle embedding, layered entanglement, single-qubit Pauli-Z readout, and binary cross-entropy with logits loss, trained with Adam optimization, retains 100% validation accuracy on the simplified Iris dataset (binary, 2 classes, 150 instances) after iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration) and retraining, down to 33.3% of the original 122 parameters.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "A binary variational quantum circuit retains 100% validation accuracy on the simplified Iris dataset after iterative magnitude pruning and retraining, down to 33.3% of the original 122 parameters.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 37
+          },
+          {
+            "start": 194,
+            "end": 258
+          },
+          {
+            "start": 293,
+            "end": 327
+          },
+          {
+            "start": 388,
+            "end": 449
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(BVQC) using angle embedding, layered entanglement, single-qubit Pauli-Z readout, and binary cross-entropy with logits loss, trained with Adam optimization,",
+        "source_spans": [
+          {
+            "start": 37,
+            "end": 194
+          }
+        ],
+        "of_terms": [
+          "binary variational quantum circuit"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(binary, 2 classes, 150 instances)",
+        "source_spans": [
+          {
+            "start": 258,
+            "end": 293
+          }
+        ],
+        "of_terms": [
+          "simplified Iris dataset"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(removing 20% of the lowest-magnitude weights per iteration)",
+        "source_spans": [
+          {
+            "start": 327,
+            "end": 388
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_4",
+    "global_id": "gcn_789bdec9a6dc4ba1",
+    "order": 4,
+    "title": "Pruning improves MVQC accuracy on Wine dataset from 45% to 80% at 32.7% parameters",
+    "content": "On the Wine dataset (178 instances, 13 features, 3 classes), an overparameterized multi-class variational quantum circuit (MVQC) with 630 parameters (16 layers, angle encoding, strongly entangling layers, Pauli-Z readout on the first 3 qubits, softmax, cross-entropy loss, Adam optimizer) achieves only 45% validation accuracy when unpruned. After iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration) to 32.7% of its original parameters (206 parameters), the pruned circuit achieves 80% validation accuracy, an increase of 35 percentage points.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "On the Wine dataset , an overparameterized multi-class variational quantum circuit with 630 parameters achieves only 45% validation accuracy when unpruned.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 20
+          },
+          {
+            "start": 59,
+            "end": 122
+          },
+          {
+            "start": 129,
+            "end": 149
+          },
+          {
+            "start": 289,
+            "end": 342
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(178 instances, 13 features, 3 classes)",
+        "source_spans": [
+          {
+            "start": 20,
+            "end": 59
+          }
+        ],
+        "of_terms": [
+          "Wine dataset"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(MVQC)",
+        "source_spans": [
+          {
+            "start": 122,
+            "end": 129
+          }
+        ],
+        "of_terms": [
+          "multi-class variational quantum circuit"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(16 layers, angle encoding, strongly entangling layers, Pauli-Z readout on the first 3 qubits, softmax, cross-entropy loss, Adam optimizer)",
+        "source_spans": [
+          {
+            "start": 149,
+            "end": 289
+          }
+        ],
+        "of_terms": [
+          "multi-class variational quantum circuit"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "After iterative magnitude pruning to 32.7% of its original parameters the pruned circuit achieves 80% validation accuracy",
+        "source_spans": [
+          {
+            "start": 342,
+            "end": 376
+          },
+          {
+            "start": 437,
+            "end": 473
+          },
+          {
+            "start": 491,
+            "end": 542
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(removing 20% of the lowest-magnitude weights per iteration)",
+        "source_spans": [
+          {
+            "start": 376,
+            "end": 437
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(206 parameters)",
+        "source_spans": [
+          {
+            "start": 473,
+            "end": 489
+          }
+        ],
+        "of_terms": [
+          "32.7% of its original parameters"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "other",
+        "content": ",",
+        "source_spans": [
+          {
+            "start": 489,
+            "end": 491
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": ", an increase of 35 percentage points.",
+        "source_spans": [
+          {
+            "start": 542,
+            "end": 580
+          }
+        ],
+        "of": [
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_5",
+    "global_id": "gcn_d120a507fd014c23",
+    "order": 5,
+    "title": "Iterative and one-shot magnitude pruning produce similar accuracy outcomes for VQCs and SNNs on small datasets",
+    "content": "On the Iris, simplified Iris, Wine, and simplified Wine datasets, using multi-class VQCs (MVQCs), binary VQCs (BVQCs), and simple neural networks (SNNs) with parameter counts ranging from 122 to 630, iterative magnitude pruning (train, prune 20% of lowest-magnitude weights, reset remaining weights to initial values, retrain, repeat) and one-shot pruning (train a model once, then prune copies at various percentages, retrain each copy from scratch) produce substantially similar validation accuracy curves across remaining-weight levels. The observed discrepancies are minor and attributable to integer rounding of exact parameter counts.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "On the Iris, simplified Iris, Wine, and simplified Wine datasets, using multi-class VQCs , binary VQCs , and simple neural networks with parameter counts ranging from 122 to 630, iterative magnitude pruning and one-shot pruning produce substantially similar validation accuracy curves across remaining-weight levels.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 89
+          },
+          {
+            "start": 96,
+            "end": 110
+          },
+          {
+            "start": 117,
+            "end": 146
+          },
+          {
+            "start": 153,
+            "end": 228
+          },
+          {
+            "start": 335,
+            "end": 356
+          },
+          {
+            "start": 451,
+            "end": 540
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(MVQCs)",
+        "source_spans": [
+          {
+            "start": 89,
+            "end": 96
+          }
+        ],
+        "of_terms": [
+          "multi-class VQCs"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(BVQCs)",
+        "source_spans": [
+          {
+            "start": 110,
+            "end": 117
+          }
+        ],
+        "of_terms": [
+          "binary VQCs"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(SNNs)",
+        "source_spans": [
+          {
+            "start": 146,
+            "end": 153
+          }
+        ],
+        "of_terms": [
+          "simple neural networks"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(train, prune 20% of lowest-magnitude weights, reset remaining weights to initial values, retrain, repeat)",
+        "source_spans": [
+          {
+            "start": 228,
+            "end": 335
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(train a model once, then prune copies at various percentages, retrain each copy from scratch)",
+        "source_spans": [
+          {
+            "start": 356,
+            "end": 451
+          }
+        ],
+        "of_terms": [
+          "one-shot pruning"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "The observed discrepancies are minor and attributable to integer rounding of exact parameter counts.",
+        "source_spans": [
+          {
+            "start": 540,
+            "end": 640
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_6",
+    "global_id": "gcn_fb8e0b6a666f4ad3",
+    "order": 6,
+    "title": "Strong LTH: EA found a BVQC mask achieving 100% accuracy at ~45% remaining weights",
+    "content": "Using an evolutionary algorithm that searches pruning masks without any weight training (strong Lottery Ticket Hypothesis protocol), a binary variational quantum circuit (BVQC) on the simplified Iris dataset (binary, 2 classes, 122 parameters, angle embedding, layered entanglement, single-qubit Pauli-Z readout, binary cross-entropy with logits, Adam optimizer) attains 100% validation accuracy, with the best individual in the final generation retaining approximately 45% of the original parameters. This demonstrates that a purely mask-searching procedure can discover a winning ticket for a VQC on a simple binary task.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "论据",
+        "content": "Using an evolutionary algorithm that searches pruning masks without any weight training a binary variational quantum circuit on the simplified Iris dataset attains 100% validation accuracy",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 88
+          },
+          {
+            "start": 133,
+            "end": 170
+          },
+          {
+            "start": 177,
+            "end": 208
+          },
+          {
+            "start": 363,
+            "end": 395
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(strong Lottery Ticket Hypothesis protocol),",
+        "source_spans": [
+          {
+            "start": 88,
+            "end": 133
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(BVQC)",
+        "source_spans": [
+          {
+            "start": 170,
+            "end": 177
+          }
+        ],
+        "of_terms": [
+          "binary variational quantum circuit"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(binary, 2 classes, 122 parameters, angle embedding, layered entanglement, single-qubit Pauli-Z readout, binary cross-entropy with logits, Adam optimizer)",
+        "source_spans": [
+          {
+            "start": 208,
+            "end": 363
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": ", with the best individual in the final generation retaining approximately 45% of the original parameters.",
+        "source_spans": [
+          {
+            "start": 395,
+            "end": 502
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation",
+        "content": "This demonstrates that",
+        "source_spans": [
+          {
+            "start": 502,
+            "end": 525
+          }
+        ],
+        "connects": [
+          1,
+          5,
+          7
+        ],
+        "expression": "([1] 且 [5]) 推出 [7]"
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "a purely mask-searching procedure can discover a winning ticket for a VQC on a simple binary task.",
+        "source_spans": [
+          {
+            "start": 525,
+            "end": 623
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_7",
+    "global_id": "gcn_f61d1df893bd4a0c",
+    "order": 7,
+    "title": "Strong LTH: EA produced substantial accuracy gains for MVQC and SNN on simplified Iris",
+    "content": "On the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm (EA) that searches pruning masks without any weight training (strong Lottery Ticket Hypothesis protocol) produces substantial accuracy gains for a multi-class variational quantum circuit (MVQC) and a simple neural network (SNN). The MVQC, with 184 parameters (15 layers, angle encoding, strongly entangling layers, Pauli-Z readout on the first 2 qubits, softmax, cross-entropy loss, Adam optimizer), improves from approximately 75% validation accuracy in early generations to about 95% at roughly 34% remaining weights. The SNN, with 170 parameters (single hidden layer of 24 ReLU nodes, softmax output, cross-entropy loss, Adam optimizer), reaches 100% validation accuracy with approximately 40% of its original weights. These outcomes indicate that mask-only search can yield large accuracy gains or full recovery for some architectures on simple tasks.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "On the simplified Iris dataset , an evolutionary algorithm produces substantial accuracy gains for a multi-class variational quantum circuit and a simple neural network .",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 31
+          },
+          {
+            "start": 65,
+            "end": 93
+          },
+          {
+            "start": 198,
+            "end": 280
+          },
+          {
+            "start": 287,
+            "end": 315
+          },
+          {
+            "start": 320,
+            "end": 322
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(binary, 2 classes, 150 instances)",
+        "source_spans": [
+          {
+            "start": 31,
+            "end": 65
+          }
+        ],
+        "of_terms": [
+          "simplified Iris dataset"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(EA)",
+        "source_spans": [
+          {
+            "start": 93,
+            "end": 98
+          }
+        ],
+        "of_terms": [
+          "an evolutionary algorithm"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "that searches pruning masks without any weight training",
+        "source_spans": [
+          {
+            "start": 98,
+            "end": 154
+          }
+        ],
+        "of_terms": [
+          "an evolutionary algorithm"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(strong Lottery Ticket Hypothesis protocol)",
+        "source_spans": [
+          {
+            "start": 154,
+            "end": 198
+          }
+        ],
+        "of_terms": [
+          "that searches pruning masks without any weight training"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(MVQC)",
+        "source_spans": [
+          {
+            "start": 280,
+            "end": 287
+          }
+        ],
+        "of_terms": [
+          "a multi-class variational quantum circuit"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(SNN)",
+        "source_spans": [
+          {
+            "start": 315,
+            "end": 320
+          }
+        ],
+        "of_terms": [
+          "a simple neural network"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "论据",
+        "content": "The MVQC , improves from approximately 75% validation accuracy in early generations to about 95% at roughly 34% remaining weights.",
+        "source_spans": [
+          {
+            "start": 322,
+            "end": 330
+          },
+          {
+            "start": 491,
+            "end": 613
+          }
+        ],
+        "supports": [
+          1,
+          15
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": ", with 184 parameters",
+        "source_spans": [
+          {
+            "start": 330,
+            "end": 352
+          }
+        ],
+        "of_terms": [
+          "The MVQC"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "(15 layers, angle encoding, strongly entangling layers, Pauli-Z readout on the first 2 qubits, softmax, cross-entropy loss, Adam optimizer)",
+        "source_spans": [
+          {
+            "start": 352,
+            "end": 491
+          }
+        ],
+        "of_terms": [
+          "184 parameters"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "论据",
+        "content": "The SNN , reaches 100% validation accuracy with approximately 40% of its original weights.",
+        "source_spans": [
+          {
+            "start": 613,
+            "end": 620
+          },
+          {
+            "start": 732,
+            "end": 815
+          }
+        ],
+        "supports": [
+          1,
+          15
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": ", with 170 parameters",
+        "source_spans": [
+          {
+            "start": 620,
+            "end": 642
+          }
+        ],
+        "of_terms": [
+          "The SNN"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "elaboration",
+        "content": "(single hidden layer of 24 ReLU nodes, softmax output, cross-entropy loss, Adam optimizer)",
+        "source_spans": [
+          {
+            "start": 642,
+            "end": 732
+          }
+        ],
+        "of_terms": [
+          "170 parameters"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "relation",
+        "content": "These outcomes indicate that",
+        "source_spans": [
+          {
+            "start": 815,
+            "end": 844
+          }
+        ],
+        "connects": [
+          8,
+          11,
+          15
+        ],
+        "expression": "[8] 且 [11] 推出 [15]"
+      },
+      {
+        "number": 15,
+        "label": "assertion",
+        "content": "mask-only search can yield large accuracy gains or full recovery for some architectures on simple tasks.",
+        "source_spans": [
+          {
+            "start": 844,
+            "end": 948
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_8",
+    "global_id": "gcn_e2a7ea3b88784145",
+    "order": 8,
+    "title": "Strong LTH fails on Wine and simplified Wine datasets for all models",
+    "content": "On the Wine dataset (178 instances, 13 features, 3 classes) and its simplified binary variant (simplified Wine, 2 classes), the evolutionary algorithm (EA) that searches pruning masks without weight training (strong Lottery Ticket Hypothesis protocol) fails to identify masks that match or exceed the unpruned performances of the models. On the Wine dataset, the multi-class VQC (MVQC, 630 parameters) unpruned accuracy is 45% and the SNN (411 parameters) unpruned accuracy is 98%; the EA produces masks with roughly 30–40% remaining weights but results in MVQC accuracy around 48% and SNN accuracy around 87%, both below unpruned levels. On the simplified Wine dataset, the BVQC (548 parameters) unpruned accuracy is approximately 94%, the MVQC (355 parameters) unpruned accuracy is approximately 97%, and the SNN (386 parameters) unpruned accuracy is approximately 98%; the EA stabilizes at subnetworks with roughly 26–45% remaining weights but fails to reach these unpruned accuracies under the tested algorithmic settings.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "On the Wine dataset and its simplified binary variant , the evolutionary algorithm fails to identify masks that match or exceed the unpruned performances of the models.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 20
+          },
+          {
+            "start": 60,
+            "end": 94
+          },
+          {
+            "start": 122,
+            "end": 151
+          },
+          {
+            "start": 252,
+            "end": 338
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(178 instances, 13 features, 3 classes)",
+        "source_spans": [
+          {
+            "start": 20,
+            "end": 60
+          }
+        ],
+        "of_terms": [
+          "Wine dataset"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(simplified Wine, 2 classes)",
+        "source_spans": [
+          {
+            "start": 94,
+            "end": 122
+          }
+        ],
+        "of_terms": [
+          "simplified binary variant"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(EA)",
+        "source_spans": [
+          {
+            "start": 151,
+            "end": 156
+          }
+        ],
+        "of_terms": [
+          "evolutionary algorithm"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "that searches pruning masks without weight training",
+        "source_spans": [
+          {
+            "start": 156,
+            "end": 208
+          }
+        ],
+        "of_terms": [
+          "evolutionary algorithm"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(strong Lottery Ticket Hypothesis protocol)",
+        "source_spans": [
+          {
+            "start": 208,
+            "end": 252
+          }
+        ],
+        "of_terms": [
+          "without weight training"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "论据",
+        "content": "On the Wine dataset, the multi-class VQC unpruned accuracy is 45%",
+        "source_spans": [
+          {
+            "start": 338,
+            "end": 379
+          },
+          {
+            "start": 402,
+            "end": 427
+          }
+        ],
+        "supports": [
+          1,
+          17
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(MVQC, 630 parameters)",
+        "source_spans": [
+          {
+            "start": 379,
+            "end": 402
+          }
+        ],
+        "of_terms": [
+          "multi-class VQC"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 427,
+            "end": 431
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "论据",
+        "content": "the SNN unpruned accuracy is 98%;",
+        "source_spans": [
+          {
+            "start": 431,
+            "end": 439
+          },
+          {
+            "start": 456,
+            "end": 482
+          }
+        ],
+        "supports": [
+          1,
+          17
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "(411 parameters)",
+        "source_spans": [
+          {
+            "start": 439,
+            "end": 456
+          }
+        ],
+        "of_terms": [
+          "SNN"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "论据",
+        "content": "the EA produces masks with roughly 30–40% remaining weights",
+        "source_spans": [
+          {
+            "start": 482,
+            "end": 542
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 13,
+        "label": "connection",
+        "content": "but",
+        "source_spans": [
+          {
+            "start": 542,
+            "end": 546
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "论据",
+        "content": "results in MVQC accuracy around 48%",
+        "source_spans": [
+          {
+            "start": 546,
+            "end": 582
+          }
+        ],
+        "supports": [
+          1,
+          17
+        ]
+      },
+      {
+        "number": 15,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 582,
+            "end": 586
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "论据",
+        "content": "SNN accuracy around 87%,",
+        "source_spans": [
+          {
+            "start": 586,
+            "end": 611
+          }
+        ],
+        "supports": [
+          1,
+          17
+        ]
+      },
+      {
+        "number": 17,
+        "label": "论据",
+        "content": "both below unpruned levels.",
+        "source_spans": [
+          {
+            "start": 611,
+            "end": 639
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 18,
+        "label": "论据",
+        "content": "On the simplified Wine dataset, the BVQC unpruned accuracy is approximately 94%,",
+        "source_spans": [
+          {
+            "start": 639,
+            "end": 680
+          },
+          {
+            "start": 697,
+            "end": 737
+          }
+        ],
+        "supports": [
+          1,
+          27
+        ]
+      },
+      {
+        "number": 19,
+        "label": "elaboration",
+        "content": "(548 parameters)",
+        "source_spans": [
+          {
+            "start": 680,
+            "end": 697
+          }
+        ],
+        "of_terms": [
+          "BVQC"
+        ]
+      },
+      {
+        "number": 20,
+        "label": "论据",
+        "content": "the MVQC unpruned accuracy is approximately 97%,",
+        "source_spans": [
+          {
+            "start": 737,
+            "end": 746
+          },
+          {
+            "start": 763,
+            "end": 803
+          }
+        ],
+        "supports": [
+          1,
+          27
+        ]
+      },
+      {
+        "number": 21,
+        "label": "elaboration",
+        "content": "(355 parameters)",
+        "source_spans": [
+          {
+            "start": 746,
+            "end": 763
+          }
+        ],
+        "of_terms": [
+          "MVQC"
+        ]
+      },
+      {
+        "number": 22,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 803,
+            "end": 807
+          }
+        ]
+      },
+      {
+        "number": 23,
+        "label": "论据",
+        "content": "the SNN unpruned accuracy is approximately 98%;",
+        "source_spans": [
+          {
+            "start": 807,
+            "end": 815
+          },
+          {
+            "start": 832,
+            "end": 872
+          }
+        ],
+        "supports": [
+          1,
+          27
+        ]
+      },
+      {
+        "number": 24,
+        "label": "elaboration",
+        "content": "(386 parameters)",
+        "source_spans": [
+          {
+            "start": 815,
+            "end": 832
+          }
+        ],
+        "of_terms": [
+          "SNN"
+        ]
+      },
+      {
+        "number": 25,
+        "label": "论据",
+        "content": "the EA stabilizes at subnetworks with roughly 26–45% remaining weights",
+        "source_spans": [
+          {
+            "start": 872,
+            "end": 943
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 26,
+        "label": "connection",
+        "content": "but",
+        "source_spans": [
+          {
+            "start": 943,
+            "end": 947
+          }
+        ]
+      },
+      {
+        "number": 27,
+        "label": "论据",
+        "content": "fails to reach these unpruned accuracies under the tested algorithmic settings.",
+        "source_spans": [
+          {
+            "start": 947,
+            "end": 1026
+          }
+        ],
+        "supports": [
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1174682106345816107::conclusion_9",
+    "global_id": "gcn_b8f937d996a04a0c",
+    "order": 9,
+    "title": "Strong LTH can sometimes find winning tickets for VQCs on simple tasks",
+    "content": "For the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm (EA) that searches pruning masks without weight training (strong Lottery Ticket Hypothesis protocol) identifies masks that match unpruned performance (100% validation accuracy) for a binary VQC (BVQC, 122 parameters) and a simple neural network (SNN, 170 parameters), and produces large accuracy gains for a multi-class VQC (MVQC, 184 parameters) from approximately 75% to 95% validation accuracy. These results show that mask-only discovery is a viable approach for small quantum classification problems.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "论据",
+        "content": "For the simplified Iris dataset , an evolutionary algorithm that searches pruning masks without weight training identifies masks that match unpruned performance for a binary VQC and a simple neural network",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 32
+          },
+          {
+            "start": 66,
+            "end": 94
+          },
+          {
+            "start": 99,
+            "end": 151
+          },
+          {
+            "start": 195,
+            "end": 244
+          },
+          {
+            "start": 271,
+            "end": 288
+          },
+          {
+            "start": 311,
+            "end": 339
+          }
+        ],
+        "supports": [
+          12
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(binary, 2 classes, 150 instances)",
+        "source_spans": [
+          {
+            "start": 32,
+            "end": 66
+          }
+        ],
+        "of_terms": [
+          "the simplified Iris dataset"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(EA)",
+        "source_spans": [
+          {
+            "start": 94,
+            "end": 99
+          }
+        ],
+        "of_terms": [
+          "evolutionary algorithm"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "instance",
+        "content": "(strong Lottery Ticket Hypothesis protocol)",
+        "source_spans": [
+          {
+            "start": 151,
+            "end": 195
+          }
+        ],
+        "of_terms": [
+          "without weight training"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(100% validation accuracy)",
+        "source_spans": [
+          {
+            "start": 244,
+            "end": 271
+          }
+        ],
+        "of_terms": [
+          "unpruned performance"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "instance",
+        "content": "(BVQC, 122 parameters)",
+        "source_spans": [
+          {
+            "start": 288,
+            "end": 311
+          }
+        ],
+        "of_terms": [
+          "a binary VQC"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "instance",
+        "content": "(SNN, 170 parameters)",
+        "source_spans": [
+          {
+            "start": 339,
+            "end": 360
+          }
+        ],
+        "of_terms": [
+          "a simple neural network"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 360,
+            "end": 366
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "论据",
+        "content": "produces large accuracy gains for a multi-class VQC from approximately 75% to 95% validation accuracy.",
+        "source_spans": [
+          {
+            "start": 366,
+            "end": 418
+          },
+          {
+            "start": 441,
+            "end": 492
+          }
+        ],
+        "supports": [
+          12
+        ]
+      },
+      {
+        "number": 10,
+        "label": "instance",
+        "content": "(MVQC, 184 parameters)",
+        "source_spans": [
+          {
+            "start": 418,
+            "end": 441
+          }
+        ],
+        "of_terms": [
+          "a multi-class VQC"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "relation",
+        "content": "These results show that",
+        "source_spans": [
+          {
+            "start": 492,
+            "end": 516
+          }
+        ],
+        "connects": [
+          1,
+          9,
+          12
+        ],
+        "expression": "[1] 且 [9] 推出 [12]"
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "mask-only discovery is a viable approach for small quantum classification problems.",
+        "source_spans": [
+          {
+            "start": 516,
+            "end": 599
+          }
+        ]
+      }
+    ]
+  }
+]

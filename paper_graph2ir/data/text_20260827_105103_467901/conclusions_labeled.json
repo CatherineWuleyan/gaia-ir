@@ -1,0 +1,23 @@
+[
+  {
+    "id": "paper:text_20260827_105103_467901::conclusion_1",
+    "global_id": "paper:text_20260827_105103_467901::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "The abduction from the observation to the hypothesis assumes the observed performance comparison was made at extreme pruning fractions for ResNet50 models in the CIFAR-10a to CIFAR-10b transfer setting.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The abduction from the observation to the hypothesis assumes",
+          "label": "framing"
+        },
+        {
+          "text": " the observed performance comparison was made at extreme pruning fractions for ResNet50 models in the CIFAR-10a to CIFAR-10b transfer setting.",
+          "label": "assertion",
+          "number": 1
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

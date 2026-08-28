@@ -1,0 +1,155 @@
+[
+  {
+    "conclusion": "conclusion_2",
+    "number": 11,
+    "label": "assertion",
+    "text": "On the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 Task 1a data, the procedure requires only one or two pruning-search iterations ($T=1$ or $2$) to find high-quality low-complexity models.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 3,
+    "label": "assertion",
+    "text": "Among three evaluated Lottery Ticket Hypothesis (LTH) mask-selection strategies—(i) large-final, (ii) small-weights, and (iii) global small-weights—the small-weights masking strategy was empirically selected, as 【5】 states.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 5,
+    "label": "论据",
+    "supports": [
+      3
+    ],
+    "text": "The small-weights masking strategy produced a superior trade-off between classification accuracy and compression rate on the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 Task 1a validation experiments.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 1,
+    "label": "assertion",
+    "text": "The iterative Lottery Ticket Hypothesis (LTH) pruning search procedure, as described in 【2】, applied to Inception-based student architectures yields sparse subnetworks that retain or modestly change validation predictive metrics compared to their unpruned seeds while achieving very large parameter reduction.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 4,
+    "label": "example",
+    "illustrates": [
+      1
+    ],
+    "text": "Visualization and empirical examples demonstrate that discovered models, as described in 【1】, have sparsity corresponding to up to a 149× compression rate in the examined shallow Inception student model.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 1,
+    "label": "论据",
+    "supports": [
+      3
+    ],
+    "text": "An ensemble built from pruned and distilled Large Inception (LIC) and Shallow Inception (SIC) models under the Acoustic Lottery pipeline achieved a validation accuracy of 79.4% and a log loss of 0.640 on the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 Task 1a development set.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 3,
+    "label": "assertion",
+    "text": "The integrated compression-and-training workflow can reach high predictive performance comparable to much larger prior systems while using compressed components.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 1,
+    "label": "论据",
+    "supports": [
+      3
+    ],
+    "text": "An ensemble composed of pruned and distilled Large Inception (LIC) models produced a system with 117 KB non-zero parameters, validation accuracy $78.7\\%$, and log loss $0.644$ on the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 Task 1a development set.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 3,
+    "label": "assertion",
+    "text": "The Acoustic Lottery approach can produce multi-device-robust acoustic scene classification (ASC) systems meeting the Detection and Classification of Acoustic Scenes and Events (DCASE) Task 1a size constraint.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 1,
+    "label": "论据",
+    "supports": [
+      6
+    ],
+    "text": "Applying teacher-student learning (TSL) to the Shallow Inception (SIC) student model improved validation accuracy from 67.8% to 68.9% and reduced log loss from 0.954 to 0.919 on the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 development set",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 6,
+    "label": "assertion",
+    "text": "Distillation of a large two-stage teacher into a small student increases the student model's predictive performance under acoustic scene classification (ASC) multi-device conditions.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 1,
+    "label": "assertion",
+    "text": "Post-training dynamic range quantization (DRQ), that statically quantizes weights to 8-bit integers and dynamically quantizes activations, reduces model file size by roughly a factor of four versus 32-bit storage.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 3,
+    "label": "论据",
+    "supports": [
+      5
+    ],
+    "text": "when applied after Lottery Ticket Hypothesis (LTH) pruning and teacher-student learning (TSL), this quantization produced a Large Inception (LIC)-based system with 103 KB non-zero-parameter size, validation accuracy $78.2\\%$, and log loss $0.723$ on the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 Task 1a development set,",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 5,
+    "label": "assertion",
+    "text": "Post-training dynamic range quantization (DRQ) can be used in concert with sparse-subnetwork discovery to reach stringent size budgets.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_9",
+    "number": 1,
+    "label": "assertion",
+    "text": "Empirically on the Detection and Classification of Acoustic Scenes and Events (DCASE) 2021 Task 1a data, the Lottery Ticket Hypothesis (LTH) pruning search—which repeatedly trains the model via teacher-student learning, prunes by masking weights, and resets surviving weights to their initial random values—required only $T=1$ or $T=2$ pruning-search iterations to find high-quality low-complexity acoustic models that do not suffer significant validation accuracy degradation compared to their high-complexity teachers.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  }
+]

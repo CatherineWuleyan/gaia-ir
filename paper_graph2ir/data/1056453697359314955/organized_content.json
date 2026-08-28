@@ -1,0 +1,1862 @@
+[
+  {
+    "id": "paper:1056453697359314955::conclusion_1",
+    "global_id": "gcn_9fdb471a5ae74ed6",
+    "order": 1,
+    "title": "Localization strategies for identifying weights tied to a property",
+    "content": "A pair of formal localization strategies is defined to select individual weight indices linked to a property $p$ by comparing a target network $f_t(\\cdot,\\theta_t)$ and a reference network $f_r(\\cdot,\\theta_r)$ of identical architecture. In mask-based localization the localization mask $b\\in\\{0,1\\}^d$ is computed from the subnetworks' pruning masks $m_t,m_r\\in\\{0,1\\}^d$ as\n      $$\n      b = m_t \\odot m_r,\n      $$\n      where $\\odot$ denotes element-wise product and $b_i=1$ indicates weight index $i$ is selected for editing. In value-based localization the localization mask $b$ selects the top-$k$ indices $I_{top}^k$ with largest absolute differences between the pruned parameter vectors, i.e.\n      $$\n      b_i =\n      \\begin{cases}\n      1, & \\text{if } i \\in I_{top}^k \\\\\n      0, & \\text{otherwise},\n      \\end{cases}\n      $$\n      where $I_{top}^k$ contains indices of the $k$ largest entries of $|(m_r \\odot \\theta_r) - (m_t \\odot \\theta_t)|$. These strategies operationalize fine-grained localization of weights to be edited in the subsequent editing step.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "A pair of formal localization strategies",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 41
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "is defined to select individual weight indices linked to a property $p$ by comparing a target network $f_t(\\cdot,\\theta_t)$ and a reference network $f_r(\\cdot,\\theta_r)$ of identical architecture.",
+        "source_spans": [
+          {
+            "start": 41,
+            "end": 238
+          }
+        ],
+        "of_terms": [
+          "formal localization strategies"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "In mask-based localization",
+        "source_spans": [
+          {
+            "start": 238,
+            "end": 265
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "other",
+        "content": "the localization mask $b\\in\\{0,1\\}^d$",
+        "source_spans": [
+          {
+            "start": 265,
+            "end": 303
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "is computed from the subnetworks' pruning masks $m_t,m_r\\in\\{0,1\\}^d$ as $$ b = m_t \\odot m_r, $$ where $\\odot$ denotes element-wise product and $b_i=1$ indicates weight index $i$ is selected for editing.",
+        "source_spans": [
+          {
+            "start": 303,
+            "end": 532
+          }
+        ],
+        "of_terms": [
+          "mask-based localization",
+          "the localization mask $b\\in\\{0,1\\}^d$"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "In value-based localization",
+        "source_spans": [
+          {
+            "start": 532,
+            "end": 560
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "other",
+        "content": "the localization mask $b$",
+        "source_spans": [
+          {
+            "start": 560,
+            "end": 586
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "selects the top-$k$ indices $I_{top}^k$ with largest absolute differences between the pruned parameter vectors, i.e. $$ b_i = \\begin{cases} 1, & \\text{if } i \\in I_{top}^k \\\\ 0, & \\text{otherwise}, \\end{cases} $$ where $I_{top}^k$ contains indices of the $k$ largest entries of $|(m_r \\odot \\theta_r) - (m_t \\odot \\theta_t)|$.",
+        "source_spans": [
+          {
+            "start": 586,
+            "end": 961
+          }
+        ],
+        "of_terms": [
+          "value-based localization",
+          "the localization mask $b$"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "other",
+        "content": "These strategies",
+        "source_spans": [
+          {
+            "start": 961,
+            "end": 978
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "operationalize fine-grained localization of weights to be edited in the subsequent editing step.",
+        "source_spans": [
+          {
+            "start": 978,
+            "end": 1074
+          }
+        ],
+        "of_terms": [
+          "These strategies"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_2",
+    "global_id": "gcn_995ccffd72134802",
+    "order": 2,
+    "title": "Local contrastive editing primitives (interpolation, extrapolation, pruning, mask switch)",
+    "content": "A set of local, contrastive editing operations is defined that modify only the coordinates indicated by a binary localization mask $b \\in \\{0,1\\}^d$ (where $b_i=1$ means weight index $i$ is selected for editing) to produce an edited parameter vector $\\theta_t'$ from the target network parameters $\\theta_t \\in \\mathbb{R}^d$ relative to the reference network parameters $\\theta_r \\in \\mathbb{R}^d$. The operations are:\n      - Weight Interpolation (IP):\n      $$\n      \\theta_t' = \\theta_t + \\alpha((\\theta_r - \\theta_t) \\odot b), \\quad \\alpha \\in [0,1],\n      $$\n      which linearly moves selected weights of the target toward the reference.\n      - Weight Extrapolation (EP):\n      $$\n      \\theta_t' = \\theta_t + \\alpha((\\theta_r - \\theta_t) \\odot b), \\quad \\alpha \\in \\mathbb{R}\\setminus[0,1],\n      $$\n      which allows moving selected weights beyond the reference values (including in the opposite direction).\n      - Pruning (PR):\n      $$\n      \\theta_t' = \\theta_t - (\\theta_t \\odot b),\n      $$\n      which zeroes out the selected weights.\n      - Mask Switch (SW) (applicable with mask-based localization): apply the reference subnetwork mask $m_r$ (a binary mask from the reference subnetwork's pruning mask) to the target,\n      $$\n      \\theta_t' = \\theta_t \\odot m_r,\n      $$\n      thereby pruning or restoring weights in the target according to the reference mask. Each primitive is explicitly restricted to indices $i$ with $b_i=1$, enabling parameter-efficient, contrastive edits that operate relative to a chosen reference model.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "A set of local, contrastive editing operations is defined",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 58
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "that modify only the coordinates indicated by a binary localization mask $b \\in \\{0,1\\}^d$ (where $b_i=1$ means weight index $i$ is selected for editing) to produce an edited parameter vector $\\theta_t'$ from the target network parameters $\\theta_t \\in \\mathbb{R}^d$ relative to the reference network parameters $\\theta_r \\in \\mathbb{R}^d$.",
+        "source_spans": [
+          {
+            "start": 58,
+            "end": 399
+          }
+        ],
+        "of_terms": [
+          "editing operations"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "The operations are:",
+        "source_spans": [
+          {
+            "start": 399,
+            "end": 425
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "other",
+        "content": "- Weight Interpolation (IP):",
+        "source_spans": [
+          {
+            "start": 425,
+            "end": 460
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "$$ \\theta_t' = \\theta_t + \\alpha((\\theta_r - \\theta_t) \\odot b), \\quad \\alpha \\in [0,1], $$ which linearly moves selected weights of the target toward the reference.",
+        "source_spans": [
+          {
+            "start": 460,
+            "end": 650
+          }
+        ],
+        "of_terms": [
+          "Weight Interpolation (IP)"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "other",
+        "content": "- Weight Extrapolation (EP):",
+        "source_spans": [
+          {
+            "start": 650,
+            "end": 685
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "$$ \\theta_t' = \\theta_t + \\alpha((\\theta_r - \\theta_t) \\odot b), \\quad \\alpha \\in \\mathbb{R}\\setminus[0,1], $$ which allows moving selected weights beyond the reference values (including in the opposite direction).",
+        "source_spans": [
+          {
+            "start": 685,
+            "end": 924
+          }
+        ],
+        "of_terms": [
+          "Weight Extrapolation (EP)"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "other",
+        "content": "- Pruning (PR):",
+        "source_spans": [
+          {
+            "start": 924,
+            "end": 946
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "$$ \\theta_t' = \\theta_t - (\\theta_t \\odot b), $$ which zeroes out the selected weights.",
+        "source_spans": [
+          {
+            "start": 946,
+            "end": 1058
+          }
+        ],
+        "of_terms": [
+          "Pruning (PR)"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "other",
+        "content": "- Mask Switch (SW)",
+        "source_spans": [
+          {
+            "start": 1058,
+            "end": 1077
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "(applicable with mask-based localization): apply the reference subnetwork mask $m_r$ (a binary mask from the reference subnetwork's pruning mask) to the target, $$ \\theta_t' = \\theta_t \\odot m_r, $$ thereby pruning or restoring weights in the target according to the reference mask.",
+        "source_spans": [
+          {
+            "start": 1077,
+            "end": 1384
+          }
+        ],
+        "of_terms": [
+          "Mask Switch (SW)"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "Each primitive is explicitly restricted to indices $i$ with $b_i=1$, enabling parameter-efficient, contrastive edits that operate relative to a chosen reference model.",
+        "source_spans": [
+          {
+            "start": 1384,
+            "end": 1551
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_3",
+    "global_id": "gcn_64eaec9f52f34310",
+    "order": 3,
+    "title": "Subnetworks extracted by iterative magnitude pruning are stable winning tickets that preserve parent-model bias",
+    "content": "Using iterative magnitude pruning (IMP) applied to fine-tuned Bidirectional Encoder Representations from Transformers (BERT) models, subnetworks up to 40% sparsity were discovered that satisfy the winning-ticket criterion (subnetwork performance after limited fine-tuning is within 5% of the full model). The extracted subnetworks are stable across random seeds (Jaccard similarity of pruning masks > 0.98 across runs) and the subnetworks largely maintain the stereotypical or anti-stereotypical bias of their parent models, as measured by intrinsic bias benchmarks: the Word Embedding Association Test (WEAT), StereoSet, and CrowS-Pairs. At sparsity levels 10%, 20%, 30%, and 40%, the bias values (WEAT effect size, StereoSet stereotype score, CrowS-Pairs stereotype score) of the subnetworks remained within a few percentage points of the full model's values (mean across seeds).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Using iterative magnitude pruning (IMP) applied to fine-tuned Bidirectional Encoder Representations from Transformers (BERT) models,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 133
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "subnetworks up to 40% sparsity were discovered that satisfy the winning-ticket criterion",
+        "source_spans": [
+          {
+            "start": 133,
+            "end": 222
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(subnetwork performance after limited fine-tuning is within 5% of the full model).",
+        "source_spans": [
+          {
+            "start": 222,
+            "end": 305
+          }
+        ],
+        "of_terms": [
+          "winning-ticket criterion"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "The extracted subnetworks are stable across random seeds",
+        "source_spans": [
+          {
+            "start": 305,
+            "end": 362
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "(Jaccard similarity of pruning masks > 0.98 across runs)",
+        "source_spans": [
+          {
+            "start": 362,
+            "end": 419
+          }
+        ],
+        "supports": [
+          4
+        ]
+      },
+      {
+        "number": 6,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 419,
+            "end": 423
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "the subnetworks largely maintain the stereotypical or anti-stereotypical bias of their parent models,",
+        "source_spans": [
+          {
+            "start": 423,
+            "end": 525
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "framing",
+        "content": "as measured by intrinsic bias benchmarks:",
+        "source_spans": [
+          {
+            "start": 525,
+            "end": 567
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "instance",
+        "content": "the Word Embedding Association Test (WEAT), StereoSet, and CrowS-Pairs.",
+        "source_spans": [
+          {
+            "start": 567,
+            "end": 639
+          }
+        ],
+        "of_terms": [
+          "intrinsic bias benchmarks"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "论据",
+        "content": "At sparsity levels 10%, 20%, 30%, and 40%, the bias values of the subnetworks remained within a few percentage points of the full model's values",
+        "source_spans": [
+          {
+            "start": 639,
+            "end": 698
+          },
+          {
+            "start": 775,
+            "end": 861
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "(WEAT effect size, StereoSet stereotype score, CrowS-Pairs stereotype score)",
+        "source_spans": [
+          {
+            "start": 698,
+            "end": 775
+          }
+        ],
+        "of_terms": [
+          "bias values"
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "(mean across seeds).",
+        "source_spans": [
+          {
+            "start": 861,
+            "end": 881
+          }
+        ],
+        "of": [
+          10
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_4",
+    "global_id": "gcn_1c64dbbe57f54dca",
+    "order": 4,
+    "title": "Only a very small proportion (<0.5%) of weights differ between stereotypical and anti-stereotypical subnetworks",
+    "content": "Empirically, when comparing the pruning masks of stereotypical and anti-stereotypical BERT-base-uncased subnetworks (extracted from models fine-tuned to exhibit opposite gender stereotypes via Counterfactual Data Augmentation) at multiple sparsity levels, the percentage of weights where the masks differ remains below 0.5%. This indicates that the two subnetworks are highly similar overall, and that the parameter differences correlated with the injected gender-bias signals are concentrated in a tiny fraction of indices.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Empirically,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 13
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "when comparing the pruning masks of stereotypical and anti-stereotypical BERT-base-uncased subnetworks",
+        "source_spans": [
+          {
+            "start": 13,
+            "end": 116
+          }
+        ],
+        "of": [
+          5
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(extracted from models fine-tuned to exhibit opposite gender stereotypes via Counterfactual Data Augmentation)",
+        "source_spans": [
+          {
+            "start": 116,
+            "end": 227
+          }
+        ],
+        "of_terms": [
+          "stereotypical and anti-stereotypical BERT-base-uncased subnetworks"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "at multiple sparsity levels",
+        "source_spans": [
+          {
+            "start": 227,
+            "end": 254
+          }
+        ],
+        "of": [
+          5
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": ", the percentage of weights where the masks differ remains below 0.5%.",
+        "source_spans": [
+          {
+            "start": 254,
+            "end": 325
+          }
+        ],
+        "supports": [
+          7,
+          9
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation",
+        "content": "This indicates that",
+        "source_spans": [
+          {
+            "start": 325,
+            "end": 345
+          }
+        ],
+        "connects": [
+          5,
+          7,
+          9
+        ],
+        "expression": "[5] 推出 ([7] 且 [9])"
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "the two subnetworks are highly similar overall",
+        "source_spans": [
+          {
+            "start": 345,
+            "end": 391
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 391,
+            "end": 397
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "that the parameter differences correlated with the injected gender-bias signals are concentrated in a tiny fraction of indices.",
+        "source_spans": [
+          {
+            "start": 397,
+            "end": 524
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_5",
+    "global_id": "gcn_2e5307cac04c4e49",
+    "order": 5,
+    "title": "Localized weight differences concentrate in higher layers, predominantly the attention output dense layer",
+    "content": "Applying both mask-based localization (selecting weights where the pruning masks of the target and reference subnetworks differ) and value-based localization (selecting the top-$k$ weights by absolute difference between the pruned parameter vectors) to the stereotypical vs. anti-stereotypical BERT-base-uncased subnetworks (fine-tuned on opposite gender-biased data) yields consistent architectural concentration: both strategies predominantly select weights in the last layers of the transformer (layers 8–11 in the 12-layer BERT model), with a pronounced focus on the attention output dense (feed-forward/projection) components. Thus, the localized indices implicated by the contrastive procedures are not randomly distributed but are concentrated in specific higher-layer components.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Applying both mask-based localization and value-based localization to the stereotypical vs. anti-stereotypical BERT-base-uncased subnetworks yields consistent architectural concentration:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 38
+          },
+          {
+            "start": 129,
+            "end": 158
+          },
+          {
+            "start": 250,
+            "end": 324
+          },
+          {
+            "start": 368,
+            "end": 415
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(selecting weights where the pruning masks of the target and reference subnetworks differ)",
+        "source_spans": [
+          {
+            "start": 38,
+            "end": 129
+          }
+        ],
+        "of_terms": [
+          "mask-based localization"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(selecting the top-$k$ weights by absolute difference between the pruned parameter vectors)",
+        "source_spans": [
+          {
+            "start": 158,
+            "end": 250
+          }
+        ],
+        "of_terms": [
+          "value-based localization"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(fine-tuned on opposite gender-biased data)",
+        "source_spans": [
+          {
+            "start": 324,
+            "end": 368
+          }
+        ],
+        "of_terms": [
+          "BERT-base-uncased subnetworks"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "both strategies predominantly select weights in the last layers of the transformer , with a pronounced focus on the attention output dense components.",
+        "source_spans": [
+          {
+            "start": 415,
+            "end": 498
+          },
+          {
+            "start": 538,
+            "end": 594
+          },
+          {
+            "start": 620,
+            "end": 632
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(layers 8–11 in the 12-layer BERT model)",
+        "source_spans": [
+          {
+            "start": 498,
+            "end": 538
+          }
+        ],
+        "of_terms": [
+          "the last layers of the transformer"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(feed-forward/projection)",
+        "source_spans": [
+          {
+            "start": 594,
+            "end": 620
+          }
+        ],
+        "of_terms": [
+          "attention output dense"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 632,
+            "end": 638
+          }
+        ],
+        "connects": [
+          1,
+          5,
+          9
+        ],
+        "expression": "([1] 且 [5]) 推出 [9]"
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "the localized indices implicated by the contrastive procedures are not randomly distributed but are concentrated in specific higher-layer components.",
+        "source_spans": [
+          {
+            "start": 638,
+            "end": 787
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_6",
+    "global_id": "gcn_164e4ab492094094",
+    "order": 6,
+    "title": "Local contrastive editing on tiny subsets (<0.5%) can flexibly steer and remove measurable gender bias",
+    "content": "When using the subnetworks and localization masks to apply the local editing primitives (weight interpolation, weight extrapolation, pruning, mask switch) to a BERT-base-uncased target model with a reference of opposite gender-bias polarity (one stereotypical, one anti-stereotypical), the following results are obtained: (a) mask-based localization editing using a selected subset below 0.5% of all weights can effectively modify stereotypical gender bias as measured by the Word Embedding Association Test (WEAT), StereoSet, and CrowS-Pairs; (b) varying the interpolation/extrapolation weighting factor $\\alpha$ provides smooth and controllable shifts of bias between the target and reference regimes; and (c) for certain settings, WEAT indicates complete removal of the injected bias (introduced via Counterfactual Data Augmentation) at $\\alpha=2$. These results show that very small, contrastively-chosen weight subsets suffice to control an intrinsic measure of gender stereotype encoded in BERT.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "When using the subnetworks and localization masks to apply the local editing primitives",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 88
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(weight interpolation, weight extrapolation, pruning, mask switch)",
+        "source_spans": [
+          {
+            "start": 88,
+            "end": 155
+          }
+        ],
+        "of_terms": [
+          "local editing primitives"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "to a BERT-base-uncased target model with a reference of opposite gender-bias polarity",
+        "source_spans": [
+          {
+            "start": 155,
+            "end": 241
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(one stereotypical, one anti-stereotypical)",
+        "source_spans": [
+          {
+            "start": 241,
+            "end": 284
+          }
+        ],
+        "of_terms": [
+          "a reference of opposite gender-bias polarity"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "framing",
+        "content": ", the following results are obtained:",
+        "source_spans": [
+          {
+            "start": 284,
+            "end": 322
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "(a) mask-based localization editing using a selected subset below 0.5% of all weights can effectively modify stereotypical gender bias",
+        "source_spans": [
+          {
+            "start": 322,
+            "end": 457
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "framing",
+        "content": "as measured by the Word Embedding Association Test",
+        "source_spans": [
+          {
+            "start": 457,
+            "end": 508
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(WEAT)",
+        "source_spans": [
+          {
+            "start": 508,
+            "end": 514
+          }
+        ],
+        "of_terms": [
+          "Word Embedding Association Test"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "framing",
+        "content": ", StereoSet, and CrowS-Pairs;",
+        "source_spans": [
+          {
+            "start": 514,
+            "end": 544
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "(b) varying the interpolation/extrapolation weighting factor $\\alpha$ provides smooth and controllable shifts of bias between the target and reference regimes;",
+        "source_spans": [
+          {
+            "start": 544,
+            "end": 704
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 704,
+            "end": 708
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "(c) for certain settings, complete removal of the injected bias at $\\alpha=2$.",
+        "source_spans": [
+          {
+            "start": 708,
+            "end": 734
+          },
+          {
+            "start": 749,
+            "end": 787
+          },
+          {
+            "start": 837,
+            "end": 852
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "framing",
+        "content": "WEAT indicates",
+        "source_spans": [
+          {
+            "start": 734,
+            "end": 749
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "(introduced via Counterfactual Data Augmentation)",
+        "source_spans": [
+          {
+            "start": 787,
+            "end": 837
+          }
+        ],
+        "of_terms": [
+          "the injected bias"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "relation",
+        "content": "These results show that",
+        "source_spans": [
+          {
+            "start": 852,
+            "end": 876
+          }
+        ],
+        "connects": [
+          6,
+          10,
+          12,
+          16
+        ],
+        "expression": "([6] 且 [10] 且 [12]) 推出 [16]"
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "very small, contrastively-chosen weight subsets suffice to control an intrinsic measure of gender stereotype encoded in BERT.",
+        "source_spans": [
+          {
+            "start": 876,
+            "end": 1001
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_7",
+    "global_id": "gcn_71834a669d9948ba",
+    "order": 7,
+    "title": "Localization is essential: uninformed/random edits have minimal effect on bias",
+    "content": "As a control, applying the local editing primitives (weight interpolation, weight extrapolation, pruning, mask switch) to uninformed subsets of weights (randomly sampled from all weights except those pruned in both the stereotypical and anti-stereotypical BERT-base-uncased subnetworks) produces little or no change in the bias measures (WEAT, StereoSet, CrowS-Pairs), indicating that the localization step is critical: random tiny edits with the same cardinality do not reliably shift stereotypical gender associations.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "motivation",
+        "content": "As a control,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 14
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "applying the local editing primitives to uninformed subsets of weights produces little or no change in the bias measures",
+        "source_spans": [
+          {
+            "start": 14,
+            "end": 52
+          },
+          {
+            "start": 119,
+            "end": 152
+          },
+          {
+            "start": 287,
+            "end": 337
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(weight interpolation, weight extrapolation, pruning, mask switch)",
+        "source_spans": [
+          {
+            "start": 52,
+            "end": 119
+          }
+        ],
+        "of_terms": [
+          "local editing primitives"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(randomly sampled from all weights except those pruned in both the stereotypical and anti-stereotypical BERT-base-uncased subnetworks)",
+        "source_spans": [
+          {
+            "start": 152,
+            "end": 287
+          }
+        ],
+        "of_terms": [
+          "uninformed subsets of weights"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(WEAT, StereoSet, CrowS-Pairs)",
+        "source_spans": [
+          {
+            "start": 337,
+            "end": 367
+          }
+        ],
+        "of_terms": [
+          "bias measures"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation",
+        "content": ", indicating that",
+        "source_spans": [
+          {
+            "start": 367,
+            "end": 385
+          }
+        ],
+        "connects": [
+          2,
+          7
+        ],
+        "expression": "[2] 推出 [7]"
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "the localization step is critical",
+        "source_spans": [
+          {
+            "start": 385,
+            "end": 418
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "论据",
+        "content": ": random tiny edits with the same cardinality do not reliably shift stereotypical gender associations.",
+        "source_spans": [
+          {
+            "start": 418,
+            "end": 520
+          }
+        ],
+        "supports": [
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_8",
+    "global_id": "gcn_436971731ac1427e",
+    "order": 8,
+    "title": "Most local edits preserve language modeling and downstream performance; value-based pruning is an exception that severely degrades performance",
+    "content": "Across the local editing strategies (interpolation, extrapolation, pruning, mask switch) and localization methods (mask-based, value-based) applied to BERT-base-uncased models, nearly all edits induce only minor increases in perplexity (masked language modeling) and minor downstream performance changes on the Multi-Genre Natural Language Inference (MNLI) and Semantic Textual Similarity Benchmark (STS-B) tasks (maximum performance losses of at most ~1.07%/1.06% for most edits). The notable exception is value-based pruning, which causes large increases in perplexity (e.g., +9.529 at 30% sparsity) and significant drops in the language modeling (LM) score and downstream performance. Thus, local contrastive edits can be minimally invasive, but some primitives (value-based pruning of selected indices) can catastrophically damage language modeling ability.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Across the local editing strategies",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 37
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(interpolation, extrapolation, pruning, mask switch)",
+        "source_spans": [
+          {
+            "start": 37,
+            "end": 87
+          }
+        ],
+        "of_terms": [
+          "the local editing strategies"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "and localization methods",
+        "source_spans": [
+          {
+            "start": 87,
+            "end": 115
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(mask-based, value-based)",
+        "source_spans": [
+          {
+            "start": 115,
+            "end": 138
+          }
+        ],
+        "of_terms": [
+          "localization methods"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "framing",
+        "content": "applied to BERT-base-uncased models,",
+        "source_spans": [
+          {
+            "start": 138,
+            "end": 177
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "nearly all edits induce only minor increases in perplexity and minor downstream performance changes on the Multi-Genre Natural Language Inference and Semantic Textual Similarity Benchmark tasks .",
+        "source_spans": [
+          {
+            "start": 177,
+            "end": 237
+          },
+          {
+            "start": 261,
+            "end": 351
+          },
+          {
+            "start": 355,
+            "end": 400
+          },
+          {
+            "start": 405,
+            "end": 414
+          },
+          {
+            "start": 479,
+            "end": 482
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(masked language modeling)",
+        "source_spans": [
+          {
+            "start": 237,
+            "end": 261
+          }
+        ],
+        "of_terms": [
+          "perplexity"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(MNLI)",
+        "source_spans": [
+          {
+            "start": 351,
+            "end": 355
+          }
+        ],
+        "of_terms": [
+          "Multi-Genre Natural Language Inference"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "(STS-B)",
+        "source_spans": [
+          {
+            "start": 400,
+            "end": 405
+          }
+        ],
+        "of_terms": [
+          "Semantic Textual Similarity Benchmark"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "(maximum performance losses of at most ~1.07%/1.06% for most edits)",
+        "source_spans": [
+          {
+            "start": 414,
+            "end": 479
+          }
+        ],
+        "of_terms": [
+          "minor downstream performance changes"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "The notable exception is value-based pruning, which causes large increases in perplexity and significant drops in the language modeling score and downstream performance.",
+        "source_spans": [
+          {
+            "start": 482,
+            "end": 572
+          },
+          {
+            "start": 600,
+            "end": 650
+          },
+          {
+            "start": 652,
+            "end": 688
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "framing",
+        "content": "(e.g., )",
+        "source_spans": [
+          {
+            "start": 572,
+            "end": 578
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "instance",
+        "content": "(+9.529 at 30% sparsity)",
+        "source_spans": [
+          {
+            "start": 578,
+            "end": 600
+          }
+        ],
+        "of_terms": [
+          "large increases in perplexity"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "(LM)",
+        "source_spans": [
+          {
+            "start": 650,
+            "end": 652
+          }
+        ],
+        "of_terms": [
+          "language modeling"
+        ]
+      },
+      {
+        "number": 15,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 688,
+            "end": 694
+          }
+        ],
+        "connects": [
+          6,
+          11,
+          16,
+          18
+        ],
+        "expression": "[6] 且 [11] 推出 [16] 和 [18]"
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "local contrastive edits can be minimally invasive",
+        "source_spans": [
+          {
+            "start": 694,
+            "end": 743
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "label": "connection",
+        "content": ", but",
+        "source_spans": [
+          {
+            "start": 743,
+            "end": 749
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "label": "assertion",
+        "content": "some primitives can catastrophically damage language modeling ability.",
+        "source_spans": [
+          {
+            "start": 749,
+            "end": 766
+          },
+          {
+            "start": 805,
+            "end": 861
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "label": "instance",
+        "content": "(value-based pruning of selected indices)",
+        "source_spans": [
+          {
+            "start": 766,
+            "end": 805
+          }
+        ],
+        "of_terms": [
+          "some primitives"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_9",
+    "global_id": "gcn_8206b38b6a114d4c",
+    "order": 9,
+    "title": "There exists a critical range (≈20–40%) of selected weights for value-based interpolation beyond which additional weights do not increase bias effects",
+    "content": "In sensitivity experiments for value-based interpolation (using the linear interpolation formula $\\theta_t' = \\theta_t + \\alpha((\\theta_r - \\theta_t) \\odot b)$ with a fixed weighting factor $\\alpha=0.5$) on BERT-base-uncased subnetworks at 30% sparsity (stereotypical vs. anti-stereotypical), increasing the number $k$ of selected top-differing weights initially strengthens the effect on gender-bias measures (WEAT, StereoSet, CrowS-Pairs) up to a threshold of approximately 20–40% of candidate weights (the set of weights present in both subnetworks); beyond this range editing more weights yields little additional effect, indicating that a critical subset primarily encodes the gender-bias signal.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "In sensitivity experiments for value-based interpolation",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 57
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(using the linear interpolation formula $\\theta_t' = \\theta_t + \\alpha((\\theta_r - \\theta_t) \\odot b)$ with a fixed weighting factor $\\alpha=0.5$)",
+        "source_spans": [
+          {
+            "start": 57,
+            "end": 204
+          }
+        ],
+        "of_terms": [
+          "value-based interpolation"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "on BERT-base-uncased subnetworks at 30% sparsity",
+        "source_spans": [
+          {
+            "start": 204,
+            "end": 253
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(stereotypical vs. anti-stereotypical)",
+        "source_spans": [
+          {
+            "start": 253,
+            "end": 291
+          }
+        ],
+        "of_terms": [
+          "BERT-base-uncased subnetworks at 30% sparsity"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": ", increasing the number $k$ of selected top-differing weights initially strengthens the effect on gender-bias measures up to a threshold of approximately 20–40% of candidate weights ; beyond this range editing more weights yields little additional effect,",
+        "source_spans": [
+          {
+            "start": 291,
+            "end": 410
+          },
+          {
+            "start": 441,
+            "end": 504
+          },
+          {
+            "start": 552,
+            "end": 626
+          }
+        ],
+        "supports": [
+          9
+        ]
+      },
+      {
+        "number": 6,
+        "label": "instance",
+        "content": "(WEAT, StereoSet, CrowS-Pairs)",
+        "source_spans": [
+          {
+            "start": 410,
+            "end": 441
+          }
+        ],
+        "of_terms": [
+          "gender-bias measures"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(the set of weights present in both subnetworks)",
+        "source_spans": [
+          {
+            "start": 504,
+            "end": 552
+          }
+        ],
+        "of_terms": [
+          "candidate weights"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "relation",
+        "content": "indicating that",
+        "source_spans": [
+          {
+            "start": 626,
+            "end": 642
+          }
+        ],
+        "connects": [
+          5,
+          9
+        ],
+        "expression": "[5] 推出 [9]"
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "a critical subset primarily encodes the gender-bias signal.",
+        "source_spans": [
+          {
+            "start": 642,
+            "end": 701
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_10",
+    "global_id": "gcn_dbb4d7319f8f445d",
+    "order": 10,
+    "title": "Effect magnitude correlates with weighting factor $\\alpha$, but large $|\\alpha|$ degrades language modeling (limits to extrapolation)",
+    "content": "Varying the interpolation/extrapolation factor $\\alpha$ in local contrastive editing on BERT-base-uncased models yields monotonic increases in gender-bias-control effect size for moderate $|\\alpha|$, providing a continuous calibration mechanism. However, for large absolute weighting factors ($|\\alpha| \\geq 5$), language modeling performance declines (increasing perplexity and decreasing language modeling (LM) score), and the bias effects become inconsistent. Thus, while $\\alpha$ affords flexible control, there exists a practical operational range ($|\\alpha| < 5$) beyond which edits harm model quality and reliability.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Varying the interpolation/extrapolation factor $\\alpha$ in local contrastive editing on BERT-base-uncased models yields monotonic increases in gender-bias-control effect size for moderate $|\\alpha|$",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 198
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": ", providing a continuous calibration mechanism.",
+        "source_spans": [
+          {
+            "start": 198,
+            "end": 246
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "connection",
+        "content": "However,",
+        "source_spans": [
+          {
+            "start": 246,
+            "end": 255
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "for large absolute weighting factors , language modeling performance declines",
+        "source_spans": [
+          {
+            "start": 255,
+            "end": 292
+          },
+          {
+            "start": 311,
+            "end": 352
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "($|\\alpha| \\geq 5$)",
+        "source_spans": [
+          {
+            "start": 292,
+            "end": 311
+          }
+        ],
+        "of_terms": [
+          "large absolute weighting factors"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(increasing perplexity and decreasing language modeling (LM) score)",
+        "source_spans": [
+          {
+            "start": 352,
+            "end": 419
+          }
+        ],
+        "of_terms": [
+          "language modeling performance declines"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "connection",
+        "content": ", and",
+        "source_spans": [
+          {
+            "start": 419,
+            "end": 425
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "the bias effects become inconsistent.",
+        "source_spans": [
+          {
+            "start": 425,
+            "end": 463
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "relation",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 463,
+            "end": 469
+          }
+        ],
+        "connects": [
+          4,
+          8,
+          12
+        ],
+        "expression": "([4] 且 [8]) 推出 [12]"
+      },
+      {
+        "number": 10,
+        "label": "connection",
+        "content": "while",
+        "source_spans": [
+          {
+            "start": 469,
+            "end": 475
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "assertion",
+        "content": "$\\alpha$ affords flexible control,",
+        "source_spans": [
+          {
+            "start": 475,
+            "end": 510
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "there exists a practical operational range beyond which edits harm model quality and reliability.",
+        "source_spans": [
+          {
+            "start": 510,
+            "end": 553
+          },
+          {
+            "start": 570,
+            "end": 624
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "elaboration",
+        "content": "($|\\alpha| < 5$)",
+        "source_spans": [
+          {
+            "start": 553,
+            "end": 570
+          }
+        ],
+        "of_terms": [
+          "practical operational range"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1056453697359314955::conclusion_11",
+    "global_id": "gcn_3875be67026543be",
+    "order": 11,
+    "title": "Local contrastive editing can steer a neutral model using a stereotypical reference, but results with an anti-stereotypical reference are mixed",
+    "content": "Applying local contrastive editing to a neutral BERT-base-uncased target model (fine-tuned on a subset of Wikipedia independent of the biased datasets constructed via Counterfactual Data Augmentation) shows that using the stereotypical reference model (fine-tuned on the stereotypical dataset) as the target can successfully steer the neutral model's gender bias in the expected direction (e.g., extrapolation with $\\alpha=-2$ removes stereotypical bias per the Word Embedding Association Test (WEAT)), while using an anti-stereotypical reference yields mixed results in some settings. These experiments indicate the method's applicability beyond parallel fine-tuning regimes (where target and reference are fine-tuned on similar data with opposite biases), but also expose limits when reference and target datasets differ.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Applying local contrastive editing to a neutral BERT-base-uncased target model",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 79
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(fine-tuned on a subset of Wikipedia independent of the biased datasets constructed via Counterfactual Data Augmentation)",
+        "source_spans": [
+          {
+            "start": 79,
+            "end": 201
+          }
+        ],
+        "of_terms": [
+          "neutral BERT-base-uncased target model"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "shows that",
+        "source_spans": [
+          {
+            "start": 201,
+            "end": 212
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "using the stereotypical reference model as the target can successfully steer the neutral model's gender bias in the expected direction",
+        "source_spans": [
+          {
+            "start": 212,
+            "end": 252
+          },
+          {
+            "start": 294,
+            "end": 389
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(fine-tuned on the stereotypical dataset)",
+        "source_spans": [
+          {
+            "start": 252,
+            "end": 294
+          }
+        ],
+        "of_terms": [
+          "stereotypical reference model"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "framing",
+        "content": "(e.g., )",
+        "source_spans": [
+          {
+            "start": 389,
+            "end": 396
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "example",
+        "content": "(extrapolation with $\\alpha=-2$ removes stereotypical bias per the Word Embedding Association Test)",
+        "source_spans": [
+          {
+            "start": 396,
+            "end": 494
+          }
+        ],
+        "illustrates": [
+          4
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "( (WEAT))",
+        "source_spans": [
+          {
+            "start": 494,
+            "end": 500
+          }
+        ],
+        "of_terms": [
+          "Word Embedding Association Test"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": ", while",
+        "source_spans": [
+          {
+            "start": 500,
+            "end": 509
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "assertion",
+        "content": "using an anti-stereotypical reference yields mixed results in some settings.",
+        "source_spans": [
+          {
+            "start": 509,
+            "end": 586
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "framing",
+        "content": "These experiments indicate",
+        "source_spans": [
+          {
+            "start": 586,
+            "end": 613
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "the method's applicability beyond parallel fine-tuning regimes",
+        "source_spans": [
+          {
+            "start": 613,
+            "end": 676
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "elaboration",
+        "content": "(where target and reference are fine-tuned on similar data with opposite biases)",
+        "source_spans": [
+          {
+            "start": 676,
+            "end": 756
+          }
+        ],
+        "of_terms": [
+          "parallel fine-tuning regimes"
+        ]
+      },
+      {
+        "number": 14,
+        "label": "connection",
+        "content": ", but also",
+        "source_spans": [
+          {
+            "start": 756,
+            "end": 767
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "label": "framing",
+        "content": "expose",
+        "source_spans": [
+          {
+            "start": 767,
+            "end": 774
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "label": "assertion",
+        "content": "limits when reference and target datasets differ.",
+        "source_spans": [
+          {
+            "start": 774,
+            "end": 823
+          }
+        ]
+      }
+    ]
+  }
+]

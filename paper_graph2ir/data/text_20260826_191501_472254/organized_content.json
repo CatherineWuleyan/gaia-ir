@@ -1,0 +1,36 @@
+[
+  {
+    "id": "paper:text_20260826_191501_472254::conclusion_1",
+    "global_id": "paper:text_20260826_191501_472254::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "The natural-image datasets used as transfer targets in the experiments are Fashion-MNIST, SVHN, CIFAR-10, CIFAR-100, ImageNet, and Places365.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "The natural-image datasets used as transfer targets in the experiments are",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 75
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "Fashion-MNIST, SVHN, CIFAR-10, CIFAR-100, ImageNet, and Places365.",
+        "source_spans": [
+          {
+            "start": 75,
+            "end": 141
+          }
+        ],
+        "of_terms": [
+          "natural-image datasets used as transfer targets in the experiments"
+        ]
+      }
+    ]
+  }
+]

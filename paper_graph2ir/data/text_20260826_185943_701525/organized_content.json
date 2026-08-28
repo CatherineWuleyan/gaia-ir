@@ -1,0 +1,36 @@
+[
+  {
+    "id": "paper:text_20260826_185943_701525::conclusion_1",
+    "global_id": "paper:text_20260826_185943_701525::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "Fixed conditions for the abduction: under the same data distribution, CIFAR-10 is divided into CIFAR-10a and CIFAR-10b (25,000 training images each, 2,500 per class); winning tickets are generated using CIFAR-10a and evaluated on CIFAR-10b; models are ResNet50; comparisons are against random tickets and CIFAR-10b winning tickets; performance is measured at extreme pruning fractions; error bars represent mean ± standard deviation across six random seeds.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "Fixed conditions for the abduction:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 36
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "under the same data distribution, CIFAR-10 is divided into CIFAR-10a and CIFAR-10b (25,000 training images each, 2,500 per class); winning tickets are generated using CIFAR-10a and evaluated on CIFAR-10b; models are ResNet50; comparisons are against random tickets and CIFAR-10b winning tickets; performance is measured at extreme pruning fractions; error bars represent mean ± standard deviation across six random seeds.",
+        "source_spans": [
+          {
+            "start": 36,
+            "end": 457
+          }
+        ],
+        "of_terms": [
+          "Fixed conditions for the abduction"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,402 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 1,
+    "label": "assertion",
+    "text": "The trajectory of out-of-distribution (OOD) detection performance, during supervised training decomposes into three distinct stages: (A) an initial stage where training and test error fall and AUROC improves; (B) a subsequent overfitting stage where the training error approaches zero and test error can continue to decrease while AUROC decreases ; and (C) a final instability stage where classification test error is stable but AUROC varies sharply across nearby checkpoints, making final-checkpoint selection unreliable.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 1,
+    "label": "assertion",
+    "text": "The instability of out-of-distribution (OOD) metrics near the final checkpoint arises from the trained solution being fragile to small perturbations of network weights:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 2,
+    "label": "论据",
+    "text": "evaluating the area under the receiver operating characteristic curve (AUROC) and the false positive rate at 95% true positive rate (FPR95) as the weights are moved along random normalized directions \\(d\\) with small scalar magnitude \\(\\alpha\\) shows narrow optima in the weight space causing sharp metric changes for small \\(\\alpha\\).",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 4,
+    "label": "assertion",
+    "text": "Applying exponential moving-weight averaging (Model Averaging, MA) stabilizes OOD performance by producing a smoother / wider optimum:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 6,
+    "label": "论据",
+    "text": "The averaged parameters \\(\\theta^{\\mathrm{MA}}\\) yield substantially reduced AUROC and FPR95 sensitivity to small weight perturbations and smoother AUROC curves during training across scoring functions.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 1,
+    "label": "assertion",
+    "text": "For a simplified linear-Gaussian model the Bayes classifier and its in-distribution (ID) classification risk and out-of-distribution (OOD) detection (rejection) risk admit closed-form expressions:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 4,
+    "label": "论据",
+    "text": "The Bayes logit is \\[ f_{\\mathrm{Bayes}}(\\boldsymbol{x}) = x_1 + \\eta\\sum_{i=2}^{d+1} x_i, \\] and the resulting risks simplify to \\[ \\mathcal{R}_{\\mathrm{ID}}(f_{\\mathrm{Bayes}})=\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\sqrt{1+d\\eta^2}}{\\sigma}\\right\\}, \\] \\[ \\mathcal{R}_{\\mathrm{OOD}}(f_{\\mathrm{Bayes}})=\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\delta-d\\eta^2}{\\sigma\\sqrt{1+d\\eta^2}}\\right\\}+\\Pr\\!\\left\\{\\mathcal{N}(0,1)>\\frac{\\delta+d\\eta^2}{\\sigma\\sqrt{1+d\\eta^2}}\\right\\}, \\]",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 7,
+    "label": "assertion",
+    "text": "increasing the number \\(d\\) of common weak features can markedly increase OOD risk",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 10,
+    "label": "assertion",
+    "text": "only slowly improving ID classification.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 13,
+    "label": "论据",
+    "text": "yields the closed-form trimmed coefficient vector \\[ f_{\\text{LASSO}}(\\boldsymbol{x}) = (1-\\lambda)_+\\,x_1 + \\sum_{i=2}^{d+1} (\\eta-\\lambda)_+\\, x_i, \\]",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 16,
+    "label": "assertion",
+    "text": "an \\(L_1\\) penalty can suppress coefficients on abundant weak common features",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 20,
+    "label": "assertion",
+    "text": "reducing OOD detection risk at controlled cost to ID accuracy.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 15,
+    "label": "assertion",
+    "text": "pruning reduces learned common features",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 18,
+    "label": "assertion",
+    "text": "model averaging widens optima",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 20,
+    "label": "assertion",
+    "text": "the combined module is applied without modifying existing scoring functions.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 1,
+    "label": "assertion",
+    "text": "Applying Average of Pruning (AoP) as a plug-in improves out-of-distribution (OOD) detection performance across multiple benchmarks and scoring methods.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 3,
+    "label": "example",
+    "text": "on ResNet-18 trained on CIFAR-10, applying AoP to K-Nearest Neighbors (KNN) increases average area under the receiver operating characteristic curve (AUROC) across six OOD datasets from 94.39% to 95.04% and reduces average false positive rate at 95% true positive rate (FPR95) from 34.42% to 25.30%",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 5,
+    "label": "example",
+    "text": "; applying AoP to Virtual-Logit Matching (ViM) on the same backbone/dataset increases average AUROC from 94.18% to 95.69% and reduces FPR95 from 32.27% to 25.3%.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 6,
+    "label": "assertion",
+    "text": "AoP also improves multiple scoring functions",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 10,
+    "label": "assertion",
+    "text": "scales to larger datasets:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 11,
+    "label": "example",
+    "text": "on Tiny-ImageNet, AoP improves MSP AUROC by 1.5–3.3 percentage points on Textures, LSUN, and iSUN;",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 12,
+    "label": "example",
+    "text": "on ImageNet, AoP yields AUROC improvements of 0.3–0.7 percentage points across scoring functions on Places, SUN, and Textures.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 13,
+    "label": "assertion",
+    "text": "The improvements hold across backbones",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 16,
+    "label": "assertion",
+    "text": "remain when combining AoP with Outlier Exposure (OE).",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 1,
+    "label": "assertion",
+    "text": "Iterative magnitude pruning reduces the late-stage overfitting of out-of-distribution (OOD) detection:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 3,
+    "label": "assertion",
+    "text": "as global sparsity is increased from dense toward moderate sparsity, the area under the receiver operating characteristic curve (AUROC) on OOD tasks first increases and then eventually decreases if pruning becomes too aggressive and removes discriminative capacity.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 6,
+    "label": "assertion",
+    "text": "pruned models produce larger ID-versus-OOD feature differences than dense models.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 7,
+    "label": "assertion",
+    "text": "Different pruning schedules and methods matter:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 8,
+    "label": "论据",
+    "text": "LTH with weight rewind outperforms random pruning and naive fine-tuning based pruning in OOD metrics",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 10,
+    "label": "论据",
+    "text": "among during-training pruning methods evaluated , iterative/post-training LTH performed best for OOD tasks in CIFAR-10 experiments with ResNet-18.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 2,
+    "label": "assertion",
+    "text": "both components are required:",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 4,
+    "label": "论据",
+    "text": "(i) pruning alone improves the area under the receiver operating characteristic curve relative to the dense baseline",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 7,
+    "label": "论据",
+    "text": "(ii) combining pruning with MA yields the best performance.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 10,
+    "label": "example",
+    "text": "on CIFAR-10 with ResNet-18: baseline AUROC = 91.63%; with pruning alone AUROC increases to 92.94%; with pruning plus MA (AoP) AUROC further increases to 93.32%.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": false,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 11,
+    "label": "assertion",
+    "text": "Similar trends hold for WideResNet-28-10 and other metrics",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 14,
+    "label": "论据",
+    "text": "pruning reduces overfitting",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 16,
+    "label": "论据",
+    "text": "MA stabilizes the weights/landscape for more reliable scoring.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 1,
+    "label": "assertion",
+    "text": "Average of Pruning (AoP) not only improves out-of-distribution (OOD) detection but also enhances misclassification detection",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 3,
+    "label": "论据",
+    "text": "On WideResNet-40-2 trained on CIFAR-10, applying AoP to Maximum Softmax Probability (MSP) improves the area under the receiver operating characteristic curve (AUROC) for misclassification detection from 92.51% to 93.23%, reduces the area under the risk-coverage curve (AURC) from \\(7.55\\times 10^{-3}\\) to \\(6.41\\times 10^{-3}\\), and reduces the false positive rate at 95% true positive rate (FPR95) from 40.87% to 38.47%.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 4,
+    "label": "assertion",
+    "text": "Similar improvements are observed when AoP is combined with other confidence estimators",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "是完整断言": true,
+    "completeness_status": "ok"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 11,
+    "text": "The strengths of inductive support for Empirical Risk Minimization (ERM) are derived from a winning ticket rather than from a global asymptotic requirement.",
+    "certain_instances_given": [
+      13
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 4,
+    "text": "Under distribution shifts, the Material Theory of Induction (MTI) justification fails.",
+    "certain_instances_given": [
+      7
+    ],
+    "uncertain_instances_given": []
+  }
+]

@@ -1,0 +1,442 @@
+[
+  {
+    "id": "paper:867771291879342656::conclusion_1",
+    "global_id": "gcn_f22fc9a9f36d4b45",
+    "order": 1,
+    "title": "Winning tickets from large natural-image source datasets transfer across natural-image target datasets with near target-specific performance",
+    "content": "Winning-ticket initializations discovered by iterative magnitude pruning (iterative pruning rate 0.2, up to 30 pruning iterations; late resetting to early training iterations) on large, complex natural-image source datasets (ImageNet and Places365, and to a lesser extent CIFAR-100) produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on other natural-image target datasets (SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365), frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets. The transferability is observed across a wide range of pruning fractions (including very high sparsity), and larger / more class-rich source datasets produced stronger cross-dataset transfer than smaller sources (e.g., CIFAR-100 tickets generalize better than CIFAR-10 tickets despite both having 50,000 training examples).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Winning-ticket initializations discovered by iterative magnitude pruning ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(iterative pruning rate 0.2, up to 30 pruning iterations; late resetting to early training iterations)",
+          "label": "elaboration",
+          "of_terms": [
+            "iterative magnitude pruning"
+          ]
+        },
+        {
+          "text": " on large, complex natural-image source datasets ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(ImageNet and Places365, and to a lesser extent CIFAR-100)",
+          "label": "instance",
+          "of_terms": [
+            "large, complex natural-image source datasets"
+          ]
+        },
+        {
+          "text": " produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on other natural-image target datasets ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365)",
+          "label": "instance",
+          "of_terms": [
+            "other natural-image target datasets"
+          ]
+        },
+        {
+          "text": ", frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets.",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " The transferability is observed across a wide range of pruning fractions ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(including very high sparsity)",
+          "label": "instance",
+          "of_terms": [
+            "a wide range of pruning fractions"
+          ]
+        },
+        {
+          "text": ", and ",
+          "label": "connection"
+        },
+        {
+          "text": "larger / more class-rich source datasets produced stronger cross-dataset transfer than smaller sources ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "CIFAR-100 tickets generalize better than CIFAR-10 tickets despite both having 50,000 training examples).",
+          "label": "example",
+          "number": 4,
+          "illustrates": [
+            3
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867771291879342656::conclusion_2",
+    "global_id": "gcn_0fdc65dd973e495e",
+    "order": 2,
+    "title": "Source dataset scale and number of classes predict transferability of winning tickets",
+    "content": "Winning tickets discovered on larger source datasets—both in terms of number of training examples and number of output classes—transfer substantially better to other natural-image classification datasets (SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365) than tickets discovered on smaller source datasets, for both VGG19 and ResNet50 architectures. This effect is not solely explained by raw training-set size: holding training-set size fixed, a source dataset with many classes (CIFAR-100, 100 classes) produced tickets that generalized better across targets than one with few classes (CIFAR-10, 10 classes).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Winning tickets discovered on larger source datasets",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "—both in terms of number of training examples and number of output classes—",
+          "label": "elaboration",
+          "of_terms": [
+            "larger source datasets",
+            "smaller source datasets"
+          ]
+        },
+        {
+          "text": "transfer substantially better to other natural-image classification datasets ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365)",
+          "label": "instance",
+          "of_terms": [
+            "other natural-image classification datasets"
+          ]
+        },
+        {
+          "text": " than tickets discovered on smaller source datasets, for both VGG19 and ResNet50 architectures. ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "This effect is not solely explained by raw training-set size:",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " holding training-set size fixed, a source dataset with many classes",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2
+          ]
+        },
+        {
+          "text": " (CIFAR-100, 100 classes)",
+          "label": "instance",
+          "of_terms": [
+            "a source dataset with many classes"
+          ]
+        },
+        {
+          "text": " produced tickets that generalized better across targets than one with few classes",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2
+          ]
+        },
+        {
+          "text": " (CIFAR-10, 10 classes).",
+          "label": "instance",
+          "of_terms": [
+            "one with few classes"
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867771291879342656::conclusion_3",
+    "global_id": "gcn_d354352c21724714",
+    "order": 3,
+    "title": "Winning tickets can generalize across optimizers (SGD w/ momentum and Adam) for VGG models",
+    "content": "Winning-ticket initializations generated with one optimizer generalize to training with a different optimizer on natural-image classification datasets: VGG19 tickets found using SGD with momentum or using Adam, when re-used with the alternate optimizer, achieve high performance that is comparable to tickets discovered under the target optimizer. There are optimizer-dependent nuances in behavior: tickets transferred from SGD to Adam sometimes under-perform random tickets at low pruning fractions but outperform random tickets at high pruning fractions.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Winning-ticket initializations generated with one optimizer generalize to training with a different optimizer on natural-image classification datasets:",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " VGG19 tickets found using SGD with momentum or using Adam, when re-used with the alternate optimizer, achieve high performance that is comparable to tickets discovered under the target optimizer.",
+          "label": "example",
+          "number": 2,
+          "illustrates": [
+            1
+          ]
+        },
+        {
+          "text": " There are optimizer-dependent nuances in behavior:",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": " tickets transferred from SGD to Adam sometimes under-perform random tickets at low pruning fractions but outperform random tickets at high pruning fractions.",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            3
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867771291879342656::conclusion_4",
+    "global_id": "gcn_2cab68b8709b4d9f",
+    "order": 4,
+    "title": "Winning tickets generalize across different samples from the same data distribution",
+    "content": "A winning ticket discovered on CIFAR-10a, a subset of the CIFAR-10 dataset containing 25,000 training images with 2,500 images per class, transfers to a disjoint subset CIFAR-10b from the same data distribution and improves training on that held-out subset relative to random sparse initializations. This within-distribution transfer holds for both VGG19 and ResNet50, though ResNet50 showed sensitivity at low pruning fractions (occasionally under-performing random tickets when few weights are pruned).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "A winning ticket discovered on CIFAR-10a, ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "a subset of the CIFAR-10 dataset containing 25,000 training images with 2,500 images per class, ",
+          "label": "elaboration",
+          "of_terms": [
+            "CIFAR-10a"
+          ]
+        },
+        {
+          "text": "transfers to a disjoint subset CIFAR-10b from the same data distribution and improves training on that held-out subset relative to random sparse initializations.",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " This within-distribution transfer holds for both VGG19 and ResNet50",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": ", though ",
+          "label": "connection"
+        },
+        {
+          "text": "ResNet50 showed sensitivity at low pruning fractions ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(occasionally under-performing random tickets when few weights are pruned).",
+          "label": "elaboration",
+          "of_terms": [
+            "sensitivity at low pruning fractions"
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867771291879342656::conclusion_5",
+    "global_id": "gcn_cdeb0e970f4042d0",
+    "order": 5,
+    "title": "Global magnitude pruning outperforms layerwise pruning and results in non-uniform layerwise sparsity (deeper layers pruned more) under global schedules",
+    "content": "When performing magnitude pruning for winning-ticket discovery on VGG19 trained on CIFAR-10, globally ranking weights across all layers and pruning the smallest-magnitude weights globally yields higher-performing sparse subnetworks than pruning a fixed fraction per layer (\"layerwise pruning\"). Under global magnitude pruning the pruning fractions vary across layers: deeper convolutional layers are pruned more heavily while early layers (notably the first convolutional layer) retain a much larger fraction of their parameters.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "When performing magnitude pruning for winning-ticket discovery on VGG19 trained on CIFAR-10, globally ranking weights across all layers and pruning the smallest-magnitude weights globally yields higher-performing sparse subnetworks than pruning a fixed fraction per layer ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(\"layerwise pruning\").",
+          "label": "elaboration",
+          "of_terms": [
+            "pruning a fixed fraction per layer"
+          ]
+        },
+        {
+          "text": " Under global magnitude pruning the pruning fractions vary across layers: deeper convolutional layers are pruned more heavily while early layers ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(notably ",
+          "label": "framing"
+        },
+        {
+          "text": "the first convolutional layer)",
+          "label": "instance",
+          "of_terms": [
+            "early layers"
+          ]
+        },
+        {
+          "text": " retain a much larger fraction of their parameters.",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867771291879342656::conclusion_6",
+    "global_id": "gcn_764a16230b6b4c66",
+    "order": 6,
+    "title": "Mask structure carries substantial information; fair random baselines must randomize mask structure",
+    "content": "For VGG19 trained on CIFAR-10, the structure of the pruning mask contains substantial information useful for training sparse networks: comparing (a) preserved winning-ticket masks, (b) masks permuted only within layers (local permutation), and (c) masks permuted across all layers (global permutation) shows that locally permuting a mask degrades performance moderately while globally permuting the mask degrades performance dramatically. Therefore, a fair \"random ticket\" baseline for evaluating a winning-ticket initialization should randomize both weight values and mask structure (global permutation), because preserving mask statistics across layers transfers information from the discovered ticket.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For VGG19 trained on CIFAR-10, the structure of the pruning mask contains substantial information useful for training sparse networks: ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "comparing (a) preserved winning-ticket masks, (b) masks permuted only within layers ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(local permutation)",
+          "label": "elaboration",
+          "of_terms": [
+            "masks permuted only within layers"
+          ]
+        },
+        {
+          "text": ", and (c) masks permuted across all layers ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(global permutation)",
+          "label": "elaboration",
+          "of_terms": [
+            "masks permuted across all layers"
+          ]
+        },
+        {
+          "text": " shows that locally permuting a mask degrades performance moderately while globally permuting the mask degrades performance dramatically. ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "Therefore, ",
+          "label": "relation",
+          "connects": [
+            2,
+            3
+          ],
+          "expression": "[2] 推出 [3]"
+        },
+        {
+          "text": "a fair \"random ticket\" baseline for evaluating a winning-ticket initialization should randomize both weight values and mask structure ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(global permutation)",
+          "label": "elaboration",
+          "of_terms": [
+            "mask structure"
+          ]
+        },
+        {
+          "text": ", because preserving mask statistics across layers transfers information from the discovered ticket.",
+          "label": "论证",
+          "supports": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867771291879342656::conclusion_7",
+    "global_id": "gcn_1c4ea7e959814d8f",
+    "order": 7,
+    "title": "Late resetting and iterative magnitude-pruning schedule used to obtain winning tickets for large models and datasets",
+    "content": "For obtaining competitive winning tickets in the large-model and large-dataset regime of natural-image classification, an iterative magnitude-pruning schedule with pruning fraction per iteration 0.2 (20% of remaining parameters) over up to 30 iterations combined with late resetting to parameters at a small early training iteration produced effective winning tickets; late resetting settings used were resetting to the parameters after 1 epoch for Fashion-MNIST, SVHN, CIFAR-10 and CIFAR-100, and after 3 epochs for ImageNet and Places365. Learning-rate annealing schedules and other hyperparameters were matched per model family (VGG19 trained 160 epochs with LR drops at epochs 80 and 120; ResNet50 trained 90 epochs with LR drops at epochs 50, 65, and 80).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For obtaining competitive winning tickets in the large-model and large-dataset regime of natural-image classification, ",
+          "label": "motivation"
+        },
+        {
+          "text": "an iterative magnitude-pruning schedule with pruning fraction per iteration 0.2 ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(20% of remaining parameters) ",
+          "label": "elaboration",
+          "of_terms": [
+            "pruning fraction per iteration 0.2"
+          ]
+        },
+        {
+          "text": "over up to 30 iterations combined with late resetting to parameters at a small early training iteration produced effective winning tickets",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "; late resetting settings used were resetting to the parameters after 1 epoch for Fashion-MNIST, SVHN, CIFAR-10 and CIFAR-100, and after 3 epochs for ImageNet and Places365.",
+          "label": "elaboration",
+          "of_terms": [
+            "late resetting to parameters at a small early training iteration"
+          ]
+        },
+        {
+          "text": " Learning-rate annealing schedules and other hyperparameters were matched per model family ",
+          "label": "elaboration",
+          "of": [
+            1
+          ]
+        },
+        {
+          "text": "(VGG19 trained 160 epochs with LR drops at epochs 80 and 120; ResNet50 trained 90 epochs with LR drops at epochs 50, 65, and 80).",
+          "label": "instance",
+          "of_terms": [
+            "model family"
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

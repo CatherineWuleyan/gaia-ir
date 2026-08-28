@@ -1,0 +1,913 @@
+[
+  {
+    "id": "paper:1162088558115160127::conclusion_1",
+    "global_id": "gcn_b992d9640e224c1e",
+    "order": 1,
+    "title": "Sparsification via GMP and SET reduces common plasticity‑loss indicators in MTRL",
+    "content": "Applying dynamic sparsification methods—Gradual Magnitude Pruning (GMP), which progressively increases layer-wise sparsity following a cubic schedule from a start time $t_{\\text{start}}$ to an end time $t_{\\text{end}}$ to reach a target sparsity $\\rho_F$, and Sparse Evolutionary Training (SET), which maintains a fixed global sparsity $\\rho$ while periodically pruning a fraction $\\varepsilon$ of smallest-magnitude connections and regrowing the same number of new random connections—consistently modifies three correlative indicators of plasticity in multi-task agents trained on MiniGrid benchmarks (MT3, MT5, MT7): (a) the percentage of dormant neurons (fraction of neurons whose mean absolute activation normalized within the layer is below threshold $\\tau$) is reduced under sparsification compared to dense baselines, with SET typically attaining the lowest dormancy levels across actor and critic components; (b) the effective rank of shared feature representations, measured as $\\operatorname{srank}_\\delta(\\Phi)=\\min_k\\{\\frac{\\sum_{i=1}^k\\sigma_i}{\\sum_{i=1}^d\\sigma_i}\\ge 1-\\delta\\}$ for singular values $\\sigma_i$ of feature matrix $\\Phi$, is maintained or increased under sparsification relative to dense baselines (preventing representational collapse in many settings); and (c) the trace of the Fisher Information Matrix, $\\operatorname{Tr}(F)=\\mathbb{E}_{s,a\\sim\\pi}[\\|\\nabla_\\theta\\log\\pi(a\\mid s)\\|_2^2]$, generally stabilizes at lower or less volatile values for sparse agents, with GMP often showing a peak‑and‑decline pattern and SET maintaining a low, steady trace.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Applying dynamic sparsification methods—",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "Gradual Magnitude Pruning (GMP),",
+          "label": "instance",
+          "of_terms": [
+            "dynamic sparsification methods"
+          ]
+        },
+        {
+          "text": " which progressively increases layer-wise sparsity following a cubic schedule from a start time $t_{\\text{start}}$ to an end time $t_{\\text{end}}$ to reach a target sparsity $\\rho_F$,",
+          "label": "elaboration",
+          "of_terms": [
+            "Gradual Magnitude Pruning (GMP)"
+          ]
+        },
+        {
+          "text": " and",
+          "label": "connection"
+        },
+        {
+          "text": " Sparse Evolutionary Training (SET),",
+          "label": "instance",
+          "of_terms": [
+            "dynamic sparsification methods"
+          ]
+        },
+        {
+          "text": " which maintains a fixed global sparsity $\\rho$ while periodically pruning a fraction $\\varepsilon$ of smallest-magnitude connections and regrowing the same number of new random connections—",
+          "label": "elaboration",
+          "of_terms": [
+            "Sparse Evolutionary Training (SET)"
+          ]
+        },
+        {
+          "text": "consistently modifies three correlative indicators of plasticity in multi-task agents trained on MiniGrid benchmarks",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (MT3, MT5, MT7)",
+          "label": "instance",
+          "of_terms": [
+            "MiniGrid benchmarks"
+          ]
+        },
+        {
+          "text": ":",
+          "label": "other"
+        },
+        {
+          "text": " (a) the percentage of dormant neurons",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " (fraction of neurons whose mean absolute activation normalized within the layer is below threshold $\\tau$)",
+          "label": "elaboration",
+          "of_terms": [
+            "dormant neurons"
+          ]
+        },
+        {
+          "text": " is reduced under sparsification compared to dense baselines,",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " with",
+          "label": "connection"
+        },
+        {
+          "text": " SET typically attaining the lowest dormancy levels across actor and critic components;",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": " (b) the effective rank of shared feature representations,",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " measured as $\\operatorname{srank}_\\delta(\\Phi)=\\min_k\\{\\frac{\\sum_{i=1}^k\\sigma_i}{\\sum_{i=1}^d\\sigma_i}\\ge 1-\\delta\\}$ for singular values $\\sigma_i$ of feature matrix $\\Phi$,",
+          "label": "elaboration",
+          "of_terms": [
+            "the effective rank of shared feature representations"
+          ]
+        },
+        {
+          "text": " is maintained or increased under sparsification relative to dense baselines",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " (preventing representational collapse in many settings)",
+          "label": "elaboration",
+          "of": [
+            4
+          ]
+        },
+        {
+          "text": "; and",
+          "label": "connection"
+        },
+        {
+          "text": " (c) the trace of the Fisher Information Matrix,",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": " $\\operatorname{Tr}(F)=\\mathbb{E}_{s,a\\sim\\pi}[\\|\\nabla_\\theta\\log\\pi(a\\mid s)\\|_2^2]$,",
+          "label": "elaboration",
+          "of_terms": [
+            "the trace of the Fisher Information Matrix"
+          ]
+        },
+        {
+          "text": " generally stabilizes at lower or less volatile values for sparse agents,",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": " with",
+          "label": "connection"
+        },
+        {
+          "text": " GMP often showing a peak‑and‑decline pattern",
+          "label": "assertion",
+          "number": 6
+        },
+        {
+          "text": " and",
+          "label": "connection"
+        },
+        {
+          "text": " SET maintaining a low, steady trace.",
+          "label": "assertion",
+          "number": 7
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_2",
+    "global_id": "gcn_6e6fa9d3cad6462c",
+    "order": 2,
+    "title": "Sparse agents frequently outperform dense baselines in aggregated multi‑task performance",
+    "content": "Across multiple MTRL architectures (shared-backbone MTPPO, Mixture-of-Experts MoE) and MiniGrid benchmarks (MT3, MT5, MT7), agents trained with GMP (final target sparsity $95\\%$ in main experiments) or SET (fixed sparsity $95\\%$ with ERK initialization and evolution parameter $\\varepsilon$) achieve higher normalized interquantile mean (IQM) aggregate returns than their dense counterparts: for example, in the MTPPO configuration on MT5, GMP attains IQM = 0.81 (95% CI: 0.75–0.86) and SET attains IQM = 0.80 (95% CI: 0.75–0.84), both exceeding the dense IQM = 0.65 (95% CI: 0.61–0.71); similar improvements are observed in MoE results. These sparse agents also compare favorably against alternative plasticity interventions and common regularization baselines in many settings.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Across multiple MTRL architectures ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(shared-backbone MTPPO, Mixture-of-Experts MoE) ",
+          "label": "instance",
+          "of_terms": [
+            "MTRL architectures"
+          ]
+        },
+        {
+          "text": "and MiniGrid benchmarks ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(MT3, MT5, MT7), ",
+          "label": "instance",
+          "of_terms": [
+            "MiniGrid benchmarks"
+          ]
+        },
+        {
+          "text": "agents trained with GMP ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(final target sparsity $95\\%$ in main experiments) ",
+          "label": "elaboration",
+          "of_terms": [
+            "GMP"
+          ]
+        },
+        {
+          "text": "or SET ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(fixed sparsity $95\\%$ with ERK initialization and evolution parameter $\\varepsilon$) ",
+          "label": "elaboration",
+          "of_terms": [
+            "SET"
+          ]
+        },
+        {
+          "text": "achieve higher normalized interquantile mean ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(IQM) ",
+          "label": "elaboration",
+          "of_terms": [
+            "normalized interquantile mean"
+          ]
+        },
+        {
+          "text": "aggregate returns than their dense counterparts: ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "for example, ",
+          "label": "framing"
+        },
+        {
+          "text": "in the MTPPO configuration on MT5, GMP attains IQM = 0.81 ",
+          "label": "example",
+          "number": 2,
+          "illustrates": [
+            1
+          ]
+        },
+        {
+          "text": "(95% CI: 0.75–0.86) ",
+          "label": "elaboration",
+          "of_terms": [
+            "IQM = 0.81"
+          ]
+        },
+        {
+          "text": "and SET attains IQM = 0.80 ",
+          "label": "example",
+          "number": 2,
+          "illustrates": [
+            1
+          ]
+        },
+        {
+          "text": "(95% CI: 0.75–0.84), ",
+          "label": "elaboration",
+          "of_terms": [
+            "IQM = 0.80"
+          ]
+        },
+        {
+          "text": "both exceeding the dense IQM = 0.65 ",
+          "label": "example",
+          "number": 2,
+          "illustrates": [
+            1
+          ]
+        },
+        {
+          "text": "(95% CI: 0.61–0.71); ",
+          "label": "elaboration",
+          "of_terms": [
+            "dense IQM = 0.65"
+          ]
+        },
+        {
+          "text": "similar improvements are observed in MoE results. ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "These sparse agents also compare favorably against alternative plasticity interventions and common regularization baselines in many settings.",
+          "label": "assertion",
+          "number": 4
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_3",
+    "global_id": "gcn_ae08372c19994de9",
+    "order": 3,
+    "title": "Sparsification benefits are architecture‑dependent and extreme pruning can induce representational collapse",
+    "content": "The effectiveness of Gradual Magnitude Pruning (GMP, which progressively increases sparsity following a cubic schedule) and Sparse Evolutionary Training (SET, which maintains constant sparsity with periodic pruning and regrowth) depends on architectural design: Multi-Task PPO (MTPPO) and Mixture of Experts (MoE) architectures consistently benefit from dynamic sparsification with improved plasticity metrics (neuron dormancy—percentage of neurons whose normalized mean absolute activation is below a threshold $\\tau$; effective rank—the minimum number $k$ such that $\\sum_{i=1}^k \\sigma_i / \\sum_{i=1}^d \\sigma_i \\ge 1-\\delta$ for singular values $\\sigma_i$ of the feature matrix; and Fisher trace—the expected squared gradient norm of the log-policy, $\\operatorname{Tr}(F) = \\mathbb{E}_{s,a\\sim\\pi}[\\|\\nabla_\\theta \\log \\pi(a|s)\\|_2^2]$) and higher aggregate returns, whereas Mixture of Orthogonal Experts (MOORE) exhibits more variable outcomes—SET sometimes reduces performance for MOORE despite lowering dormancy, and very aggressive pruning levels (e.g., GMP at 99% sparsity) can produce rank collapse in MOORE, evidenced by a sharp drop in effective rank accompanied by increased Fisher Trace and neuron dormancy, and corresponding late-training performance degradation.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The effectiveness of Gradual Magnitude Pruning (GMP, ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "which progressively increases sparsity following a cubic schedule",
+          "label": "elaboration",
+          "of_terms": [
+            "GMP"
+          ]
+        },
+        {
+          "text": ") and ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "Sparse Evolutionary Training (SET, ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "which maintains constant sparsity with periodic pruning and regrowth",
+          "label": "elaboration",
+          "of_terms": [
+            "SET"
+          ]
+        },
+        {
+          "text": ") depends on architectural design: ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "Multi-Task PPO (MTPPO) and Mixture of Experts (MoE) architectures consistently benefit from dynamic sparsification with improved plasticity metrics (neuron dormancy—",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "percentage of neurons whose normalized mean absolute activation is below a threshold $\\tau$",
+          "label": "elaboration",
+          "of_terms": [
+            "neuron dormancy"
+          ]
+        },
+        {
+          "text": "; effective rank—",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "the minimum number $k$ such that $\\sum_{i=1}^k \\sigma_i / \\sum_{i=1}^d \\sigma_i \\ge 1-\\delta$ for singular values $\\sigma_i$ of the feature matrix",
+          "label": "elaboration",
+          "of_terms": [
+            "effective rank"
+          ]
+        },
+        {
+          "text": "; and Fisher trace—",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "the expected squared gradient norm of the log-policy, $\\operatorname{Tr}(F) = \\mathbb{E}_{s,a\\sim\\pi}[\\|\\nabla_\\theta \\log \\pi(a|s)\\|_2^2]$",
+          "label": "elaboration",
+          "of_terms": [
+            "Fisher trace"
+          ]
+        },
+        {
+          "text": ") ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "and ",
+          "label": "connection"
+        },
+        {
+          "text": "higher aggregate returns, ",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "whereas ",
+          "label": "connection"
+        },
+        {
+          "text": "Mixture of Orthogonal Experts (MOORE) exhibits more variable outcomes—",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "SET sometimes reduces performance for MOORE despite lowering dormancy, ",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "and ",
+          "label": "connection"
+        },
+        {
+          "text": "very aggressive pruning levels (",
+          "label": "论据",
+          "number": 6,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "GMP at 99% sparsity",
+          "label": "instance",
+          "of_terms": [
+            "very aggressive pruning levels"
+          ]
+        },
+        {
+          "text": ") can produce rank collapse in MOORE, ",
+          "label": "论据",
+          "number": 6,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "evidenced by ",
+          "label": "framing"
+        },
+        {
+          "text": "a sharp drop in effective rank accompanied by increased Fisher Trace and neuron dormancy, ",
+          "label": "论据",
+          "number": 7,
+          "supports": [
+            6
+          ]
+        },
+        {
+          "text": "and ",
+          "label": "connection"
+        },
+        {
+          "text": "corresponding late-training performance degradation.",
+          "label": "论据",
+          "number": 8,
+          "supports": [
+            6
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_4",
+    "global_id": "gcn_50ec51e58be64598",
+    "order": 4,
+    "title": "Selective actor pruning in continuous control improves MetaWorld MT10 success rates and actor plasticity",
+    "content": "In the continuous-control Multi-Task Multi-Headed Soft Actor-Critic (MTMH-SAC) experiments on MetaWorld MT10, applying Gradual Magnitude Pruning (GMP) exclusively to the actor network (keeping the critic dense) yields a final mean success rate of 81% (95% CI: 0.77–0.83), outperforming the dense MTMH-SAC baseline (73%; 95% CI: 0.67–0.75) and global actor+critic pruning (75%; 95% CI: 0.73–0.78). Actor-only pruning also sustained reduced actor neuron dormancy (percentage of neurons with normalized mean absolute activation below a threshold $\\tau$) and increased mean effective rank (dimensionality of feature space measured via singular values) compared to both the dense and globally pruned agents, indicating a role-dependent benefit of targeted sparsification in actor–critic settings.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "In the continuous-control Multi-Task Multi-Headed Soft Actor-Critic (MTMH-SAC) experiments on MetaWorld MT10, ",
+          "label": "framing"
+        },
+        {
+          "text": "applying Gradual Magnitude Pruning (GMP) exclusively to the actor network ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "(keeping the critic dense)",
+          "label": "elaboration",
+          "of_terms": [
+            "exclusively to the actor network"
+          ]
+        },
+        {
+          "text": " yields a final mean success rate of 81% ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "(95% CI: 0.77–0.83)",
+          "label": "elaboration",
+          "of": [
+            1
+          ]
+        },
+        {
+          "text": ", outperforming the dense MTMH-SAC baseline ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "(73%; 95% CI: 0.67–0.75)",
+          "label": "elaboration",
+          "of_terms": [
+            "dense MTMH-SAC baseline"
+          ]
+        },
+        {
+          "text": " and global actor+critic pruning ",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "(75%; 95% CI: 0.73–0.78)",
+          "label": "elaboration",
+          "of_terms": [
+            "global actor+critic pruning"
+          ]
+        },
+        {
+          "text": ". Actor-only pruning also sustained reduced actor neuron dormancy ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "(percentage of neurons with normalized mean absolute activation below a threshold $\\tau$)",
+          "label": "elaboration",
+          "of_terms": [
+            "actor neuron dormancy"
+          ]
+        },
+        {
+          "text": " and ",
+          "label": "connection"
+        },
+        {
+          "text": "increased mean effective rank ",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "(dimensionality of feature space measured via singular values)",
+          "label": "elaboration",
+          "of_terms": [
+            "mean effective rank"
+          ]
+        },
+        {
+          "text": " compared to both the dense and globally pruned agents, ",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "indicating a role-dependent benefit of targeted sparsification in actor–critic settings.",
+          "label": "assertion",
+          "number": 4
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_5",
+    "global_id": "gcn_ee8827d9d36847c6",
+    "order": 5,
+    "title": "Combining GMP with Weight Decay or PCGrad yields no consistent additive benefit over GMP alone",
+    "content": "In Multi-Task PPO (MTPPO) experiments on the MT5 benchmark, Gradual Magnitude Pruning (GMP) in isolation achieves the highest final aggregated returns; pairing GMP with Weight Decay (GMP+WD) or PCGrad (gradient surgery that projects conflicting gradients to reduce interference) yields no additional performance gains and in some cases slightly worsens plasticity indicators and final returns. PCGrad by itself improves over a dense baseline, but the combination GMP+PCGrad does not surpass GMP alone; GMP+WD exhibits plasticity dynamics similar to GMP with minor degradations in some metrics, consistent with the notion that weight decay can increase the pool of small-magnitude weights that magnitude-based pruning may subsequently remove.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "In Multi-Task PPO (MTPPO) experiments on the MT5 benchmark, Gradual Magnitude Pruning (GMP) in isolation achieves the highest final aggregated returns; ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "pairing GMP with Weight Decay (GMP+WD) or PCGrad ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(gradient surgery that projects conflicting gradients to reduce interference)",
+          "label": "elaboration",
+          "of_terms": [
+            "PCGrad"
+          ]
+        },
+        {
+          "text": " yields no additional performance gains and in some cases slightly worsens plasticity indicators and final returns. ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "PCGrad by itself improves over a dense baseline, ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "but ",
+          "label": "connection"
+        },
+        {
+          "text": "the combination GMP+PCGrad does not surpass GMP alone; ",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": "GMP+WD exhibits plasticity dynamics similar to GMP with minor degradations in some metrics, ",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": "consistent with the notion that weight decay can increase the pool of small-magnitude weights that magnitude-based pruning may subsequently remove.",
+          "label": "论证",
+          "supports": [
+            2
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_6",
+    "global_id": "gcn_2bbedea4eadf4b80",
+    "order": 6,
+    "title": "GMP and SET induce distinct plasticity dynamics (GMP peak‑and‑decline vs SET stable low sensitivity) informing different adaptation profiles",
+    "content": "Although both Gradual Magnitude Pruning (GMP) and Sparse Evolutionary Training (SET) improve correlative plasticity indicators (neuron dormancy—percentage of neurons with normalized mean absolute activation below threshold $\\tau$; effective rank—dimensionality of feature space via singular values; Fisher trace—$\\operatorname{Tr}(F)=\\mathbb{E}_{s,a\\sim\\pi}[\\|\\nabla_\\theta\\log\\pi(a|s)\\|_2^2]$) relative to dense baselines, they produce different temporal patterns: GMP commonly exhibits a characteristic peak‑and‑decline in the Fisher trace (indicative of transiently increased sensitivity followed by convergence to flatter minima) and tends to reduce dormancy more strongly in actor than critic in some settings, whereas SET produces consistently low Fisher trace values and maintains very low neuron dormancy throughout training due to its continual rewiring; these distinct dynamics imply differing adaptation profiles—GMP promotes staged sparsification adaptation while SET supports continuous topological exploration.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Although",
+          "label": "connection"
+        },
+        {
+          "text": " both Gradual Magnitude Pruning (GMP) and Sparse Evolutionary Training (SET) improve correlative plasticity indicators (neuron dormancy",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "—percentage of neurons with normalized mean absolute activation below threshold $\\tau$",
+          "label": "elaboration",
+          "of_terms": [
+            "neuron dormancy"
+          ]
+        },
+        {
+          "text": "; effective rank",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "—dimensionality of feature space via singular values",
+          "label": "elaboration",
+          "of_terms": [
+            "effective rank"
+          ]
+        },
+        {
+          "text": "; Fisher trace",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "—$\\operatorname{Tr}(F)=\\mathbb{E}_{s,a\\sim\\pi}[\\|\\nabla_\\theta\\log\\pi(a|s)\\|_2^2]$",
+          "label": "elaboration",
+          "of_terms": [
+            "Fisher trace"
+          ]
+        },
+        {
+          "text": ") relative to dense baselines,",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " they produce different temporal patterns:",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " GMP commonly exhibits a characteristic peak‑and‑decline in the Fisher trace",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": " (indicative of transiently increased sensitivity followed by convergence to flatter minima)",
+          "label": "elaboration",
+          "of": [
+            3
+          ]
+        },
+        {
+          "text": " and",
+          "label": "connection"
+        },
+        {
+          "text": " tends to reduce dormancy more strongly in actor than critic in some settings,",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " whereas",
+          "label": "connection"
+        },
+        {
+          "text": " SET produces consistently low Fisher trace values",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": " and",
+          "label": "connection"
+        },
+        {
+          "text": " maintains very low neuron dormancy throughout training",
+          "label": "assertion",
+          "number": 6
+        },
+        {
+          "text": " due to its continual rewiring",
+          "label": "elaboration",
+          "of": [
+            6
+          ]
+        },
+        {
+          "text": "; these distinct dynamics imply differing adaptation profiles",
+          "label": "assertion",
+          "number": 7
+        },
+        {
+          "text": "—GMP promotes staged sparsification adaptation",
+          "label": "assertion",
+          "number": 8
+        },
+        {
+          "text": " while",
+          "label": "connection"
+        },
+        {
+          "text": " SET supports continuous topological exploration.",
+          "label": "assertion",
+          "number": 9
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_7",
+    "global_id": "gcn_9d22a97c238a4ad4",
+    "order": 7,
+    "title": "Lottery‑Ticket style rewinding underperforms GMP and SET in multi‑task settings",
+    "content": "Preliminary experiments on the MT5 benchmark (a multi-task MiniGrid crossing of 5 tasks) show that Lottery Ticket Hypothesis (LTH) style rewinding (early rewinding at iteration 1 with 1 epoch warmup to target sparsity 95%) did not produce significant improvements over single-task baselines and underperformed relative to Gradual Magnitude Pruning (GMP) and Sparse Evolutionary Training (SET) in multi-task scenarios, indicating that fixed sparse subnetworks found via early rewinding are less capable of adapting across diverse tasks compared to dynamically adapting sparsification strategies.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Preliminary experiments on the MT5 benchmark (a multi-task MiniGrid crossing of 5 tasks) show that Lottery Ticket Hypothesis (LTH) style rewinding (early rewinding at iteration 1 with 1 epoch warmup to target sparsity 95%) did not produce significant improvements over single-task baselines and underperformed relative to Gradual Magnitude Pruning (GMP) and Sparse Evolutionary Training (SET) in multi-task scenarios, indicating that fixed sparse subnetworks found via early rewinding are less capable of adapting across diverse tasks compared to dynamically adapting sparsification strategies.",
+          "label": "assertion",
+          "number": 1
+        }
+      ]
+    },
+    "labeling_status": "fallback_trivial"
+  },
+  {
+    "id": "paper:1162088558115160127::conclusion_8",
+    "global_id": "gcn_1e5718c3f1f54bd7",
+    "order": 8,
+    "title": "Layer Normalization reduces dormancy but collapses representational rank, harming multi‑task performance",
+    "content": "Layer Normalization (LayerNorm) applied in the evaluated multi-task reinforcement learning (MTRL) settings tends to produce very low dormant neuron percentages (neurons with normalized mean absolute activation below threshold $\\tau$) but simultaneously causes a severe and persistent reduction in effective rank (dimensionality of feature space measured via singular values) of feature representations, correlating with substantially worse aggregated multi-task returns compared to both dense and sparsified agents; this indicates that normalization can suppress neuron inactivity at the cost of representational diversity in multi-task contexts.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Layer Normalization",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " (LayerNorm)",
+          "label": "elaboration",
+          "of_terms": [
+            "Layer Normalization"
+          ]
+        },
+        {
+          "text": " applied in the evaluated multi-task reinforcement learning",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " (MTRL)",
+          "label": "elaboration",
+          "of_terms": [
+            "multi-task reinforcement learning"
+          ]
+        },
+        {
+          "text": " settings tends to produce very low dormant neuron percentages",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " (neurons with normalized mean absolute activation below threshold $\\tau$)",
+          "label": "elaboration",
+          "of_terms": [
+            "dormant neuron"
+          ]
+        },
+        {
+          "text": " but",
+          "label": "connection"
+        },
+        {
+          "text": " simultaneously causes a severe and persistent reduction in effective rank",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " (dimensionality of feature space measured via singular values)",
+          "label": "elaboration",
+          "of_terms": [
+            "effective rank"
+          ]
+        },
+        {
+          "text": " of feature representations",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": ", correlating with substantially worse aggregated multi-task returns compared to both dense and sparsified agents",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": "; this indicates that",
+          "label": "relation",
+          "connects": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "expression": "[1] 且 [2] 且 [3] 推出 [4]"
+        },
+        {
+          "text": " normalization can suppress neuron inactivity at the cost of representational diversity in multi-task contexts.",
+          "label": "assertion",
+          "number": 4
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

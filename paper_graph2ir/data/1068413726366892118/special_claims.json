@@ -1,0 +1,29 @@
+[
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 1,
+    "text": "Soft-TF generalizes to CLIP.",
+    "certain_instances_given": [
+      2
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 3,
+    "text": "Applying Soft-TF to layers L[10,11,12] yields stronger continual-learning performance in DualPrompt settings, producing near-zero forgetting.",
+    "certain_instances_given": [
+      5
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_6",
+    "claim_number": 11,
+    "text": "Fine-tuning Soft-TF-L[12] w/ only ATTN already attains very high performance.",
+    "certain_instances_given": [
+      13
+    ],
+    "uncertain_instances_given": []
+  }
+]

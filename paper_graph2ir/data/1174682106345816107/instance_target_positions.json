@@ -1,0 +1,97 @@
+[
+  {
+    "conclusion": "conclusion_2",
+    "instance_number": 3,
+    "instance_content": "(with $n=3$ for the Iris dataset, the number of classes)",
+    "instance_span": {
+      "start": 151,
+      "end": 207
+    },
+    "targets": [
+      {
+        "term": "the first $n$ qubits",
+        "certainty": "certain",
+        "content": "the first $n$ qubits",
+        "start": 130,
+        "end": 150,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 4,
+    "instance_content": "(strong Lottery Ticket Hypothesis protocol)",
+    "instance_span": {
+      "start": 151,
+      "end": 195
+    },
+    "targets": [
+      {
+        "term": "without weight training",
+        "certainty": "certain",
+        "content": "without weight training",
+        "start": 127,
+        "end": 150,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 6,
+    "instance_content": "(BVQC, 122 parameters)",
+    "instance_span": {
+      "start": 288,
+      "end": 311
+    },
+    "targets": [
+      {
+        "term": "a binary VQC",
+        "certainty": "certain",
+        "content": "a binary VQC",
+        "start": 275,
+        "end": 287,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 7,
+    "instance_content": "(SNN, 170 parameters)",
+    "instance_span": {
+      "start": 339,
+      "end": 360
+    },
+    "targets": [
+      {
+        "term": "a simple neural network",
+        "certainty": "certain",
+        "content": "a simple neural network",
+        "start": 315,
+        "end": 338,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 10,
+    "instance_content": "(MVQC, 184 parameters)",
+    "instance_span": {
+      "start": 418,
+      "end": 441
+    },
+    "targets": [
+      {
+        "term": "a multi-class VQC",
+        "certainty": "certain",
+        "content": "a multi-class VQC",
+        "start": 400,
+        "end": 417,
+        "candidates": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 6,
+    "text": "The boundaries between the low-error plateau (LEP), approximate power-law region (APL), and high-error plateau (HEP) depend on whether the physical phase of the target Hamiltonian is the TFIM ferromagnet, the critical point, or the paramagnet.",
+    "certain_instances_given": [
+      7
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 5,
+    "text": "In shallow depth $d=1$ feed-forward neural networks (FFNNs) approximating the ground state of the transverse-field Ising model (TFIM) at the critical transverse field $\\kappa=\\kappa_{c}$, there is a sharp transition at a critical parameter density $\\rho_{c}\\approx 3\\text{--}5$ characterized by a rapid drop in fidelity $F(\\rho)=\\langle\\Psi^{NN}(\\rho)|\\Psi^{NN}(\\rho+\\epsilon)\\rangle$, a kink in the variational energy (discontinuity in $\\mathrm{d}E/\\mathrm{d}\\rho$), and abrupt changes in the total magnetization in the $x$-direction and the total magnetization in the $z$-direction.",
+    "certain_instances_given": [
+      11,
+      14
+    ],
+    "uncertain_instances_given": []
+  }
+]

@@ -1,0 +1,813 @@
+[
+  {
+    "id": "paper:867751999540560103::conclusion_1",
+    "global_id": "gcn_e03586f6c94b495a",
+    "order": 1,
+    "title": "Lower bound on existence probability of a rescaled approximation in same-depth random networks",
+    "content": "For a target feed-forward ReLU network $f$ of depth $L$ and architecture $\\bar{n}=[n_0,\\dots,n_L]$ and for a larger randomly initialized network $f_0$ of the same depth $L$ and architecture $\\bar{n}_0$, if each weight in layer $l$ of $f_0$ is sampled i.i.d. as $w_{ij}^{(l)}\\sim U([- \\sigma_w^{(l)},\\sigma_w^{(l)}])$ and each bias as $b_i^{(l)}\\sim U([- \\prod_{k=1}^l \\sigma_w^{(k)},\\prod_{k=1}^l \\sigma_w^{(k)}])$, then with $\\epsilon\\in(0,1)$ and layerwise allowed parameter errors $\\epsilon_l$ (defined by the error-propagation requirement) the probability that $f_0$ contains a prunable subnetwork $f_\\epsilon$ and a global scaling factor $\\lambda=\\prod_{l=1}^L 1/\\sigma_w^{(l)}$ such that $\\|f-\\lambda f_\\epsilon\\|_\\infty \\le \\epsilon$ is lower-bounded by\n      $$\n      \\mathbb{P}\\left(\\exists f_{\\epsilon}\\subset f_0:\\|f-\\lambda f_{\\epsilon}\\|_{\\infty}\\le\\epsilon\\right)\\ge \\prod_{l=1}^L\\left(1-\\sum_{i=1}^{n_l}\\left(1-\\epsilon_l^{\\,k_i}\\right)^{n_{l,0}}\\right),\n      $$\n      where $k_i$ is the in-degree (number of non-zero incoming weights plus bias indicator) of neuron $i$ in layer $l$, $n_{l,0}$ is the width of layer $l$ in $f_0$, and $\\epsilon_l$ are the per-layer parameter tolerances required to guarantee a final uniform approximation error $\\epsilon$ (as given by the error propagation bound). This bound implies that high width $n_{l,0}$ and small neuron in-degrees $k_i$ increase existence probability, while additional layers multiply failure probabilities.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For a target feed-forward ReLU network $f$ of depth $L$ and architecture $\\bar{n}=[n_0,\\dots,n_L]$ and for a larger randomly initialized network $f_0$ of the same depth $L$ and architecture $\\bar{n}_0$, if each weight in layer $l$ of $f_0$ is sampled i.i.d. as $w_{ij}^{(l)}\\sim U([- \\sigma_w^{(l)},\\sigma_w^{(l)}])$ and each bias as $b_i^{(l)}\\sim U([- \\prod_{k=1}^l \\sigma_w^{(k)},\\prod_{k=1}^l \\sigma_w^{(k)}])$, then with $\\epsilon\\in(0,1)$ and layerwise allowed parameter errors $\\epsilon_l$ (defined by the error-propagation requirement) the probability that $f_0$ contains a prunable subnetwork $f_\\epsilon$ and a global scaling factor $\\lambda=\\prod_{l=1}^L 1/\\sigma_w^{(l)}$ such that $\\|f-\\lambda f_\\epsilon\\|_\\infty \\le \\epsilon$ is lower-bounded by $$ \\mathbb{P}\\left(\\exists f_{\\epsilon}\\subset f_0:\\|f-\\lambda f_{\\epsilon}\\|_{\\infty}\\le\\epsilon\\right)\\ge \\prod_{l=1}^L\\left(1-\\sum_{i=1}^{n_l}\\left(1-\\epsilon_l^{\\,k_i}\\right)^{n_{l,0}}\\right), $$",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 985
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "where $k_i$ is the in-degree (number of non-zero incoming weights plus bias indicator) of neuron $i$ in layer $l$, $n_{l,0}$ is the width of layer $l$ in $f_0$, and $\\epsilon_l$ are the per-layer parameter tolerances required to guarantee a final uniform approximation error $\\epsilon$ (as given by the error propagation bound).",
+        "source_spans": [
+          {
+            "start": 985,
+            "end": 1314
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "relation of the assertions [1,4,6]",
+        "content": "This bound implies that",
+        "source_spans": [
+          {
+            "start": 1314,
+            "end": 1338
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "high width $n_{l,0}$ and small neuron in-degrees $k_i$ increase existence probability",
+        "source_spans": [
+          {
+            "start": 1338,
+            "end": 1423
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "relation of the assertions [4,6]",
+        "content": ", while",
+        "source_spans": [
+          {
+            "start": 1423,
+            "end": 1431
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "additional layers multiply failure probabilities.",
+        "source_spans": [
+          {
+            "start": 1431,
+            "end": 1480
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_2",
+    "global_id": "gcn_8516571efb514896",
+    "order": 2,
+    "title": "Planting algorithm to hide a target ticket inside a larger network by layerwise matching and per-neuron rescaling",
+    "content": "A practical planting algorithm is provided that, given a target network $f$ and a larger host network $f_0$, iteratively matches each neuron of $f$ to a previously unmatched neuron of $f_0$ in the same layer by minimizing the Euclidean mismatch after allowing for an optimal multiplicative scaling per candidate neuron. Concretely, for a target neuron with (possibly sparse) parameter vector $\\boldsymbol{\\theta}=(b,\\boldsymbol{w}\\boldsymbol{\\lambda}_{\\text{old}})$ (where $\\boldsymbol{\\lambda}_{\\text{old}}$ stores scaling factors of matched neurons in the previous layer), each unmatched candidate neuron with parameter vector $\\boldsymbol{m}$ is scored by\n      $$\n      q_{\\theta}(\\boldsymbol{m})=\\|\\boldsymbol{\\theta}-\\lambda(\\boldsymbol{m})\\boldsymbol{m}\\|_2,\n      \\quad\\text{with}\\quad\n      \\lambda(\\boldsymbol{m})=\\frac{\\boldsymbol{\\theta}^T\\boldsymbol{m}}{\\|\\boldsymbol{m}\\|_2^2},\n      $$\n      and the best-matching $\\boldsymbol{m}^*$ is replaced by the rescaled target parameters $\\boldsymbol{\\theta}/\\lambda(\\boldsymbol{m}^*)$ in $f_0$, while recording $\\lambda(\\boldsymbol{m}^*)$ for downstream matches. The algorithm proceeds layerwise from the first hidden layer to the output and returns the modified $f_0$ containing the planted ticket together with the per-neuron scaling factors.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "A practical planting algorithm is provided that, given a target network $f$ and a larger host network $f_0$, iteratively matches each neuron of $f$ to a previously unmatched neuron of $f_0$ in the same layer by minimizing the Euclidean mismatch after allowing for an optimal multiplicative scaling per candidate neuron.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 320
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "Concretely, for a target neuron with (possibly sparse) parameter vector $\\boldsymbol{\\theta}=(b,\\boldsymbol{w}\\boldsymbol{\\lambda}_{\\text{old}})$ (where $\\boldsymbol{\\lambda}_{\\text{old}}$ stores scaling factors of matched neurons in the previous layer), each unmatched candidate neuron with parameter vector $\\boldsymbol{m}$ is scored by $$ q_{\\theta}(\\boldsymbol{m})=\\|\\boldsymbol{\\theta}-\\lambda(\\boldsymbol{m})\\boldsymbol{m}\\|_2, \\quad\\text{with}\\quad \\lambda(\\boldsymbol{m})=\\frac{\\boldsymbol{\\theta}^T\\boldsymbol{m}}{\\|\\boldsymbol{m}\\|_2^2}, $$ and the best-matching $\\boldsymbol{m}^*$ is replaced by the rescaled target parameters $\\boldsymbol{\\theta}/\\lambda(\\boldsymbol{m}^*)$ in $f_0$, while recording $\\lambda(\\boldsymbol{m}^*)$ for downstream matches.",
+        "source_spans": [
+          {
+            "start": 320,
+            "end": 1120
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "The algorithm proceeds layerwise from the first hidden layer to the output and returns the modified $f_0$ containing the planted ticket together with the per-neuron scaling factors.",
+        "source_spans": [
+          {
+            "start": 1120,
+            "end": 1301
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_3",
+    "global_id": "gcn_6cd328c379524c1b",
+    "order": 3,
+    "title": "Concrete sparse target constructions (benchmarks): ReLU, Circle, and Helix tickets",
+    "content": "Three explicit target (planted) tickets that embody common modelling challenges were constructed and used as benchmarks: (a) ReLU regression: a univariate ReLU $f(x)=\\phi(x)=\\max(x,0)$ implemented as a single active neuron per layer along a path, producing an optimally sparse ticket; (b) Circle classification: a 4-class classifier on inputs $(x_1,x_2)\\in[-1,1]^2$ whose decision relies on the radial quantity $g(x)=x_1^2+x_2^2$; the ticket computes $g$ by successive mirroring along axes with layerwise axes $\\boldsymbol{a}^{(l)}=(\\cos(\\pi/2^{l-1}),\\sin(\\pi/2^{l-1}))$ and (optionally) a piecewise-linear approximation of $h(x)=x^2$ in the penultimate layer to trade depth for precision; (c) Helix regression: a one-dimensional input $x\\in[-1,1]$ mapped to three outputs defined by\n      $$\n      f_1(x)=\\frac{(5\\pi+3\\pi x)\\cos(5\\pi+3\\pi x)}{8\\pi},\\quad\n      f_2(x)=\\frac{(5\\pi+3\\pi x)\\sin(5\\pi+3\\pi x)}{8\\pi},\\quad\n      f_3(x)=\\frac{5\\pi+3\\pi x}{8\\pi},\n      $$\n      where each $f_i$ is approximated by a depth-$2$ univariate ReLU network implemented via a piecewise-linear decomposition $g_i(x)=\\sum_{j=1}^N a_j^{(i)}\\phi(p_j(x-s_j))+b^{(i)}$ with shared inner knots $s_j$ and signs $p_j\\in\\{\\pm1\\}$. These constructions yield extremely sparse target topologies (controllable sparsity and depth) suitable for planting in large host networks.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "Three explicit target (planted) tickets that embody common modelling challenges were constructed and used as benchmarks:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 121
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(a) ReLU regression: a univariate ReLU $f(x)=\\phi(x)=\\max(x,0)$ implemented as a single active neuron per layer along a path, producing an optimally sparse ticket;",
+        "source_spans": [
+          {
+            "start": 121,
+            "end": 285
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(b) Circle classification: a 4-class classifier on inputs $(x_1,x_2)\\in[-1,1]^2$ whose decision relies on the radial quantity $g(x)=x_1^2+x_2^2$; the ticket computes $g$ by successive mirroring along axes with layerwise axes $\\boldsymbol{a}^{(l)}=(\\cos(\\pi/2^{l-1}),\\sin(\\pi/2^{l-1}))$ and (optionally) a piecewise-linear approximation of $h(x)=x^2$ in the penultimate layer to trade depth for precision;",
+        "source_spans": [
+          {
+            "start": 285,
+            "end": 690
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(c) Helix regression: a one-dimensional input $x\\in[-1,1]$ mapped to three outputs defined by $$ f_1(x)=\\frac{(5\\pi+3\\pi x)\\cos(5\\pi+3\\pi x)}{8\\pi},\\quad f_2(x)=\\frac{(5\\pi+3\\pi x)\\sin(5\\pi+3\\pi x)}{8\\pi},\\quad f_3(x)=\\frac{5\\pi+3\\pi x}{8\\pi}, $$ where each $f_i$ is approximated by a depth-$2$ univariate ReLU network implemented via a piecewise-linear decomposition $g_i(x)=\\sum_{j=1}^N a_j^{(i)}\\phi(p_j(x-s_j))+b^{(i)}$ with shared inner knots $s_j$ and signs $p_j\\in\\{\\pm1\\}$.",
+        "source_spans": [
+          {
+            "start": 690,
+            "end": 1208
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "These constructions yield extremely sparse target topologies (controllable sparsity and depth) suitable for planting in large host networks.",
+        "source_spans": [
+          {
+            "start": 1208,
+            "end": 1348
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_4",
+    "global_id": "gcn_9ff7d0d2e7eb4519",
+    "order": 4,
+    "title": "Empirical finding: singleshot pruning cannot recover planted strong tickets and fails at extreme sparsities",
+    "content": "In extensive singleshot (one-pass scoring and pruning) experiments on depth-5 width-100 host networks planted with the ReLU, Circle, and Helix tickets, averaged over multiple runs, all evaluated methods—SNIP, GRASP, SYNFLOW, MAGNITUDE, RANDOM baseline, and EDGE-POPUP where applicable—were able to find weak tickets (subnetworks that require further training) at moderate sparsity for Circle and ReLU but failed to recover planted strong tickets (subnetworks that perform well at initialization); no method recovered planted strong tickets in a single pruning round. All methods also failed to produce well-performing subnetworks at extreme target sparsities (e.g., $\\rho\\le 0.01$, including the planted baseline sparsities used), and the Helix manifold task was particularly challenging, with methods failing to recover good subnetworks in singleshot settings.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "In extensive singleshot experiments on depth-5 width-100 host networks planted with the ReLU, Circle, and Helix tickets, averaged over multiple runs, all evaluated methods— were able to find weak tickets at moderate sparsity for Circle and ReLU but failed to recover planted strong tickets no method recovered planted strong tickets in a single pruning round.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 24
+          },
+          {
+            "start": 55,
+            "end": 203
+          },
+          {
+            "start": 285,
+            "end": 316
+          },
+          {
+            "start": 360,
+            "end": 446
+          },
+          {
+            "start": 497,
+            "end": 567
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(one-pass scoring and pruning)",
+        "source_spans": [
+          {
+            "start": 24,
+            "end": 55
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "SNIP, GRASP, SYNFLOW, MAGNITUDE, RANDOM baseline, and EDGE-POPUP where applicable—",
+        "source_spans": [
+          {
+            "start": 203,
+            "end": 285
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(subnetworks that require further training)",
+        "source_spans": [
+          {
+            "start": 316,
+            "end": 360
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(subnetworks that perform well at initialization);",
+        "source_spans": [
+          {
+            "start": 446,
+            "end": 497
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "All methods also failed to produce well-performing subnetworks at extreme target sparsities",
+        "source_spans": [
+          {
+            "start": 567,
+            "end": 659
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(e.g., $\\rho\\le 0.01$, including the planted baseline sparsities used),",
+        "source_spans": [
+          {
+            "start": 659,
+            "end": 731
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "other",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 731,
+            "end": 735
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "the Helix manifold task was particularly challenging, with methods failing to recover good subnetworks in singleshot settings.",
+        "source_spans": [
+          {
+            "start": 735,
+            "end": 861
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_5",
+    "global_id": "gcn_a532ad25ee8741ea",
+    "order": 5,
+    "title": "Empirical finding: multishot (iterative prune/train/reset) enables recovery of weak tickets; SYNFLOW, MAGNITUDE, SNIP perform best for classification",
+    "content": "When pruning was performed in a multishot protocol—iteratively training the current subnetwork for 5 epochs per round, pruning toward an annealed intermediate sparsity $\\rho^{r/10}$ in round $r$ (where $\\rho$ is the desired network sparsity), and resetting weights to initial values after each round—SYNFLOW, MAGNITUDE, and SNIP recovered weak tickets (subnetworks requiring further training) at substantially lower sparsity levels (sparser networks) for the Circle classification task; in particular, SYNFLOW consistently performed best, recovering planted weak tickets at extreme sparsities (e.g., $\\rho=0.01$) for Circle. For the Helix manifold (regression) task, multishot enabled improvements relative to singleshot but recovery of very sparse tickets remained more difficult than for classification.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "When pruning was performed in a multishot protocol— SYNFLOW, MAGNITUDE, and SNIP recovered weak tickets (subnetworks requiring further training) at substantially lower sparsity levels (sparser networks) for the Circle classification task;",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 51
+          },
+          {
+            "start": 300,
+            "end": 487
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "iteratively training the current subnetwork for 5 epochs per round, pruning toward an annealed intermediate sparsity $\\rho^{r/10}$ in round $r$ (where $\\rho$ is the desired network sparsity), and resetting weights to initial values after each round—",
+        "source_spans": [
+          {
+            "start": 51,
+            "end": 300
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "in particular, SYNFLOW consistently performed best, recovering planted weak tickets at extreme sparsities (e.g., $\\rho=0.01$) for Circle.",
+        "source_spans": [
+          {
+            "start": 487,
+            "end": 625
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "For the Helix manifold (regression) task, multishot enabled improvements relative to singleshot",
+        "source_spans": [
+          {
+            "start": 625,
+            "end": 721
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "relation of the assertions [4,6]",
+        "content": "but",
+        "source_spans": [
+          {
+            "start": 721,
+            "end": 725
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "recovery of very sparse tickets remained more difficult than for classification.",
+        "source_spans": [
+          {
+            "start": 725,
+            "end": 805
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_6",
+    "global_id": "gcn_382e7dcf9cca417b",
+    "order": 6,
+    "title": "Empirical finding: EDGE-POPUP finds some strong tickets but is limited in sparsity; annealing improves but not to baseline",
+    "content": "EDGE-POPUP, an approach that trains per-parameter scores (targeted to find strong tickets, i.e., subnetworks that perform well at initialization without further training), recovered a strong ticket at sparsity $\\rho\\approx 0.5$ for the Circle task in its original form but failed to retrieve planted tickets at much lower sparsities. Extending EDGE-POPUP with an annealing schedule that gradually reduces the target sparsity across score-training rounds (specifically, reducing sparsity to $\\rho^{i/10}$ in round $i$) improved its performance: the modified method discovered stronger (sparser) strong tickets (e.g., achieving reasonable accuracy near $\\rho=0.1$ in some settings), representing an order-of-magnitude sparsity improvement over the original behavior; nevertheless, in experiments that planted a trained weak ticket (a subnetwork that requires training) of sparsity $\\rho=0.01$ into VGG16 on CIFAR10, EDGE-POPUP could not recover the planted baseline sparse strong ticket, indicating the method still falls short of planted ground-truth sparsity in realistic CNN settings.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "EDGE-POPUP, an approach that trains per-parameter scores , recovered a strong ticket at sparsity $\\rho\\approx 0.5$ for the Circle task in its original form but failed to retrieve planted tickets at much lower sparsities.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 58
+          },
+          {
+            "start": 169,
+            "end": 334
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(targeted to find strong tickets, i.e., subnetworks that perform well at initialization without further training)",
+        "source_spans": [
+          {
+            "start": 58,
+            "end": 169
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "Extending EDGE-POPUP with an annealing schedule that gradually reduces the target sparsity across score-training rounds improved its performance: the modified method discovered stronger (sparser) strong tickets , representing an order-of-magnitude sparsity improvement over the original behavior;",
+        "source_spans": [
+          {
+            "start": 334,
+            "end": 455
+          },
+          {
+            "start": 516,
+            "end": 610
+          },
+          {
+            "start": 678,
+            "end": 765
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(specifically, reducing sparsity to $\\rho^{i/10}$ in round $i$)",
+        "source_spans": [
+          {
+            "start": 455,
+            "end": 516
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "example of the assertion [3]",
+        "content": "(e.g., achieving reasonable accuracy near $\\rho=0.1$ in some settings)",
+        "source_spans": [
+          {
+            "start": 610,
+            "end": 678
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation of the assertions [3,7]",
+        "content": "nevertheless,",
+        "source_spans": [
+          {
+            "start": 765,
+            "end": 779
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "in experiments that planted a trained weak ticket of sparsity $\\rho=0.01$ into VGG16 on CIFAR10, EDGE-POPUP could not recover the planted baseline sparse strong ticket, indicating the method still falls short of planted ground-truth sparsity in realistic CNN settings.",
+        "source_spans": [
+          {
+            "start": 779,
+            "end": 830
+          },
+          {
+            "start": 865,
+            "end": 1085
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(a subnetwork that requires training)",
+        "source_spans": [
+          {
+            "start": 830,
+            "end": 865
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_7",
+    "global_id": "gcn_2230b44a1b5a4beb",
+    "order": 7,
+    "title": "Observed failure mode: layer collapse and greater difficulty on regression/manifold tasks",
+    "content": "Across pruning strategies and experiments, a recurrent failure mode is layer collapse, i.e., entire layers becoming masked so that information flow is interrupted; layer collapse occurs particularly at extreme sparsities (e.g., $\\rho\\le 0.01$) and can prevent subnetwork functionality. In addition, pruning algorithms consistently struggled more with regression and manifold-learning tasks (ReLU regression and Helix), where the best recovered weak tickets (subnetworks requiring training) were often limited to sparsities of order $\\rho\\approx 0.1$ (10%), whereas classification (Circle) was easier to recover under multishot strategies (iterative training, pruning, and weight resetting).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Across pruning strategies and experiments, a recurrent failure mode is layer collapse, i.e., entire layers becoming masked so that information flow is interrupted; layer collapse occurs particularly at extreme sparsities (e.g., $\\rho\\le 0.01$) and can prevent subnetwork functionality.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 164
+          },
+          {
+            "start": 164,
+            "end": 286
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "In addition, pruning algorithms consistently struggled more with regression and manifold-learning tasks , where the best recovered weak tickets were often limited to sparsities of order $\\rho\\approx 0.1$ (10%),",
+        "source_spans": [
+          {
+            "start": 286,
+            "end": 390
+          },
+          {
+            "start": 417,
+            "end": 457
+          },
+          {
+            "start": 490,
+            "end": 557
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "example of the assertion [2]",
+        "content": "(ReLU regression and Helix)",
+        "source_spans": [
+          {
+            "start": 390,
+            "end": 417
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(subnetworks requiring training)",
+        "source_spans": [
+          {
+            "start": 457,
+            "end": 490
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "relation of the assertions [2,6]",
+        "content": "whereas",
+        "source_spans": [
+          {
+            "start": 557,
+            "end": 565
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "classification was easier to recover under multishot strategies",
+        "source_spans": [
+          {
+            "start": 565,
+            "end": 580
+          },
+          {
+            "start": 589,
+            "end": 638
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "(Circle)",
+        "source_spans": [
+          {
+            "start": 580,
+            "end": 589
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(iterative training, pruning, and weight resetting).",
+        "source_spans": [
+          {
+            "start": 638,
+            "end": 690
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_8",
+    "global_id": "gcn_672aed16c2734973",
+    "order": 8,
+    "title": "Benchmarks with planted tickets reproduce qualitative trends from image experiments and provide verifiable baselines",
+    "content": "The planted-ticket benchmarks reproduce qualitative trends previously observed on image classification tasks (e.g., degradation around $\\rho\\approx 0.01$, relative method rankings) while providing known achievable sparsities and performance levels; this demonstrates that the planting framework yields synthetic but realistic experimental conditions that can serve as verifiable baselines for comparing pruning algorithms and for distinguishing algorithmic failure from nonexistence of sparse tickets.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The planted-ticket benchmarks reproduce qualitative trends previously observed on image classification tasks while providing known achievable sparsities and performance levels;",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 109
+          },
+          {
+            "start": 181,
+            "end": 249
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "example of the assertion [1]",
+        "content": "(e.g., degradation around $\\rho\\approx 0.01$, relative method rankings)",
+        "source_spans": [
+          {
+            "start": 109,
+            "end": 181
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "relation of the assertions [1,4]",
+        "content": "this demonstrates that",
+        "source_spans": [
+          {
+            "start": 249,
+            "end": 272
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "the planting framework yields synthetic but realistic experimental conditions that can serve as verifiable baselines for comparing pruning algorithms and for distinguishing algorithmic failure from nonexistence of sparse tickets.",
+        "source_spans": [
+          {
+            "start": 272,
+            "end": 501
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_9",
+    "global_id": "gcn_067b678b44514d7f",
+    "order": 9,
+    "title": "Empirical conclusion: current limitations in ticket sparsity are likely algorithmic rather than fundamental",
+    "content": "Using the planting framework, in an experiment where a trained weak ticket (a subnetwork that requires further training) of sparsity $\\rho=0.01$ (discovered by the SYNFLOW pruning method and trained on CIFAR10) was planted back into a VGG16 neural network and then given to the EDGE-POPUP pruning method, EDGE-POPUP failed to retrieve the planted $\\rho=0.01$ strong ticket (a subnetwork that performs well at initialization) in this realistic convolutional neural network setting. Because the planted ticket is known to exist inside the host by construction, this failure indicates that the inability of pruning methods (here EDGE-POPUP) to find extremely sparse strong tickets in practice is due to algorithmic limitations of current methods rather than fundamental nonexistence of such tickets in randomly initialized networks.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Using the planting framework, in an experiment where a trained weak ticket of sparsity $\\rho=0.01$ was planted back into a VGG16 neural network and then given to the EDGE-POPUP pruning method, EDGE-POPUP failed to retrieve the planted $\\rho=0.01$ strong ticket in this realistic convolutional neural network setting.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 76
+          },
+          {
+            "start": 119,
+            "end": 146
+          },
+          {
+            "start": 209,
+            "end": 374
+          },
+          {
+            "start": 423,
+            "end": 481
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(a subnetwork that requires further training)",
+        "source_spans": [
+          {
+            "start": 76,
+            "end": 119
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(discovered by the SYNFLOW pruning method and trained on CIFAR10)",
+        "source_spans": [
+          {
+            "start": 146,
+            "end": 209
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(a subnetwork that performs well at initialization)",
+        "source_spans": [
+          {
+            "start": 374,
+            "end": 423
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "proof of the assertion [7]",
+        "content": "Because the planted ticket is known to exist inside the host by construction,",
+        "source_spans": [
+          {
+            "start": 481,
+            "end": 559
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation of the assertions [1,7]",
+        "content": "this failure indicates that",
+        "source_spans": [
+          {
+            "start": 559,
+            "end": 587
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "the inability of pruning methods to find extremely sparse strong tickets in practice is due to algorithmic limitations of current methods rather than fundamental nonexistence of such tickets in randomly initialized networks.",
+        "source_spans": [
+          {
+            "start": 587,
+            "end": 621
+          },
+          {
+            "start": 636,
+            "end": 829
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(here EDGE-POPUP)",
+        "source_spans": [
+          {
+            "start": 621,
+            "end": 636
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867751999540560103::conclusion_10",
+    "global_id": "gcn_e83fe729a6e04073",
+    "order": 10,
+    "title": "Implementation and reproducible artifact",
+    "content": "A reproducible implementation of the planting algorithm, the synthetic benchmark data generators for ReLU/Circle/Helix, the experimental protocols (singleshot and multishot pruning, ANN hyperparameters, EDGE-POPUP implementation extended to biases), and the code used for all pruning evaluations are released publicly to enable reuse and comparison by future work.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "A reproducible implementation of the planting algorithm, the synthetic benchmark data generators for ReLU/Circle/Helix, the experimental protocols (singleshot and multishot pruning, ANN hyperparameters, EDGE-POPUP implementation extended to biases), and the code used for all pruning evaluations are released publicly",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 318
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "motivation",
+        "content": "to enable reuse and comparison by future work.",
+        "source_spans": [
+          {
+            "start": 318,
+            "end": 364
+          }
+        ]
+      }
+    ]
+  }
+]

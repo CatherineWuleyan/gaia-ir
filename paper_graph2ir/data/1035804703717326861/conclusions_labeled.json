@@ -1,0 +1,673 @@
+[
+  {
+    "id": "paper:1035804703717326861::conclusion_1",
+    "global_id": "gcn_6c7f249240814597",
+    "order": 1,
+    "title": "Existence of highly sparse, trainable subnetworks (winning tickets) in PCNNs up to 99% sparsity with near-baseline accuracy on ModelNet40",
+    "content": "Point Cloud Neural Networks (PCNNs) – specifically PointNet, DGCNN, and PointCNN – contain sparse subnetworks obtained by magnitude-based pruning. When only the top 1% of weights by magnitude are retained (99% sparsity), these subnetworks achieve test accuracies on the ModelNet40 dataset that are close to the unpruned baselines. For instance, after discovering subnetworks on the ShapeNetCore dataset via global Iterative Magnitude Pruning (IMP) or one-shot global pruning and then transferring them to ModelNet40, the accuracies are: PointNet baseline 87.5% compared to 86.3% (IMP) and 86.9% (one-shot); DGCNN baseline 89.2% compared to 88.5% (IMP) and 88.0% (one-shot); PointCNN baseline 90.2% compared to 87.4% (IMP) and 86.9% (one-shot). These results demonstrate that retaining only the top 1% highest-magnitude weights can preserve the majority of classification performance on ModelNet40 for these PCNN architectures.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Point Cloud Neural Networks",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (PCNNs)",
+          "label": "elaboration",
+          "of_terms": [
+            "Point Cloud Neural Networks"
+          ]
+        },
+        {
+          "text": " – specifically",
+          "label": "framing"
+        },
+        {
+          "text": " PointNet, DGCNN, and PointCNN – ",
+          "label": "instance",
+          "of_terms": [
+            "PCNNs"
+          ]
+        },
+        {
+          "text": "contain sparse subnetworks obtained by magnitude-based pruning.",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " When only the top 1% of weights by magnitude are retained",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " (99% sparsity)",
+          "label": "elaboration",
+          "of_terms": [
+            "top 1% of weights by magnitude"
+          ]
+        },
+        {
+          "text": ", these subnetworks achieve test accuracies on the ModelNet40 dataset that are close to the unpruned baselines.",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " For instance,",
+          "label": "framing"
+        },
+        {
+          "text": " after discovering subnetworks on the ShapeNetCore dataset via global Iterative Magnitude Pruning",
+          "label": "framing"
+        },
+        {
+          "text": " (IMP)",
+          "label": "elaboration",
+          "of_terms": [
+            "Iterative Magnitude Pruning"
+          ]
+        },
+        {
+          "text": " or one-shot global pruning and then transferring them to ModelNet40, the accuracies are:",
+          "label": "framing"
+        },
+        {
+          "text": " PointNet baseline 87.5% compared to 86.3%",
+          "label": "example",
+          "number": 3,
+          "illustrates": [
+            2
+          ]
+        },
+        {
+          "text": " (IMP)",
+          "label": "framing"
+        },
+        {
+          "text": " and 86.9%",
+          "label": "example",
+          "number": 3,
+          "illustrates": [
+            2
+          ]
+        },
+        {
+          "text": " (one-shot);",
+          "label": "framing"
+        },
+        {
+          "text": " DGCNN baseline 89.2% compared to 88.5%",
+          "label": "example",
+          "number": 4,
+          "illustrates": [
+            2
+          ]
+        },
+        {
+          "text": " (IMP)",
+          "label": "framing"
+        },
+        {
+          "text": " and 88.0%",
+          "label": "example",
+          "number": 4,
+          "illustrates": [
+            2
+          ]
+        },
+        {
+          "text": " (one-shot);",
+          "label": "framing"
+        },
+        {
+          "text": " PointCNN baseline 90.2% compared to 87.4%",
+          "label": "example",
+          "number": 5,
+          "illustrates": [
+            2
+          ]
+        },
+        {
+          "text": " (IMP)",
+          "label": "framing"
+        },
+        {
+          "text": " and 86.9%",
+          "label": "example",
+          "number": 5,
+          "illustrates": [
+            2
+          ]
+        },
+        {
+          "text": " (one-shot).",
+          "label": "framing"
+        },
+        {
+          "text": " These results demonstrate that",
+          "label": "relation",
+          "connects": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "expression": "([3] 且 [4] 且 [5]) 推出 [6]"
+        },
+        {
+          "text": " retaining only the top 1% highest-magnitude weights can preserve the majority of classification performance on ModelNet40 for these PCNN architectures.",
+          "label": "assertion",
+          "number": 6
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1035804703717326861::conclusion_2",
+    "global_id": "gcn_7b5b8a9d9fee471a",
+    "order": 2,
+    "title": "Global one-shot magnitude pruning outperforms iterative local pruning and global IMP at extreme sparsity for PCNNs",
+    "content": "Global magnitude pruning executed as a one-shot operation (a single pruning cycle, J=1) or as global Iterative Magnitude Pruning (IMP) identifies winning-ticket subnetworks at extreme sparsity levels (99%) on the ModelNet40 3D shape classification dataset more reliably than iterative layer-local pruning. In particular, one-shot global pruning at 99% sparsity achieves higher test accuracy than both iterative local pruning and global IMP across the PointNet, DGCNN, and PointCNN network architectures.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Global magnitude pruning executed as a one-shot operation ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(a single pruning cycle, J=1)",
+          "label": "elaboration",
+          "of_terms": [
+            "one-shot operation"
+          ]
+        },
+        {
+          "text": " or as global Iterative Magnitude Pruning ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(IMP)",
+          "label": "elaboration",
+          "of_terms": [
+            "Iterative Magnitude Pruning"
+          ]
+        },
+        {
+          "text": " identifies winning-ticket subnetworks at extreme sparsity levels ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(99%)",
+          "label": "instance",
+          "of_terms": [
+            "extreme sparsity levels"
+          ]
+        },
+        {
+          "text": " on the ModelNet40 3D shape classification dataset more reliably than iterative layer-local pruning. ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "In particular, ",
+          "label": "framing"
+        },
+        {
+          "text": "one-shot global pruning at 99% sparsity achieves higher test accuracy than both iterative local pruning and global IMP across the PointNet, DGCNN, and PointCNN network architectures.",
+          "label": "assertion",
+          "number": 2
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1035804703717326861::conclusion_3",
+    "global_id": "gcn_dc842f91817a4123",
+    "order": 3,
+    "title": "Transferability of winning-ticket subnetworks across 3D datasets from ShapeNetCore to ModelNet40 and ScanObjectNN",
+    "content": "Sparse subnetworks (winning tickets) discovered on the ShapeNetCore 3D dataset transfer to the ModelNet40 and ScanObjectNN datasets while retaining comparable or acceptable accuracy after fine-tuning. For subnetworks at 60% sparsity transferred to ModelNet40: PointNet achieves 88.2% (global Iterative Magnitude Pruning, IMP) and 87.8% (one-shot global pruning) vs. dense baseline 87.5%; DGCNN achieves 90.1% (IMP) and 90.4% (one-shot) vs. baseline 89.2%; PointCNN achieves 90.6% (IMP) and 90.4% (one-shot) vs. baseline 90.2%. For the same 60% sparsity transferred to ScanObjectNN: PointNet achieves 71.7% (IMP) and 70.5% (one-shot) vs. baseline 68.2%; DGCNN achieves 75.2% (IMP) and 74.9% (one-shot) vs. baseline 71.1%; PointCNN achieves 73.2% (IMP) and 72.9% (one-shot) vs. baseline 70.4%. At 99% sparsity, transferred accuracies on ModelNet40 remain close to baselines (e.g., PointNet IMP 86.3% vs. 87.5%; DGCNN IMP 88.5% vs. 89.2%; PointCNN IMP 87.4% vs. 90.2%), while on ScanObjectNN the drops are larger (e.g., PointNet IMP 64.7% vs. 68.2%; DGCNN IMP 64.6% vs. 71.1%; PointCNN IMP 65.3% vs. 70.4%). These results indicate that winning tickets discovered on one 3D domain can be reused to reduce training and parameter costs on related 3D classification tasks.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Sparse subnetworks",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (winning tickets)",
+          "label": "elaboration",
+          "of_terms": [
+            "Sparse subnetworks"
+          ]
+        },
+        {
+          "text": " discovered on the ShapeNetCore 3D dataset transfer to the ModelNet40 and ScanObjectNN datasets while retaining comparable or acceptable accuracy after fine-tuning.",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " For subnetworks at 60% sparsity transferred to ModelNet40:",
+          "label": "framing"
+        },
+        {
+          "text": " PointNet achieves 88.2% (",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "global Iterative Magnitude Pruning, ",
+          "label": "elaboration",
+          "of_terms": [
+            "IMP"
+          ]
+        },
+        {
+          "text": "IMP) and 87.8% (one-shot global pruning) vs. dense baseline 87.5%;",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " DGCNN achieves 90.1% (IMP) and 90.4% (one-shot) vs. baseline 89.2%;",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " PointCNN achieves 90.6% (IMP) and 90.4% (one-shot) vs. baseline 90.2%.",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " For the same 60% sparsity transferred to ScanObjectNN:",
+          "label": "framing"
+        },
+        {
+          "text": " PointNet achieves 71.7% (IMP) and 70.5% (one-shot) vs. baseline 68.2%;",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " DGCNN achieves 75.2% (IMP) and 74.9% (one-shot) vs. baseline 71.1%;",
+          "label": "论据",
+          "number": 6,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " PointCNN achieves 73.2% (IMP) and 72.9% (one-shot) vs. baseline 70.4%.",
+          "label": "论据",
+          "number": 7,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " At 99% sparsity, transferred accuracies on ModelNet40 remain close to baselines",
+          "label": "assertion",
+          "number": 8
+        },
+        {
+          "text": " (e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "PointNet IMP 86.3% vs. 87.5%",
+          "label": "example",
+          "number": 9,
+          "illustrates": [
+            8
+          ]
+        },
+        {
+          "text": "; ",
+          "label": "other"
+        },
+        {
+          "text": "DGCNN IMP 88.5% vs. 89.2%",
+          "label": "example",
+          "number": 10,
+          "illustrates": [
+            8
+          ]
+        },
+        {
+          "text": "; ",
+          "label": "other"
+        },
+        {
+          "text": "PointCNN IMP 87.4% vs. 90.2%",
+          "label": "example",
+          "number": 11,
+          "illustrates": [
+            8
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": ", while",
+          "label": "connection"
+        },
+        {
+          "text": " on ScanObjectNN the drops are larger",
+          "label": "assertion",
+          "number": 12
+        },
+        {
+          "text": " (e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "PointNet IMP 64.7% vs. 68.2%",
+          "label": "example",
+          "number": 13,
+          "illustrates": [
+            12
+          ]
+        },
+        {
+          "text": "; ",
+          "label": "other"
+        },
+        {
+          "text": "DGCNN IMP 64.6% vs. 71.1%",
+          "label": "example",
+          "number": 14,
+          "illustrates": [
+            12
+          ]
+        },
+        {
+          "text": "; ",
+          "label": "other"
+        },
+        {
+          "text": "PointCNN IMP 65.3% vs. 70.4%",
+          "label": "example",
+          "number": 15,
+          "illustrates": [
+            12
+          ]
+        },
+        {
+          "text": ").",
+          "label": "other"
+        },
+        {
+          "text": " These results indicate that ",
+          "label": "framing"
+        },
+        {
+          "text": "winning tickets discovered on one 3D domain can be reused to reduce training and parameter costs on related 3D classification tasks.",
+          "label": "assertion",
+          "number": 16
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1035804703717326861::conclusion_4",
+    "global_id": "gcn_6e8c45f5adc843d8",
+    "order": 4,
+    "title": "Convolutional layers in PointNet retain critical weights after magnitude pruning while fully-connected layers are heavily pruned",
+    "content": "Layerwise analysis of Point Cloud Neural Networks (PCNNs) after magnitude pruning shows that convolutional layers retain a disproportionately large fraction of high-magnitude, task-critical weights, while fully-connected (FC) layers contribute most of the removable parameters. In an ablation on the PointNet architecture (a specific PCNN) using the ModelNet40 dataset, pruning only FC layer weights at a 99% pruning rate (i.e., removing 99% of FC weights) yields an overall network sparsity of 87% and a test accuracy of 88.3%, which exceeds the unpruned baseline accuracy of 87.5%. Pruning only convolutional layer weights at the same 99% rate yields an overall sparsity of only 12% and accuracy of 86.9%. Simultaneously pruning both layer types to achieve 99% overall sparsity results in accuracy of 86.8% with 99% sparsity. These observations indicate that convolutional layers are the primary locus of critical weights for 3D feature extraction, and that heavy pruning of FC layers can dramatically reduce parameter count with limited or no loss in classification accuracy.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Layerwise analysis of Point Cloud Neural Networks ",
+          "label": "framing"
+        },
+        {
+          "text": "(PCNNs)",
+          "label": "elaboration",
+          "of_terms": [
+            "Point Cloud Neural Networks"
+          ]
+        },
+        {
+          "text": " after magnitude pruning shows that ",
+          "label": "framing"
+        },
+        {
+          "text": "convolutional layers retain a disproportionately large fraction of high-magnitude, task-critical weights",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": ", while ",
+          "label": "connection"
+        },
+        {
+          "text": "fully-connected ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(FC)",
+          "label": "elaboration",
+          "of_terms": [
+            "fully-connected"
+          ]
+        },
+        {
+          "text": " layers contribute most of the removable parameters.",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " In an ablation on the PointNet architecture ",
+          "label": "elaboration"
+        },
+        {
+          "text": "(a specific PCNN)",
+          "label": "elaboration",
+          "of_terms": [
+            "PointNet architecture"
+          ]
+        },
+        {
+          "text": " using the ModelNet40 dataset,",
+          "label": "elaboration"
+        },
+        {
+          "text": " pruning only FC layer weights at a 99% pruning rate ",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2,
+            7
+          ]
+        },
+        {
+          "text": "(i.e., removing 99% of FC weights)",
+          "label": "elaboration",
+          "of_terms": [
+            "a 99% pruning rate"
+          ]
+        },
+        {
+          "text": " yields an overall network sparsity of 87% and a test accuracy of 88.3%",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            2,
+            7
+          ]
+        },
+        {
+          "text": ", which exceeds the unpruned baseline accuracy of 87.5%.",
+          "label": "elaboration",
+          "of_terms": [
+            "a test accuracy of 88.3%"
+          ]
+        },
+        {
+          "text": " Pruning only convolutional layer weights at the same 99% rate yields an overall sparsity of only 12% and accuracy of 86.9%.",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            1,
+            6
+          ]
+        },
+        {
+          "text": " Simultaneously pruning both layer types to achieve 99% overall sparsity results in accuracy of 86.8% with 99% sparsity.",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            7
+          ]
+        },
+        {
+          "text": " These observations indicate that ",
+          "label": "论证",
+          "supports": [
+            6,
+            7
+          ]
+        },
+        {
+          "text": "convolutional layers are the primary locus of critical weights for 3D feature extraction",
+          "label": "assertion",
+          "number": 6
+        },
+        {
+          "text": ", and that ",
+          "label": "connection"
+        },
+        {
+          "text": "heavy pruning of FC layers can dramatically reduce parameter count with limited or no loss in classification accuracy.",
+          "label": "assertion",
+          "number": 7
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1035804703717326861::conclusion_5",
+    "global_id": "gcn_07d702506685418b",
+    "order": 5,
+    "title": "Extremely pruned PCNN subnetworks have lower parameter counts than compact hand-designed architectures with reasonable accuracy",
+    "content": "Subnetworks extracted from overparameterized Point Cloud Neural Networks (PCNNs) at extreme sparsity (99% pruning) yield models with parameter counts far below several compact, hand-designed 3D architectures while achieving competitive accuracy on the ModelNet40 dataset. Specifically, pruned PointNet has 0.034M parameters and 87.1% accuracy; pruned DGCNN has 0.017M parameters and 86.3% accuracy; pruned PointCNN has 0.012M parameters and 85.4% accuracy. In comparison, compact hand-designed models such as PointCNN have 0.320M parameters and KCNet have 0.900M parameters. This shows that unstructured pruning of overparameterized PCNNs can produce extremely small models that are competitive with bespoke compact architectures.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Subnetworks extracted from overparameterized Point Cloud Neural Networks (PCNNs) at extreme sparsity (99% pruning) yield models with parameter counts far below several compact, hand-designed 3D architectures while achieving competitive accuracy on the ModelNet40 dataset.",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " Specifically,",
+          "label": "framing"
+        },
+        {
+          "text": " pruned PointNet has 0.034M parameters and 87.1% accuracy;",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1,
+            7
+          ]
+        },
+        {
+          "text": " pruned DGCNN has 0.017M parameters and 86.3% accuracy;",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            1,
+            7
+          ]
+        },
+        {
+          "text": " pruned PointCNN has 0.012M parameters and 85.4% accuracy.",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            1,
+            7
+          ]
+        },
+        {
+          "text": " In comparison,",
+          "label": "connection"
+        },
+        {
+          "text": " compact hand-designed models",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            1,
+            7
+          ]
+        },
+        {
+          "text": " such as ",
+          "label": "framing"
+        },
+        {
+          "text": "PointCNN",
+          "label": "instance",
+          "of_terms": [
+            "compact hand-designed models"
+          ]
+        },
+        {
+          "text": " have 0.320M parameters",
+          "label": "论据",
+          "number": 5,
+          "supports": [
+            1,
+            7
+          ]
+        },
+        {
+          "text": " and ",
+          "label": "connection"
+        },
+        {
+          "text": "KCNet have 0.900M parameters.",
+          "label": "论据",
+          "number": 6,
+          "supports": [
+            1,
+            7
+          ]
+        },
+        {
+          "text": " This shows that",
+          "label": "framing"
+        },
+        {
+          "text": " unstructured pruning of overparameterized PCNNs can produce extremely small models that are competitive with bespoke compact architectures.",
+          "label": "assertion",
+          "number": 7
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

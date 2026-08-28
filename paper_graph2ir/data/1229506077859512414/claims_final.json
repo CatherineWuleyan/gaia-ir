@@ -1,0 +1,97 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "Across the evaluated combinations of five DRL algorithms (TRPO, PPO, DDPG, TD3, SAC) and five continuous-control Mujoco environments, Post-Training Dynamic Quantization (PTDQ) produced the best average return more frequently than Quantization-Aware Training (QAT) or Post-Training Static Quantization (PTSQ).",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "Across the evaluated combinations of five DRL algorithms (TRPO, PPO, DDPG, TD3, SAC) and five continuous-control Mujoco environments, among Post-Training Dynamic Quantization (PTDQ), Quantization-Aware Training (QAT), and Post-Training Static Quantization (PTSQ), PTSQ produced the lowest average returns most often.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 2
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Converting 32-bit floating-point deep reinforcement learning (DRL) models to int8 quantized representations and applying structural pruning reduced model size, but across the tested software and hardware stack these size reductions did not reliably translate into lower energy consumption, lower memory usage, or faster inference.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 3
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Deep reinforcement learning (DRL) models with int8 quantized representations frequently showed unchanged or increased memory utilization, attributed to library and runtime overhead.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 4
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "The energy consumption of deep reinforcement learning (DRL) models with int8 quantized representations only decreased in cases where the average return fell substantially, causing earlier episode termination and less computation.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 5
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Pruning reduced model size but did not consistently accelerate inference or reduce measured Joules per inference.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 6
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "For the evaluated continuous-control DRL algorithms and environments, $L_2$-norm based pruning outperformed $L_1$-norm pruning in the majority of model-environment pairs.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 7
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "Exceptions exist (notably some PPO instances and specific environments) to the assertion that $L_2$-norm based pruning outperformed $L_1$-norm pruning in the majority of model-environment pairs.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 8
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "For the evaluated continuous-control DRL algorithms and environments, $L_2$ pruning provided a more favorable trade-off between parameter reduction and return preservation than $L_1$-norm pruning.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 9
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "Using the selection criterion of retaining at least 90% of baseline average return while maximizing prune percentage, several model–environment combinations achieved optimal pruning percentages up to 70%, demonstrating that substantial parameter reduction is feasible without exceeding a 10% loss in episodic return for particular algorithm/environment pairs.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 10
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "This ability in claim 10 is heterogeneous across algorithms and environments.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 11
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "The empirical pruning results contradict the Lottery Ticket Hypothesis (LTH) for the evaluated DRL settings.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 12
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "The empirical pruning results indicate that small subnetworks found by magnitude pruning at substantial sparsities did not reproduce original performance when trained or evaluated in isolation under the evaluated DRL settings.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 13
+    }
+  ],
+  "note": [],
+  "relation": []
+}

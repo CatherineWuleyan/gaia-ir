@@ -1,0 +1,205 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "Let T_S be a dense source network with parameters {λ_i} trained on a source domain D_S, let T_T be a candidate sparse target network represented as ξ(x; M(λ_i)) obtained by applying an unstructured mask M(λ_i)=m ⊙ λ_i with m ∈ {0,1}^{|λ|}, denote by n_S and n_T the numbers of training iterations required for T_S and T_T, respectively, to reach their minimum validation loss, and denote by η_S and η_T the corresponding validation accuracy percentages. If (i) ξ(x; M(λ_i)) can be obtained from T_S by unstructured pruning using a mask m ∈ {0,1}^{|λ|}, (ii) after retraining the pruned network T_T the minimum-validation loss is reached in no more iterations than the dense source T_S (n_T ≤ n_S), and (iii) after retraining the pruned network T_T the validation accuracy is no worse than the dense source T_S (η_T ≥ η_S), then ξ(x; M(λ_i)) is regarded as a WLT-net (transferable winning lottery ticket) of T_S that retains the source task's representational capacity and therefore can serve as a sparse object for transfer learning from D_S to D_T.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "Using CIFAR‑10 as the source domain D_S and a ResNet‑18 backbone (the 18‑layer residual network with approximately 11,173,962 total parameters in the original dense configuration), iterative unstructured pruning with the WLTs‑SDTL procedure produced a WLT‑net that retained 10.7% of the original parameters.",
+      "is_pure_data": false,
+      "needs_more_context": [
+        "WLTs‑SDTL",
+        "WLT‑net"
+      ],
+      "number": 2
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "(1,212,145 parameters retained out of 11,173,962).",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 3
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "The pruned ResNet‑18 WLT‑net produced by iterative unstructured pruning with the WLTs‑SDTL procedure achieved an average test accuracy of 89.24% on CIFAR‑10.",
+      "is_pure_data": false,
+      "needs_more_context": [
+        "WLTs‑SDTL",
+        "WLT‑net"
+      ],
+      "number": 4
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "The average test accuracy in claim 4 compares to the original dense ResNet‑18's average test accuracy of 89.43% on the same dataset and evaluation metric.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 5
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "When the sparse WLT‑net obtained by pruning a CIFAR‑10 ResNet‑18 source was transferred to SmallNORB as the target domain D_T and fine‑tuned according to the WLTs‑SDTL protocol as described in note 1, the WLTs‑SDTL method that includes late reset and weight‑trend‑aware freezing produced target accuracies that are comparable to or exceed the accuracy achieved by training a dense ResNet‑18 from scratch on SmallNORB.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 6
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "(the dense from‑scratch baseline achieved 89.9% average accuracy in the reported experiments)",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 7
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "When the sparse WLT‑net obtained by pruning a CIFAR‑10 ResNet‑18 source was transferred to SmallNORB as the target domain D_T and fine‑tuned according to the WLTs‑SDTL protocol as described in note 1, the WLTs‑SDTL method that includes late reset and weight‑trend‑aware freezing was using substantially fewer trainable parameters in the transferred sparse network than in training a dense ResNet‑18 from scratch on SmallNORB.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 8
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "Applied to tomato leaf disease classification using a filtered and balanced subset of the PlantVillage dataset, WLTs‑SDTL produced sparse ResNet‑18 models whose peak reported performance occurred when 67% of the original parameters were removed, giving a peak test accuracy of 97.69%.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 9
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "At an extreme sparsity level produced by 15 rounds of iterative pruning, when only 3.6% of the original ResNet‑18 parameters remained, the sparse model produced by WLTs‑SDTL still attained 93.16% test accuracy on the same evaluation (tomato leaf disease classification using a filtered and balanced subset of the PlantVillage dataset).",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 10
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "A highly compressed network produced by WLTs‑SDTL can sustain acceptable classification performance for this agricultural task (tomato leaf disease classification using a filtered and balanced subset of the PlantVillage dataset).",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 11
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "In the reported experiments on citrus greening (Huanglongbing) detection using a combined training set formed from 1,500 field‑clipped images derived from 1,266 collected field images and 5,000 randomly sampled PlantVillage orange leaf images (6,500 training samples total) and on transferring a sparse WLT‑net initialized from a pretrained related task on PlantVillage, a peak accuracy of 98.26% was obtained at the 3rd pruning level when 51.2% of the original ResNet‑18 parameters remained.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 12
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "In the reported experiments, this 98.26% peak reported in claim 12 exceeds the dense DTL baseline accuracy of 98.06% described in note 2.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 13
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "The experiments show that, in the reported experiments on citrus greening (Huanglongbing) detection using a combined training set formed from 1,500 field‑clipped images derived from 1,266 collected field images and 5,000 randomly sampled PlantVillage orange leaf images (6,500 training samples total) and on transferring a sparse WLT‑net initialized from a pretrained related task on PlantVillage, fine‑grained pruning in the approximate retained‑parameter range 50%–30% consistently produced optimal or near‑optimal performance.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 14
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "a model retaining 8.59% of parameters achieved 96.67% accuracy",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 15
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "a model retaining 3.6% of parameters achieved 94.01% accuracy",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 16
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "In the reported experiments, both of the sparse models in claim 15 and claim 16 obtained higher accuracy than a dense ResNet‑18 trained from scratch without transfer.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 17
+    }
+  ],
+  "note": [
+    {
+      "conclusion": "conclusion_4",
+      "text": "elaboration of the WLTs‑SDTL protocol: (transfer initialization from recorded λ_α, frozen convolutional layers, and tuning only the unfrozen layers such as the final fully connected layer)",
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "elaboration of the dense DTL baseline accuracy of 98.06%: obtained when the dense ResNet‑18 was initialized from the more similar pretrained task.",
+      "number": 2
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "elaboration of claim 15, claim 16: on the same evaluation;",
+      "number": 3
+    }
+  ],
+  "relation": [
+    {
+      "conclusion": "conclusion_3",
+      "connects": [
+        3,
+        2
+      ],
+      "expression": "[3] 是 [2] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_4",
+      "connects": [
+        7,
+        6
+      ],
+      "expression": "[7] 是 [6] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_5",
+      "connects": [
+        10,
+        11
+      ],
+      "expression": "[10] 是 [11] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        12,
+        13,
+        14
+      ],
+      "expression": "[12] 是 ([13] 和 [14]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        13,
+        14
+      ],
+      "expression": "[13] 是 [14] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        15,
+        17
+      ],
+      "expression": "[15] 是 [17] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        16,
+        17
+      ],
+      "expression": "[16] 是 [17] 的例子或证据"
+    }
+  ]
+}

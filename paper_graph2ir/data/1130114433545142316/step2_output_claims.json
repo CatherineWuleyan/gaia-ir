@@ -1,0 +1,68 @@
+[
+  {
+    "conclusion": "conclusion_4",
+    "number": 3,
+    "label": "论据",
+    "supports": [
+      12
+    ],
+    "text": "iterative magnitude pruning required 122 minutes",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 6,
+    "label": "论据",
+    "supports": [
+      14
+    ],
+    "text": "pruned 85% of total weights;",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 7,
+    "label": "论据",
+    "supports": [
+      12
+    ],
+    "text": "the BINGO pruning pipeline required 17 minutes",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 10,
+    "label": "论据",
+    "supports": [
+      14
+    ],
+    "text": "pruned 71% of total weights.",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 12,
+    "label": "assertion",
+    "text": "On a feed-forward model trained on the MNIST dataset with an initial test accuracy of 97% and pruned until the model accuracy dropped to 90%, the BINGO pruning pipeline reduced the measured training+pruning wall-clock time relative to iterative magnitude pruning by approximately 86.07%.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 14,
+    "label": "assertion",
+    "text": "On a feed-forward model trained on the MNIST dataset with an initial test accuracy of 97% and pruned until the model accuracy dropped to 90%, the BINGO pruning pipeline is yielding a final pruned fraction that, under the same 97%→90% accuracy pruning target, is 14 percentage points lower than iterative magnitude pruning's final pruned fraction.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  }
+]

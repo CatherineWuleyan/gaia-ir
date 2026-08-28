@@ -1,0 +1,423 @@
+{
+  "paper_id": "867771291879342656",
+  "source_file": "ocr.md",
+  "char_offset_unit": "unicode_code_point",
+  "line_numbering": "1-indexed",
+  "formulas": [
+    {
+      "start_line": 55,
+      "start_char": 399,
+      "end_line": 55,
+      "end_char": 402,
+      "type": "single"
+    },
+    {
+      "start_line": 55,
+      "start_char": 409,
+      "end_line": 55,
+      "end_char": 412,
+      "type": "single"
+    },
+    {
+      "start_line": 72,
+      "start_char": 213,
+      "end_line": 72,
+      "end_char": 218,
+      "type": "single"
+    }
+  ],
+  "segments": [
+    {
+      "paragraph": 1,
+      "type": "text",
+      "start_line": 3,
+      "end_line": 5
+    },
+    {
+      "paragraph": 2,
+      "type": "text",
+      "start_line": 7,
+      "end_line": 9
+    },
+    {
+      "paragraph": 3,
+      "type": "text",
+      "start_line": 11,
+      "end_line": 13
+    },
+    {
+      "paragraph": 4,
+      "type": "text",
+      "start_line": 15,
+      "end_line": 17
+    },
+    {
+      "paragraph": 5,
+      "type": "text",
+      "start_line": 20,
+      "end_line": 20
+    },
+    {
+      "paragraph": 6,
+      "type": "text",
+      "start_line": 23,
+      "end_line": 23
+    },
+    {
+      "paragraph": 7,
+      "type": "text",
+      "start_line": 25,
+      "end_line": 25
+    },
+    {
+      "paragraph": 8,
+      "type": "text",
+      "start_line": 27,
+      "end_line": 27
+    },
+    {
+      "paragraph": 9,
+      "type": "text",
+      "start_line": 29,
+      "end_line": 29
+    },
+    {
+      "paragraph": 10,
+      "type": "text",
+      "start_line": 31,
+      "end_line": 31
+    },
+    {
+      "paragraph": 11,
+      "type": "text",
+      "start_line": 33,
+      "end_line": 33
+    },
+    {
+      "paragraph": 12,
+      "type": "text",
+      "start_line": 37,
+      "end_line": 37
+    },
+    {
+      "paragraph": 13,
+      "type": "text",
+      "start_line": 39,
+      "end_line": 39
+    },
+    {
+      "paragraph": 14,
+      "type": "text",
+      "start_line": 41,
+      "end_line": 41
+    },
+    {
+      "paragraph": 15,
+      "type": "figure",
+      "start_line": 43,
+      "end_line": 43
+    },
+    {
+      "paragraph": 16,
+      "type": "text",
+      "start_line": 45,
+      "end_line": 45
+    },
+    {
+      "paragraph": 17,
+      "type": "text",
+      "start_line": 51,
+      "end_line": 51
+    },
+    {
+      "paragraph": 18,
+      "type": "text",
+      "start_line": 53,
+      "end_line": 53
+    },
+    {
+      "paragraph": 19,
+      "type": "text",
+      "start_line": 55,
+      "end_line": 55
+    },
+    {
+      "paragraph": 20,
+      "type": "text",
+      "start_line": 57,
+      "end_line": 57
+    },
+    {
+      "paragraph": 20,
+      "type": "text",
+      "start_line": 59,
+      "end_line": 59
+    },
+    {
+      "paragraph": 21,
+      "type": "text",
+      "start_line": 61,
+      "end_line": 61
+    },
+    {
+      "paragraph": 22,
+      "type": "text",
+      "start_line": 64,
+      "end_line": 64
+    },
+    {
+      "paragraph": 23,
+      "type": "text",
+      "start_line": 67,
+      "end_line": 67
+    },
+    {
+      "paragraph": 24,
+      "type": "text",
+      "start_line": 69,
+      "end_line": 69
+    },
+    {
+      "paragraph": 25,
+      "type": "text",
+      "start_line": 72,
+      "end_line": 72
+    },
+    {
+      "paragraph": 26,
+      "type": "text",
+      "start_line": 75,
+      "end_line": 75
+    },
+    {
+      "paragraph": 27,
+      "type": "figure",
+      "start_line": 77,
+      "end_line": 77
+    },
+    {
+      "paragraph": 28,
+      "type": "text",
+      "start_line": 79,
+      "end_line": 79
+    },
+    {
+      "paragraph": 29,
+      "type": "text",
+      "start_line": 81,
+      "end_line": 81
+    },
+    {
+      "paragraph": 30,
+      "type": "text",
+      "start_line": 84,
+      "end_line": 84
+    },
+    {
+      "paragraph": 31,
+      "type": "text",
+      "start_line": 86,
+      "end_line": 86
+    },
+    {
+      "paragraph": 32,
+      "type": "text",
+      "start_line": 88,
+      "end_line": 88
+    },
+    {
+      "paragraph": 33,
+      "type": "text",
+      "start_line": 90,
+      "end_line": 90
+    },
+    {
+      "paragraph": 34,
+      "type": "figure",
+      "start_line": 92,
+      "end_line": 92
+    },
+    {
+      "paragraph": 35,
+      "type": "text",
+      "start_line": 94,
+      "end_line": 94
+    },
+    {
+      "paragraph": 36,
+      "type": "text",
+      "start_line": 96,
+      "end_line": 96
+    },
+    {
+      "paragraph": 37,
+      "type": "text",
+      "start_line": 98,
+      "end_line": 98
+    },
+    {
+      "paragraph": 38,
+      "type": "text",
+      "start_line": 100,
+      "end_line": 100
+    },
+    {
+      "paragraph": 39,
+      "type": "figure",
+      "start_line": 102,
+      "end_line": 102
+    },
+    {
+      "paragraph": 40,
+      "type": "text",
+      "start_line": 104,
+      "end_line": 104
+    },
+    {
+      "paragraph": 41,
+      "type": "text",
+      "start_line": 108,
+      "end_line": 108
+    },
+    {
+      "paragraph": 42,
+      "type": "text",
+      "start_line": 110,
+      "end_line": 110
+    },
+    {
+      "paragraph": 43,
+      "type": "figure",
+      "start_line": 112,
+      "end_line": 112
+    },
+    {
+      "paragraph": 44,
+      "type": "text",
+      "start_line": 114,
+      "end_line": 114
+    },
+    {
+      "paragraph": 45,
+      "type": "text",
+      "start_line": 118,
+      "end_line": 118
+    },
+    {
+      "paragraph": 46,
+      "type": "text",
+      "start_line": 122,
+      "end_line": 122
+    },
+    {
+      "paragraph": 47,
+      "type": "text",
+      "start_line": 124,
+      "end_line": 124
+    },
+    {
+      "paragraph": 48,
+      "type": "text",
+      "start_line": 126,
+      "end_line": 126
+    },
+    {
+      "paragraph": 49,
+      "type": "text",
+      "start_line": 128,
+      "end_line": 128
+    },
+    {
+      "paragraph": 50,
+      "type": "text",
+      "start_line": 130,
+      "end_line": 130
+    },
+    {
+      "paragraph": 50,
+      "type": "text",
+      "start_line": 132,
+      "end_line": 132
+    },
+    {
+      "paragraph": 51,
+      "type": "text",
+      "start_line": 216,
+      "end_line": 216
+    },
+    {
+      "paragraph": 52,
+      "type": "text",
+      "start_line": 218,
+      "end_line": 218
+    },
+    {
+      "paragraph": 53,
+      "type": "text",
+      "start_line": 220,
+      "end_line": 220
+    },
+    {
+      "paragraph": 54,
+      "type": "text",
+      "start_line": 222,
+      "end_line": 222
+    },
+    {
+      "paragraph": 55,
+      "type": "figure",
+      "start_line": 226,
+      "end_line": 226
+    },
+    {
+      "paragraph": 56,
+      "type": "text",
+      "start_line": 228,
+      "end_line": 228
+    },
+    {
+      "paragraph": 57,
+      "type": "text",
+      "start_line": 230,
+      "end_line": 230
+    },
+    {
+      "paragraph": 57,
+      "type": "text",
+      "start_line": 233,
+      "end_line": 233
+    },
+    {
+      "paragraph": 58,
+      "type": "text",
+      "start_line": 235,
+      "end_line": 235
+    },
+    {
+      "paragraph": 59,
+      "type": "text",
+      "start_line": 237,
+      "end_line": 237
+    }
+  ],
+  "headings": [
+    1,
+    19,
+    22,
+    35,
+    47,
+    49,
+    63,
+    66,
+    71,
+    74,
+    83,
+    106,
+    116,
+    120,
+    134,
+    212,
+    214,
+    224
+  ]
+}

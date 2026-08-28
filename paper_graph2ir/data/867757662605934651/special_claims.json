@@ -1,0 +1,13 @@
+[
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 1,
+    "text": "Empirically, across the four architectures ResNet-20s, ResNet-18, VGG-16, and DenseNet-100 and the three datasets CIFAR-10, CIFAR-100, and Restricted ImageNet and for the four Trojan types gray-scale patch, RGB patch, clean-label, and stealthier WaNet, there exists an extreme-sparsity subnetwork—termed the winning Trojan ticket—identified by a peak in the Trojan score (the LMC-based metric $\\mathcal{S}_{\\mathrm{Trojan}}$ that quantifies pruning-induced stability via the error barrier between un-finetuned and finetuned Trojan tickets), which simultaneously (i) preserves the Trojan attack effectiveness in terms of attack success rate (ASR) nearly as well as the original dense Trojan model and (ii) has near-random standard accuracy (SA) on clean inputs due to the aggressive pruning.",
+    "certain_instances_given": [
+      2,
+      3,
+      4
+    ],
+    "uncertain_instances_given": []
+  }
+]

@@ -1,0 +1,214 @@
+[
+  {
+    "id": "paper:873226422896820806::conclusion_1",
+    "global_id": "gcn_9f809ae37a7340b7",
+    "order": 1,
+    "title": "Definition and empirical existence of essential sparsity in large pre-trained transformers",
+    "content": "Essential sparsity is defined as a sparsity level at which a one-shot mask obtained by removing the smallest-magnitude weights from a pre-trained parameter vector $\\theta_p$ yields downstream evaluation $\\mathcal{E}^{\\mathcal{T}}(f(x; m\\odot\\theta_p))$ within $\\epsilon$ of the dense baseline $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))$, but any further small additional pruning $\\mathcal{P}_\\rho(m)$ causes the evaluation to fall below $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))-\\epsilon$. Formally, if\n      $$\n      \\mathcal{E}^{\\mathcal{T}}(f(x; m\\odot\\theta_p)) \\ge \\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p)) - \\epsilon\n      $$\n      and\n      $$\n      \\mathcal{E}^{\\mathcal{T}}(f(x; \\mathcal{P}_\\rho(m)\\odot\\theta_p)) < \\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p)) - \\epsilon,\n      $$\n      then the corresponding sparsity $1-\\frac{\\|m\\|_0}{|m|}$ is an essential sparsity for model $f$ on task $\\mathcal{T}$. In the experiments $\\epsilon$ is set to $1\\%$. Across multiple pre-trained vision and language transformers (BERT-base, OPT-125M/350M/1.3B, ViT-base/large, DINO-base and a case study on Vicuna-7B), experimentally observed essential-sparsity ranges allow removal of roughly $30\\%$–$50\\%$ of weights by one-shot magnitude pruning (OMP) without exceeding the $\\epsilon=1\\%$ performance drop on many downstream tasks; beyond that sharp turning point the performance degrades rapidly.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Essential sparsity is defined as a sparsity level at which a one-shot mask obtained by removing the smallest-magnitude weights from a pre-trained parameter vector $\\theta_p$ yields downstream evaluation $\\mathcal{E}^{\\mathcal{T}}(f(x; m\\odot\\theta_p))$ within $\\epsilon$ of the dense baseline $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))$, but any further small additional pruning $\\mathcal{P}_\\rho(m)$ causes the evaluation to fall below $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))-\\epsilon$.",
+          "label": "elaboration"
+        },
+        {
+          "text": " Formally, if\n      $$\n      \\mathcal{E}^{\\mathcal{T}}(f(x; m\\odot\\theta_p)) \\ge \\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p)) - \\epsilon\n      $$\n      and\n      $$\n      \\mathcal{E}^{\\mathcal{T}}(f(x; \\mathcal{P}_\\rho(m)\\odot\\theta_p)) < \\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p)) - \\epsilon,\n      $$\n      then the corresponding sparsity $1-\\frac{\\|m\\|_0}{|m|}$ is an essential sparsity for model $f$ on task $\\mathcal{T}$.",
+          "label": "elaboration"
+        },
+        {
+          "text": " In the experiments $\\epsilon$ is set to $1\\%$.",
+          "label": "elaboration"
+        },
+        {
+          "text": " Across multiple pre-trained vision and language transformers ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(BERT-base, OPT-125M/350M/1.3B, ViT-base/large, DINO-base and a case study on Vicuna-7B)",
+          "label": "elaboration"
+        },
+        {
+          "text": ", experimentally observed essential-sparsity ranges allow removal of roughly $30\\%$–$50\\%$ of weights by one-shot magnitude pruning (OMP) without exceeding the $\\epsilon=1\\%$ performance drop on many downstream tasks; beyond that sharp turning point the performance degrades rapidly.",
+          "label": "assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:873226422896820806::conclusion_2",
+    "global_id": "gcn_d9598923ac274b5f",
+    "order": 2,
+    "title": "Essential sparsity holds for structured N:M sparsity patterns",
+    "content": "The essential sparsity phenomenon, defined as the sparsity level at which further pruning a small fraction $\\rho$ of the remaining nonzero weights causes the downstream evaluation $\\mathcal{E}^{\\mathcal{T}}(f(x; \\mathcal{P}_\\rho(m)\\odot\\theta_p))$ to drop below $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))-\\epsilon$ with $\\epsilon=1\\%$, also appears when enforcing hardware-friendly N:M fine-grained structured sparsity (each contiguous group of $M$ weights has at most $N$ nonzeros). In experiments on the OPT-350M language model, using N:M masks derived from one-shot magnitude pruning on pre-trained weights and evaluated on the MNLI, QNLI, RTE, and SST-2 tasks, a substantial fraction of low-magnitude weights can be removed under N:M constraints with negligible downstream performance loss up to an essential sparsity boundary, indicating that essential sparsity generalizes beyond unstructured pruning to N:M structured patterns.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The essential sparsity phenomenon, ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "defined as the sparsity level at which further pruning a small fraction $\\rho$ of the remaining nonzero weights causes the downstream evaluation $\\mathcal{E}^{\\mathcal{T}}(f(x; \\mathcal{P}_\\rho(m)\\odot\\theta_p))$ to drop below $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))-\\epsilon$ with $\\epsilon=1\\%$, ",
+          "label": "elaboration"
+        },
+        {
+          "text": "also appears when enforcing hardware-friendly N:M fine-grained structured sparsity ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(each contiguous group of $M$ weights has at most $N$ nonzeros).",
+          "label": "elaboration"
+        },
+        {
+          "text": "In experiments on the OPT-350M language model, using N:M masks derived from one-shot magnitude pruning on pre-trained weights and evaluated on the MNLI, QNLI, RTE, and SST-2 tasks, a substantial fraction of low-magnitude weights can be removed under N:M constraints with negligible downstream performance loss up to an essential sparsity boundary, indicating that essential sparsity generalizes beyond unstructured pruning to N:M structured patterns.",
+          "label": "proof of the assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:873226422896820806::conclusion_3",
+    "global_id": "gcn_d8b6017df9f243f5",
+    "order": 3,
+    "title": "Essential sparsity exists in modern LLMs (Vicuna-7B) and can be extended by advanced one-shot methods",
+    "content": "One-shot magnitude pruning (OMP), which removes the lowest-magnitude weights from the pre-trained parameter vector $\\theta_p$ of the Vicuna-7B large language model (7 billion parameters) and evaluates zero-shot on the MMLU benchmark (covering Stem, Humanities, Social Science, and Others), exhibits the essential sparsity phenomenon: the evaluation metric $\\mathcal{E}^{\\mathcal{T}}(f(x; m\\odot\\theta_p))$ remains within $1\\%$ of the dense baseline $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))$ for a sizable fraction of removed weights, until a sharp turning point beyond which performance degrades rapidly. Furthermore, the SparseGPT one-shot pruning algorithm, applied under the same zero-shot evaluation, shows similar trends and can push the usable sparsity beyond that achievable by OMP at higher computational cost, demonstrating that one-shot methods can scale to modern LLM checkpoints.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "One-shot magnitude pruning (OMP),",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "which removes the lowest-magnitude weights from the pre-trained parameter vector $\\theta_p$ of the Vicuna-7B large language model (7 billion parameters) and evaluates zero-shot on the MMLU benchmark (covering Stem, Humanities, Social Science, and Others),",
+          "label": "elaboration"
+        },
+        {
+          "text": "exhibits the essential sparsity phenomenon: the evaluation metric $\\mathcal{E}^{\\mathcal{T}}(f(x; m\\odot\\theta_p))$ remains within $1\\%$ of the dense baseline $\\mathcal{E}^{\\mathcal{T}}(f(x;\\theta_p))$ for a sizable fraction of removed weights, until a sharp turning point beyond which performance degrades rapidly.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Furthermore, the SparseGPT one-shot pruning algorithm,",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "applied under the same zero-shot evaluation,",
+          "label": "elaboration"
+        },
+        {
+          "text": "shows similar trends and can push the usable sparsity beyond that achievable by OMP at higher computational cost,",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "demonstrating that one-shot methods can scale to modern LLM checkpoints.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:873226422896820806::conclusion_4",
+    "global_id": "gcn_96245cd09a484db7",
+    "order": 4,
+    "title": "Within the essential-sparsity range, one-shot magnitude masks match Lottery Ticket masks in performance and have very high mask similarity",
+    "content": "Within the essential-sparsity range (the sparsity level at which one-shot magnitude pruning yields downstream fine-tuning performance within $\\epsilon=1\\%$ of the dense baseline), masks produced by one-shot magnitude pruning (OMP) on pre-trained models BERT-base and ViT-base display nearly identical downstream fine-tuning performance to masks obtained by Lottery Ticket Hypothesis (LTH) iterative prune–retrain procedures, across multiple tasks (MNLI, QNLI, QQP, SST-2, RTE, SQuAD v1.1 for BERT; CIFAR-10, CIFAR-100, Tiny-ImageNet for ViT). For sparsity levels $s\\in\\{10\\%,20\\%,30\\%,40\\%\\}$, the binary masks from the two procedures exhibit high cosine similarity (above $96\\%$ and often above $98\\%$). Performance differences between OMP and LTH become significant only beyond the essential-sparsity regime, where LTH's task-specific retraining can preserve accuracy at higher sparsity.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Within the essential-sparsity range (",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "the sparsity level at which one-shot magnitude pruning yields downstream fine-tuning performance within $\\epsilon=1\\%$ of the dense baseline",
+          "label": "elaboration"
+        },
+        {
+          "text": "), masks produced by one-shot magnitude pruning (OMP) on pre-trained models BERT-base and ViT-base display nearly identical downstream fine-tuning performance to masks obtained by Lottery Ticket Hypothesis (LTH) iterative prune–retrain procedures, across multiple tasks (",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "MNLI, QNLI, QQP, SST-2, RTE, SQuAD v1.1 for BERT; CIFAR-10, CIFAR-100, Tiny-ImageNet for ViT",
+          "label": "elaboration"
+        },
+        {
+          "text": ").",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "For sparsity levels $s\\in\\{10\\%,20\\%,30\\%,40\\%\\}$, the binary masks from the two procedures exhibit high cosine similarity (above $96\\%$ and often above $98\\%$).",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "Performance differences between OMP and LTH become significant only beyond the essential-sparsity regime, where LTH's task-specific retraining can preserve accuracy at higher sparsity.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:873226422896820806::conclusion_5",
+    "global_id": "gcn_5d0ad30cd3854f5f",
+    "order": 5,
+    "title": "Self-supervised pre-training yields stronger emergent sparsification than supervised pre-training in identical ViT architectures",
+    "content": "When two vision-transformer checkpoints with identical architecture are compared—supervised ViT-base versus self-supervised DINO-base—the self-supervised DINO pre-training produces a weight distribution more concentrated near zero, leading to approximately $14.37\\%$ more zero weights in the DINO checkpoint and improved robustness to one-shot low-magnitude removal; consequently, DINO exhibits better essential sparsity (larger free-removable fractions where downstream fine-tuning performance after pruning, on tasks CIFAR-10, CIFAR-100, and Tiny-ImageNet, remains within $\\epsilon=1\\%$ of the dense baseline) and higher tolerance to one-shot pruning across these downstream tasks.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "When two vision-transformer checkpoints with identical architecture are compared—supervised ViT-base versus self-supervised DINO-base—",
+          "label": "elaboration"
+        },
+        {
+          "text": "the self-supervised DINO pre-training produces a weight distribution more concentrated near zero, ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "leading to ",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "approximately $14.37\\%$ more zero weights in the DINO checkpoint and improved robustness to one-shot low-magnitude removal; ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "consequently, ",
+          "label": "relation of the assertions [1,2,3]"
+        },
+        {
+          "text": "DINO exhibits better essential sparsity (",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "larger free-removable fractions where downstream fine-tuning performance after pruning, on tasks CIFAR-10, CIFAR-100, and Tiny-ImageNet, remains within $\\epsilon=1\\%$ of the dense baseline) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "and higher tolerance to one-shot pruning across these downstream tasks.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:873226422896820806::conclusion_6",
+    "global_id": "gcn_d992bc56266f4f47",
+    "order": 6,
+    "title": "Sharp turning behavior of essential sparsity is downstream-task dependent and not simply a function of model size",
+    "content": "The sparsity–performance curve exhibits a sharp turning point (the essential-sparsity boundary, defined as the sparsity level beyond which further small pruning causes the downstream evaluation to drop below the dense baseline minus $1\\%$) whose location depends strongly on downstream task complexity rather than monotonically on pre-trained model size. For example, BERT-base shows a turning point at approximately $60\\%$ sparsity on the MNLI and QNLI tasks, whereas OPT-1.3B cannot be pruned beyond about $40\\%$ on the RTE task without a sharp performance drop, demonstrating that larger parameter count does not guarantee a larger free-removable fraction.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The sparsity–performance curve exhibits a sharp turning point (the essential-sparsity boundary, defined as the sparsity level beyond which further small pruning causes the downstream evaluation to drop below the dense baseline minus $1\\%$) whose location depends strongly on downstream task complexity rather than monotonically on pre-trained model size.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "For example, BERT-base shows a turning point at approximately $60\\%$ sparsity on the MNLI and QNLI tasks, whereas OPT-1.3B cannot be pruned beyond about $40\\%$ on the RTE task without a sharp performance drop, demonstrating that larger parameter count does not guarantee a larger free-removable fraction.",
+          "label": "example of the assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

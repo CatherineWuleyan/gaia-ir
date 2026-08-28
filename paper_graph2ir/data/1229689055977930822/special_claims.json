@@ -1,0 +1,20 @@
+[
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 1,
+    "text": "When the three QMPNN variants QGCN, QGAT, and QSAGE of standard GNN architectures are trained under the same hyperparameters as those standard GNN architectures and evaluated on standard datasets, the quaternion models achieve comparable or better accuracy, ROC-AUC, or Hits@K (proportion of top-K predictions that are correct) while using roughly one-fourth of the trainable parameters of those standard GNN architectures.",
+    "certain_instances_given": [
+      2
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 2,
+    "text": "Magnitude-based iterative pruning identifies subnetworks that match baseline performance at sparsity levels down to approximately 1–20% of the original parameter count across the architectures QGCN, QGAT, and QSAGE and tasks.",
+    "certain_instances_given": [
+      5
+    ],
+    "uncertain_instances_given": []
+  }
+]

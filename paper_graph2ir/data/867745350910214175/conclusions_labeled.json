@@ -1,0 +1,306 @@
+[
+  {
+    "id": "paper:867745350910214175::conclusion_1",
+    "global_id": "gcn_498628cc0b5449da",
+    "order": 1,
+    "title": "Existence of boosting tickets (faster-converging trainable subnetworks)",
+    "content": "There exist trainable sparse sub-networks, termed \"boosting tickets\", that are obtained by magnitude-based pruning of a trained dense model and resetting the remaining weights to the original initialization mask. When retrained in isolation, boosting tickets converge significantly faster (fewer epochs to reach high validation/test accuracy) than both the original dense model and winning tickets (sub-networks that, when trained from their initialization, achieve test accuracy comparable to the full dense model), and achieve comparable final test accuracy to the dense model and to winning tickets. On the CIFAR-10 dataset (50,000 training images, 10 classes), with VGG-16 (29.98 million parameters) and ResNet-18 (11.17 million parameters) trained using 80% magnitude pruning (smallest 80% of weights by magnitude removed), boosting tickets show earlier high validation accuracy traces during training compared to winning tickets and full models for both architectures. For VGG-16, boosting tickets achieve test accuracy of 91.25% after 20 training epochs (winning tickets: 88.10%), 91.84% after 40 epochs (winning: 90.03%), peak at 92.13% after 60 epochs, and achieve 92.05% after 100 epochs; winning tickets reach 92.00% only after 100 epochs. Thus boosting tickets match or exceed winning-ticket accuracy at all epoch budgets from 20 to 100.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "There exist trainable sparse sub-networks, termed \"boosting tickets\", that are obtained by magnitude-based pruning of a trained dense model and resetting the remaining weights to the original initialization mask.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "When retrained in isolation, boosting tickets converge significantly faster ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(fewer epochs to reach high validation/test accuracy)",
+          "label": "elaboration"
+        },
+        {
+          "text": "than both the original dense model and winning tickets ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(sub-networks that, when trained from their initialization, achieve test accuracy comparable to the full dense model)",
+          "label": "elaboration"
+        },
+        {
+          "text": ", and achieve comparable final test accuracy to the dense model and to winning tickets.",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "On the CIFAR-10 dataset (50,000 training images, 10 classes), with VGG-16 (29.98 million parameters) and ResNet-18 (11.17 million parameters) trained using 80% magnitude pruning (smallest 80% of weights by magnitude removed), ",
+          "label": "elaboration"
+        },
+        {
+          "text": "boosting tickets show earlier high validation accuracy traces during training compared to winning tickets and full models for both architectures.",
+          "label": "example of the assertion [2]"
+        },
+        {
+          "text": "For VGG-16, boosting tickets achieve test accuracy of 91.25% after 20 training epochs (winning tickets: 88.10%), 91.84% after 40 epochs (winning: 90.03%), peak at 92.13% after 60 epochs, and achieve 92.05% after 100 epochs; winning tickets reach 92.00% only after 100 epochs.",
+          "label": "example of the assertions [2,3]"
+        },
+        {
+          "text": "Thus ",
+          "label": "relation of the assertions [2,3]"
+        },
+        {
+          "text": "boosting tickets match or exceed winning-ticket accuracy at all epoch budgets from 20 to 100.",
+          "label": "proof of the assertions [2,3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867745350910214175::conclusion_2",
+    "global_id": "gcn_5720375efae64867",
+    "order": 2,
+    "title": "Practical procedure to obtain boosting tickets (one-shot pruning with small pruning learning rate and warmup)",
+    "content": "A practical procedure for obtaining boosting tickets consists of: (i) training a dense model once using a small learning rate (e.g., for VGG-16 use pruning learning rate 0.01; for ResNet-18 use 0.05), (ii) pruning a large fraction of weights by magnitude (commonly 80% of weights with smallest magnitude), producing a binary mask, (iii) applying the mask to the saved original initialization and retraining the masked sub-network using learning-rate warmup from the small training learning rate up to the usual training learning rate (e.g., VGG-16 warmup from 0.01 to 0.1; ResNet-18 warmup from 0.05 to 0.1). This one-shot prune-and-retrain recipe yields boosting tickets with the accelerated convergence and matched final accuracy reported for multiple architectures. Additionally, experiments on VGG-16 and ResNet-18 on CIFAR-10 show that iterative pruning (multiple train-prune-reset cycles) and one-shot pruning produce boosting tickets with overlapping validation accuracy over training epochs, indicating that the boosting effects and final accuracy are empirically indistinguishable; therefore iterative pruning is not necessary.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "A practical procedure for obtaining boosting tickets consists of: (i) training a dense model once using a small learning rate (e.g., for VGG-16 use pruning learning rate 0.01; for ResNet-18 use 0.05), (ii) pruning a large fraction of weights by magnitude (commonly 80% of weights with smallest magnitude), producing a binary mask, (iii) applying the mask to the saved original initialization and retraining the masked sub-network using learning-rate warmup from the small training learning rate up to the usual training learning rate (e.g., VGG-16 warmup from 0.01 to 0.1; ResNet-18 warmup from 0.05 to 0.1).",
+          "label": "elaboration"
+        },
+        {
+          "text": "This one-shot prune-and-retrain recipe yields boosting tickets with the accelerated convergence and matched final accuracy reported for multiple architectures.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Additionally, experiments on VGG-16 and ResNet-18 on CIFAR-10 show that iterative pruning (multiple train-prune-reset cycles) and one-shot pruning produce boosting tickets with overlapping validation accuracy over training epochs, indicating that the boosting effects and final accuracy are empirically indistinguishable;",
+          "label": "assertion [2]"
+        },
+        {
+          "text": " therefore",
+          "label": "relation of the assertions [2,3]"
+        },
+        {
+          "text": " iterative pruning is not necessary.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867745350910214175::conclusion_3",
+    "global_id": "gcn_11ad5e35f4704550",
+    "order": 3,
+    "title": "Characterization: boosting effect depends on learning rate, pruning ratio, and model capacity",
+    "content": "The strength of the boosting effect is controlled primarily by three empirical factors: (A) pruning-time learning rate — smaller pruning learning rates produce stronger boosting (tested values 0.005, 0.01, 0.05, 0.1; intermediate small values 0.01 for VGG-16 and 0.05 for ResNet-18 are optimal); (B) pruning ratio — pruning ratios in the range approximately 60%–90% yield the strongest early-epoch gains (80% used as standard); (C) model capacity — larger width and depth increase boosting strength, as demonstrated by WideResNet experiments on CIFAR-10 where wider models boost faster and validation accuracy saturates in depth beyond approximately depth 22. For instance, WideResNet-34-10 (46.16 million parameters) with 80% magnitude pruning achieves 90.88% validation accuracy after a single training epoch. Small models (e.g., LeNet with two convolutional layers and two fully connected layers) do not exhibit winning or boosting behavior under large pruning ratios.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The strength of the boosting effect is controlled primarily by three empirical factors: (A) pruning-time learning rate — smaller pruning learning rates produce stronger boosting ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(tested values 0.005, 0.01, 0.05, 0.1; intermediate small values 0.01 for VGG-16 and 0.05 for ResNet-18 are optimal); ",
+          "label": "elaboration"
+        },
+        {
+          "text": "(B) pruning ratio — pruning ratios in the range approximately 60%–90% yield the strongest early-epoch gains ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(80% used as standard); ",
+          "label": "elaboration"
+        },
+        {
+          "text": "(C) model capacity — larger width and depth increase boosting strength, ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "as demonstrated by WideResNet experiments on CIFAR-10 where wider models boost faster and validation accuracy saturates in depth beyond approximately depth 22.",
+          "label": "proof of the assertion [1]"
+        },
+        {
+          "text": " For instance, WideResNet-34-10 (46.16 million parameters) with 80% magnitude pruning achieves 90.88% validation accuracy after a single training epoch.",
+          "label": "example of the assertion [1]"
+        },
+        {
+          "text": " Small models (e.g., LeNet with two convolutional layers and two fully connected layers) do not exhibit winning or boosting behavior under large pruning ratios.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867745350910214175::conclusion_4",
+    "global_id": "gcn_e64e42fc1d1f4c99",
+    "order": 4,
+    "title": "Lottery-ticket and boosting-ticket hypotheses extend to adversarial training",
+    "content": "The lottery ticket hypothesis (stating that a randomly initialized dense neural network contains a sub-network that, when trained in isolation from its initialization, matches the test accuracy of the original network) and the boosting-ticket phenomenon (sub-networks that converge significantly faster than the original network and other winning tickets) apply under adversarial training regimes. Specifically, magnitude-pruned sub-networks obtained from dense models trained naturally, with Fast Gradient Sign Method (FGSM)-based adversarial training, or with Projected Gradient Descent (PGD)-based adversarial training, when retrained using PGD-based adversarial training (10-step PGD with step size 2/255 and L∞ perturbation bound epsilon=8/255), (a) achieve comparable clean accuracy and robust accuracy to the full dense model and (b) converge faster than randomly reinitialized sparse models. On CIFAR-10 with VGG-16, a boosting ticket obtained by 80% magnitude pruning from an FGSM-adversarially trained dense model and retrained for 60 epochs with PGD-10 adversarial training achieves 45.73% robust accuracy (against PGD-20 attack) and 76.48% clean accuracy, compared to the baseline full model trained for 100 epochs with PGD-10 which achieves 44.78% robust accuracy and 77.21% clean accuracy.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The lottery ticket hypothesis ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(stating that a randomly initialized dense neural network contains a sub-network that, when trained in isolation from its initialization, matches the test accuracy of the original network)",
+          "label": "elaboration"
+        },
+        {
+          "text": " and the boosting-ticket phenomenon ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(sub-networks that converge significantly faster than the original network and other winning tickets)",
+          "label": "elaboration"
+        },
+        {
+          "text": " apply under adversarial training regimes.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Specifically, magnitude-pruned sub-networks obtained from dense models trained naturally, with Fast Gradient Sign Method (FGSM)-based adversarial training, or with Projected Gradient Descent (PGD)-based adversarial training, when retrained using PGD-based adversarial training ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(10-step PGD with step size 2/255 and L∞ perturbation bound epsilon=8/255)",
+          "label": "elaboration"
+        },
+        {
+          "text": ", (a) achieve comparable clean accuracy and robust accuracy to the full dense model and (b) converge faster than randomly reinitialized sparse models.",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "On CIFAR-10 with VGG-16, a boosting ticket obtained by 80% magnitude pruning from an FGSM-adversarially trained dense model and retrained for 60 epochs with PGD-10 adversarial training achieves 45.73% robust accuracy (against PGD-20 attack) and 76.48% clean accuracy, compared to the baseline full model trained for 100 epochs with PGD-10 which achieves 44.78% robust accuracy and 77.21% clean accuracy.",
+          "label": "example of the assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867745350910214175::conclusion_5",
+    "global_id": "gcn_ade8fe419f9d416c",
+    "order": 5,
+    "title": "Pruning a weakly robust (FGSM-trained) model yields a boosting ticket that, when retrained with PGD, leads to strong robustness and large wall-clock savings on WideResNet-34-10",
+    "content": "A practical two-stage workflow for obtaining a strongly robust model with reduced training time consists of: (i) training a dense WideResNet-34-10 model (46.16 million parameters) on CIFAR-10 with Fast Gradient Sign Method (FGSM)-based adversarial training (bound 8/255 in L∞ norm) to obtain a weakly robust model, (ii) pruning 80% of weights by magnitude and resetting the surviving weights to the original initialization to obtain a boosting ticket, (iii) retraining the boosting ticket with 10-step Projected Gradient Descent (PGD)-based adversarial training (step size 2/255, bound 8/255) to obtain a strongly robust model. This procedure (Ours-40, retrained for 40 epochs) yields test accuracies and robust accuracies comparable to or slightly better than the baseline full model trained with 100-epoch PGD-based adversarial training (Madry et al.'s method): natural accuracy 87.72% vs 86.21%; PGD-20 robust accuracy 50.37% vs 50.07%; PGD-100 robust accuracy 49.28% vs 49.32%; Carlini-Wagner (C&W) attack robust accuracy 50.92% vs 50.46%. The total wall-clock time for Ours-40 (pruning time 15,462 seconds including initial FGSM adversarial training, retraining time 54,090 seconds) is 69,552 seconds, which is 0.51 times the baseline's 134,764 seconds, saving 49% of total training time while achieving comparable or better robustness on white-box PGD-20, PGD-100, C&W attacks and black-box transfer attacks from other models.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "A practical two-stage workflow for obtaining a strongly robust model with reduced training time consists of: (i) training a dense WideResNet-34-10 model (46.16 million parameters) on CIFAR-10 with Fast Gradient Sign Method (FGSM)-based adversarial training (bound 8/255 in L∞ norm) to obtain a weakly robust model, (ii) pruning 80% of weights by magnitude and resetting the surviving weights to the original initialization to obtain a boosting ticket, (iii) retraining the boosting ticket with 10-step Projected Gradient Descent (PGD)-based adversarial training (step size 2/255, bound 8/255) to obtain a strongly robust model.",
+          "label": "other"
+        },
+        {
+          "text": "This procedure (Ours-40, retrained for 40 epochs) yields test accuracies and robust accuracies comparable to or slightly better than the baseline full model trained with 100-epoch PGD-based adversarial training (Madry et al.'s method): natural accuracy 87.72% vs 86.21%; PGD-20 robust accuracy 50.37% vs 50.07%; PGD-100 robust accuracy 49.28% vs 49.32%; Carlini-Wagner (C&W) attack robust accuracy 50.92% vs 50.46%.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "The total wall-clock time for Ours-40 ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(pruning time 15,462 seconds including initial FGSM adversarial training, retraining time 54,090 seconds)",
+          "label": "elaboration"
+        },
+        {
+          "text": "is 69,552 seconds, which is 0.51 times the baseline's 134,764 seconds, saving 49% of total training time while achieving comparable or better robustness on white-box PGD-20, PGD-100, C&W attacks and black-box transfer attacks from other models.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867745350910214175::conclusion_6",
+    "global_id": "gcn_dbca5f5a1b35406a",
+    "order": 6,
+    "title": "One-shot magnitude pruning is sufficient (iterative pruning not required for boosting effects)",
+    "content": "On VGG-16 and ResNet-18 trained on CIFAR-10 with 80% magnitude pruning and the one-shot procedure (small learning rate for the dense training run and learning-rate warmup during retraining), one-shot magnitude-based pruning followed by reset-and-retrain yields boosting tickets whose validation accuracy over epochs and final test accuracy are empirically indistinguishable from those obtained via iterative pruning (multiple train-prune-reset cycles). Therefore, iterative pruning is not necessary to obtain boosting tickets in these experiments.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "On VGG-16 and ResNet-18 trained on CIFAR-10 with 80% magnitude pruning and the one-shot procedure (",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "small learning rate for the dense training run and learning-rate warmup during retraining",
+          "label": "elaboration"
+        },
+        {
+          "text": "), one-shot magnitude-based pruning followed by reset-and-retrain yields boosting tickets whose validation accuracy over epochs and final test accuracy are empirically indistinguishable from those obtained via iterative pruning (",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "multiple train-prune-reset cycles",
+          "label": "elaboration"
+        },
+        {
+          "text": ").",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Therefore,",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "iterative pruning is not necessary to obtain boosting tickets in these experiments.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:867745350910214175::conclusion_7",
+    "global_id": "gcn_3500dec02d2c4c66",
+    "order": 7,
+    "title": "Adversarial-lottery failures on small models are explained by insufficient capacity",
+    "content": "The empirical failure of prior work to find winning tickets under adversarial training on small architectures is explained by model capacity limits: small convolutional networks that are adequate for natural training become unstable when heavily pruned under adversarial training (training via Projected Gradient Descent adversarial examples) and can collapse to trivial classifiers (e.g., constant predictions), whereas larger architectures (e.g., VGG-16, WideResNet variants) do exhibit winning tickets (sub-networks matching full model accuracy) and boosting tickets under adversarial training. Experiments reproducing the small-model collapse and contrasting it with successful larger-model pruning support this explanation.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The empirical failure of prior work to find winning tickets under adversarial training on small architectures is explained by model capacity limits: small convolutional networks that are adequate for natural training become unstable when heavily pruned under adversarial training ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(training via Projected Gradient Descent adversarial examples)",
+          "label": "elaboration"
+        },
+        {
+          "text": "and can collapse to trivial classifiers ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(e.g., constant predictions)",
+          "label": "elaboration"
+        },
+        {
+          "text": ", whereas larger architectures ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(e.g., VGG-16, WideResNet variants)",
+          "label": "elaboration"
+        },
+        {
+          "text": "do exhibit winning tickets ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(sub-networks matching full model accuracy)",
+          "label": "elaboration"
+        },
+        {
+          "text": "and boosting tickets under adversarial training.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": " Experiments reproducing the small-model collapse and contrasting it with successful larger-model pruning support this explanation.",
+          "label": "proof of the assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

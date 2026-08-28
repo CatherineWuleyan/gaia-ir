@@ -1,0 +1,661 @@
+[
+  {
+    "id": "paper:1130114433545142316::conclusion_1",
+    "global_id": "gcn_0a0090b8beea4639",
+    "order": 1,
+    "title": "Lottery ticket searching: isolating subnetworks during a single training run",
+    "content": "Lottery ticket searching is a procedural mechanism that, during a single standard training run and immediately after individual training passes, simulates the effect of isolating subsets of weights by temporarily resetting selected weights back to their initial randomly assigned values (the values they held at network initialization). The temporary resets are performed only to measure consequences for model accuracy and are not committed to the model's parameters (the real weights remain as trained). By iterating many such temporary-reset \"searches\" on different subsets while the network is being trained, lottery ticket searching produces observation data describing how holding particular weights at their untrained initial values would have affected accuracy, thereby isolating the contribution of specific weight subsets without performing additional full retraining cycles.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "Lottery ticket searching",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 25
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "is a procedural mechanism that, during a single standard training run and immediately after individual training passes, simulates the effect of isolating subsets of weights by temporarily resetting selected weights back to their initial randomly assigned values",
+        "source_spans": [
+          {
+            "start": 25,
+            "end": 287
+          }
+        ],
+        "of_terms": [
+          "Lottery ticket searching"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(the values they held at network initialization).",
+        "source_spans": [
+          {
+            "start": 287,
+            "end": 337
+          }
+        ],
+        "of_terms": [
+          "initial randomly assigned values"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "other",
+        "content": "The temporary resets",
+        "source_spans": [
+          {
+            "start": 337,
+            "end": 358
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "are performed only to measure consequences for model accuracy",
+        "source_spans": [
+          {
+            "start": 358,
+            "end": 420
+          }
+        ],
+        "of_terms": [
+          "The temporary resets"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 420,
+            "end": 424
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "are not committed to the model's parameters",
+        "source_spans": [
+          {
+            "start": 424,
+            "end": 468
+          }
+        ],
+        "of_terms": [
+          "The temporary resets"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(the real weights remain as trained).",
+        "source_spans": [
+          {
+            "start": 468,
+            "end": 506
+          }
+        ],
+        "of_terms": [
+          "not committed to the model's parameters"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "By iterating many such temporary-reset \"searches\" on different subsets while the network is being trained,",
+        "source_spans": [
+          {
+            "start": 506,
+            "end": 613
+          }
+        ],
+        "of_terms": [
+          "lottery ticket searching"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "other",
+        "content": "lottery ticket searching",
+        "source_spans": [
+          {
+            "start": 613,
+            "end": 638
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "label": "elaboration",
+        "content": "produces observation data describing how holding particular weights at their untrained initial values would have affected accuracy, thereby isolating the contribution of specific weight subsets without performing additional full retraining cycles.",
+        "source_spans": [
+          {
+            "start": 638,
+            "end": 885
+          }
+        ],
+        "of_terms": [
+          "lottery ticket searching"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1130114433545142316::conclusion_2",
+    "global_id": "gcn_596265b965754b7b",
+    "order": 2,
+    "title": "Weight significance score and update rule for per-weight importance during training",
+    "content": "During a single training run of a neural network, after each training pass, a procedure called lottery ticket searching temporarily resets a selected subset of weights to their initial randomly assigned values. For a weight w that is temporarily reset during such a lottery ticket search, its new weight significance score S_w is computed from its previous score S_p and the observed change in model accuracy as\n      $$\n      S_{w}=\\frac{S_{p}+\\left(1-\\frac{|A_{\\text{before}}-A_{\\text{after}}|}{A_{\\text{before}}}\\right)}{2},\n      $$\n      where A_{\\text{before}} is the model accuracy immediately before the temporary reset and A_{\\text{after}} is the model accuracy observed after the temporary reset. The weight significance score is a per-weight importance metric scaled from 0 to 1. Each weight's significance score is initialized to 0.5 prior to any lottery ticket searches. After the full training run completes and significance scores have been accumulated for weights that were temporarily reset in at least one search, pruning proceeds in a single pass: weights are removed in ascending order of S_w until a user-specified minimum model accuracy is reached.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "During a single training run of a neural network, after each training pass, a procedure called lottery ticket searching",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 120
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "temporarily resets a selected subset of weights to their initial randomly assigned values.",
+        "source_spans": [
+          {
+            "start": 120,
+            "end": 211
+          }
+        ],
+        "of_terms": [
+          "lottery ticket searching"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "For a weight w that is temporarily reset during such a lottery ticket search, its new weight significance score S_w is computed from its previous score S_p and the observed change in model accuracy as $$ S_{w}$$",
+        "source_spans": [
+          {
+            "start": 211,
+            "end": 432
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "$$=\\frac{S_{p}+\\left(1-\\frac{|A_{\\text{before}}-A_{\\text{after}}|}{A_{\\text{before}}}\\right)}{2}, $$",
+        "source_spans": [
+          {
+            "start": 432,
+            "end": 543
+          }
+        ],
+        "of_terms": [
+          "S_w"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "other",
+        "content": "where A_{\\text{before}}",
+        "source_spans": [
+          {
+            "start": 543,
+            "end": 567
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "is the model accuracy immediately before the temporary reset",
+        "source_spans": [
+          {
+            "start": 567,
+            "end": 628
+          }
+        ],
+        "of_terms": [
+          "A_{\\text{before}}"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "other",
+        "content": "and A_{\\text{after}}",
+        "source_spans": [
+          {
+            "start": 628,
+            "end": 649
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "is the model accuracy observed after the temporary reset.",
+        "source_spans": [
+          {
+            "start": 649,
+            "end": 707
+          }
+        ],
+        "of_terms": [
+          "A_{\\text{after}}"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "other",
+        "content": "The weight significance score",
+        "source_spans": [
+          {
+            "start": 707,
+            "end": 737
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "is a per-weight importance metric scaled from 0 to 1.",
+        "source_spans": [
+          {
+            "start": 737,
+            "end": 791
+          }
+        ],
+        "of_terms": [
+          "weight significance score"
+        ]
+      },
+      {
+        "number": 11,
+        "label": "other",
+        "content": "Each weight's significance score",
+        "source_spans": [
+          {
+            "start": 791,
+            "end": 824
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "label": "elaboration",
+        "content": "is initialized to 0.5 prior to any lottery ticket searches.",
+        "source_spans": [
+          {
+            "start": 824,
+            "end": 884
+          }
+        ],
+        "of_terms": [
+          "significance score"
+        ]
+      },
+      {
+        "number": 13,
+        "label": "other",
+        "content": "After the full training run completes and significance scores have been accumulated for weights that were temporarily reset in at least one search, pruning",
+        "source_spans": [
+          {
+            "start": 884,
+            "end": 1040
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "elaboration",
+        "content": "proceeds in a single pass: weights are removed in ascending order of S_w until a user-specified minimum model accuracy is reached.",
+        "source_spans": [
+          {
+            "start": 1040,
+            "end": 1170
+          }
+        ],
+        "of_terms": [
+          "pruning"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1130114433545142316::conclusion_3",
+    "global_id": "gcn_388623e825374415",
+    "order": 3,
+    "title": "BINGO: a one-shot pruning pipeline that collects in-training significance and prunes post-training without retraining",
+    "content": "BINGO is an end-to-end pruning pipeline that combines a procedure called lottery ticket searching and a per-weight importance metric called the weight significance score to enable one-shot pruning after a single training run. During lottery ticket searching, after each training pass of the neural network, a selected subset of weights are temporarily reset to their initial randomly assigned values, and the incurred change in model accuracy is recorded. For each weight w that is temporarily reset, its significance score S_w is updated using the formula\n      $$\n      S_{w} = \\frac{S_{p} + \\left(1 - \\frac{|A_{\\text{before}} - A_{\\text{after}}|}{A_{\\text{before}}}\\right)}{2},\n      $$\n      where S_p is the weight's previous significance score, A_{\\text{before}} is the model accuracy before the reset, and A_{\\text{after}} is the model accuracy after the reset. The weight significance score is initialized to 0.5 for all weights prior to any lottery ticket searches. Once training terminates, the pipeline prunes weights in order of increasing S_w (lowest significance first) until a chosen minimum accuracy threshold is reached—all without performing additional full training-and-reset cycles on the pruned architectures.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "BINGO is an end-to-end pruning pipeline that combines a procedure called lottery ticket searching and a per-weight importance metric called the weight significance score",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 170
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "motivation",
+        "content": "to enable one-shot pruning after a single training run.",
+        "source_spans": [
+          {
+            "start": 170,
+            "end": 226
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "During lottery ticket searching,",
+        "source_spans": [
+          {
+            "start": 226,
+            "end": 259
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "after each training pass of the neural network, a selected subset of weights are temporarily reset to their initial randomly assigned values, and the incurred change in model accuracy is recorded.",
+        "source_spans": [
+          {
+            "start": 259,
+            "end": 456
+          }
+        ],
+        "of_terms": [
+          "lottery ticket searching"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "other",
+        "content": "For each weight w that is temporarily reset,",
+        "source_spans": [
+          {
+            "start": 456,
+            "end": 501
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "other",
+        "content": "its significance score S_w is updated using the formula",
+        "source_spans": [
+          {
+            "start": 501,
+            "end": 563
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "elaboration",
+        "content": "$$ S_{w} = \\frac{S_{p} + \\left(1 - \\frac{|A_{\\text{before}} - A_{\\text{after}}|}{A_{\\text{before}}}\\right)}{2}, $$ where S_p is the weight's previous significance score, A_{\\text{before}} is the model accuracy before the reset, and A_{\\text{after}} is the model accuracy after the reset.",
+        "source_spans": [
+          {
+            "start": 563,
+            "end": 869
+          }
+        ],
+        "of_terms": [
+          "weight significance score"
+        ]
+      },
+      {
+        "number": 8,
+        "label": "other",
+        "content": "The weight significance score",
+        "source_spans": [
+          {
+            "start": 869,
+            "end": 899
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "label": "elaboration",
+        "content": "is initialized to 0.5 for all weights prior to any lottery ticket searches.",
+        "source_spans": [
+          {
+            "start": 899,
+            "end": 975
+          }
+        ],
+        "of_terms": [
+          "weight significance score"
+        ]
+      },
+      {
+        "number": 10,
+        "label": "elaboration",
+        "content": "Once training terminates, the pipeline prunes weights in order of increasing S_w (lowest significance first) until a chosen minimum accuracy threshold is reached—all without performing additional full training-and-reset cycles on the pruned architectures.",
+        "source_spans": [
+          {
+            "start": 975,
+            "end": 1230
+          }
+        ],
+        "of_terms": [
+          "one-shot pruning"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1130114433545142316::conclusion_4",
+    "global_id": "gcn_73b9df1184ba4f16",
+    "order": 4,
+    "title": "Empirical MNIST benchmark: BINGO achieves the 90%-accuracy pruning target faster but at lower final sparsity than IMP",
+    "content": "On a feed-forward model trained on the MNIST dataset with an initial test accuracy of 97% and pruned until the model accuracy dropped to 90%, the measured training+pruning times and resulting sparsities were: iterative magnitude pruning (IMP) required 122 minutes and pruned 85% of total weights; the BINGO pruning pipeline (which uses lottery ticket searching and weight significance scores to prune weights after a single training run without retraining) required 17 minutes and pruned 71% of total weights. From these numbers, BINGO reduced the measured training+pruning wall-clock time relative to IMP by approximately 86.07% while yielding a final pruned fraction that is 14 percentage points lower than IMP under the same 97%→90% accuracy pruning target.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "On a feed-forward model trained on the MNIST dataset with an initial test accuracy of 97% and pruned until the model accuracy dropped to 90%,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 142
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "framing",
+        "content": "the measured training+pruning times and resulting sparsities were:",
+        "source_spans": [
+          {
+            "start": 142,
+            "end": 209
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "论据",
+        "content": "iterative magnitude pruning required 122 minutes",
+        "source_spans": [
+          {
+            "start": 209,
+            "end": 237
+          },
+          {
+            "start": 243,
+            "end": 264
+          }
+        ],
+        "supports": [
+          12
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(IMP)",
+        "source_spans": [
+          {
+            "start": 237,
+            "end": 243
+          }
+        ],
+        "of_terms": [
+          "iterative magnitude pruning"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 264,
+            "end": 268
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "论据",
+        "content": "pruned 85% of total weights;",
+        "source_spans": [
+          {
+            "start": 268,
+            "end": 297
+          }
+        ],
+        "supports": [
+          14
+        ]
+      },
+      {
+        "number": 7,
+        "label": "论据",
+        "content": "the BINGO pruning pipeline required 17 minutes",
+        "source_spans": [
+          {
+            "start": 297,
+            "end": 324
+          },
+          {
+            "start": 457,
+            "end": 477
+          }
+        ],
+        "supports": [
+          12
+        ]
+      },
+      {
+        "number": 8,
+        "label": "elaboration",
+        "content": "(which uses lottery ticket searching and weight significance scores to prune weights after a single training run without retraining)",
+        "source_spans": [
+          {
+            "start": 324,
+            "end": 457
+          }
+        ],
+        "of_terms": [
+          "the BINGO pruning pipeline"
+        ]
+      },
+      {
+        "number": 9,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 477,
+            "end": 481
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "label": "论据",
+        "content": "pruned 71% of total weights.",
+        "source_spans": [
+          {
+            "start": 481,
+            "end": 510
+          }
+        ],
+        "supports": [
+          14
+        ]
+      },
+      {
+        "number": 11,
+        "label": "论证",
+        "content": "From these numbers,",
+        "source_spans": [
+          {
+            "start": 510,
+            "end": 530
+          }
+        ],
+        "supports": [
+          12,
+          14
+        ]
+      },
+      {
+        "number": 12,
+        "label": "assertion",
+        "content": "BINGO reduced the measured training+pruning wall-clock time relative to IMP by approximately 86.07%",
+        "source_spans": [
+          {
+            "start": 530,
+            "end": 630
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "label": "connection",
+        "content": "while",
+        "source_spans": [
+          {
+            "start": 630,
+            "end": 636
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "label": "assertion",
+        "content": "yielding a final pruned fraction that is 14 percentage points lower than IMP under the same 97%→90% accuracy pruning target.",
+        "source_spans": [
+          {
+            "start": 636,
+            "end": 760
+          }
+        ]
+      }
+    ]
+  }
+]

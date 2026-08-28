@@ -1,0 +1,21 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "instance_number": 2,
+    "instance_content": "(mixup; SpecAugment; spectrum correction; pitch shift; speed change; random noise; mix audios)",
+    "instance_span": {
+      "start": 198,
+      "end": 293
+    },
+    "targets": [
+      {
+        "term": "data augmentation",
+        "certainty": "certain",
+        "content": "data augmentation",
+        "start": 180,
+        "end": 197,
+        "candidates": []
+      }
+    ]
+  }
+]

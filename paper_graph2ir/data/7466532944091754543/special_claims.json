@@ -1,0 +1,40 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 2,
+    "text": "On a 3-layer fully-connected network with two hidden layers of 256 units each (784→256→256→10, ReLU activation, unit masking on the two hidden layers), trained with SGD (learning rate η=0.01) for 5 structural-edit cycles with 20 epochs per cycle, the GROW method as described in 【3】 and the PRUNE method as described in 【5】 produce closely matched winning-ticket final accuracy and winning-ticket trajectory-average accuracy across compactness budgets c∈{20,30,40,50}%, where c is the fraction of weights retained across growable and prunable layers, with no consistent ordering, on IID (independent and identically distributed) MNIST (10-class handwritten-digit classification, 60,000 training images, 10,000 test images, 28×28 grayscale), class-incremental Split-MNIST (5 tasks of 2 classes each, shared 10-way classifier head, no task-identity routing, Tiny Experience Replay buffer storing 50 samples per class), and the analogous Split-FashionMNIST setting.",
+    "certain_instances_given": [
+      7,
+      8,
+      10
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_9",
+    "claim_number": 1,
+    "text": "On CIFAR-100 with the same hybrid ConvNet (dense two-layer convolutional trunk and four-layer fully-connected masked head), retrained-mask winning-ticket accuracy (accuracy after freezing the final mask, reinitializing model weights, and retraining from scratch) is not monotonically aligned with Cycle-TAA (trajectory-average accuracy during the structural-edit procedure) across the six intervention methods: vanilla GROW, Two-Speed, Moment Transplant, GradMax, Rand. Smooth-Leaky, and Net2Wider.",
+    "certain_instances_given": [
+      5
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_9",
+    "claim_number": 6,
+    "text": "GradMax and Rand. Smooth-Leaky, which substantially improve edit-time integration (as measured by Cycle-TAA, i.e., trajectory-average accuracy during the structural-edit procedure), do not necessarily produce better final retrainable subnetworks (as measured by retrained-mask winning-ticket accuracy, i.e., accuracy after freezing the final mask, reinitializing model weights, and retraining from scratch).",
+    "certain_instances_given": [
+      8
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_11",
+    "claim_number": 11,
+    "text": "Among growth-family methods, GROW combined with Rand. Smooth-Leaky (a smoother randomized leaky activation function) is the only growth variant that becomes competitive with or outperforms PRUNE (iterative magnitude pruning with weight rewinding) in Split-CIFAR100.",
+    "certain_instances_given": [
+      12
+    ],
+    "uncertain_instances_given": []
+  }
+]

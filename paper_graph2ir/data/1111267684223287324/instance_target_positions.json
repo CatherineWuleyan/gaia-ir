@@ -1,0 +1,105 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "instance_number": 9,
+    "instance_content": "( 1–50 images per class)",
+    "instance_span": {
+      "start": 365,
+      "end": 386
+    },
+    "targets": [
+      {
+        "term": "distilled synthetic set",
+        "certainty": "certain",
+        "content": "distilled synthetic set",
+        "start": 334,
+        "end": 357,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_2",
+    "instance_number": 7,
+    "instance_content": "(ConvNet-3 on CIFAR-10 and ResNet-10 on ImageNet-10)",
+    "instance_span": {
+      "start": 353,
+      "end": 403
+    },
+    "targets": [
+      {
+        "term": "studied settings",
+        "certainty": "certain",
+        "content": "studied settings",
+        "start": 329,
+        "end": 345,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_5",
+    "instance_number": 3,
+    "instance_content": "(Efficient Dataset Condensation tuned for the target architecture)",
+    "instance_span": {
+      "start": 101,
+      "end": 165
+    },
+    "targets": [
+      {
+        "term": "trajectory-matching distilled datasets",
+        "certainty": "certain",
+        "content": "trajectory-matching distilled datasets",
+        "start": 11,
+        "end": 49,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_5",
+    "instance_number": 8,
+    "instance_content": "(10 images per class)",
+    "instance_span": {
+      "start": 375,
+      "end": 394
+    },
+    "targets": [
+      {
+        "term": "distilled settings",
+        "certainty": "certain",
+        "content": "distilled settings",
+        "start": 355,
+        "end": 373,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_5",
+    "instance_number": 14,
+    "instance_content": "(CIFAR-100 or larger datasets with poorer distilled accuracy)",
+    "instance_span": {
+      "start": 630,
+      "end": 689
+    },
+    "targets": [
+      {
+        "term": "more complex tasks",
+        "certainty": "certain",
+        "content": "more complex tasks",
+        "start": 566,
+        "end": 584,
+        "candidates": []
+      },
+      {
+        "term": "distilled data under-performs",
+        "certainty": "certain",
+        "content": "distilled data under-performs",
+        "start": 593,
+        "end": 622,
+        "candidates": []
+      }
+    ]
+  }
+]

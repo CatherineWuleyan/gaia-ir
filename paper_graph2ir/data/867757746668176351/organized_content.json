@@ -1,0 +1,295 @@
+[
+  {
+    "id": "paper:867757746668176351::conclusion_1",
+    "global_id": "gcn_394af066a2f14012",
+    "order": 1,
+    "title": "Stabilized lottery ticket pruning achieves BLEU/TER comparable to magnitude pruning up to approximately 85% sparsity on Transformer WMT14 En→De/En→Fr; magnitude pruning superior above 85%",
+    "content": "On the Transformer base architecture (60 M parameters) trained for WMT 2014 English→German and English→French, stabilized lottery ticket (SLT) pruning—with masks computed from a converged model and applied after rewinding to an intermediate checkpoint at \\(t=25{,}000\\) iterations (5 % of the 500 k iteration training)—produces BLEU and TER values that are comparable to magnitude pruning (MP) for sparsity levels up to about \\(85\\%\\), while for sparsities above \\(85\\%\\) MP yields higher BLEU / lower TER than SLT.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "On the Transformer base architecture (60 M parameters) trained for WMT 2014 English→German and English→French, stabilized lottery ticket (SLT) pruning produces BLEU and TER values that are comparable to magnitude pruning (MP) for sparsity levels up to about \\(85\\%\\),",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 150
+          },
+          {
+            "start": 319,
+            "end": 436
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "—with masks computed from a converged model and applied after rewinding to an intermediate checkpoint at \\(t=25{,}000\\) iterations (5 % of the 500 k iteration training)—",
+        "source_spans": [
+          {
+            "start": 150,
+            "end": 319
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "relation of the assertions [1,4]",
+        "content": "while",
+        "source_spans": [
+          {
+            "start": 436,
+            "end": 442
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "for sparsities above \\(85\\%\\) MP yields higher BLEU / lower TER than SLT.",
+        "source_spans": [
+          {
+            "start": 442,
+            "end": 515
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867757746668176351::conclusion_2",
+    "global_id": "gcn_07d6b323abd249c3",
+    "order": 2,
+    "title": "SLT-MP two-stage pruning procedure improves accuracy at high sparsity",
+    "content": "SLT-MP is a two-stage unstructured pruning procedure: first, stabilized lottery ticket (SLT) pruning is used to obtain a mask \\(m\\) at an intermediate sparsity \\(s_i\\) (possibly by iterative SLT steps), the rewound‑and‑masked initialization \\(\\theta_t \\odot m\\) is formed (where \\(\\theta_t\\) is the parameter vector at the rewinding checkpoint after 25 000 iterations, i.e., 5 % of the 500 k training), and then training is continued while applying magnitude pruning (MP) initialized with \\(s_0 = s_i\\) to reach target sparsity \\(s_T\\). On the Transformer base model (60 M parameters) for WMT 14 English→German and English→French, SLT‑MP yields higher BLEU / lower TER than any single technique tested (MP, LT, SLT, CLT, MP‑SLT), especially at high sparsity: for example, on En→De at \\(85\\%\\) sparsity SLT‑MP obtains BLEU \\(24.9\\) and TER \\(66.4\\) versus MP \\(23.9/67.7\\) and SLT \\(23.7/68.5\\); at \\(90\\%\\) sparsity SLT‑MP \\(23.5/68.4\\) versus MP \\(22.9/69.0\\). On En→Fr, SLT‑MP similarly outperforms, e.g., at \\(80\\%\\) sparsity SLT‑MP BLEU \\(38.0\\) TER \\(58.7\\) vs MP \\(37.5/59.1\\).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "SLT-MP is a two-stage unstructured pruning procedure: first, stabilized lottery ticket (SLT) pruning is used to obtain a mask \\(m\\) at an intermediate sparsity \\(s_i\\) (possibly by iterative SLT steps), the rewound‑and‑masked initialization \\(\\theta_t \\odot m\\) is formed (where \\(\\theta_t\\) is the parameter vector at the rewinding checkpoint after 25 000 iterations, i.e., 5 % of the 500 k training), and then training is continued while applying magnitude pruning (MP) initialized with \\(s_0 = s_i\\) to reach target sparsity \\(s_T\\).",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 537
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "On the Transformer base model (60 M parameters) for WMT 14 English→German and English→French, SLT‑MP yields higher BLEU / lower TER than any single technique tested (MP, LT, SLT, CLT, MP‑SLT), especially at high sparsity:",
+        "source_spans": [
+          {
+            "start": 537,
+            "end": 759
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "example of the assertion [2]",
+        "content": "for example, on En→De at \\(85\\%\\) sparsity SLT‑MP obtains BLEU \\(24.9\\) and TER \\(66.4\\) versus MP \\(23.9/67.7\\) and SLT \\(23.7/68.5\\); at \\(90\\%\\) sparsity SLT‑MP \\(23.5/68.4\\) versus MP \\(22.9/69.0\\). On En→Fr, SLT‑MP similarly outperforms, e.g., at \\(80\\%\\) sparsity SLT‑MP BLEU \\(38.0\\) TER \\(58.7\\) vs MP \\(37.5/59.1\\).",
+        "source_spans": [
+          {
+            "start": 759,
+            "end": 1083
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867757746668176351::conclusion_3",
+    "global_id": "gcn_17a42232f5aa4929",
+    "order": 3,
+    "title": "Initial parameter signs dominate over values for successful sparse training of Transformer base on WMT14 En→De and En→Fr",
+    "content": "For the Transformer base models (60 M parameters) trained on WMT 14 English→German and English→French, Constant Lottery Ticket (CLT) pruning—where after selecting the mask \\(m\\) the remaining parameters in each layer \\(l\\) are set to \\(\\operatorname{sign}(p)\\cdot\\alpha_l\\) with \\(\\alpha_l = \\sqrt{\\frac{6}{n_{l_{\\text{in}}}+n_{l_{\\text{out}}}}}\\)—retains high performance and often outperforms stabilized lottery ticket (SLT) pruning. Empirically, keeping original signs but resetting magnitudes preserves BLEU/TER across many sparsity levels; conversely, randomizing signs after pruning to \\(50\\%\\) sparsity reduced En→De BLEU from \\(26.7\\) to \\(24.6\\) (TER worsened from \\(65.2\\) to \\(67.5\\)), demonstrating that the sign pattern of the initial parameters is a primary factor for successful sparse training in these Transformer experiments.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For the Transformer base models (60 M parameters) trained on WMT 14 English→German and English→French, Constant Lottery Ticket (CLT) pruning— retains high performance and often outperforms stabilized lottery ticket (SLT) pruning.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 141
+          },
+          {
+            "start": 348,
+            "end": 436
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "where after selecting the mask \\(m\\) the remaining parameters in each layer \\(l\\) are set to \\(\\operatorname{sign}(p)\\cdot\\alpha_l\\) with \\(\\alpha_l = \\sqrt{\\frac{6}{n_{l_{\\text{in}}}+n_{l_{\\text{out}}}}}\\)—",
+        "source_spans": [
+          {
+            "start": 141,
+            "end": 348
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [5]",
+        "content": "Empirically, keeping original signs but resetting magnitudes preserves BLEU/TER across many sparsity levels;",
+        "source_spans": [
+          {
+            "start": 436,
+            "end": 545
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "proof of the assertion [5]",
+        "content": "conversely, randomizing signs after pruning to \\(50\\%\\) sparsity reduced En→De BLEU from \\(26.7\\) to \\(24.6\\) (TER worsened from \\(65.2\\) to \\(67.5\\)),",
+        "source_spans": [
+          {
+            "start": 545,
+            "end": 697
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "demonstrating that the sign pattern of the initial parameters is a primary factor for successful sparse training in these Transformer experiments.",
+        "source_spans": [
+          {
+            "start": 697,
+            "end": 843
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867757746668176351::conclusion_4",
+    "global_id": "gcn_b862c58396c74f94",
+    "order": 4,
+    "title": "Magnitude pruning can serve as a method to discover masks useful as winning lottery tickets (MP-SLT) on Transformer",
+    "content": "Using magnitude pruning (MP) first to obtain a trained sparse network and then using the MP‑derived mask \\(m\\) as the mask for a subsequent stabilized lottery ticket (SLT)-like rewinding training (MP‑SLT) on the Transformer base model (60 M parameters) for WMT 14 English→German and English→French yields models that perform slightly better than pure SLT in some settings, indicating that MP‑derived masks can be used to identify effective sparse initializations (i.e., potential winning lottery tickets) for Transformer‑scale tasks.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Using magnitude pruning (MP) first to obtain a trained sparse network and then using the MP‑derived mask \\(m\\) as the mask for a subsequent stabilized lottery ticket (SLT)-like rewinding training (MP‑SLT) on the Transformer base model (60 M parameters) for WMT 14 English→German and English→French yields models that perform slightly better than pure SLT in some settings,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 373
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "relation of the assertions [1,3]",
+        "content": "indicating that",
+        "source_spans": [
+          {
+            "start": 373,
+            "end": 389
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "MP‑derived masks can be used to identify effective sparse initializations (i.e., potential winning lottery tickets) for Transformer‑scale tasks.",
+        "source_spans": [
+          {
+            "start": 389,
+            "end": 533
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867757746668176351::conclusion_5",
+    "global_id": "gcn_936d41b0f7a449e4",
+    "order": 5,
+    "title": "Adafactor optimizer yields 0.5 BLEU improvement over Adam for Transformer base on WMT14 En→De and En→Fr",
+    "content": "In initial comparisons on the Transformer base (60 M parameters) for WMT 14 English→German and English→French, Adafactor yielded an improvement of approximately \\(0.5\\) BLEU compared to Adam; consequently, Adafactor with learning rate schedule \\(lr(t) = 1/\\max(t, w)\\) and \\(w=10{,}000\\) warmup steps was selected for all experiments in this study.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "In initial comparisons on the Transformer base (60 M parameters) for WMT 14 English→German and English→French, Adafactor yielded an improvement of approximately \\(0.5\\) BLEU compared to Adam;",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 192
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "other",
+        "content": "consequently, Adafactor with learning rate schedule \\(lr(t) = 1/\\max(t, w)\\) and \\(w=10{,}000\\) warmup steps was selected for all experiments in this study.",
+        "source_spans": [
+          {
+            "start": 192,
+            "end": 348
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867757746668176351::conclusion_6",
+    "global_id": "gcn_aee71ff4dec44fc2",
+    "order": 6,
+    "title": "Iterative SLT pruning causes parameter magnitude growth and numerical instability at extreme sparsity on Transformer",
+    "content": "Iterative stabilized lottery ticket (SLT) pruning on the Transformer base model (60 M parameters) trained on WMT 14 English→German causes the magnitudes of the remaining parameters to increase with every pruning step; at extreme sparsity (e.g., \\(98\\%\\)) the remaining weights exceeded values of \\(100\\), which renders checkpoint averaging ineffective and makes subsequent magnitude‑based fine‑tuning difficult or numerically unstable. This practical numerical instability motivated operational modifications in the SLT‑MP procedure (for example, pruning directly to \\(50\\%\\) on the first SLT iteration in SLT‑MP).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Iterative stabilized lottery ticket (SLT) pruning on the Transformer base model (60 M parameters) trained on WMT 14 English→German causes the magnitudes of the remaining parameters to increase with every pruning step;",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 218
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "example of the assertion [1]",
+        "content": "at extreme sparsity (e.g., \\(98\\%\\)) the remaining weights exceeded values of \\(100\\),",
+        "source_spans": [
+          {
+            "start": 218,
+            "end": 305
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "which renders checkpoint averaging ineffective and makes subsequent magnitude‑based fine‑tuning difficult or numerically unstable.",
+        "source_spans": [
+          {
+            "start": 305,
+            "end": 436
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "motivation",
+        "content": "This practical numerical instability motivated operational modifications in the SLT‑MP procedure (for example, pruning directly to \\(50\\%\\) on the first SLT iteration in SLT‑MP).",
+        "source_spans": [
+          {
+            "start": 436,
+            "end": 614
+          }
+        ]
+      }
+    ]
+  }
+]

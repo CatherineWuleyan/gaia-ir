@@ -1,0 +1,40 @@
+[
+  {
+    "conclusion": "conclusion_2",
+    "instance_number": 13,
+    "instance_content": "(a winning ticket)",
+    "instance_span": {
+      "start": 739,
+      "end": 755
+    },
+    "targets": [
+      {
+        "term": "the local context",
+        "certainty": "certain",
+        "content": "the local context",
+        "start": 714,
+        "end": 731,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_5",
+    "instance_number": 7,
+    "instance_content": "(under distribution shifts)",
+    "instance_span": {
+      "start": 338,
+      "end": 363
+    },
+    "targets": [
+      {
+        "term": "these conditions are violated",
+        "certainty": "certain",
+        "content": "these conditions are violated",
+        "start": 301,
+        "end": 330,
+        "candidates": []
+      }
+    ]
+  }
+]

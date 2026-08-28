@@ -1,0 +1,677 @@
+[
+  {
+    "id": "paper:1068413726366892118::conclusion_1",
+    "global_id": "gcn_0b131809d179427c",
+    "order": 1,
+    "title": "Well-initialized Lottery Ticket Hypothesis (WLTH)",
+    "content": "Well-initialized Lottery Ticket Hypothesis (WLTH): \"A well-initialized dense neural network contains globally minimal solutions that can retain the prior class knowledge while providing room to learn the new class knowledge through isolated fine-tuning of the networks or subnetworks.\" WLTH posits that when starting from a well-pretrained (well-initialized) transformer backbone, there exist per-task subnetworks or task-adaptive soft-networks that (i) preserve previously learned classes and (ii) admit isolated fine-tuning to learn new classes without catastrophic forgetting.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Well-initialized Lottery Ticket Hypothesis (WLTH): ",
+          "label": "framing"
+        },
+        {
+          "text": "\"A well-initialized dense neural network contains globally minimal solutions that can retain the prior class knowledge while providing room to learn the new class knowledge through isolated fine-tuning of the networks or subnetworks.\"",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " WLTH posits that ",
+          "label": "framing"
+        },
+        {
+          "text": "when starting from a well-pretrained (well-initialized) transformer backbone, there exist per-task subnetworks or task-adaptive soft-networks that (i) preserve previously learned classes and (ii) admit isolated fine-tuning to learn new classes without catastrophic forgetting.",
+          "label": "elaboration",
+          "of": [
+            1
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1068413726366892118::conclusion_2",
+    "global_id": "gcn_83987e7c48944988",
+    "order": 2,
+    "title": "Soft-TransFormers (Soft-TF): algorithm and operational definition",
+    "content": "Soft-TransFormers (Soft-TF) is a method that (a) keeps pre-trained transformer parameters $\\boldsymbol{\\theta}$ frozen and (b) learns per-task task-adaptive soft-parameters $\\boldsymbol{m}_t$ (real-valued masks applied elementwise) together with shared G-prompts $\\boldsymbol{g}$, task E-prompts $\\{\\boldsymbol{e}_t\\}$, task keys $\\{\\boldsymbol{k}_t\\}$, and a task classifier $f_{\\phi}$. The method instantiates a soft-MSA layer by applying masks to projection matrices so that a multi-head attention projection $\\boldsymbol{w}^{O},\\boldsymbol{w}_{i}^{Q},\\boldsymbol{w}_{i}^{K},\\boldsymbol{w}_{i}^{V}$ is used in computation as $\\boldsymbol{w}^{O}\\odot \\boldsymbol{m}^{O}$ and $\\boldsymbol{w}_i^{Q}\\odot \\boldsymbol{m}^Q$, etc., producing $ \\operatorname{MSA}(\\boldsymbol{h}_Q,\\boldsymbol{h}_K,\\boldsymbol{h}_V)=\\operatorname{Concat}(\\boldsymbol{h}_1,\\dots,\\boldsymbol{h}_n)\\;(\\boldsymbol{w}^{O}\\odot \\boldsymbol{m}^{O}) $ with $\\boldsymbol{h}_i=\\operatorname{Attention}(\\boldsymbol{h}_Q(\\boldsymbol{w}_i^{Q}\\odot \\boldsymbol{m}^Q),\\boldsymbol{h}_K(\\boldsymbol{w}_i^{K}\\odot \\boldsymbol{m}^K),\\boldsymbol{h}_V(\\boldsymbol{w}_i^{V}\\odot \\boldsymbol{m}^V))$. Training optimizes\n      $$\n      \\min_{\\boldsymbol{g},\\boldsymbol{e}_t,\\boldsymbol{m}_t,\\boldsymbol{k}_t,\\phi}\\; \\mathcal{L}\\big(f_{\\phi}(f_{\\boldsymbol{g},\\boldsymbol{e}_t,\\boldsymbol{m}_t}(\\boldsymbol{x})),y\\big)+\\lambda\\mathcal{L}_{\\text{match}}(\\boldsymbol{x},\\boldsymbol{k}_t),\\quad \\boldsymbol{x}\\in\\mathcal{D}_t,\n      $$\n      where $\\mathcal{L}$ is cross-entropy and $\\mathcal{L}_{\\text{match}}(\\boldsymbol{x},\\boldsymbol{k}_t)=\\gamma(q(\\boldsymbol{x}),\\boldsymbol{k}_t)$ is cosine matching of the [class] token feature $q(\\boldsymbol{x})$. During training for each task $t$, the task-specific E-prompt $\\boldsymbol{e}_t$, soft-network $\\boldsymbol{m}_t$, and task key $\\boldsymbol{k}_t$ are selected; the shared G-prompt $\\boldsymbol{g}$ and $\\boldsymbol{e}_t$ are attached to the designated layers; and all learnable parameters $\\phi$, $\\boldsymbol{g}$, $\\boldsymbol{E}$, $\\boldsymbol{M}$, $\\boldsymbol{K}$ are updated by backpropagation on the loss. At test time, task inference is performed either by Prompt ID ($\\arg\\min_t \\gamma(q(\\boldsymbol{x}),\\boldsymbol{k}_t)$) or Gradient ID (one-shot inference by computing $\\hat t=\\arg\\min_t \\partial \\mathcal{H}/\\partial \\alpha_t$ with $\\alpha_t$ mixing weights over learned subnetworks, where $\\mathcal{H}$ is the entropy function). After task inference, the corresponding E-prompt $\\boldsymbol{e}_{\\hat t}$ and subnetwork $\\boldsymbol{m}_{\\hat t}$ are attached together with $\\boldsymbol{g}$ to form the prompted architecture for prediction.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Soft-TransFormers (Soft-TF)",
+          "label": "other"
+        },
+        {
+          "text": " is a method that (a) keeps pre-trained transformer parameters $\\boldsymbol{\\theta}$ frozen and (b) learns per-task task-adaptive soft-parameters $\\boldsymbol{m}_t$ ",
+          "label": "elaboration",
+          "of_terms": [
+            "Soft-TransFormers (Soft-TF)"
+          ]
+        },
+        {
+          "text": "(real-valued masks applied elementwise)",
+          "label": "elaboration",
+          "of_terms": [
+            "$\\boldsymbol{m}_t$"
+          ]
+        },
+        {
+          "text": " together with shared G-prompts $\\boldsymbol{g}$, task E-prompts $\\{\\boldsymbol{e}_t\\}$, task keys $\\{\\boldsymbol{k}_t\\}$, and a task classifier $f_{\\phi}$.",
+          "label": "elaboration",
+          "of_terms": [
+            "Soft-TransFormers (Soft-TF)"
+          ]
+        },
+        {
+          "text": " The method instantiates a soft-MSA layer",
+          "label": "other"
+        },
+        {
+          "text": " by applying masks to projection matrices so that a multi-head attention projection $\\boldsymbol{w}^{O},\\boldsymbol{w}_{i}^{Q},\\boldsymbol{w}_{i}^{K},\\boldsymbol{w}_{i}^{V}$ is used in computation as $\\boldsymbol{w}^{O}\\odot \\boldsymbol{m}^{O}$ and $\\boldsymbol{w}_i^{Q}\\odot \\boldsymbol{m}^Q$, etc., producing $ \\operatorname{MSA}(\\boldsymbol{h}_Q,\\boldsymbol{h}_K,\\boldsymbol{h}_V)=\\operatorname{Concat}(\\boldsymbol{h}_1,\\dots,\\boldsymbol{h}_n)\\;(\\boldsymbol{w}^{O}\\odot \\boldsymbol{m}^{O}) $ with $\\boldsymbol{h}_i=\\operatorname{Attention}(\\boldsymbol{h}_Q(\\boldsymbol{w}_i^{Q}\\odot \\boldsymbol{m}^Q),\\boldsymbol{h}_K(\\boldsymbol{w}_i^{K}\\odot \\boldsymbol{m}^K),\\boldsymbol{h}_V(\\boldsymbol{w}_i^{V}\\odot \\boldsymbol{m}^V))$.",
+          "label": "elaboration",
+          "of_terms": [
+            "soft-MSA layer"
+          ]
+        },
+        {
+          "text": " Training optimizes",
+          "label": "other"
+        },
+        {
+          "text": "\n      $$\n      \\min_{\\boldsymbol{g},\\boldsymbol{e}_t,\\boldsymbol{m}_t,\\boldsymbol{k}_t,\\phi}\\; \\mathcal{L}\\big(f_{\\phi}(f_{\\boldsymbol{g},\\boldsymbol{e}_t,\\boldsymbol{m}_t}(\\boldsymbol{x})),y\\big)+\\lambda\\mathcal{L}_{\\text{match}}(\\boldsymbol{x},\\boldsymbol{k}_t),\\quad \\boldsymbol{x}\\in\\mathcal{D}_t,\n      $$\n      ",
+          "label": "elaboration",
+          "of_terms": [
+            "Training optimizes"
+          ]
+        },
+        {
+          "text": "where ",
+          "label": "other"
+        },
+        {
+          "text": "$\\mathcal{L}$",
+          "label": "other"
+        },
+        {
+          "text": " is cross-entropy ",
+          "label": "elaboration",
+          "of_terms": [
+            "$\\mathcal{L}$"
+          ]
+        },
+        {
+          "text": "and ",
+          "label": "connection"
+        },
+        {
+          "text": "$\\mathcal{L}_{\\text{match}}(\\boldsymbol{x},\\boldsymbol{k}_t)=\\gamma(q(\\boldsymbol{x}),\\boldsymbol{k}_t)$",
+          "label": "other"
+        },
+        {
+          "text": " is cosine matching of the [class] token feature $q(\\boldsymbol{x})$.",
+          "label": "elaboration",
+          "of_terms": [
+            "$\\mathcal{L}_{\\text{match}}(\\boldsymbol{x},\\boldsymbol{k}_t)=\\gamma(q(\\boldsymbol{x}),\\boldsymbol{k}_t)$"
+          ]
+        },
+        {
+          "text": " During training",
+          "label": "other"
+        },
+        {
+          "text": " for each task $t$, the task-specific E-prompt $\\boldsymbol{e}_t$, soft-network $\\boldsymbol{m}_t$, and task key $\\boldsymbol{k}_t$ are selected; the shared G-prompt $\\boldsymbol{g}$ and $\\boldsymbol{e}_t$ are attached to the designated layers; and all learnable parameters $\\phi$, $\\boldsymbol{g}$, $\\boldsymbol{E}$, $\\boldsymbol{M}$, $\\boldsymbol{K}$ are updated by backpropagation on the loss.",
+          "label": "elaboration",
+          "of_terms": [
+            "During training"
+          ]
+        },
+        {
+          "text": " At test time",
+          "label": "other"
+        },
+        {
+          "text": ", task inference is performed either by Prompt ID",
+          "label": "other"
+        },
+        {
+          "text": " ($\\arg\\min_t \\gamma(q(\\boldsymbol{x}),\\boldsymbol{k}_t)$)",
+          "label": "elaboration",
+          "of_terms": [
+            "Prompt ID"
+          ]
+        },
+        {
+          "text": " or",
+          "label": "connection"
+        },
+        {
+          "text": " Gradient ID",
+          "label": "other"
+        },
+        {
+          "text": " (one-shot inference by computing $\\hat t=\\arg\\min_t \\partial \\mathcal{H}/\\partial \\alpha_t$ with $\\alpha_t$ mixing weights over learned subnetworks, where $\\mathcal{H}$ is the entropy function).",
+          "label": "elaboration",
+          "of_terms": [
+            "Gradient ID"
+          ]
+        },
+        {
+          "text": " After task inference",
+          "label": "other"
+        },
+        {
+          "text": ", the corresponding E-prompt $\\boldsymbol{e}_{\\hat t}$ and subnetwork $\\boldsymbol{m}_{\\hat t}$ are attached together with $\\boldsymbol{g}$ to form the prompted architecture for prediction.",
+          "label": "elaboration",
+          "of_terms": [
+            "After task inference"
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1068413726366892118::conclusion_3",
+    "global_id": "gcn_fbbf55dd79104252",
+    "order": 3,
+    "title": "Convergence bound for Soft-TransFormers under convex-Lipschitz assumptions",
+    "content": "The convergence analysis considers a convex-Lipschitz loss function $f$ with gradient norm bounded by $\\rho$, i.e., $\\|\\boldsymbol{v}_t\\|\\le \\rho$ for per-iteration gradient vectors $\\boldsymbol{v}_t$, and an update rule $\\boldsymbol{w}^{(t+1)}=\\boldsymbol{w}^{(t)}-\\eta\\boldsymbol{v}_t$ applied sequentially over $T$ steps. Define $\\overline{\\boldsymbol{w}}=\\frac{1}{T}\\sum_{t=1}^T\\boldsymbol{w}^{(t)}$ and let $\\boldsymbol{w}^*$ be any comparator vector. Let $\\boldsymbol{w}_m$ denote the effective weighted parameters when masks $\\boldsymbol{m}$ are applied, e.g., $\\boldsymbol{w}_m=(\\boldsymbol{w}^Q\\odot\\boldsymbol{m}^Q)\\,\\boldsymbol{x}\\boldsymbol{p}^T\\,(\\boldsymbol{w}^K\\odot\\boldsymbol{m}^K)^T$, where $\\boldsymbol{x}$ is the image token embedding and $\\boldsymbol{p}$ is the prompt token embedding from the concatenated input $\\boldsymbol{z}=[\\boldsymbol{p};\\boldsymbol{x}]$, and $\\boldsymbol{w}^Q,\\boldsymbol{w}^K$ are frozen pre-trained projection matrices. Let $\\boldsymbol{w}_p$ denote the prompt-only effective parameters (with $\\boldsymbol{m}=\\mathbf{1}$). For any $B_m< B_p < B$, where $B_m=\\|\\boldsymbol{w}_m^{(T+1)}-\\boldsymbol{w}^*\\|$, $B_p=\\|\\boldsymbol{w}_p^{(T+1)}-\\boldsymbol{w}^*\\|$, and $\\|\\boldsymbol{w}^{(T+1)}-\\boldsymbol{w}^*\\|\\le B$, choosing $\\eta=\\sqrt{B^2/(\\rho^2 T)}$ yields the bound\n      $$\n      \\frac{1}{T}\\sum_{t=1}^T\\langle \\boldsymbol{w}^{(t)}-\\boldsymbol{w}^*,\\boldsymbol{v}_t\\rangle \\le \\frac{B_m\\rho}{\\sqrt{T}} < \\frac{B_p\\rho}{\\sqrt{T}} < \\frac{B\\rho}{\\sqrt{T}}.\n      $$\n      Consequently, the sub-optimality $f(\\overline{\\boldsymbol{w}})-f(\\boldsymbol{w}^*)$ is upper-bounded by quantities that scale as $\\mathcal{O}(B_m\\rho/\\sqrt{T})$, where a smaller $B_m$ (associated with learning soft masks) yields a tighter bound than prompt-only or unconstrained updates.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The convergence analysis considers a convex-Lipschitz loss function $f$ with gradient norm bounded by $\\rho$, i.e.,",
+          "label": "other"
+        },
+        {
+          "text": " $\\|\\boldsymbol{v}_t\\|\\le \\rho$ for per-iteration gradient vectors $\\boldsymbol{v}_t$",
+          "label": "elaboration",
+          "of_terms": [
+            "gradient norm bounded by $\\rho$"
+          ]
+        },
+        {
+          "text": ", and",
+          "label": "connection"
+        },
+        {
+          "text": " an update rule",
+          "label": "other"
+        },
+        {
+          "text": " $\\boldsymbol{w}^{(t+1)}=\\boldsymbol{w}^{(t)}-\\eta\\boldsymbol{v}_t$ applied sequentially over $T$ steps.",
+          "label": "elaboration",
+          "of_terms": [
+            "an update rule"
+          ]
+        },
+        {
+          "text": " Define $\\overline{\\boldsymbol{w}}",
+          "label": "framing"
+        },
+        {
+          "text": "=\\frac{1}{T}\\sum_{t=1}^T\\boldsymbol{w}^{(t)}$",
+          "label": "elaboration",
+          "of_terms": [
+            "\\overline{\\boldsymbol{w}}"
+          ]
+        },
+        {
+          "text": " and let $\\boldsymbol{w}^*$",
+          "label": "framing"
+        },
+        {
+          "text": " be any comparator vector.",
+          "label": "elaboration",
+          "of_terms": [
+            "\\boldsymbol{w}^*"
+          ]
+        },
+        {
+          "text": " Let $\\boldsymbol{w}_m$ denote",
+          "label": "framing"
+        },
+        {
+          "text": " the effective weighted parameters when masks $\\boldsymbol{m}$ are applied",
+          "label": "elaboration",
+          "of_terms": [
+            "\\boldsymbol{w}_m"
+          ]
+        },
+        {
+          "text": ", e.g.,",
+          "label": "framing"
+        },
+        {
+          "text": " $\\boldsymbol{w}_m=(\\boldsymbol{w}^Q\\odot\\boldsymbol{m}^Q)\\,\\boldsymbol{x}\\boldsymbol{p}^T\\,(\\boldsymbol{w}^K\\odot\\boldsymbol{m}^K)^T$",
+          "label": "instance",
+          "of_terms": [
+            "the effective weighted parameters when masks $\\boldsymbol{m}$ are applied"
+          ]
+        },
+        {
+          "text": ", where $\\boldsymbol{x}$ is the image token embedding and $\\boldsymbol{p}$ is the prompt token embedding from the concatenated input $\\boldsymbol{z}=[\\boldsymbol{p};\\boldsymbol{x}]$, and $\\boldsymbol{w}^Q,\\boldsymbol{w}^K$ are frozen pre-trained projection matrices.",
+          "label": "elaboration"
+        },
+        {
+          "text": " Let $\\boldsymbol{w}_p$ denote",
+          "label": "framing"
+        },
+        {
+          "text": " the prompt-only effective parameters (with $\\boldsymbol{m}=\\mathbf{1}$).",
+          "label": "elaboration",
+          "of_terms": [
+            "\\boldsymbol{w}_p"
+          ]
+        },
+        {
+          "text": " For any $B_m< B_p < B$, where $B_m=\\|\\boldsymbol{w}_m^{(T+1)}-\\boldsymbol{w}^*\\|$, $B_p=\\|\\boldsymbol{w}_p^{(T+1)}-\\boldsymbol{w}^*\\|$, and $\\|\\boldsymbol{w}^{(T+1)}-\\boldsymbol{w}^*\\|\\le B$, choosing $\\eta=\\sqrt{B^2/(\\rho^2 T)}$ yields the bound\n      $$\n      \\frac{1}{T}\\sum_{t=1}^T\\langle \\boldsymbol{w}^{(t)}-\\boldsymbol{w}^*,\\boldsymbol{v}_t\\rangle \\le \\frac{B_m\\rho}{\\sqrt{T}} < \\frac{B_p\\rho}{\\sqrt{T}} < \\frac{B\\rho}{\\sqrt{T}}.\n      $$",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "\n      Consequently,",
+          "label": "relation",
+          "connects": [
+            1,
+            2
+          ],
+          "expression": "[1] 推出 [2]"
+        },
+        {
+          "text": " the sub-optimality $f(\\overline{\\boldsymbol{w}})-f(\\boldsymbol{w}^*)$ is upper-bounded by quantities that scale as $\\mathcal{O}(B_m\\rho/\\sqrt{T})$",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": ", where a smaller $B_m$ (associated with learning soft masks) yields a tighter bound than prompt-only or unconstrained updates.",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1068413726366892118::conclusion_4",
+    "global_id": "gcn_c0549a5203db4780",
+    "order": 4,
+    "title": "Soft-TF achieves state-of-the-art continual-learning performance on ViT benchmarks",
+    "content": "On ViT-based continual-learning benchmarks Soft-TF obtains state-of-the-art (SOTA) class-incremental and task-incremental results. Representative results: DualPrompt-Soft-TF (using Gradient ID) on 10-Split-CIFAR100 achieves ACC = 97.87% and Forget = 0.21; on 20-Split-CIFAR100 ACC = 99.05% and Forget = 0.24; on 10-Split-ImageNet-R ACC = 82.38% and Forget = 0.59. These results substantially outperform prompt-only baselines (e.g., DualPrompt with Prompt ID: ACC=86.50%, Forget=5.77; L2P-PGP: ACC=84.34%, Forget=5.59; L2P: ACC=83.77%, Forget=6.63) and rehearsal/regularization baselines (e.g., BiC with 5,000 exemplars: ACC=81.42%, Forget=17.31; EWC: ACC=47.01%, Forget=33.27) on 10-Split-CIFAR100.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "On ViT-based continual-learning benchmarks Soft-TF obtains state-of-the-art ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(SOTA)",
+          "label": "elaboration",
+          "of_terms": [
+            "state-of-the-art"
+          ]
+        },
+        {
+          "text": " class-incremental and task-incremental results.",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " Representative results: ",
+          "label": "framing"
+        },
+        {
+          "text": "DualPrompt-Soft-TF ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(using Gradient ID)",
+          "label": "elaboration",
+          "of_terms": [
+            "DualPrompt-Soft-TF"
+          ]
+        },
+        {
+          "text": " on 10-Split-CIFAR100 achieves ACC = 97.87% and Forget = 0.21;",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " on 20-Split-CIFAR100 ACC = 99.05% and Forget = 0.24;",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " on 10-Split-ImageNet-R ACC = 82.38% and Forget = 0.59.",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": " These results substantially outperform prompt-only baselines ",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "DualPrompt with Prompt ID: ACC=86.50%, Forget=5.77",
+          "label": "论据",
+          "number": 6,
+          "supports": [
+            5
+          ]
+        },
+        {
+          "text": "; L2P-PGP: ACC=84.34%, Forget=5.59",
+          "label": "论据",
+          "number": 7,
+          "supports": [
+            5
+          ]
+        },
+        {
+          "text": "; L2P: ACC=83.77%, Forget=6.63)",
+          "label": "论据",
+          "number": 8,
+          "supports": [
+            5
+          ]
+        },
+        {
+          "text": " and rehearsal/regularization baselines ",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "BiC with 5,000 exemplars: ACC=81.42%, Forget=17.31",
+          "label": "论据",
+          "number": 9,
+          "supports": [
+            5
+          ]
+        },
+        {
+          "text": "; EWC: ACC=47.01%, Forget=33.27)",
+          "label": "论据",
+          "number": 10,
+          "supports": [
+            5
+          ]
+        },
+        {
+          "text": " on 10-Split-CIFAR100.",
+          "label": "assertion",
+          "number": 5
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1068413726366892118::conclusion_5",
+    "global_id": "gcn_4a10f73d277246ae",
+    "order": 5,
+    "title": "Soft-TF extends to CLIP and yields strong CIL/TIL results",
+    "content": "Soft-TF generalizes to vision-language backbones (CLIP). On 10-Split-CIFAR100 with CLIP backbone, CLIP-Prompt-Soft-TF-L[1-12] using Gradient ID attains CIL ACC = 85.90% and Forget = 3.07, and TIL ACC = 96.83% and Forget = 0.44, showing substantial improvement over CLIP prompt baselines (CLIP with Prompt ID: CIL ACC=73.76%, Forget=5.60; CLIP-PGP: CIL ACC=79.47%, Forget=4.23) under the same task settings.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Soft-TF generalizes to vision-language backbones ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(CLIP)",
+          "label": "instance",
+          "of_terms": [
+            "vision-language backbones"
+          ]
+        },
+        {
+          "text": ". On 10-Split-CIFAR100 with CLIP backbone, CLIP-Prompt-Soft-TF-L[1-12] using Gradient ID attains CIL ACC = 85.90% and Forget = 3.07, and TIL ACC = 96.83% and Forget = 0.44",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": ", showing substantial improvement over CLIP prompt baselines ",
+          "label": "论证",
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(CLIP with Prompt ID: CIL ACC=73.76%, Forget=5.60; CLIP-PGP: CIL ACC=79.47%, Forget=4.23) under the same task settings.",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            1
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1068413726366892118::conclusion_6",
+    "global_id": "gcn_7cd78bed4b474fc2",
+    "order": 6,
+    "title": "Layer-wise and attention-only ablations identify effective fine-tuning loci",
+    "content": "Empirical ablations show that (a) applying Soft-TF to higher transformer layers (e.g., layers L[10,11,12]) yields stronger continual-learning performance in DualPrompt settings, producing near-zero forgetting (example: DualPrompt-Soft-TF-L[10,11,12] Gradient ID ACC = 97.87%, Forget = 0.21), and (b) fine-tuning only attention projections (QKV and projection matrices) at last layers (Soft-TF-L[12] w/ only ATTN) already attains very high performance (reported ACC = 97.17%, Forget = 0.40 in one configuration), indicating that attention modules (especially QKV) are highly influential for task-adaptive specialization.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Empirical ablations show that ",
+          "label": "framing"
+        },
+        {
+          "text": "(a) ",
+          "label": "other"
+        },
+        {
+          "text": "applying Soft-TF to higher transformer layers ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "layers L[10,11,12]",
+          "label": "instance",
+          "of_terms": [
+            "higher transformer layers"
+          ]
+        },
+        {
+          "text": ") ",
+          "label": "other"
+        },
+        {
+          "text": "yields stronger continual-learning performance in DualPrompt settings, producing near-zero forgetting ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(example: ",
+          "label": "framing"
+        },
+        {
+          "text": "DualPrompt-Soft-TF-L[10,11,12] Gradient ID ACC = 97.87%, Forget = 0.21",
+          "label": "example",
+          "number": 2,
+          "illustrates": [
+            1
+          ]
+        },
+        {
+          "text": "), and ",
+          "label": "connection"
+        },
+        {
+          "text": "(b) ",
+          "label": "other"
+        },
+        {
+          "text": "fine-tuning only attention projections ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(QKV and projection matrices) ",
+          "label": "elaboration",
+          "of_terms": [
+            "attention projections"
+          ]
+        },
+        {
+          "text": "at last layers ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(Soft-TF-L[12] w/ only ATTN) ",
+          "label": "instance",
+          "of_terms": [
+            "attention projections",
+            "last layers"
+          ]
+        },
+        {
+          "text": "already attains very high performance ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(reported ",
+          "label": "framing"
+        },
+        {
+          "text": "ACC = 97.17%, Forget = 0.40 in one configuration",
+          "label": "example",
+          "number": 4,
+          "illustrates": [
+            3
+          ]
+        },
+        {
+          "text": "), ",
+          "label": "other"
+        },
+        {
+          "text": "indicating that ",
+          "label": "relation",
+          "connects": [
+            1,
+            3,
+            5
+          ],
+          "expression": "([1] 且 [3]) 推出 [5]"
+        },
+        {
+          "text": "attention modules ",
+          "label": "assertion",
+          "number": 5
+        },
+        {
+          "text": "(especially QKV) ",
+          "label": "elaboration",
+          "of_terms": [
+            "attention modules"
+          ]
+        },
+        {
+          "text": "are highly influential for task-adaptive specialization.",
+          "label": "assertion",
+          "number": 5
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1068413726366892118::conclusion_7",
+    "global_id": "gcn_ab076b18c9dc4058",
+    "order": 7,
+    "title": "Transformer sparse subnetworks (WSN-style) exist and yield competitive CF behavior",
+    "content": "Extending WSN-style subnetworks to pre-trained transformers yields competitive sparse solutions: e.g., DualPrompt-WSN-L[10,11,12] with sparsity c=87.0% on 10-Split-TinyImageNet achieves ACC=91.91% and Forget=0.38. This empirical observation supports a \"rotary\" or transformer's lottery-like phenomenon (authors term Rottary Ticket Hypothesis, RTH) where dense pretrained transformers contain high-performing sparse subnetworks.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Extending WSN-style subnetworks to pre-trained transformers yields competitive sparse solutions",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": ":",
+          "label": "other"
+        },
+        {
+          "text": " e.g.,",
+          "label": "framing"
+        },
+        {
+          "text": " DualPrompt-WSN-L[10,11,12] with sparsity c=87.0% on 10-Split-TinyImageNet achieves ACC=91.91% and Forget=0.38.",
+          "label": "example",
+          "number": 2,
+          "illustrates": [
+            1
+          ]
+        },
+        {
+          "text": " This empirical observation supports",
+          "label": "论证",
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": " a \"rotary\" or transformer's lottery-like phenomenon",
+          "label": "other"
+        },
+        {
+          "text": " (authors term Rottary Ticket Hypothesis, RTH)",
+          "label": "framing"
+        },
+        {
+          "text": " where",
+          "label": "other"
+        },
+        {
+          "text": " dense pretrained transformers contain high-performing sparse subnetworks.",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

@@ -1,0 +1,426 @@
+[
+  {
+    "id": "paper:1032903864883347458::conclusion_1",
+    "global_id": "gcn_2952a7356a3d4e95",
+    "order": 1,
+    "title": "Closed-form mirror potential for the $m\\odot w$ parameterization",
+    "content": "The implicit mirror potential (a differentiable Bregman function) induced by the overparameterization $x=m\\odot w$ with initialization satisfying $m_{0,i} > |w_{0,i}|$ for all $i\\in[n]$ equals\n      $$\n      R(x) \\;=\\; \\frac{1}{4}\\sum_{i=1}^n x_i\\,\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{2u_{0,i}v_{0,i}}\\right)\\;-\\;\\sqrt{x_i^2+4u_{0,i}^2v_{0,i}^2}\\;-\\;x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right),\n      $$\n      where $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$ and $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$. The function $R$ is a Bregman potential and its smoothness (Lipschitz constant of its gradient inverse) depends on the initialization via the factor $2u_{0,i}v_{0,i}$.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "The implicit mirror potential (a differentiable Bregman function) induced by the overparameterization $x=m\\odot w$ with initialization satisfying $m_{0,i} > |w_{0,i}|$ for all $i\\in[n]$ equals\n      $$\n      R(x) \\;=\\; \\frac{1}{4}\\sum_{i=1}^n x_i\\,\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{2u_{0,i}v_{0,i}}\\right)\\;-\\;\\sqrt{x_i^2+4u_{0,i}^2v_{0,i}^2}\\;-\\;x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right),\n      $$",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "where $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$ and $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$.",
+          "label": "elaboration"
+        },
+        {
+          "text": "The function $R$ is a Bregman potential and its smoothness (Lipschitz constant of its gradient inverse) depends on the initialization via the factor $2u_{0,i}v_{0,i}$.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_2",
+    "global_id": "gcn_212ec9e2b9d14155",
+    "order": 2,
+    "title": "Implicit $L_1$ asymptotics require small initialization scale",
+    "content": "For the mirror potential $R(x)=\\frac{1}{4}\\sum_{i=1}^n\\left(x_i\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a}\\right)-\\sqrt{x_i^2+a^2}-x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right)\\right)$, where $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$, $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$, and $2u_{0,i}v_{0,i}=a$ for all $i$ (the corrected hyperbolic-entropy variant), in the regime $a\\to 0$ and $|x_i/a|\\to\\infty$ one has\n      $$\n      R(x)\\sim \\log\\!\\left(\\frac{1}{a}\\right)\\,||x||_{L_1},\n      $$\n      i.e., $R$ scales like a multiple of the $L_1$ norm. However, obtaining this $L_1$-dominant regime requires $a$ to be exponentially small relative to relevant magnitudes (making zero or near-zero initializations numerically problematic and potentially causing saddle-point slowdowns).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For the mirror potential $R(x)=\\frac{1}{4}\\sum_{i=1}^n\\left(x_i\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a}\\right)-\\sqrt{x_i^2+a^2}-x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right)\\right)$, where $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$, $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$, and $2u_{0,i}v_{0,i}=a$ for all $i$ (the corrected hyperbolic-entropy variant), ",
+          "label": "elaboration"
+        },
+        {
+          "text": "in the regime $a\\to 0$ and $|x_i/a|\\to\\infty$ one has\n      $$\n      R(x)\\sim \\log\\!\\left(\\frac{1}{a}\\right)\\,||x||_{L_1},\n      $$\n      ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "i.e., $R$ scales like a multiple of the $L_1$ norm.",
+          "label": "elaboration"
+        },
+        {
+          "text": "However, ",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "obtaining this $L_1$-dominant regime requires $a$ to be exponentially small relative to relevant magnitudes",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(making zero or near-zero initializations numerically problematic and potentially causing saddle-point slowdowns).",
+          "label": "elaboration"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_3",
+    "global_id": "gcn_ab2ab80dd5dc4fb5",
+    "order": 3,
+    "title": "Convergence under PL inequality for mirror flow from reparameterization",
+    "content": "Let $f:\\mathbb{R}^n\\to\\mathbb{R}$ be continuously differentiable and satisfy the Polyak-Łojasiewicz (PL) inequality: $||\\nabla f(x)||_{L_2}^2 \\ge \\lambda\\,(f(x)-f(x^*))$ for some $\\lambda>0$ and global minimizer $x^*$. If the Bregman potential $R$ satisfies the matrix lower bound\n      $$\n      z^\\top\\!\\big(\\nabla^2 R(x)\\big)^{-1} z \\;\\ge\\; \\sigma\\,||z||_{L_2}^2\\quad\\forall x,z\\in\\mathbb{R}^n\n      $$\n      for some $\\sigma>0$, then the mirror flow $d\\nabla R(x_t)=-\\nabla f(x_t)dt$ (which arises from the $m\\odot w$ parameterization) converges to a minimizer of $f$ and the loss decays linearly with rate $\\sigma\\lambda$.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Let $f:\\mathbb{R}^n\\to\\mathbb{R}$ be continuously differentiable and satisfy the Polyak-Łojasiewicz (PL) inequality: ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "$||\\nabla f(x)||_{L_2}^2 \\ge \\lambda\\,(f(x)-f(x^*))$ for some $\\lambda>0$ and global minimizer $x^*$.",
+          "label": "elaboration"
+        },
+        {
+          "text": " If the Bregman potential $R$ satisfies the matrix lower bound\n      ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "$$\n      z^\\top\\!\\big(\\nabla^2 R(x)\\big)^{-1} z \\;\\ge\\; \\sigma\\,||z||_{L_2}^2\\quad\\forall x,z\\in\\mathbb{R}^n\n      $$\n      for some $\\sigma>0$,",
+          "label": "elaboration"
+        },
+        {
+          "text": " then the mirror flow $d\\nabla R(x_t)=-\\nabla f(x_t)dt$ ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(which arises from the $m\\odot w$ parameterization)",
+          "label": "elaboration"
+        },
+        {
+          "text": " converges to a minimizer of $f$ and the loss decays linearly with rate $\\sigma\\lambda$.",
+          "label": "assertion [1]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_4",
+    "global_id": "gcn_461713dfc9554339",
+    "order": 4,
+    "title": "Interpolator selected by minimizing mirror potential in underdetermined linear regression",
+    "content": "For underdetermined linear regression problems $f(x)=\\tilde f(Zx-Y)$ with $n>d$, if $f$ is quasi-convex, $\\nabla f$ is locally Lipschitz, and $\\operatorname{argmin}_{x\\in\\mathbb{R}^n} f(x)$ is non-empty, then gradient flow on the overparameterized variables $(m,w)$ (with $x=m\\odot w$) converges to a limit $x^*$ that solves\n      $$\n      x^* \\;=\\; \\operatorname{argmin}_{Zx=Y} R(x),\n      $$\n      i.e., among all interpolators $x$ satisfying the data constraints $Zx=Y$, gradient flow selects the one minimizing the Bregman potential $R$ induced by the $m\\odot w$ parameterization.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For underdetermined linear regression problems $f(x)=\\tilde f(Zx-Y)$ with $n>d$, if $f$ is quasi-convex, $\\nabla f$ is locally Lipschitz, and $\\operatorname{argmin}_{x\\in\\mathbb{R}^n} f(x)$ is non-empty, then gradient flow on the overparameterized variables $(m,w)$ ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(with $x=m\\odot w$) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "converges to a limit $x^*$ that solves\n      $$\n      x^* \\;=\\; \\operatorname{argmin}_{Zx=Y} R(x),\n      $$\n      ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "i.e., among all interpolators $x$ satisfying the data constraints $Zx=Y$, gradient flow selects the one minimizing the Bregman potential $R$ induced by the $m\\odot w$ parameterization.",
+          "label": "elaboration"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_5",
+    "global_id": "gcn_7fb82af5e8fe44ff",
+    "order": 5,
+    "title": "Time-dependent Bregman potential induced by weight-decay on $(m,w)$",
+    "content": "Adding weight decay regularization $h(m,w)=\\sum_{i=1}^n(m_i^2+w_i^2)$ with time-varying coefficient $\\alpha_t\\ge 0$ to gradient flow on $(m,w)$ yields a time-dependent mirror potential governing the dynamics in $x=m\\odot w$: for $a_{t,i}=2u_{0,i}v_{0,i}\\exp\\!\\big(-2\\int_0^t\\alpha_s ds\\big)$ with $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$ and $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$,\n      $$\n      R_{a_t}(x) \\;=\\; \\frac{1}{2}\\sum_{i=1}^n x_i\\,\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a_{t,i}}\\right) - \\sqrt{x_i^2 + a_{t,i}^2} - x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right),\n      $$\n      and the dynamics satisfy the time-dependent mirror-flow identity\n      $$\n      d\\!\\big(\\nabla R_{a_t}(x_t)\\big) \\;=\\; -\\nabla f(x_t)\\,dt,\\qquad x_0=m_0\\odot w_0.\n      $$\n      Thus a decaying schedule for $\\alpha_t$ directly controls the scale $a_{t}$ of the mirror potential and thereby the strength and position of the implicit bias.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Adding weight decay regularization $h(m,w)=\\sum_{i=1}^n(m_i^2+w_i^2)$ with time-varying coefficient $\\alpha_t\\ge 0$ to gradient flow on $(m,w)$ yields a time-dependent mirror potential governing the dynamics in $x=m\\odot w$: for ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "$a_{t,i}=2u_{0,i}v_{0,i}\\exp\\!\\big(-2\\int_0^t\\alpha_s ds\\big)$ with $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$ and $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$,\n      ",
+          "label": "elaboration"
+        },
+        {
+          "text": "$$\n      R_{a_t}(x) \\;=\\; \\frac{1}{2}\\sum_{i=1}^n x_i\\,\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a_{t,i}}\\right) - \\sqrt{x_i^2 + a_{t,i}^2} - x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right),\n      $$\n      and the dynamics satisfy the time-dependent mirror-flow identity\n      $$\n      d\\!\\big(\\nabla R_{a_t}(x_t)\\big) \\;=\\; -\\nabla f(x_t)\\,dt,\\qquad x_0=m_0\\odot w_0.\n      $$",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Thus ",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "a decaying schedule for $\\alpha_t$ directly controls the scale $a_{t}$ of the mirror potential and thereby the strength and position of the implicit bias.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_6",
+    "global_id": "gcn_a7d8ca95a5ab41f2",
+    "order": 6,
+    "title": "Convergence and linear rate for time-dependent potential (PILoT) under PL",
+    "content": "Let $\\alpha_t\\ge 0$ satisfy $\\int_0^\\infty \\alpha_s ds<\\infty$, and assume $f$ is quasi-convex or satisfies the PL inequality with constant $\\lambda>0$. Consider the time-dependent Bregman potential $R_{a_t}$ given by $R_{a_t}(x)=\\frac{1}{2}\\sum_{i=1}^n\\left(x_i\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a_{t,i}}\\right)-\\sqrt{x_i^2+a_{t,i}^2}-x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right)\\right)$ with $a_{t,i}=2u_{0,i}v_{0,i}\\exp\\!\\left(-2\\int_0^t\\alpha_s ds\\right)$, $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$, $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$. Then the time-dependent mirror flow $d\\nabla R_{a_t}(x_t)=-\\nabla f(x_t)dt$ converges to a critical point $x^*$; if $f$ is convex or satisfies PL then $x^*$ is an interpolating minimizer of $f$. In the PL case the loss satisfies the finite-time bound\n      $$\n      f(x_t)-f(x^*) \\le B\\exp\\!\\big(-\\lambda a_\\infty t\\big),\n      $$\n      where $a_\\infty=\\lim_{t\\to\\infty}a_t$ and\n      $$\n      B=(f(x_0)-f(x^*))\\exp\\!\\Big(C||x^*||_{L_2}\\!\\int_0^\\infty\\alpha_s ds\\Big),\n      $$\n      with $C$ a constant depending on the smoothness of $f$.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Let $\\alpha_t\\ge 0$ satisfy $\\int_0^\\infty \\alpha_s ds<\\infty$, and assume $f$ is quasi-convex or satisfies the PL inequality with constant $\\lambda>0$.",
+          "label": "elaboration"
+        },
+        {
+          "text": "Consider the time-dependent Bregman potential $R_{a_t}$ given by $R_{a_t}(x)=\\frac{1}{2}\\sum_{i=1}^n\\left(x_i\\operatorname{arcsinh}\\!\\left(\\frac{x_i}{a_{t,i}}\\right)-\\sqrt{x_i^2+a_{t,i}^2}-x_i\\log\\!\\left(\\frac{u_{0,i}}{v_{0,i}}\\right)\\right)$ with $a_{t,i}=2u_{0,i}v_{0,i}\\exp\\!\\left(-2\\int_0^t\\alpha_s ds\\right)$, $u_{0,i}=\\frac{m_{0,i}+w_{0,i}}{\\sqrt{2}}$, $v_{0,i}=\\frac{m_{0,i}-w_{0,i}}{\\sqrt{2}}$.",
+          "label": "elaboration"
+        },
+        {
+          "text": "Then the time-dependent mirror flow $d\\nabla R_{a_t}(x_t)=-\\nabla f(x_t)dt$ converges to a critical point $x^*$;",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "if $f$ is convex or satisfies PL then $x^*$ is an interpolating minimizer of $f$.",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "In the PL case the loss satisfies the finite-time bound\n      $$\n      f(x_t)-f(x^*) \\le B\\exp\\!\\big(-\\lambda a_\\infty t\\big),\n      $$",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "where $a_\\infty=\\lim_{t\\to\\infty}a_t$ and\n      $$\n      B=(f(x_0)-f(x^*))\\exp\\!\\Big(C||x^*||_{L_2}\\!\\int_0^\\infty\\alpha_s ds\\Big),\n      $$\n      with $C$ a constant depending on the smoothness of $f$.",
+          "label": "elaboration"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_7",
+    "global_id": "gcn_8bdc0f97821f4d1d",
+    "order": 7,
+    "title": "Optimal interpolator for underdetermined regression with time-dependent potential",
+    "content": "For underdetermined linear regression $f(x)=\\tilde f(Zx-Y)$, under the conditions of the convergence theorem for time-dependent potentials (i.e., $f$ quasi-convex, $\\nabla f$ locally Lipschitz, $\\operatorname{argmin} f$ non-empty, $\\alpha_t\\ge 0$, $\\int_0^\\infty\\alpha_sds<\\infty$), the limit $x^*$ of the time-dependent mirror flow satisfies\n      $$\n      x^* \\;=\\; \\operatorname{argmin}_{Zx=Y} R_{a_\\infty}(x),\n      $$\n      i.e., gradient flow with the PILoT schedule selects, among interpolators, the one minimizing the limiting time-dependent mirror potential $R_{a_\\infty}$, where $R_{a_\\infty}$ is the Bregman potential $R_{a_t}$ in the limit $t\\to\\infty$ with $a_\\infty = \\lim_{t\\to\\infty} a_{t,i}$.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For underdetermined linear regression $f(x)=\\tilde f(Zx-Y)$, under the conditions of the convergence theorem for time-dependent potentials ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(i.e., $f$ quasi-convex, $\\nabla f$ locally Lipschitz, $\\operatorname{argmin} f$ non-empty, $\\alpha_t\\ge 0$, $\\int_0^\\infty\\alpha_sds<\\infty$), ",
+          "label": "elaboration"
+        },
+        {
+          "text": "the limit $x^*$ of the time-dependent mirror flow satisfies\n      $$\n      x^* \\;=\\; \\operatorname{argmin}_{Zx=Y} R_{a_\\infty}(x),\n      $$\n      i.e., gradient flow with the PILoT schedule selects, among interpolators, the one minimizing the limiting time-dependent mirror potential $R_{a_\\infty}$, ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "where $R_{a_\\infty}$ is the Bregman potential $R_{a_t}$ in the limit $t\\to\\infty$ with $a_\\infty = \\lim_{t\\to\\infty} a_{t,i}$.",
+          "label": "elaboration"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_8",
+    "global_id": "gcn_0de43e8df46e40e1",
+    "order": 8,
+    "title": "PILoT: an algorithmic instantiation (initialization, weight decay schedule) for controllable implicit sparsification",
+    "content": "PILoT is a practical continuous-sparsification procedure that: (i) parameterizes weights as $x=m\\odot w$, (ii) applies weight decay $h(m,w)=\\sum_i(m_i^2+w_i^2)$ with a time-dependent coefficient $\\alpha_t$ (typically a decaying schedule with $\\alpha_t\\ge 0$, $\\int_0^\\infty\\alpha_s ds<\\infty$), and (iii) uses an initialization that fixes the per-coordinate scale $2u_{0,i}v_{0,i}$ to a chosen constant (e.g., $1$) across parameters. This combination yields a time-dependent Bregman potential $R_{a_t}$ that can be driven towards an $L_1$-like regime (where it approximates the $L_1$ norm) without requiring zero initialization, thereby providing a tunable implicit $L_1$-regularization while preserving convergence of the loss and the optimal interpolator selection property for underdetermined linear regression (the limit minimizes $R_{a_\\infty}$ among interpolators).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "PILoT is a practical continuous-sparsification procedure that: (i) parameterizes weights as $x=m\\odot w$, (ii) applies weight decay $h(m,w)=\\sum_i(m_i^2+w_i^2)$ with a time-dependent coefficient $\\alpha_t$",
+          "label": "other"
+        },
+        {
+          "text": "(typically a decaying schedule with $\\alpha_t\\ge 0$, $\\int_0^\\infty\\alpha_s ds<\\infty$)",
+          "label": "elaboration"
+        },
+        {
+          "text": ", and (iii) uses an initialization that fixes the per-coordinate scale $2u_{0,i}v_{0,i}$ to a chosen constant",
+          "label": "other"
+        },
+        {
+          "text": "(e.g., $1$)",
+          "label": "elaboration"
+        },
+        {
+          "text": "across parameters.",
+          "label": "other"
+        },
+        {
+          "text": "This combination yields a time-dependent Bregman potential $R_{a_t}$ that can be driven towards an $L_1$-like regime",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(where it approximates the $L_1$ norm)",
+          "label": "elaboration"
+        },
+        {
+          "text": "without requiring zero initialization, thereby providing a tunable implicit $L_1$-regularization while preserving convergence of the loss and the optimal interpolator selection property for underdetermined linear regression",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(the limit minimizes $R_{a_\\infty}$ among interpolators).",
+          "label": "elaboration"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_9",
+    "global_id": "gcn_dcef34ba1122431f",
+    "order": 9,
+    "title": "Diagonal linear-network experiments: initialization and decaying schedule advantage",
+    "content": "In simulated diagonal linear networks for underdetermined sparse recovery ($d=40$, $n=100$, ground-truth $||x^*||_{L_0}=5$) the proposed PILoT initialization (constant per-coordinate scale $2u_{0,i}v_{0,i}=1$) together with a strongly decaying $\\alpha_t$ schedule recovers the ground-truth $x^*$ faster and more accurately (smaller $||x_t-x^*||_{L_2}$ trajectories) than baselines including spred initialization, $L_1$ on $m$ only, and standard $L_1$ on $x$. Spred initialization with $2u_{0}v_{0}=0$ fails to approach the ground truth for all regularization strengths tested. These behaviors are illustrated empirically.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "In simulated diagonal linear networks for underdetermined sparse recovery ($d=40$, $n=100$, ground-truth $||x^*||_{L_0}=5$) the proposed PILoT initialization ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(constant per-coordinate scale $2u_{0,i}v_{0,i}=1$)",
+          "label": "elaboration"
+        },
+        {
+          "text": "together with a strongly decaying $\\alpha_t$ schedule recovers the ground-truth $x^*$ faster and more accurately ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(smaller $||x_t-x^*||_{L_2}$ trajectories)",
+          "label": "elaboration"
+        },
+        {
+          "text": "than baselines including spred initialization, $L_1$ on $m$ only, and standard $L_1$ on $x$.",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "Spred initialization with $2u_{0}v_{0}=0$ fails to approach the ground truth for all regularization strengths tested.",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "These behaviors are illustrated empirically.",
+          "label": "proof of the assertions [1,2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_10",
+    "global_id": "gcn_01e6775a8fdf4fb1",
+    "order": 10,
+    "title": "One-shot CIFAR experiments: PILoT improves high-sparsity accuracy",
+    "content": "In one-shot pruning experiments on CIFAR-10 and CIFAR-100 (train for 150 epochs, then remove smallest weights), the $m\\odot w$ parameterization with PILoT regularization achieves higher validation accuracy than standard baselines and alternative continuous parameterizations across sparsity levels and is particularly robust in the high-sparsity regime; while simple $L_1$ on $x$ can perform well at some settings, it is less robust to regularization strength and degrades more severely at extreme sparsities than PILoT.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "In one-shot pruning experiments on CIFAR-10 and CIFAR-100 ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(train for 150 epochs, then remove smallest weights), ",
+          "label": "elaboration"
+        },
+        {
+          "text": "the $m\\odot w$ parameterization with PILoT regularization achieves higher validation accuracy than standard baselines and alternative continuous parameterizations across sparsity levels and is particularly robust in the high-sparsity regime",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "; while ",
+          "label": "relation of the assertions [1,2]"
+        },
+        {
+          "text": "simple $L_1$ on $x$ can perform well at some settings, it is less robust to regularization strength and degrades more severely at extreme sparsities than PILoT.",
+          "label": "assertion [2]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_11",
+    "global_id": "gcn_41bc6c61918c49fb",
+    "order": 11,
+    "title": "Iterative pruning (IMP, LRR) enhanced by PILoT yields sparser winning tickets and higher accuracy",
+    "content": "When combined with iterative pruning protocols (Iterative Magnitude Pruning (IMP) and Learning Rate Rewinding (LRR)) on CIFAR-10 and CIFAR-100, training the networks with the $m\\odot w$ parameterization and PILoT regularization produces higher final accuracies at high sparsity compared to the same iterative schemes using the standard parameterization; LRR with PILoT identifies the sparsest winning tickets and IMP with PILoT becomes competitive with LRR, outperforming it at some sparsity levels.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "When combined with iterative pruning protocols ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "(Iterative Magnitude Pruning (IMP) and Learning Rate Rewinding (LRR)) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "on CIFAR-10 and CIFAR-100, training the networks with the $m\\odot w$ parameterization and PILoT regularization produces higher final accuracies at high sparsity compared to the same iterative schemes using the standard parameterization; ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "LRR with PILoT identifies the sparsest winning tickets ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "and IMP with PILoT becomes competitive with LRR, outperforming it at some sparsity levels.",
+          "label": "assertion [3]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1032903864883347458::conclusion_12",
+    "global_id": "gcn_c831d6d4e86d4768",
+    "order": 12,
+    "title": "Regularizing both $m$ and $w$ is required; neuronwise masks do not induce mirror flows",
+    "content": "Weight decay applied symmetrically to both $m$ and $w$ commutes with the $m\\odot w$ parameterization and is necessary to obtain the derived time-dependent mirror-flow description; regularizing only $m$ does not satisfy the necessary Lie-bracket commutation condition (that the Lie bracket span of the gradient vector fields is in the kernel of the Jacobian). Moreover, neuronwise mask parameterizations (mask per neuron instead of per parameter) violate the same Lie-bracket condition and therefore do not induce a mirror-flow implicit bias of the same form.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Weight decay applied symmetrically to both $m$ and $w$ commutes with the $m\\odot w$ parameterization and is necessary to obtain the derived time-dependent mirror-flow description; ",
+          "label": "assertion [1]"
+        },
+        {
+          "text": "regularizing only $m$ does not satisfy the necessary Lie-bracket commutation condition ",
+          "label": "assertion [2]"
+        },
+        {
+          "text": "(that the Lie bracket span of the gradient vector fields is in the kernel of the Jacobian). ",
+          "label": "elaboration"
+        },
+        {
+          "text": "Moreover, ",
+          "label": "other"
+        },
+        {
+          "text": "neuronwise mask parameterizations ",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "(mask per neuron instead of per parameter) ",
+          "label": "elaboration"
+        },
+        {
+          "text": "violate the same Lie-bracket condition and ",
+          "label": "assertion [3]"
+        },
+        {
+          "text": "therefore ",
+          "label": "relation of the assertions [3,4]"
+        },
+        {
+          "text": "do not induce a mirror-flow implicit bias of the same form.",
+          "label": "assertion [4]"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

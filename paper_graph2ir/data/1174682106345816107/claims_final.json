@@ -1,0 +1,502 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "The weak Lottery Ticket Hypothesis (LTH) holds for variational quantum circuits (VQCs) on small classification tasks: after training, iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration), resetting the remaining weights to their initial random values, and retraining, multi-class VQCs (MVQCs) and binary VQCs (BVQCs) on the Iris dataset (150 instances, 4 features, 3 classes), the simplified Iris dataset (binary, 2 classes), the Wine dataset (178 instances, 13 features, 3 classes), and the simplified Wine dataset (binary) produce sparse subnetworks ('winning tickets') that match or closely approach the unpruned validation accuracy while retaining substantially fewer parameters.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "MVQC on Iris 26.0% of 198 parameters (preserving 97.5% accuracy),",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 2
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "MVQC on simplified Iris 26.1% of 184 parameters (preserving 100% accuracy),",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 3
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "BVQC on simplified Iris 33.3% of 122 parameters (preserving 100% accuracy),",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 4
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "MVQC on Wine 32.7% of 630 parameters (achieving 80% accuracy vs. 45% unpruned),",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 5
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "BVQC on simplified Wine 51.3% of 548 parameters;",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 6
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "No winning ticket was found for the MVQC (multi-class VQCs) on the simplified Wine dataset (binary); here, 'winning tickets' are sparse subnetworks.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 7
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "A multi-class variational quantum circuit (MVQC), using angle encoding, strongly entangling layers, Pauli-Z expectation readout, softmax classification, cross-entropy loss, and Adam optimization, preserves its unpruned validation accuracy of 97.5% on the Iris dataset (150 instances, 4 features, 3 classes) after iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration) and retraining, when only 26.0% of the original 198 parameters remain.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 8
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "A binary variational quantum circuit (BVQC) using angle embedding, layered entanglement, single-qubit Pauli-Z readout, and binary cross-entropy with logits loss, trained with Adam optimization, retains 100% validation accuracy on the simplified Iris dataset (binary, 2 classes, 150 instances) after iterative magnitude pruning (removing 20% of the lowest-magnitude weights per iteration) and retraining, down to 33.3% of the original 122 parameters.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 9
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "On the Wine dataset, an overparameterized multi-class variational quantum circuit with 630 parameters achieves only 45% validation accuracy when unpruned.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 10
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "On the Wine dataset, after iterative magnitude pruning to 32.7% of the original parameters of the overparameterized multi-class variational quantum circuit with 630 parameters, the pruned circuit achieves 80% validation accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 11
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "On the Iris, simplified Iris, Wine, and simplified Wine datasets, using multi-class VQCs, binary VQCs, and simple neural networks with parameter counts ranging from 122 to 630, iterative magnitude pruning and one-shot pruning produce substantially similar validation accuracy curves across remaining-weight levels.",
+      "is_pure_data": false,
+      "needs_more_context": [
+        "VQCs"
+      ],
+      "number": 12
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "The observed discrepancies across remaining-weight levels between the validation accuracy curves that iterative magnitude pruning and one-shot pruning produce are minor and attributable to integer rounding of exact parameter counts.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 13
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "Using an evolutionary algorithm that searches pruning masks without any weight training, a binary variational quantum circuit on the simplified Iris dataset attains 100% validation accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 14
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "The best individual in the final generation of the evolutionary algorithm that searches pruning masks without any weight training retains approximately 45% of the original parameters of the binary variational quantum circuit.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 15
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "A purely mask-searching procedure can discover a winning ticket for a variational quantum circuit (VQC) on a simple binary task.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 16
+    },
+    {
+      "conclusion": "conclusion_7",
+      "text": "On the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm (EA) that searches pruning masks without any weight training (strong Lottery Ticket Hypothesis protocol) produces substantial accuracy gains for a multi-class variational quantum circuit (MVQC) and a simple neural network (SNN).",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 17
+    },
+    {
+      "conclusion": "conclusion_7",
+      "text": "On the simplified Iris dataset (binary, 2 classes, 150 instances), the MVQC (multi-class variational quantum circuit), with 184 parameters (15 layers, angle encoding, strongly entangling layers, Pauli-Z readout on the first 2 qubits, softmax, cross-entropy loss, Adam optimizer), improves from approximately 75% validation accuracy in early generations of an evolutionary algorithm (EA) that searches pruning masks without any weight training (strong Lottery Ticket Hypothesis protocol) to about 95% at roughly 34% remaining weights.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 18
+    },
+    {
+      "conclusion": "conclusion_7",
+      "text": "The SNN , reaches 100% validation accuracy with approximately 40% of its original weights.",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 19
+    },
+    {
+      "conclusion": "conclusion_7",
+      "text": "Mask-only search, an evolutionary algorithm that searches pruning masks without any weight training (strong Lottery Ticket Hypothesis protocol), can yield large accuracy gains or full recovery for some architectures on simple tasks.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 20
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "On the Wine dataset (178 instances, 13 features, 3 classes) and its simplified binary variant (simplified Wine, 2 classes), the evolutionary algorithm (EA) that searches pruning masks without weight training fails to identify masks that match or exceed the unpruned performances of the models whose unpruned accuracies are stated in claim 22, claim 23, claim 28, claim 29, and claim 30.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 21
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "On the Wine dataset, the multi-class VQC unpruned accuracy is 45%",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 22
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "the SNN unpruned accuracy is 98%;",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 23
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "the EA produces masks with roughly 30–40% remaining weights",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 24
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "results in MVQC accuracy around 48%",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 25
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "SNN accuracy around 87%,",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 26
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "On the Wine dataset, the accuracies in claim 25 and claim 26 are both below the unpruned performance levels.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 27
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "On the simplified Wine dataset, the BVQC unpruned accuracy is approximately 94%,",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 28
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "the MVQC unpruned accuracy is approximately 97%,",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 29
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "the SNN unpruned accuracy is approximately 98%;",
+      "is_pure_data": true,
+      "needs_more_context": [],
+      "number": 30
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "On the simplified Wine dataset (simplified Wine, 2 classes), the evolutionary algorithm (EA) that searches pruning masks without weight training stabilizes at subnetworks with roughly 26–45% remaining weights.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 31
+    },
+    {
+      "conclusion": "conclusion_8",
+      "text": "On the simplified binary variant (simplified Wine, 2 classes), the evolutionary algorithm (EA) that searches pruning masks without weight training fails to reach the unpruned accuracies stated in claim 28, claim 29, and claim 30 under the tested algorithmic settings.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 32
+    },
+    {
+      "conclusion": "conclusion_9",
+      "text": "For the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm that searches pruning masks without weight training identifies masks that match unpruned performance (100% validation accuracy) for a binary VQC and a simple neural network.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 33
+    },
+    {
+      "conclusion": "conclusion_9",
+      "text": "For the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm that searches pruning masks without weight training produces large accuracy gains for a multi-class VQC from approximately 75% to 95% validation accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 34
+    },
+    {
+      "conclusion": "conclusion_9",
+      "text": "mask-only discovery by an evolutionary algorithm that searches pruning masks without weight training is a viable approach for small quantum classification problems.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 35
+    },
+    {
+      "conclusion": "conclusion_9",
+      "text": "For the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm that searches pruning masks under the strong Lottery Ticket Hypothesis protocol identifies masks that match unpruned performance (100% validation accuracy) for the BVQC with 122 parameters and the SNN with 170 parameters.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 36
+    },
+    {
+      "conclusion": "conclusion_9",
+      "text": "For the simplified Iris dataset (binary, 2 classes, 150 instances), an evolutionary algorithm that searches pruning masks without weight training produces large accuracy gains for the MVQC with 184 parameters from approximately 75% to 95% validation accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 37
+    }
+  ],
+  "note": [
+    {
+      "conclusion": "conclusion_4",
+      "text": "elaboration of claim 11: , an increase of 35 percentage points.",
+      "number": 1
+    }
+  ],
+  "relation": [
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        14,
+        15,
+        16
+      ],
+      "expression": "([14] 且 [15]) 推出 [16]"
+    },
+    {
+      "conclusion": "conclusion_7",
+      "connects": [
+        18,
+        19,
+        20
+      ],
+      "expression": "[18] 且 [19] 推出 [20]"
+    },
+    {
+      "conclusion": "conclusion_9",
+      "connects": [
+        33,
+        34,
+        35
+      ],
+      "expression": "[33] 且 [34] 推出 [35]"
+    },
+    {
+      "conclusion": "conclusion_1",
+      "connects": [
+        2,
+        1
+      ],
+      "expression": "[2] 是 [1] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_1",
+      "connects": [
+        3,
+        1
+      ],
+      "expression": "[3] 是 [1] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_1",
+      "connects": [
+        4,
+        1
+      ],
+      "expression": "[4] 是 [1] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_1",
+      "connects": [
+        5,
+        1
+      ],
+      "expression": "[5] 是 [1] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_1",
+      "connects": [
+        6,
+        1
+      ],
+      "expression": "[6] 是 [1] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        14,
+        16
+      ],
+      "expression": "[14] 是 [16] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        15,
+        16
+      ],
+      "expression": "[15] 是 [16] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_7",
+      "connects": [
+        18,
+        17,
+        20
+      ],
+      "expression": "[18] 是 ([17] 和 [20]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_7",
+      "connects": [
+        19,
+        17,
+        20
+      ],
+      "expression": "[19] 是 ([17] 和 [20]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        22,
+        21,
+        27
+      ],
+      "expression": "[22] 是 ([21] 和 [27]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        23,
+        21,
+        27
+      ],
+      "expression": "[23] 是 ([21] 和 [27]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        24,
+        21
+      ],
+      "expression": "[24] 是 [21] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        25,
+        21,
+        27
+      ],
+      "expression": "[25] 是 ([21] 和 [27]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        26,
+        21,
+        27
+      ],
+      "expression": "[26] 是 ([21] 和 [27]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        27,
+        21
+      ],
+      "expression": "[27] 是 [21] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        28,
+        21,
+        32
+      ],
+      "expression": "[28] 是 ([21] 和 [32]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        29,
+        21,
+        32
+      ],
+      "expression": "[29] 是 ([21] 和 [32]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        30,
+        21,
+        32
+      ],
+      "expression": "[30] 是 ([21] 和 [32]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        31,
+        21
+      ],
+      "expression": "[31] 是 [21] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_8",
+      "connects": [
+        32,
+        21
+      ],
+      "expression": "[32] 是 [21] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_9",
+      "connects": [
+        33,
+        35
+      ],
+      "expression": "[33] 是 [35] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_9",
+      "connects": [
+        34,
+        35
+      ],
+      "expression": "[34] 是 [35] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_9",
+      "connects": [
+        36,
+        33
+      ],
+      "expression": "[36] 是 [33] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_9",
+      "connects": [
+        37,
+        34
+      ],
+      "expression": "[37] 是 [34] 的例子或证据"
+    }
+  ]
+}

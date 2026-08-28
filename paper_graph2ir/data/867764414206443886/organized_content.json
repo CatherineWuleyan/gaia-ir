@@ -1,0 +1,443 @@
+[
+  {
+    "id": "paper:867764414206443886::conclusion_1",
+    "global_id": "gcn_f2c07d048e06407e",
+    "order": 1,
+    "title": "Winning tickets in AutoEncoders found by iterative magnitude pruning",
+    "content": "A \"winning ticket\" is a sparse sub-network expressed as a binary mask over the original network's parameters together with the sub-network's rewind initialization such that, when trained under the same training procedure, it attains comparable task performance to the original dense network. In experiments on image AutoEncoders, Iterative Magnitude Pruning (IMP) with global pruning (prune p=20% of remaining weights per round for n=20 rounds) and late rewinding (re-initialize pruned networks to weights at an early training iteration θ_i with i ≪ N, where N is the total number of training iterations) produced sparse AutoEncoder subnetworks that preserved reconstruction quality and downstream classification accuracy up to high sparsities. Concretely, a linear AutoEncoder trained on the MNIST dataset retained its reconstruction loss up to 89.2% of the original network's weights removed (sparsity = fraction of weights removed), and a convolutional AutoEncoder retained performance up to 95.6% sparsity on CIFAR-10 and 98.5% sparsity on Celeb-A when evaluated by reconstruction loss and by passing reconstructions through a ResNet-18 classifier trained on the original dataset.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "A \"winning ticket\" is a sparse sub-network expressed as a binary mask over the original network's parameters together with the sub-network's rewind initialization such that, when trained under the same training procedure, it attains comparable task performance to the original dense network.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 292
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "In experiments on image AutoEncoders, Iterative Magnitude Pruning (IMP) with global pruning and late rewinding produced sparse AutoEncoder subnetworks that preserved reconstruction quality and downstream classification accuracy up to high sparsities.",
+        "source_spans": [
+          {
+            "start": 292,
+            "end": 384
+          },
+          {
+            "start": 445,
+            "end": 464
+          },
+          {
+            "start": 605,
+            "end": 745
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(prune p=20% of remaining weights per round for n=20 rounds)",
+        "source_spans": [
+          {
+            "start": 384,
+            "end": 445
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(re-initialize pruned networks to weights at an early training iteration θ_i with i ≪ N, where N is the total number of training iterations)",
+        "source_spans": [
+          {
+            "start": 464,
+            "end": 605
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "example of the assertion [2]",
+        "content": "Concretely, a linear AutoEncoder trained on the MNIST dataset retained its reconstruction loss up to 89.2% of the original network's weights removed",
+        "source_spans": [
+          {
+            "start": 745,
+            "end": 894
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(sparsity = fraction of weights removed)",
+        "source_spans": [
+          {
+            "start": 894,
+            "end": 934
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "label": "example of the assertion [2]",
+        "content": ", and a convolutional AutoEncoder retained performance up to 95.6% sparsity on CIFAR-10 and 98.5% sparsity on Celeb-A when evaluated by reconstruction loss and by passing reconstructions through a ResNet-18 classifier trained on the original dataset.",
+        "source_spans": [
+          {
+            "start": 934,
+            "end": 1184
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_2",
+    "global_id": "gcn_4e9a15453bbc4462",
+    "order": 2,
+    "title": "Winning tickets in Variational AutoEncoders preserve FID and classification",
+    "content": "For Variational AutoEncoders (VAEs) and their variants, Iterative Magnitude Pruning (IMP) with global p=20%, n=20 rounds and late rewinding to an early training iteration produced sparse encoder/decoder subnetworks that preserved sample quality as measured by the Fréchet Inception Distance (FID) and downstream classification of generated images. FID denotes the Fréchet Inception Distance computed between Inception-network feature distributions of real and generated samples and is sensitive to large changes (e.g., changes ≫10 are perceptible). Using this evaluation, a standard VAE on CIFAR-10 and Celeb-A preserved FID up to 79.0% sparsity, a β-VAE preserved FID up to 86.5% sparsity, and a ResNet-VAE preserved FID up to 93.1% sparsity; the ResNet-VAE example reduced the parameter count from 2.8 million to approximately 196,000 parameters at 93.1% sparsity while maintaining the reported evaluation metrics.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "For Variational AutoEncoders (VAEs) and their variants, Iterative Magnitude Pruning (IMP) with global p=20%, n=20 rounds and late rewinding to an early training iteration produced sparse encoder/decoder subnetworks that preserved sample quality as measured by the Fréchet Inception Distance (FID) and downstream classification of generated images.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 348
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "FID denotes the Fréchet Inception Distance computed between Inception-network feature distributions of real and generated samples and is sensitive to large changes (e.g., changes ≫10 are perceptible).",
+        "source_spans": [
+          {
+            "start": 348,
+            "end": 549
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "example of the assertion [1]",
+        "content": "Using this evaluation, a standard VAE on CIFAR-10 and Celeb-A preserved FID up to 79.0% sparsity, a β-VAE preserved FID up to 86.5% sparsity, and a ResNet-VAE preserved FID up to 93.1% sparsity;",
+        "source_spans": [
+          {
+            "start": 549,
+            "end": 744
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "example of the assertion [1]",
+        "content": "the ResNet-VAE example reduced the parameter count from 2.8 million to approximately 196,000 parameters at 93.1% sparsity while maintaining the reported evaluation metrics.",
+        "source_spans": [
+          {
+            "start": 744,
+            "end": 916
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_3",
+    "global_id": "gcn_26c3ccdd57334d2f",
+    "order": 3,
+    "title": "Winning tickets in GAN generators across loss functions and architectures",
+    "content": "Iterative Magnitude Pruning (IMP) with late rewinding uncovered sparse generator subnetworks in Generative Adversarial Network (GAN) architectures and loss formulations that preserved generation quality under the same evaluation metrics (Fréchet Inception Distance and discriminator loss) and qualitative inspection. Using global IMP with p=20% and n=20 and late rewinding to an early iteration, preserved FID was observed up to 83.2% sparsity for DCGAN, 89.2% sparsity for Spectral Normalization GAN (SNGAN), 79% sparsity for ResNet-DCGAN, and for Wasserstein GAN (WGAN) preserved tickets were found at 73.7% sparsity on CIFAR-10 and 59% sparsity on Celeb-A; jointly pruned generator+discriminator configurations maintained discriminator-loss behavior and produced qualitatively plausible samples at these sparsities.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Iterative Magnitude Pruning (IMP) with late rewinding uncovered sparse generator subnetworks in Generative Adversarial Network (GAN) architectures and loss formulations that preserved generation quality under the same evaluation metrics (Fréchet Inception Distance and discriminator loss) and qualitative inspection.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 317
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "proof of the assertion [1]",
+        "content": "Using global IMP with p=20% and n=20 and late rewinding to an early iteration, preserved FID was observed up to 83.2% sparsity for DCGAN, 89.2% sparsity for Spectral Normalization GAN (SNGAN), 79% sparsity for ResNet-DCGAN, and for Wasserstein GAN (WGAN) preserved tickets were found at 73.7% sparsity on CIFAR-10 and 59% sparsity on Celeb-A; jointly pruned generator+discriminator configurations maintained discriminator-loss behavior and produced qualitatively plausible samples at these sparsities.",
+        "source_spans": [
+          {
+            "start": 317,
+            "end": 818
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_4",
+    "global_id": "gcn_f78bca229ae2424a",
+    "order": 4,
+    "title": "Iterative magnitude pruning with late rewinding yields better sparse generative subnetworks",
+    "content": "Iterative Magnitude Pruning (IMP) implemented as global pruning of p=20% per round for n=20 rounds together with late rewinding to weights at an early training iteration θ_i (i ≪ N) produced higher-quality sparse subnetworks for generative models than one-shot magnitude pruning and than rewinding to the original initialization θ_0. In DCGAN and other generative-model experiments using FID and stability across multiple random runs as metrics, the combination of small per-iteration pruning fractions (p=20% over n=20) and rewinding to θ_i yielded better FID scores and more stable winning tickets at high sparsity levels than both one-shot pruning followed by reinitialization to θ_0 and iterative pruning with rewinding to θ_0.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Iterative Magnitude Pruning (IMP) implemented as global pruning of p=20% per round for n=20 rounds together with late rewinding to weights at an early training iteration θ_i produced higher-quality sparse subnetworks for generative models than one-shot magnitude pruning and than rewinding to the original initialization θ_0.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 174
+          },
+          {
+            "start": 182,
+            "end": 334
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(i ≪ N)",
+        "source_spans": [
+          {
+            "start": 174,
+            "end": 182
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "example of the assertion [1]",
+        "content": "In DCGAN and other generative-model experiments using FID and stability across multiple random runs as metrics, the combination of small per-iteration pruning fractions",
+        "source_spans": [
+          {
+            "start": 334,
+            "end": 503
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(p=20% over n=20)",
+        "source_spans": [
+          {
+            "start": 503,
+            "end": 521
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "example of the assertion [1]",
+        "content": "and rewinding to θ_i yielded better FID scores and more stable winning tickets at high sparsity levels than both one-shot pruning followed by reinitialization to θ_0 and iterative pruning with rewinding to θ_0.",
+        "source_spans": [
+          {
+            "start": 521,
+            "end": 731
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_5",
+    "global_id": "gcn_481419f017b740be",
+    "order": 5,
+    "title": "Winning tickets speed convergence and increase stability in generative training",
+    "content": "Sparse subnetworks identified as winning tickets (masks from IMP plus their rewind initialization) converged faster and exhibited higher run-to-run stability than both randomly initialized subnetworks with the same masks (\"random tickets\") and the original unpruned networks. Empirically, in experiments repeated over N=5 independent random runs, winning tickets reached early-stopping criteria in fewer training iterations and showed reduced variance across runs in the early-stopping iterations, indicating improved convergence behavior and stability in generative-model training.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Sparse subnetworks identified as winning tickets converged faster and exhibited higher run-to-run stability than both randomly initialized subnetworks with the same masks and the original unpruned networks.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 49
+          },
+          {
+            "start": 99,
+            "end": 221
+          },
+          {
+            "start": 240,
+            "end": 276
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(masks from IMP plus their rewind initialization)",
+        "source_spans": [
+          {
+            "start": 49,
+            "end": 99
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(\"random tickets\")",
+        "source_spans": [
+          {
+            "start": 221,
+            "end": 240
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "proof of the assertion [1]",
+        "content": "Empirically, in experiments repeated over N=5 independent random runs, winning tickets reached early-stopping criteria in fewer training iterations and showed reduced variance across runs in the early-stopping iterations, indicating improved convergence behavior and stability in generative-model training.",
+        "source_spans": [
+          {
+            "start": 276,
+            "end": 582
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_6",
+    "global_id": "gcn_aa2266e148f14e9e",
+    "order": 6,
+    "title": "Winning-ticket masks and initializations transfer between VAE decoders and GAN generators",
+    "content": "Subnetworks (binary masks) and their rewind initializations discovered as winning tickets for one generative objective transfer to a different generative objective when the two models share the same generator/decoder architecture: specifically, applying a VAE-decoder winning-ticket mask and its rewind initialization to initialize a DCGAN generator (while keeping the DCGAN discriminator dense) yielded comparable FID to DCGAN winning tickets found by pruning the DCGAN generator itself, and the reverse transfer (GAN-winning tickets to VAE decoders) produced comparable VAE performance; in the reported experiments this transfer preserved performance up to roughly 80% sparsity.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Subnetworks (binary masks) and their rewind initializations discovered as winning tickets for one generative objective transfer to a different generative objective when the two models share the same generator/decoder architecture",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 229
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "example of the assertion [1]",
+        "content": ": specifically, applying a VAE-decoder winning-ticket mask and its rewind initialization to initialize a DCGAN generator (while keeping the DCGAN discriminator dense) yielded comparable FID to DCGAN winning tickets found by pruning the DCGAN generator itself, and the reverse transfer (GAN-winning tickets to VAE decoders) produced comparable VAE performance; in the reported experiments this transfer preserved performance up to roughly 80% sparsity.",
+        "source_spans": [
+          {
+            "start": 229,
+            "end": 680
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_7",
+    "global_id": "gcn_f77c2929bb964cfe",
+    "order": 7,
+    "title": "Early-Bird tickets reduce FLOPs and training time and outperform pruning-at-initialization on DCGAN",
+    "content": "Early-Bird tickets (EB-tickets) are channel-pruned subnetworks detected early during training by monitoring the Hamming distance between channel masks over consecutive iterations (channel-mask look-back = 5 iterations, detection threshold δ = 0.1), compressing channels when the mask distance stabilizes (typically detected around epochs 4–6), and continuing training on the compressed model; channel pruning is implemented by zeroing affine batch-normalization parameters to remove entire channels. In DCGAN experiments, EB-ticket compression reduced cumulative training floating-point operations (FLOPs) from 1.12e+16 (unpruned network) to approximately 0.13e+16 (≈88% reduction) and reduced total training time from 4590.5 s (unpruned) to 2417.07 s (EB-ticket) in full precision and to 2131.09 s for mixed-precision EB-tickets (≈53.5% reduction); EB-tickets also achieved lower FID (EB-ticket FID 33.49) than the unpruned network (FID 37.71) and outperformed the pruning-at-initialization baselines SNIP (FID 56.02) and GraSP (FID 65.53) on the reported DCGAN benchmark while producing the indicated reductions in FLOPs and training time.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "Early-Bird tickets (EB-tickets) are channel-pruned subnetworks detected early during training by monitoring the Hamming distance between channel masks over consecutive iterations (channel-mask look-back = 5 iterations, detection threshold δ = 0.1), compressing channels when the mask distance stabilizes (typically detected around epochs 4–6), and continuing training on the compressed model; channel pruning is implemented by zeroing affine batch-normalization parameters to remove entire channels.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 500
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "In DCGAN experiments, EB-ticket compression reduced cumulative training floating-point operations (FLOPs) from 1.12e+16 (unpruned network) to approximately 0.13e+16 (≈88% reduction) and reduced total training time from 4590.5 s (unpruned) to 2417.07 s (EB-ticket) in full precision and to 2131.09 s for mixed-precision EB-tickets (≈53.5% reduction);",
+        "source_spans": [
+          {
+            "start": 500,
+            "end": 850
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "EB-tickets also achieved lower FID (EB-ticket FID 33.49) than the unpruned network (FID 37.71)",
+        "source_spans": [
+          {
+            "start": 850,
+            "end": 945
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "and outperformed the pruning-at-initialization baselines SNIP (FID 56.02) and GraSP (FID 65.53) on the reported DCGAN benchmark while producing the indicated reductions in FLOPs and training time.",
+        "source_spans": [
+          {
+            "start": 945,
+            "end": 1141
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867764414206443886::conclusion_9",
+    "global_id": "gcn_06e2f848290f4461",
+    "order": 9,
+    "title": "Winning tickets outperform random tickets across evaluation metrics and qualitatively",
+    "content": "Across AutoEncoders, VAEs and GANs studied here, winning tickets—defined as subnetworks found by Iterative Magnitude Pruning together with their rewind initialization—outperform random tickets (the same masks but with randomly re-initialized weights) on multiple quantitative evaluation metrics, including reconstruction loss, Fréchet Inception Distance (FID), discriminator loss, Inception Score, and downstream classification accuracy of generated or reconstructed images, and they produce qualitatively better samples and reconstructions up to the reported sparsity thresholds; these comparative results were observed consistently across the datasets and architectures evaluated in the experiments.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Across AutoEncoders, VAEs and GANs studied here, winning tickets— outperform random tickets on multiple quantitative evaluation metrics, including reconstruction loss, Fréchet Inception Distance (FID), discriminator loss, Inception Score, and downstream classification accuracy of generated or reconstructed images, and they produce qualitatively better samples and reconstructions up to the reported sparsity thresholds; these comparative results were observed consistently across the datasets and architectures evaluated in the experiments.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 65
+          },
+          {
+            "start": 167,
+            "end": 193
+          },
+          {
+            "start": 251,
+            "end": 701
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "defined as subnetworks found by Iterative Magnitude Pruning together with their rewind initialization—",
+        "source_spans": [
+          {
+            "start": 65,
+            "end": 167
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(the same masks but with randomly re-initialized weights)",
+        "source_spans": [
+          {
+            "start": 193,
+            "end": 251
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,191 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 1,
+    "label": "assertion",
+    "text": "It is possible to classify an input factual statement $X$ into three mutually exclusive categories—Novel, Familiar, and Dissonant—using lightweight features derived from model inner states and from model outputs.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 3,
+    "label": "assertion",
+    "text": "Using simple classifiers (Support Vector Machines and Random Forests) with combined activation-and-gradient features (per-layer activation statistics and gradient statistics) yields high accuracy.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 8,
+    "label": "assertion",
+    "text": "Readily-extractable statistics (mean, std, min, max, quartiles) of activations and gradients, or output-only probability features, contain strong, deployable signatures that discriminate between novel, familiar, and dissonant facts.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 3,
+    "label": "assertion",
+    "text": "This gradient-masking workflow, namely “during training on new facts, compute standard forward/backward gradients and then zero-out (mask) gradients for parameters that do not belong to a chosen neuron set, so only selected neurons and their associated weights are updated by the optimizer,” is computationally lightweight and directly controls where parameter updates are applied.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 1,
+    "label": "assertion",
+    "text": "In experiments that add non-dissonant (non-contradictory) facts after training on an initial set of 2000 facts from the COUNTERFACT dataset, GPT-2-small shows strong inherent robustness to preserving unrelated prior knowledge under many update modes.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 3,
+    "label": "assertion",
+    "text": "In experiments that add non-dissonant (non-contradictory) facts after training on an initial set of 2000 facts from the COUNTERFACT dataset, plastic-neuron updates require more neurons or training time to reach high accuracy on the new facts; candidate, stubborn, or specific-neuron strategies learn new facts using fewer parameters but incur more degradation to tracked old facts.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_4",
+    "number": 5,
+    "label": "assertion",
+    "text": "In experiments that add non-dissonant (non-contradictory) facts after training on an initial set of 2000 facts from the COUNTERFACT dataset, there is a tradeoff: avoiding heavily-used (stubborn) neurons improves retention of unrelated knowledge (stability) while some subnetworks (stubborn/candidate) enable efficient ingestion (plasticity).",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 1,
+    "label": "assertion",
+    "text": "Controlled experiments reveal that introducing dissonant updates—new data that directly contradicts previously learned associations—causes severe, widespread degradation of unrelated prior knowledge regardless of model scale and regardless of neuron-targeting strategy.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 6,
+    "label": "assertion",
+    "text": "This catastrophic interference—severe, widespread degradation of unrelated prior knowledge—occurs even when dissonant updates (new data that directly contradicts previously learned associations) are restricted to neurons classified as plastic (rarely used) and also manifests on larger models that have greater capacity but still exhibit significant degradation of tracked unrelated facts.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 1,
+    "label": "assertion",
+    "text": "Combining per-layer activation statistics and gradient statistics (A+G) yields consistently better classification performance than using either feature type alone.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 2,
+    "label": "assertion",
+    "text": "In the finetuned scenario (GPT-2 model fine-tuned on 1000 known facts), gradient-based features dominate feature importance.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 4,
+    "label": "assertion",
+    "text": "In the pre-trained scenario (pre-trained GPT-2 model), both activations and gradients contribute substantially.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 6,
+    "label": "assertion",
+    "text": "Historical normalization (layer-wise cumulative) helps SVM classifiers more than Random Forests in some settings.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_7",
+    "number": 1,
+    "label": "assertion",
+    "text": "Features extracted solely from model outputs can achieve performance comparable to internal-state features on dissonance/novelty classification (Novel, Familiar, Dissonant).",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_8",
+    "number": 1,
+    "label": "assertion",
+    "text": "Analysis of the historical-gradient distributions across transformer blocks of GPT-2-XL reveals non-uniform localization (not uniformly distributed): neurons identified as stubborn (high historical gradient magnitude $H\\hat{G}_n$) concentrate in certain blocks, with the concatenated query, key, value attention matrix ($\\text{Attn}_{\\text{c_attn}}$) generally containing a larger share of stubborn neurons except in early blocks where the attention output projection matrix ($\\text{Attn}_{\\text{c_proj}}$) can dominate.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_9",
+    "number": 1,
+    "label": "assertion",
+    "text": "Experiments that first trained a GPT-2-small model on 10,000 disjoint facts (Facts H) to identify highly active 'Lottery Ticket Neurons' and then restricted learning of different new facts (Facts A) to various neuron subsets show that the Lottery Ticket Neurons achieve substantially better new-fact acquisition with fewer neurons than non-lottery neurons or randomly selected neurons.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_9",
+    "number": 6,
+    "label": "assertion",
+    "text": "Certain pre-existing subnetworks are more conducive to packing new factual associations, which is an extension of the lottery ticket hypothesis to factual integration in transformers.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 1,
+    "label": "assertion",
+    "text": "When benchmarked under multi-fact editing scenarios with 10, 100, and 1000 dissonant facts, candidate- and specific-neuron targeted-update strategies can achieve higher harmonic means than single-edit-focused editing methods such as Rank-One Model Editing (ROME) and Mass-Editing Memory in a Transformer (MEMIT) in some multi-fact settings.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 6,
+    "label": "assertion",
+    "text": "No targeted strategy studied among the candidate- and specific-neuron targeted-update strategies avoids the fundamental catastrophic interference produced by dissonant updates.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 7,
+    "label": "assertion",
+    "text": "The candidate- and specific-neuron targeted-update strategies trade off differently along the preservation–ingestion Pareto front and occasionally outperform editing baselines—single-edit-focused editing methods such as Rank-One Model Editing (ROME) and Mass-Editing Memory in a Transformer (MEMIT)—on combined metrics (balancing old unrelated accuracy, new reliability, and generalization).",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_10",
+    "number": 9,
+    "label": "assertion",
+    "text": "None of the candidate- and specific-neuron targeted-update strategies solve the dissonance-induced destruction problem.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  }
+]
