@@ -1,7 +1,0 @@
-﻿{
-  "segments": [
-    {"text": "The regularization term penalizes model complexity", "label": "assertion", "number": 1},
-    {"text": " (i.e., the number of non-zero parameters in the network)", "label": "elaboration", "of_terms": ["model complexity"]},
-    {"text": ", which discourages the optimizer from retaining redundant weights.", "label": "assertion", "number": 2}
-  ]
-}

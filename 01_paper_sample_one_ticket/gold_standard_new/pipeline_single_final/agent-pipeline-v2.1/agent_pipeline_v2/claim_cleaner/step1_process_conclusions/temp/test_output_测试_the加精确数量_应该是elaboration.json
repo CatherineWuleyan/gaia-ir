@@ -1,7 +1,0 @@
-﻿{
-  "segments": [
-    {"text": "All experiments were repeated using the three random seeds ", "label": "elaboration"},
-    {"text": "(17, 42, and 123)", "label": "elaboration", "of_terms": ["the three random seeds"]},
-    {"text": ", and the reported accuracy is the mean across these runs.", "label": "elaboration"}
-  ]
-}
