@@ -1,0 +1,50 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "With a_{t,i} as in note 1, R_{a_t} (the time-dependent Bregman potential) and the mirror-flow identity as in note 2 give the schedule α_t direct control over the scale a_t, over the global minimum of R_{a_t} as in note 3, and over the asymptotic implicit-bias strength as in note 4.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "The schedule α_t controls the strength and position of the implicit bias.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 2
+    }
+  ],
+  "note": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "elaboration of a_{t,i}: =2u_{0,i}v_{0,i} exp(-2 ∫_0^t α_s ds)",
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "elaboration of mirror-flow identity: d∇R_{a_t}(x_t) = -∇f(x_t)dt",
+      "number": 2
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "elaboration of global minimum of R_{a_t}: (at x = exp(-2 ∫_0^t α_s ds) ⊙ m_0 ⊙ w_0)",
+      "number": 3
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "elaboration of asymptotic implicit-bias strength: (R_a(x) ~ log(1/a) ||x||_{L_1} as a→0 and |x/a|→∞)",
+      "number": 4
+    }
+  ],
+  "relation": [
+    {
+      "conclusion": "conclusion_1",
+      "connects": [
+        1,
+        2
+      ],
+      "expression": "[1] 推出 [2]"
+    }
+  ]
+}

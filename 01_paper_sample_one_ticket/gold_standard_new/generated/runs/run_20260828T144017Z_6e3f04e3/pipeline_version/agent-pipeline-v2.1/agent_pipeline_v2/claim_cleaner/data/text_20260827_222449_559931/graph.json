@@ -1,0 +1,20 @@
+{
+  "data": {
+    "papers": [
+      {
+        "graph": {
+          "nodes": [
+            {
+              "id": "paper:text_20260827_222449_559931::conclusion_1",
+              "global_id": "paper:text_20260827_222449_559931::conclusion_1",
+              "kind": "conclusion",
+              "order": 0,
+              "title": "",
+              "content": "For the Bayes classifier f_Bayes(x)=x_1+η∑_{i=2}^{d+1}x_i, the risk expressions in Eq. (5) imply, under the common-feature condition 0<η≪1 and d≫1, that as d grows the ID classification risk decreases slowly (so increasing d only slowly improves ID classification)."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

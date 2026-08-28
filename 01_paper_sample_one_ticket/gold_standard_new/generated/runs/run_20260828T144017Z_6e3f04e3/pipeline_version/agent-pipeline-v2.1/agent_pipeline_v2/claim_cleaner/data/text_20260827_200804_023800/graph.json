@@ -1,0 +1,20 @@
+{
+  "data": {
+    "papers": [
+      {
+        "graph": {
+          "nodes": [
+            {
+              "id": "paper:text_20260827_200804_023800::conclusion_1",
+              "global_id": "paper:text_20260827_200804_023800::conclusion_1",
+              "kind": "conclusion",
+              "order": 0,
+              "title": "",
+              "content": "For the time-dependent mirror potential R_{a_t}(x) with a_{t,i}=2u_{0,i}v_{0,i} exp(-2∫_0^t α_s ds), the schedule of α_t controls the scale a_t; since the global minimum of R_{a_t} is located at exp(-2∫_0^t α_s ds) ⊙ m_0 ⊙ w_0 and R_a(x) ∼ log(1/a) ||x||_{L_1} as a → 0, the α_t schedule controls the positional and asymptotic-strength aspects of the implicit bias."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

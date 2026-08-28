@@ -1,0 +1,20 @@
+{
+  "data": {
+    "papers": [
+      {
+        "graph": {
+          "nodes": [
+            {
+              "id": "paper:text_20260827_213213_250223::conclusion_1",
+              "global_id": "paper:text_20260827_213213_250223::conclusion_1",
+              "kind": "conclusion",
+              "order": 0,
+              "title": "",
+              "content": "In the Gaussian model of Eq. (2), the feature vector is x = (x_1, ..., x_{d+1}), where x_1 is the special feature and x_2, ..., x_{d+1} are the d common weak features; sigma is the Gaussian noise scale and delta is the rejection threshold."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

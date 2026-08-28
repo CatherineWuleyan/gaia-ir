@@ -1,0 +1,8 @@
+﻿{
+  "segments": [
+    {"text": "The code and datasets used for the lottery ticket experiments (", "label": "other"},
+    {"text": "iterative magnitude pruning, domain transfer on five Amazon Reviews sentiment classification tasks using a CNN)", "label": "elaboration", "of_terms": ["lottery ticket experiments"]},
+    {"text": " are publicly released (", "label": "other"},
+    {"text": "repository link provided by the authors).", "label": "elaboration", "of_terms": ["publicly released"]}
+  ]
+}

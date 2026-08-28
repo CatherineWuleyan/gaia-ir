@@ -1,0 +1,13 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "Under CIFAR-10, the preserved, locally permuted, and globally permuted masks are masks used for random ticket initializations.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    }
+  ],
+  "note": [],
+  "relation": []
+}

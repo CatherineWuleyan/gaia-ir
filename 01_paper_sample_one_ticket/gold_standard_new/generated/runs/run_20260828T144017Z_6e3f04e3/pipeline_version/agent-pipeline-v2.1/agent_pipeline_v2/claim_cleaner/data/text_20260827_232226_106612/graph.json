@@ -1,0 +1,20 @@
+{
+  "data": {
+    "papers": [
+      {
+        "graph": {
+          "nodes": [
+            {
+              "id": "paper:text_20260827_232226_106612::conclusion_1",
+              "global_id": "paper:text_20260827_232226_106612::conclusion_1",
+              "kind": "conclusion",
+              "order": 0,
+              "title": "",
+              "content": "The random-mask comparison was performed on CIFAR-10."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

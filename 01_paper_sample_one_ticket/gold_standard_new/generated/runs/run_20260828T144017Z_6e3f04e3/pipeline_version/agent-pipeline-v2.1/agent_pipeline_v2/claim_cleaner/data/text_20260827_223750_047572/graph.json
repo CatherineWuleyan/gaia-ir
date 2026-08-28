@@ -1,0 +1,20 @@
+{
+  "data": {
+    "papers": [
+      {
+        "graph": {
+          "nodes": [
+            {
+              "id": "paper:text_20260827_223750_047572::conclusion_1",
+              "global_id": "paper:text_20260827_223750_047572::conclusion_1",
+              "kind": "conclusion",
+              "order": 0,
+              "title": "",
+              "content": "In the closed-form LASSO solution f_LASSO(x) = (1 - lambda)_+ x_1 + sum_{i=2}^{d+1} (eta - lambda)_+ x_i, the coordinate x_1 is the special feature and x_2, ..., x_{d+1} are the abundant weak common features; with 0 < eta << 1, choosing lambda approximately eta makes every common-feature coefficient (eta - lambda)_+ zero while leaving the special-feature coefficient (1 - lambda)_+ positive."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

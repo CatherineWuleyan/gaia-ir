@@ -1,0 +1,58 @@
+[
+  {
+    "id": "paper:text_20260827_200804_023800::conclusion_1",
+    "global_id": "paper:text_20260827_200804_023800::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "For the time-dependent mirror potential R_{a_t}(x) with a_{t,i}=2u_{0,i}v_{0,i} exp(-2∫_0^t α_s ds), the schedule of α_t controls the scale a_t; since the global minimum of R_{a_t} is located at exp(-2∫_0^t α_s ds) ⊙ m_0 ⊙ w_0 and R_a(x) ∼ log(1/a) ||x||_{L_1} as a → 0, the α_t schedule controls the positional and asymptotic-strength aspects of the implicit bias.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For the time-dependent mirror potential R_{a_t}(x) with a_{t,i}=2u_{0,i}v_{0,i} exp(-2∫_0^t α_s ds), ",
+          "label": "other"
+        },
+        {
+          "text": "the schedule of α_t controls the scale a_t; ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "since ",
+          "label": "relation",
+          "connects": [
+            2,
+            3,
+            4
+          ],
+          "expression": "([2] 且 [3]) 推出 [4]"
+        },
+        {
+          "text": "the global minimum of R_{a_t} is located at exp(-2∫_0^t α_s ds) ⊙ m_0 ⊙ w_0",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " and ",
+          "label": "connection"
+        },
+        {
+          "text": "R_a(x) ∼ log(1/a) ||x||_{L_1} as a → 0",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": ", the α_t schedule controls the positional and asymptotic-strength aspects of the implicit bias.",
+          "label": "assertion",
+          "number": 4
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

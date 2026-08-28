@@ -1,0 +1,40 @@
+[
+  {
+    "id": "paper:text_20260827_220645_076791::conclusion_1",
+    "global_id": "paper:text_20260827_220645_076791::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "The architectures ResNet-20s, ResNet-18, VGG-16, and DenseNet-100 are the network architectures over which the paper's experiments demonstrate the winning-Trojan-ticket existence.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "The architectures are the network architectures over which the paper's experiments demonstrate the winning-Trojan-ticket existence.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 18
+          },
+          {
+            "start": 66,
+            "end": 179
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "ResNet-20s, ResNet-18, VGG-16, and DenseNet-100",
+        "source_spans": [
+          {
+            "start": 18,
+            "end": 66
+          }
+        ],
+        "of_terms": [
+          "The architectures"
+        ]
+      }
+    ]
+  }
+]

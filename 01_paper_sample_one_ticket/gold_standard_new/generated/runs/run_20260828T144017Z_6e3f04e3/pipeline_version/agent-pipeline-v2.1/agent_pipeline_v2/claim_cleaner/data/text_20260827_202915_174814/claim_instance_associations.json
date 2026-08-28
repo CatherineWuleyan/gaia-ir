@@ -1,0 +1,16 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 1,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  },
+  {
+    "conclusion": "conclusion_1",
+    "claim_number": 3,
+    "claim_label": "assertion",
+    "certain_instances": [],
+    "uncertain_instances": []
+  }
+]

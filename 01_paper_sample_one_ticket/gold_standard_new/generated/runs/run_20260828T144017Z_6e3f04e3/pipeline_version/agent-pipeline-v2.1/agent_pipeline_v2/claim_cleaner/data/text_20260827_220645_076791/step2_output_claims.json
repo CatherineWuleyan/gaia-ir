@@ -1,0 +1,13 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 1,
+    "label": "assertion",
+    "text": "The architectures, which are ResNet-20s, ResNet-18, VGG-16, and DenseNet-100 (【2】), are the network architectures over which the paper's experiments demonstrate the winning-Trojan-ticket existence.",
+    "is_pure_data": false,
+    "needs_more_context": [
+      "winning-Trojan-ticket existence"
+    ],
+    "instance_removed": false
+  }
+]

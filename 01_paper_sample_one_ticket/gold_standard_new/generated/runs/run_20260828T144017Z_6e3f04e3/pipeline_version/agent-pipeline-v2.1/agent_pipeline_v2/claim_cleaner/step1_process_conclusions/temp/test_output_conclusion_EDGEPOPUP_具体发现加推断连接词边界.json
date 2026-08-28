@@ -1,0 +1,15 @@
+﻿{
+  "segments": [
+    {"text": "Using the planting framework, in an experiment where a trained weak ticket ", "label": "è®ºæ®", "number": 1, "supports": [2]},
+    {"text": "(a subnetwork that requires further training)", "label": "elaboration", "of_terms": ["weak ticket"]},
+    {"text": " of sparsity $\\rho=0.01$ ", "label": "è®ºæ®", "number": 1, "supports": [2]},
+    {"text": "(discovered by the SYNFLOW pruning method and trained on CIFAR10)", "label": "elaboration", "of_terms": ["weak ticket"]},
+    {"text": " was planted back into a VGG16 neural network and then given to the EDGE-POPUP pruning method, EDGE-POPUP failed to retrieve the planted $\\rho=0.01$ strong ticket ", "label": "è®ºæ®", "number": 1, "supports": [2]},
+    {"text": "(a subnetwork that performs well at initialization)", "label": "elaboration", "of_terms": ["strong ticket"]},
+    {"text": " in this realistic convolutional neural network setting.", "label": "è®ºæ®", "number": 1, "supports": [2]},
+    {"text": " Because the planted ticket is known to exist inside the host by construction, this failure indicates that", "label": "è®ºè¯", "supports": [2]},
+    {"text": " the inability of pruning methods ", "label": "assertion", "number": 2},
+    {"text": "(here EDGE-POPUP)", "label": "instance", "of_terms": ["pruning methods"]},
+    {"text": " to find extremely sparse strong tickets in practice is due to algorithmic limitations of current methods rather than fundamental nonexistence of such tickets in randomly initialized networks.", "label": "assertion", "number": 2}
+  ]
+}

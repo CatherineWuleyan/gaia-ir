@@ -1,0 +1,7 @@
+﻿{
+  "segments": [
+    {"text": "The framework was validated on several challenging benchmarks (", "label": "assertion", "number": 1},
+    {"text": "ImageNet-1k and COCO", "label": "instance", "of_terms": ["several challenging benchmarks"]},
+    {"text": "), achieving consistent improvements over the baseline in both cases.", "label": "assertion", "number": 1}
+  ]
+}

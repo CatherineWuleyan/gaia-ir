@@ -1,0 +1,51 @@
+[
+  {
+    "id": "paper:text_20260827_223411_927232::conclusion_1",
+    "global_id": "paper:text_20260827_223411_927232::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "If an L1 penalty suppresses coefficients on abundant weak common features (by choosing λ≈η), then OOD detection risk is reduced at a controlled cost to ID classification accuracy; this is the behavior shown in the linear-Gaussian LASSO analysis.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "If an L1 penalty suppresses coefficients on abundant weak common features , then OOD detection risk is reduced at a controlled cost to ID classification accuracy",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 74
+          },
+          {
+            "start": 91,
+            "end": 178
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(by choosing λ≈η)",
+        "source_spans": [
+          {
+            "start": 74,
+            "end": 91
+          }
+        ],
+        "of_terms": [
+          "suppresses coefficients on abundant weak common features"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "; this is the behavior shown in the linear-Gaussian LASSO analysis.",
+        "source_spans": [
+          {
+            "start": 178,
+            "end": 245
+          }
+        ]
+      }
+    ]
+  }
+]

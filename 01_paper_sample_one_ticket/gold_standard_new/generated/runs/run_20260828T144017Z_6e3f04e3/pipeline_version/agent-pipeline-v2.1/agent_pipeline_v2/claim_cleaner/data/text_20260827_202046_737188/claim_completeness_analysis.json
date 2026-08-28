@@ -1,0 +1,34 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 2,
+    "label": "assertion",
+    "text": "R_{a_t} with a_{t,i} and the mirror-flow identity give the schedule α_t direct control over the scale a_t, over the global minimum of R_{a_t} , and over the asymptotic implicit-bias strength",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "完整表述": "With a_{t,i} as in 【3】, R_{a_t} (the time-dependent Bregman potential) and the mirror-flow identity as in 【4】 give the schedule α_t direct control over the scale a_t, over the global minimum of R_{a_t} as in 【5】, and over the asymptotic implicit-bias strength as in 【6】.",
+    "需要更多上下文": [],
+    "completion_status": "ok",
+    "instance_containment": null,
+    "instance_containment_status": "skipped_no_instances",
+    "完整表述_不含instance": null,
+    "instance_containment_confirmed": null,
+    "instance_removal_status": "skipped_not_applicable"
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 8,
+    "label": "assertion",
+    "text": "the schedule controls the strength and position of the implicit bias.",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "完整表述": "The schedule α_t controls the strength and position of the implicit bias.",
+    "需要更多上下文": [],
+    "completion_status": "ok",
+    "instance_containment": null,
+    "instance_containment_status": "skipped_no_instances",
+    "完整表述_不含instance": null,
+    "instance_containment_confirmed": null,
+    "instance_removal_status": "skipped_not_applicable"
+  }
+]

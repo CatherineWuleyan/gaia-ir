@@ -1,0 +1,11 @@
+{
+  "claim": [],
+  "note": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "Under CIFAR-10, the performance of the preserved, locally permuted, and globally permuted random masks is reported with mean ± standard deviation across six random seeds.",
+      "number": 1
+    }
+  ],
+  "relation": []
+}

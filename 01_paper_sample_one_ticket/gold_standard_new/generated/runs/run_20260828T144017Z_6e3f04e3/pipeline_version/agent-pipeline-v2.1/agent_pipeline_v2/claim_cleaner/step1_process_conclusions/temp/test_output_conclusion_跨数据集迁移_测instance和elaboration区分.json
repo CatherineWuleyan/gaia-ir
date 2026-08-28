@@ -1,0 +1,17 @@
+﻿{
+  "segments": [
+    {"text": "Winning-ticket initializations discovered by iterative magnitude pruning ", "label": "assertion", "number": 1},
+    {"text": "(iterative pruning rate 0.2, up to 30 pruning iterations; late resetting to early training iterations) ", "label": "elaboration", "of_terms": ["iterative magnitude pruning"]},
+    {"text": "on large, complex natural-image source datasets ", "label": "assertion", "number": 1},
+    {"text": "(ImageNet and Places365, and to a lesser extent CIFAR-100) ", "label": "elaboration", "of_terms": ["large, complex natural-image source datasets"]},
+    {"text": "produce sparse initializations that, when used to train a VGG19 or ResNet50 architecture on other natural-image target datasets ", "label": "assertion", "number": 1},
+    {"text": "(SVHN, Fashion-MNIST, CIFAR-10, CIFAR-100, ImageNet, Places365)", "label": "elaboration", "of_terms": ["other natural-image target datasets"]},
+    {"text": ", frequently achieve test accuracies on the target tasks that are close to the accuracies obtained by winning tickets discovered directly on those target datasets.", "label": "assertion", "number": 1},
+    {"text": " The transferability is observed across a wide range of pruning fractions ", "label": "assertion", "number": 2},
+    {"text": "(including very high sparsity)", "label": "elaboration", "of_terms": ["wide range of pruning fractions"]},
+    {"text": ", and ", "label": "connection"},
+    {"text": "larger / more class-rich source datasets produced stronger cross-dataset transfer than smaller sources ", "label": "assertion", "number": 3},
+    {"text": "(e.g., ", "label": "framing"},
+    {"text": "CIFAR-100 tickets generalize better than CIFAR-10 tickets despite both having 50,000 training examples).", "label": "example", "number": 4, "illustrates": [3]}
+  ]
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "paper:text_20260827_232146_328625::conclusion_1",
+    "global_id": "paper:text_20260827_232146_328625::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "The preserved, locally permuted, and globally permuted masks compared are used for random tickets.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "The preserved, locally permuted, and globally permuted masks compared",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 70
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "are used for random tickets.",
+        "source_spans": [
+          {
+            "start": 70,
+            "end": 98
+          }
+        ],
+        "of_terms": [
+          "masks compared"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,131 @@
+[
+  {
+    "id": "paper:text_20260827_202046_737188::conclusion_1",
+    "global_id": "paper:text_20260827_202046_737188::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "The time-dependent Bregman potential R_{a_t} with a_{t,i}=2u_{0,i}v_{0,i} exp(-2 ∫_0^t α_s ds) and the mirror-flow identity d∇R_{a_t}(x_t) = -∇f(x_t)dt give the schedule α_t direct control over the scale a_t, over the global minimum of R_{a_t} (at x = exp(-2 ∫_0^t α_s ds) ⊙ m_0 ⊙ w_0), and over the asymptotic implicit-bias strength (R_a(x) ~ log(1/a) ||x||_{L_1} as a→0 and |x/a|→∞); hence the schedule controls the strength and position of the implicit bias.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "The time-dependent Bregman potential",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 37
+          }
+        ],
+        "of_terms": [
+          "R_{a_t}"
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "R_{a_t} with a_{t,i} and the mirror-flow identity give the schedule α_t direct control over the scale a_t, over the global minimum of R_{a_t} , and over the asymptotic implicit-bias strength",
+        "source_spans": [
+          {
+            "start": 37,
+            "end": 57
+          },
+          {
+            "start": 95,
+            "end": 124
+          },
+          {
+            "start": 152,
+            "end": 244
+          },
+          {
+            "start": 285,
+            "end": 334
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "=2u_{0,i}v_{0,i} exp(-2 ∫_0^t α_s ds)",
+        "source_spans": [
+          {
+            "start": 57,
+            "end": 95
+          }
+        ],
+        "of_terms": [
+          "a_{t,i}"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "d∇R_{a_t}(x_t) = -∇f(x_t)dt",
+        "source_spans": [
+          {
+            "start": 124,
+            "end": 152
+          }
+        ],
+        "of_terms": [
+          "mirror-flow identity"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "(at x = exp(-2 ∫_0^t α_s ds) ⊙ m_0 ⊙ w_0)",
+        "source_spans": [
+          {
+            "start": 244,
+            "end": 285
+          }
+        ],
+        "of_terms": [
+          "global minimum of R_{a_t}"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "(R_a(x) ~ log(1/a) ||x||_{L_1} as a→0 and |x/a|→∞)",
+        "source_spans": [
+          {
+            "start": 334,
+            "end": 384
+          }
+        ],
+        "of_terms": [
+          "asymptotic implicit-bias strength"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "relation",
+        "content": "; hence",
+        "source_spans": [
+          {
+            "start": 384,
+            "end": 392
+          }
+        ],
+        "connects": [
+          2,
+          8
+        ],
+        "expression": "[2] 推出 [8]"
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "the schedule controls the strength and position of the implicit bias.",
+        "source_spans": [
+          {
+            "start": 392,
+            "end": 461
+          }
+        ]
+      }
+    ]
+  }
+]

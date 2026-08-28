@@ -1,0 +1,20 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 1,
+    "label": "assertion",
+    "text": "A parameterization induces a mirror-flow implicit bias only if the Lie bracket span of its gradient vector fields lies in the kernel of its Jacobian.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_1",
+    "number": 3,
+    "label": "assertion",
+    "text": "A parameterization that violates this necessary condition, stated in 【1】, does not induce a mirror-flow implicit bias of the same form as one that satisfies it.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  }
+]

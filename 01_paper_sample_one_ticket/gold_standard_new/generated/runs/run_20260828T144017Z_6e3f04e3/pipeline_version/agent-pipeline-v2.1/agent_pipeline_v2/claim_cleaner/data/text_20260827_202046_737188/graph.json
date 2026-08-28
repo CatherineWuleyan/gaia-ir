@@ -1,0 +1,20 @@
+{
+  "data": {
+    "papers": [
+      {
+        "graph": {
+          "nodes": [
+            {
+              "id": "paper:text_20260827_202046_737188::conclusion_1",
+              "global_id": "paper:text_20260827_202046_737188::conclusion_1",
+              "kind": "conclusion",
+              "order": 0,
+              "title": "",
+              "content": "The time-dependent Bregman potential R_{a_t} with a_{t,i}=2u_{0,i}v_{0,i} exp(-2 ∫_0^t α_s ds) and the mirror-flow identity d∇R_{a_t}(x_t) = -∇f(x_t)dt give the schedule α_t direct control over the scale a_t, over the global minimum of R_{a_t} (at x = exp(-2 ∫_0^t α_s ds) ⊙ m_0 ⊙ w_0), and over the asymptotic implicit-bias strength (R_a(x) ~ log(1/a) ||x||_{L_1} as a→0 and |x/a|→∞); hence the schedule controls the strength and position of the implicit bias."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

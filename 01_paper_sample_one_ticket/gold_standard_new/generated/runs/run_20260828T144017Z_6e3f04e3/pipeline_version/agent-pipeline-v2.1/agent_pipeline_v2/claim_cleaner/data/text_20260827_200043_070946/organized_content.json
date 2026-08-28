@@ -1,0 +1,40 @@
+[
+  {
+    "id": "paper:text_20260827_200043_070946::conclusion_1",
+    "global_id": "paper:text_20260827_200043_070946::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "If a mask parameterization violates the necessary condition stated in Theorem C.1 — that the Lie bracket span of the gradient vector fields is in the kernel of the Jacobian — then it does not induce a mirror flow.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "If a mask parameterization violates the necessary condition stated in Theorem C.1 then it does not induce a mirror flow.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 82
+          },
+          {
+            "start": 175,
+            "end": 213
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "— that the Lie bracket span of the gradient vector fields is in the kernel of the Jacobian —",
+        "source_spans": [
+          {
+            "start": 82,
+            "end": 175
+          }
+        ],
+        "of_terms": [
+          "the necessary condition"
+        ]
+      }
+    ]
+  }
+]

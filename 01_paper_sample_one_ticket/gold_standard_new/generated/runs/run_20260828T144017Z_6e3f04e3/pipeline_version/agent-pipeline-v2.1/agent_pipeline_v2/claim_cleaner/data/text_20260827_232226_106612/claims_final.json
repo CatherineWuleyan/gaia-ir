@@ -1,0 +1,11 @@
+{
+  "claim": [],
+  "note": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "The random-mask comparison was performed on CIFAR-10.",
+      "number": 1
+    }
+  ],
+  "relation": []
+}

@@ -1,0 +1,483 @@
+"""Pipeline 7.0 Step 3: mechanically classify imported relations."""
+from __future__ import annotations
+
+import copy
+import json
+import re
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any
+
+from pipeline_harness.domain.stages import _ast_claim_ids, _expression_tokens, _parse_expression
+from pipeline_harness.domain.tools import DomainTool, ToolCallRequest, ToolCallResponse, validate_tool_response
+from pipeline_harness.models import Finding, JSONDict
+from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult, instantiate
+from pipeline_harness.store import atomic_write_json
+
+from .authoring import REASONING_TYPES, content_hash, emit_formalization, weakpoint_target_ids
+from .step1 import PAPER_TEXT_KIND
+
+
+STEP_NAME = "step3_analyze_reasoning"
+WEAKPOINT_TOOL_SPEC = "agent_pipeline_v2.step2:DeepSeekV4FlashObservationTool"
+_OPERATOR_BY_EXPRESSION = (
+    ("不可同时成立", "contradiction"),
+    ("矛盾", "contradiction"),
+    ("等价", "equivalence"),
+    ("且", "conjunction"),
+    ("和", "conjunction"),
+    ("与", "conjunction"),
+    ("或", "disjunction"),
+    ("非", "negation"),
+)
+
+
+def _latest_formalization(context: StageContext) -> JSONDict:
+    references = context.find_all("formalization")
+    if not references:
+        raise ValueError("Step 3 requires a Step 2 formalization input")
+    reference = max(references, key=lambda item: int(item.metadata.get("step", 0)))
+    import json
+    value = json.loads(context.artifact_path(reference).read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("latest formalization must be a JSON object")
+    return value
+
+
+def _is_weakpoint_expression(expression: str) -> bool:
+    """Recognize the controlled evidence vocabulary used by cleaned inputs."""
+    return any(token in expression for token in ("例子或证据", "举例", "证据", "推出"))
+
+
+def _operator_type(expression: str) -> str | None:
+    if _is_weakpoint_expression(expression):
+        return None
+    return next((operator for token, operator in _OPERATOR_BY_EXPRESSION if token in expression), None)
+
+
+def _fixed_expression_ast(document: JSONDict, expression: str) -> JSONDict:
+    references = {key: key for key in document["graph"]["nodes"]}
+    for key in document["graph"]["nodes"]:
+        match = re.fullmatch(r"claim_(\d+)", key)
+        if match:
+            references[match.group(1)] = key
+    postfix = re.fullmatch(r"\s*(.+?)\s+与\s+(.+?)\s+(矛盾|不可同时成立)\s*", expression)
+    if postfix:
+        expression = f"{postfix.group(1)} {postfix.group(3)} {postfix.group(2)}"
+    return _parse_expression(_expression_tokens(expression, references))
+
+
+def _materialize_fixed_expression(
+    document: JSONDict, relation_id: str, expression: str, ast: JSONDict,
+) -> tuple[list[JSONDict], list[str]]:
+    """Persist nested fixed subexpressions and one root Operator; never materialize implication."""
+    operators: list[JSONDict] = []
+    added: list[str] = []
+    counter = 0
+
+    def operand(node: JSONDict) -> str:
+        nonlocal counter
+        if node["kind"] == "claim":
+            return str(node["id"])
+        if node["kind"] == "implies":
+            raise ValueError("nested implication is not a fixed Operator")
+        if node["kind"] == "negation":
+            variables = [operand(node["operand"])]
+        else:
+            variables = [operand(node["left"]), operand(node["right"])]
+        counter += 1
+        helper_id = f"helper_{relation_id}_{counter}"
+        operator_id = f"operator_{relation_id}_ast_{counter}"
+        if helper_id in document["knowledges"]:
+            raise ValueError(f"duplicate AST helper ID: {helper_id}")
+        document["knowledges"][helper_id] = {
+            "type": "claim",
+            "content": {"canonical": f"{node['kind']}({','.join(variables)})"},
+            "source_anchor_ids": [],
+        }
+        document["graph"]["nodes"].append(helper_id)
+        operators.append({
+            "id": operator_id, "type": node["kind"], "variables": variables, "conclusion": helper_id,
+            "metadata": {"expression": expression, "source_relation_id": relation_id, "derived_ast_helper": True},
+        })
+        added.extend([helper_id, operator_id])
+        return helper_id
+
+    if ast["kind"] == "implies":
+        operand(ast["left"])
+        operand(ast["right"])
+        return operators, added
+    if ast["kind"] == "claim":
+        raise ValueError("a fixed relation requires an operator")
+    if ast["kind"] == "negation":
+        variables = [operand(ast["operand"])]
+    else:
+        variables = [operand(ast["left"]), operand(ast["right"])]
+    root_id = f"operator_{relation_id}"
+    operators.append({
+        "id": root_id, "type": ast["kind"], "variables": variables,
+        "metadata": {"expression": expression, "source_relation_id": relation_id},
+    })
+    added.append(root_id)
+    return operators, added
+
+
+def _json_pointer(value: Any, pointer: str) -> Any:
+    current = value
+    for token in pointer.lstrip("/").split("/"):
+        if not token:
+            continue
+        token = token.replace("~1", "/").replace("~0", "~")
+        current = current[int(token)] if isinstance(current, list) else current[token]
+    return current
+
+
+def _anchor_excerpt(context: StageContext, anchor: JSONDict) -> str | None:
+    artifact_id = anchor.get("artifact_id")
+    locator = anchor.get("locator")
+    reference = next((item for item in context.inputs if item.artifact_id == artifact_id), None)
+    if reference is None or not isinstance(locator, dict):
+        return None
+    try:
+        path = context.artifact_path(reference)
+        if locator.get("type") == "markdown_span":
+            lines = path.read_text(encoding="utf-8-sig").splitlines()
+            start, end = int(locator["start_line"]), int(locator["end_line"])
+            return "\n".join(lines[start - 1:end])
+        if locator.get("type") == "json_pointer":
+            value = _json_pointer(json.loads(path.read_text(encoding="utf-8-sig")), str(locator["pointer"]))
+            return value.get("text") if isinstance(value, dict) and isinstance(value.get("text"), str) else json.dumps(value, ensure_ascii=False)
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+    return None
+
+
+def _classification_records(context: StageContext, document: JSONDict, weakpoints: list[JSONDict]) -> list[JSONDict]:
+    anchors = {str(item["anchor_id"]): item for item in document["workflow"]["source_anchors"]}
+    records: list[JSONDict] = []
+    for weakpoint in weakpoints:
+        payload = weakpoint["payload"]
+        evidence_ids = list(payload["evidence_claim_ids"])
+        evidence_anchor_ids = list(payload["evidence_anchor_ids"])
+        records.append({
+            "weakpoint_id": weakpoint["id"],
+            "evidence_claims": [
+                {"claim_id": claim_id, "content": document["knowledges"][claim_id]["content"]["canonical"]}
+                for claim_id in evidence_ids
+            ],
+            "target_claims": [
+                {"claim_id": claim_id, "content": document["knowledges"][claim_id]["content"]["canonical"]}
+                for claim_id in weakpoint_target_ids(payload)
+            ],
+            "expression": payload["expression"],
+            "evidence_anchors": [
+                {"anchor_id": anchor_id, "text": excerpt}
+                for anchor_id in evidence_anchor_ids
+                if (anchor := anchors.get(anchor_id)) is not None
+                and (excerpt := _anchor_excerpt(context, anchor))
+            ],
+        })
+    return records
+
+
+def _paper_anchor_ids(document: JSONDict, knowledge_ids: set[str]) -> set[str]:
+    paper_anchors = {
+        item["anchor_id"] for item in document["workflow"]["source_anchors"]
+        if item.get("source_kind") == PAPER_TEXT_KIND
+    }
+    return {
+        anchor_id for knowledge_id in knowledge_ids
+        for anchor_id in document["knowledges"][knowledge_id].get("source_anchor_ids", [])
+        if anchor_id in paper_anchors
+    }
+
+
+def _relation_clusters(context: StageContext, document: JSONDict, links: list[JSONDict]) -> list[JSONDict]:
+    """Build experiment-bounded clusters plus one adjacent coarse-relation layer."""
+    candidates = [item for item in links if _is_weakpoint_expression(
+        str(item.get("metadata", {}).get("relation", {}).get("expression", ""))
+    )]
+    seeded: dict[str, list[JSONDict]] = {}
+    loose: list[JSONDict] = []
+    for link in candidates:
+        context_id = link.get("metadata", {}).get("relation", {}).get("relation_context_id")
+        if isinstance(context_id, str) and context_id:
+            seeded.setdefault(context_id, []).append(link)
+        else:
+            loose.append(link)
+    groups: list[tuple[str | None, list[JSONDict]]] = [(key, value) for key, value in seeded.items()]
+    frozen_nodes = [
+        {key for link in group for key in [*link["sources"], link["target"]]}
+        for _, group in groups
+    ]
+    frozen_anchors = [_paper_anchor_ids(document, nodes) for nodes in frozen_nodes]
+    unassigned: list[JSONDict] = []
+    for link in loose:
+        endpoints = {*link["sources"], link["target"]}
+        link_anchors = _paper_anchor_ids(document, endpoints)
+        scores = [
+            len(link_anchors & anchors) if endpoints & nodes else 0
+            for nodes, anchors in zip(frozen_nodes, frozen_anchors)
+        ]
+        best = max(scores, default=0)
+        matches = [index for index, score in enumerate(scores) if score == best and score > 0]
+        if len(matches) == 1:
+            groups[matches[0]][1].append(link)
+        else:
+            unassigned.append(link)
+    groups.extend((None, [link]) for link in unassigned)
+
+    anchor_registry = {item["anchor_id"]: item for item in document["workflow"]["source_anchors"]}
+    clusters: list[JSONDict] = []
+    for index, (context_id, group) in enumerate(groups, 1):
+        node_ids = sorted({key for link in group for key in [*link["sources"], link["target"]]})
+        paper_anchor_ids = sorted(_paper_anchor_ids(document, set(node_ids)))
+        clusters.append({
+            "cluster_id": f"cluster_{index:03d}",
+            "relation_context_id": context_id,
+            "claims": [{
+                "claim_id": key,
+                "type": document["knowledges"][key]["type"],
+                "content": document["knowledges"][key]["content"]["canonical"],
+                "source_anchor_ids": list(document["knowledges"][key].get("source_anchor_ids", [])),
+            } for key in node_ids],
+            "candidate_relations": [{
+                "relation_id": link["id"],
+                "sources": list(link["sources"]),
+                "target": link["target"],
+                "expression": str(link.get("metadata", {}).get("relation", {}).get("expression", "")),
+            } for link in group],
+            "source_excerpts": [
+                {"anchor_id": anchor_id, "text": excerpt}
+                for anchor_id in paper_anchor_ids
+                if (anchor := anchor_registry.get(anchor_id)) is not None
+                and (excerpt := _anchor_excerpt(context, anchor))
+            ],
+        })
+    return clusters
+
+
+def _validate_cluster_result(document: JSONDict, clusters: list[JSONDict], normalized: Any) -> list[JSONDict]:
+    if not isinstance(normalized, dict) or set(normalized) != {"clusters"} or not isinstance(normalized["clusters"], list):
+        raise ValueError("Step 3 cluster tool must return only clusters")
+    source_by_id = {item["cluster_id"]: item for item in clusters}
+    results = normalized["clusters"]
+    if len(results) != len(clusters):
+        raise ValueError("Step 3 cluster tool must return every cluster exactly once")
+    result_by_id: dict[str, JSONDict] = {}
+    for result in results:
+        if (not isinstance(result, dict) or set(result) != {"cluster_id", "weakpoints", "rejected_relation_ids"}
+                or result.get("cluster_id") not in source_by_id or result["cluster_id"] in result_by_id):
+            raise ValueError("Step 3 cluster tool returned invalid or duplicate cluster data")
+        result_by_id[result["cluster_id"]] = result
+    if set(result_by_id) != set(source_by_id):
+        raise ValueError("Step 3 cluster tool omitted a cluster")
+    all_members: set[str] = set()
+    weakpoints: list[JSONDict] = []
+    for source in clusters:
+        result = result_by_id[source["cluster_id"]]
+        relation_ids = {item["relation_id"] for item in source["candidate_relations"]}
+        relation_order = {item["relation_id"]: index for index, item in enumerate(source["candidate_relations"])}
+        node_ids = {item["claim_id"] for item in source["claims"]}
+        rejected = result["rejected_relation_ids"]
+        items = result["weakpoints"]
+        if (not isinstance(rejected, list) or any(not isinstance(key, str) for key in rejected)
+                or not isinstance(items, list)):
+            raise ValueError("Step 3 cluster result requires weakpoints and rejected relation IDs")
+        consumed = list(rejected)
+        cluster_weakpoints: list[tuple[int, JSONDict]] = []
+        for item in items:
+            if not isinstance(item, dict) or set(item) != {
+                "member_relation_ids", "evidence_claim_ids", "target_claim_id", "reasoning_type", "expression",
+            }:
+                raise ValueError("Step 3 normalized weakpoint fields are invalid")
+            members = item["member_relation_ids"]
+            evidence = item["evidence_claim_ids"]
+            targets = item["target_claim_id"]
+            if any(not isinstance(values, list) or not values or len(values) != len(set(values))
+                   or any(not isinstance(key, str) or not key for key in values)
+                   for values in (members, evidence, targets)):
+                raise ValueError("Step 3 normalized weakpoint IDs must be non-empty and unique")
+            if (not set(members) <= relation_ids or not set(evidence + targets) <= node_ids
+                    or set(evidence) & set(targets) or item["reasoning_type"] not in REASONING_TYPES | {None}
+                    or not isinstance(item["expression"], str) or not item["expression"].strip()
+                    or any(f"[{key}]" not in item["expression"] for key in [*evidence, *targets])):
+                raise ValueError("Step 3 normalized weakpoint has unsupported references, type, or expression")
+            members = sorted(members, key=relation_order.__getitem__)
+            consumed.extend(members)
+            first = members[0]
+            evidence_anchor_ids = sorted({
+                anchor_id for key in evidence
+                for anchor_id in document["knowledges"][key].get("source_anchor_ids", [])
+            })
+            cluster_weakpoints.append((relation_order[first], {
+                "id": f"weakpoint_{first}",
+                "payload": {
+                    "evidence_claim_ids": list(evidence), "target_claim_id": list(targets),
+                    "reasoning_type": item["reasoning_type"], "evidence_anchor_ids": evidence_anchor_ids,
+                    "expression": item["expression"],
+                },
+            }))
+        if len(consumed) != len(set(consumed)) or set(consumed) != relation_ids:
+            raise ValueError("every candidate relation must be consumed or rejected exactly once")
+        if all_members & set(consumed):
+            raise ValueError("candidate relation was assigned across multiple clusters")
+        all_members.update(consumed)
+        weakpoints.extend(item for _, item in sorted(cluster_weakpoints, key=lambda pair: pair[0]))
+    return weakpoints
+
+
+def _classify_weakpoints(context: StageContext, document: JSONDict, weakpoints: list[JSONDict]) -> tuple[dict[str, str | None], ArtifactDraft]:
+    spec = str(context.options.get("tool_plugin", WEAKPOINT_TOOL_SPEC))
+    tool = instantiate(spec)
+    if not isinstance(tool, DomainTool):
+        raise TypeError(f"{spec} does not implement DomainTool")
+    request = ToolCallRequest(
+        call_id=f"semantic_step_3_{context.run_id}_{context.attempt}", tool_name=tool.name,
+        tool_version=tool.version, operation="classify_weakpoints",
+        inputs=[{"artifact_id": ref.artifact_id, "kind": ref.kind, "sha256": ref.sha256} for ref in context.inputs],
+        parameters={"weakpoints": _classification_records(context, document, weakpoints)},
+    )
+    try:
+        response = tool.invoke(request)
+        if not isinstance(response, ToolCallResponse):
+            raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
+        validate_tool_response(request, response)
+    except Exception as exc:
+        response = ToolCallResponse(request.call_id, "failed", None, error={"type": type(exc).__name__, "message": str(exc)})
+    response_path = context.work_dir / "semantic_step_3_tool_response.json"
+    atomic_write_json(response_path, {"request": request.to_dict(), "response": response.to_dict()})
+    draft = ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
+        "schema_version": "1.0.0", "step": 3, "tool_call_id": request.call_id,
+        "tool_name": tool.name, "tool_version": tool.version, "status": response.status,
+    })
+    if response.status != "succeeded" or not isinstance(response.normalized, dict):
+        raise ValueError(str((response.error or {}).get("message", "Step 3 semantic tool failed")))
+    classifications = response.normalized.get("classifications")
+    if not isinstance(classifications, list):
+        raise ValueError("Step 3 semantic tool returned no classifications")
+    return {str(item["weakpoint_id"]): item["reasoning_type"] for item in classifications if isinstance(item, dict)}, draft
+
+
+def _normalize_clusters(
+    context: StageContext, document: JSONDict, clusters: list[JSONDict],
+) -> tuple[list[JSONDict], list[ArtifactDraft]]:
+    spec = str(context.options.get("tool_plugin", WEAKPOINT_TOOL_SPEC))
+    frozen_document = copy.deepcopy(document)
+    frozen_clusters = copy.deepcopy(clusters)
+    inputs = [{"artifact_id": ref.artifact_id, "kind": ref.kind, "sha256": ref.sha256} for ref in context.inputs]
+
+    def normalize_one(index_and_cluster: tuple[int, JSONDict]) -> tuple[JSONDict, ArtifactDraft]:
+        index, cluster = index_and_cluster
+        tool = instantiate(spec)
+        if not isinstance(tool, DomainTool):
+            raise TypeError(f"{spec} does not implement DomainTool")
+        request = ToolCallRequest(
+            call_id=f"semantic_step_3_cluster_{context.run_id}_{context.attempt}_{index}",
+            tool_name=tool.name, tool_version=tool.version, operation="normalize_weakpoint_clusters",
+            inputs=inputs, parameters={"clusters": [copy.deepcopy(cluster)]},
+        )
+        try:
+            response = tool.invoke(request)
+            if not isinstance(response, ToolCallResponse):
+                raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
+            validate_tool_response(request, response)
+            if response.status != "succeeded":
+                raise ValueError(str((response.error or {}).get("message", "Step 3 cluster tool failed")))
+            _validate_cluster_result(frozen_document, [cluster], response.normalized)
+        except Exception as exc:
+            response = ToolCallResponse(
+                request.call_id, "failed", None,
+                error={"type": type(exc).__name__, "message": str(exc)},
+            )
+        response_path = context.work_dir / f"semantic_step_3_cluster_tool_response_{index}.json"
+        atomic_write_json(response_path, {"request": request.to_dict(), "response": response.to_dict()})
+        draft = ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
+            "schema_version": "1.0.0", "step": 3, "tool_call_id": request.call_id,
+            "tool_name": tool.name, "tool_version": tool.version, "status": response.status,
+        })
+        if response.status != "succeeded" or not isinstance(response.normalized, dict):
+            raise ValueError(str((response.error or {}).get("message", "Step 3 cluster tool failed")))
+        result_clusters = response.normalized.get("clusters")
+        if not isinstance(result_clusters, list) or len(result_clusters) != 1:
+            raise ValueError("Step 3 cluster tool must return exactly its frozen cluster")
+        return result_clusters[0], draft
+
+    with ThreadPoolExecutor() as executor:
+        results = list(executor.map(normalize_one, enumerate(frozen_clusters, 1)))
+    normalized = {"clusters": [item for item, _ in results]}
+    weakpoints = _validate_cluster_result(frozen_document, frozen_clusters, normalized)
+    return weakpoints, [draft for _, draft in results]
+
+
+class Step3AnalyzeReasoningPlugin:
+    """Normalize bounded relation clusters into weakpoints and retain fixed operators."""
+
+    def run(self, context: StageContext) -> StageResult:
+        try:
+            document = copy.deepcopy(_latest_formalization(context))
+            frozen_step2 = copy.deepcopy(document)
+            workflow = document["workflow"]
+            graph = document["graph"]
+            links = workflow["non_reasoning_links"]
+            existing_weakpoints: list[JSONDict] = list(workflow["weakpoints"])
+            operators: list[JSONDict] = list(graph["operators"])
+            added: list[str] = []
+            for link in links:
+                relation_id = str(link["id"])
+                expression = str(link.get("metadata", {}).get("relation", {}).get("expression", "")).strip()
+                if not expression:
+                    raise ValueError(f"{relation_id} has no relation expression")
+                sources = list(link["sources"])
+                target = str(link["target"])
+                if not _is_weakpoint_expression(expression):
+                    ast = _fixed_expression_ast(document, expression)
+                    fixed_operators, fixed_added = _materialize_fixed_expression(
+                        document, relation_id, expression, ast,
+                    )
+                    operators.extend(fixed_operators)
+                    added.extend(fixed_added)
+                elif "推出" in expression:
+                    ast = _fixed_expression_ast(document, expression)
+                    fixed_operators, fixed_added = _materialize_fixed_expression(
+                        document, relation_id, expression, ast,
+                    )
+                    operators.extend(fixed_operators)
+                    added.extend(fixed_added)
+            drafts: list[ArtifactDraft] = []
+            clusters = _relation_clusters(context, frozen_step2, frozen_step2["workflow"]["non_reasoning_links"])
+            normalized_weakpoints: list[JSONDict] = []
+            if clusters:
+                normalized_weakpoints, cluster_drafts = _normalize_clusters(context, frozen_step2, clusters)
+                drafts.extend(cluster_drafts)
+                added.extend(item["id"] for item in normalized_weakpoints)
+            unclassified_existing = [
+                item for item in existing_weakpoints if item["payload"]["reasoning_type"] is None
+            ]
+            if unclassified_existing:
+                classifications, classification_draft = _classify_weakpoints(context, document, unclassified_existing)
+                drafts.append(classification_draft)
+                if set(classifications) != {str(item["id"]) for item in unclassified_existing}:
+                    raise ValueError("Step 3 semantic tool did not classify every existing weakpoint")
+                for weakpoint in unclassified_existing:
+                    weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
+            weakpoints = [*existing_weakpoints, *normalized_weakpoints]
+            graph["operators"] = operators
+            workflow["weakpoints"] = weakpoints
+            workflow["non_reasoning_links"] = []
+            prior = document["revision"]
+            revision_id = f"revision_{context.run_id}_step_3"
+            document["revision"] = {
+                "revision_id": revision_id, "supersedes": prior.get("revision_id"),
+                "parent_hash": prior.get("content_hash"), "content_hash": "",
+            }
+            workflow["revisions"] = []
+            document["revision"]["content_hash"] = content_hash(document)
+            emitted = emit_formalization(context, document, step=3, step_name=STEP_NAME)
+            return StageResult(
+                emitted.status,
+                [*emitted.artifacts, *drafts],
+                emitted.findings,
+                emitted.metadata,
+            )
+        except Exception as exc:
+            return StageResult("failed", findings=[Finding("STEP3_CLASSIFICATION_FAILED", "error", str(exc))])

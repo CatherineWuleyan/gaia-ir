@@ -1,0 +1,19 @@
+[
+  {
+    "id": "paper:text_20260827_220200_225275::conclusion_1",
+    "global_id": "paper:text_20260827_220200_225275::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "If the Trojan score is approximately zero for non-Trojan models and a significantly positive peak in the Trojan score is associated with a backdoor, then computing the Trojan score along the IMP pruning path yields a data-free detector that identifies pruning levels where Trojan information is isolated.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "If the Trojan score is approximately zero for non-Trojan models and a significantly positive peak in the Trojan score is associated with a backdoor, then computing the Trojan score along the IMP pruning path yields a data-free detector that identifies pruning levels where Trojan information is isolated.",
+          "label": "assertion",
+          "number": 1
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

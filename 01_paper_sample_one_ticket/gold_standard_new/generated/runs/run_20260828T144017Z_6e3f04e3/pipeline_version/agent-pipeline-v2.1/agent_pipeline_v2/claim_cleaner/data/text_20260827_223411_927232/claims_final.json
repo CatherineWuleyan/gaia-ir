@@ -1,0 +1,13 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "If an L1 penalty suppresses coefficients on abundant weak common features, then OOD detection risk is reduced at a controlled cost to ID classification accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    }
+  ],
+  "note": [],
+  "relation": []
+}

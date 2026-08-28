@@ -1,0 +1,77 @@
+[
+  {
+    "id": "paper:text_20260827_221116_798637::conclusion_1",
+    "global_id": "paper:text_20260827_221116_798637::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "Under the IMP regime used for Trojan analysis, for the same model and same IMP pruning path, the Trojan score being approximately zero for non-Trojan models, together with a significantly positive peak in the Trojan score along that IMP path indicating a backdoor-associated atypical pruning stability fingerprint, implies that computing the Trojan score along the IMP path yields a data-free detector of the pruning level where Trojan information is isolated, since the peak Trojan score characterizes the winning Trojan ticket.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Under the IMP regime used for Trojan analysis, for the same model and same IMP pruning path,",
+          "label": "elaboration"
+        },
+        {
+          "text": " the Trojan score being approximately zero for non-Trojan models,",
+          "label": "论据",
+          "number": 1,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": " together with ",
+          "label": "connection"
+        },
+        {
+          "text": "a significantly positive peak in the Trojan score along that IMP path",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            3
+          ]
+        },
+        {
+          "text": " indicating a backdoor-associated atypical pruning stability fingerprint,",
+          "label": "elaboration",
+          "of_terms": [
+            "peak"
+          ]
+        },
+        {
+          "text": " implies that ",
+          "label": "relation",
+          "connects": [
+            1,
+            2,
+            3
+          ],
+          "expression": "([1] 且 [2]) 推出 [3]"
+        },
+        {
+          "text": "computing the Trojan score along the IMP path yields a data-free detector of the pruning level where Trojan information is isolated,",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": " since ",
+          "label": "relation",
+          "connects": [
+            3,
+            4
+          ],
+          "expression": "[4] 推出 [3]"
+        },
+        {
+          "text": "the peak Trojan score characterizes the winning Trojan ticket.",
+          "label": "论据",
+          "number": 4,
+          "supports": [
+            3
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "paper:text_20260827_222013_170089::conclusion_1",
+    "global_id": "paper:text_20260827_222013_170089::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "For the Bayes classifier f_Bayes(x)=x_1+η∑_{i=2}^{d+1}x_i, the risk expressions in Eq. (5) imply, under the common-feature condition 0<η≪1 and d≫1, that as d grows the OOD detection risk increases sharply (so increasing d can markedly increase OOD risk).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For the Bayes classifier f_Bayes(x)",
+          "label": "other"
+        },
+        {
+          "text": "=x_1+η∑_{i=2}^{d+1}x_i, ",
+          "label": "elaboration",
+          "of_terms": [
+            "f_Bayes(x)"
+          ]
+        },
+        {
+          "text": "the risk expressions in Eq. (5) imply, ",
+          "label": "论证",
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "under the common-feature condition 0<η≪1 and d≫1, that as d grows the OOD detection risk increases sharply ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(so increasing d can markedly increase OOD risk).",
+          "label": "elaboration",
+          "of": [
+            1
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

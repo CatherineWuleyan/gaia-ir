@@ -1,0 +1,67 @@
+[
+  {
+    "id": "paper:text_20260827_222449_559931::conclusion_1",
+    "global_id": "paper:text_20260827_222449_559931::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "For the Bayes classifier f_Bayes(x)=x_1+η∑_{i=2}^{d+1}x_i, the risk expressions in Eq. (5) imply, under the common-feature condition 0<η≪1 and d≫1, that as d grows the ID classification risk decreases slowly (so increasing d only slowly improves ID classification).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "For the Bayes classifier",
+          "label": "other"
+        },
+        {
+          "text": " f_Bayes(x)=x_1+η∑_{i=2}^{d+1}x_i,",
+          "label": "elaboration",
+          "of_terms": [
+            "the Bayes classifier"
+          ]
+        },
+        {
+          "text": " the risk expressions in Eq. (5) imply,",
+          "label": "framing"
+        },
+        {
+          "text": " under the common-feature condition",
+          "label": "other"
+        },
+        {
+          "text": " 0<η≪1 and d≫1,",
+          "label": "elaboration",
+          "of_terms": [
+            "the common-feature condition"
+          ]
+        },
+        {
+          "text": " that as d grows the ID classification risk decreases slowly",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (",
+          "label": "other"
+        },
+        {
+          "text": "so",
+          "label": "relation",
+          "connects": [
+            1,
+            2
+          ],
+          "expression": "[1] 推出 [2]"
+        },
+        {
+          "text": " increasing d only slowly improves ID classification",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": ").",
+          "label": "other"
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

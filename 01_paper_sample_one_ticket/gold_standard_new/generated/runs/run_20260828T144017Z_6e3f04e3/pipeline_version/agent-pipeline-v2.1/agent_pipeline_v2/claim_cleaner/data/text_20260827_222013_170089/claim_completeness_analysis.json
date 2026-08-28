@@ -1,0 +1,18 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 4,
+    "label": "assertion",
+    "text": "under the common-feature condition 0<η≪1 and d≫1, that as d grows the OOD detection risk increases sharply",
+    "是纯实验数据": false,
+    "pure_data_status": "ok",
+    "完整表述": "For the Bayes classifier f_Bayes(x)=x_1+η∑_{i=2}^{d+1}x_i, under the common-feature condition 0<η≪1 and d≫1, as d grows the OOD detection risk increases sharply.",
+    "需要更多上下文": [],
+    "completion_status": "ok",
+    "instance_containment": null,
+    "instance_containment_status": "skipped_no_instances",
+    "完整表述_不含instance": null,
+    "instance_containment_confirmed": null,
+    "instance_removal_status": "skipped_not_applicable"
+  }
+]

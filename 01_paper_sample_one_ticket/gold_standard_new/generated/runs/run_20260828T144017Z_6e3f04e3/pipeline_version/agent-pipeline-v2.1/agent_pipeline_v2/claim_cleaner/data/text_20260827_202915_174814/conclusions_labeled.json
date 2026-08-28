@@ -1,0 +1,33 @@
+[
+  {
+    "id": "paper:text_20260827_202915_174814::conclusion_1",
+    "global_id": "paper:text_20260827_202915_174814::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "A parameterization induces a mirror-flow implicit bias only if the Lie bracket span of its gradient vector fields lies in the kernel of its Jacobian; therefore, a parameterization that violates this necessary condition does not induce a mirror-flow implicit bias of the same form as one that satisfies it.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "A parameterization induces a mirror-flow implicit bias only if the Lie bracket span of its gradient vector fields lies in the kernel of its Jacobian; ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "therefore,",
+          "label": "relation",
+          "connects": [
+            1,
+            2
+          ],
+          "expression": "[1] 推出 [2]"
+        },
+        {
+          "text": " a parameterization that violates this necessary condition does not induce a mirror-flow implicit bias of the same form as one that satisfies it.",
+          "label": "assertion",
+          "number": 2
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

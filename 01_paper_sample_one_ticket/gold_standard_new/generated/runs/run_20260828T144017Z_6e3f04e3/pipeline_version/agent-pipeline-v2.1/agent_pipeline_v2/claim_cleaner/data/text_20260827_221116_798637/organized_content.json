@@ -1,0 +1,133 @@
+[
+  {
+    "id": "paper:text_20260827_221116_798637::conclusion_1",
+    "global_id": "paper:text_20260827_221116_798637::conclusion_1",
+    "order": 0,
+    "title": "",
+    "content": "Under the IMP regime used for Trojan analysis, for the same model and same IMP pruning path, the Trojan score being approximately zero for non-Trojan models, together with a significantly positive peak in the Trojan score along that IMP path indicating a backdoor-associated atypical pruning stability fingerprint, implies that computing the Trojan score along the IMP path yields a data-free detector of the pruning level where Trojan information is isolated, since the peak Trojan score characterizes the winning Trojan ticket.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "Under the IMP regime used for Trojan analysis, for the same model and same IMP pruning path,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 93
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "the Trojan score being approximately zero for non-Trojan models,",
+        "source_spans": [
+          {
+            "start": 93,
+            "end": 158
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 3,
+        "label": "connection",
+        "content": "together with",
+        "source_spans": [
+          {
+            "start": 158,
+            "end": 172
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "论据",
+        "content": "a significantly positive peak in the Trojan score along that IMP path",
+        "source_spans": [
+          {
+            "start": 172,
+            "end": 242
+          }
+        ],
+        "supports": [
+          7
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "indicating a backdoor-associated atypical pruning stability fingerprint,",
+        "source_spans": [
+          {
+            "start": 242,
+            "end": 315
+          }
+        ],
+        "of_terms": [
+          "peak"
+        ]
+      },
+      {
+        "number": 6,
+        "label": "relation",
+        "content": "implies that",
+        "source_spans": [
+          {
+            "start": 315,
+            "end": 328
+          }
+        ],
+        "connects": [
+          2,
+          4,
+          7
+        ],
+        "expression": "([2] 且 [4]) 推出 [7]"
+      },
+      {
+        "number": 7,
+        "label": "assertion",
+        "content": "computing the Trojan score along the IMP path yields a data-free detector of the pruning level where Trojan information is isolated,",
+        "source_spans": [
+          {
+            "start": 328,
+            "end": 461
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "label": "relation",
+        "content": "since",
+        "source_spans": [
+          {
+            "start": 461,
+            "end": 467
+          }
+        ],
+        "connects": [
+          7,
+          9
+        ],
+        "expression": "[9] 推出 [7]"
+      },
+      {
+        "number": 9,
+        "label": "论据",
+        "content": "the peak Trojan score characterizes the winning Trojan ticket.",
+        "source_spans": [
+          {
+            "start": 467,
+            "end": 529
+          }
+        ],
+        "supports": [
+          7
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,230 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import threading
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from agent_pipeline_v2.step3 import _relation_clusters, _validate_cluster_result
+from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
+from pipeline_harness.runner import run_pipeline
+from pipeline_harness.store import RunStore, atomic_write_json
+from pipeline_harness.view.projector import project_run
+
+
+class FakeWeakpointClassifier:
+    name = "fake-weakpoint-classifier"
+    version = "1"
+    calls: list[ToolCallRequest] = []
+
+    def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
+        self.__class__.calls.append(request)
+        clusters = request.parameters["clusters"]
+        normalized = []
+        for cluster in clusters:
+            weakpoints = []
+            for relation in cluster["candidate_relations"]:
+                endpoints = [*relation["sources"], relation["target"]]
+                weakpoints.append({
+                    "member_relation_ids": [relation["relation_id"]],
+                    "evidence_claim_ids": list(relation["sources"]),
+                    "target_claim_id": [relation["target"]],
+                    "reasoning_type": "abduction",
+                    "expression": " 是 ".join(f"[{key}]" for key in endpoints),
+                })
+            normalized.append({"cluster_id": cluster["cluster_id"], "weakpoints": weakpoints, "rejected_relation_ids": []})
+        return ToolCallResponse(request.call_id, "succeeded", {"clusters": clusters}, {"clusters": normalized})
+
+
+class ParallelWeakpointClassifier(FakeWeakpointClassifier):
+    barrier = threading.Barrier(2)
+    thread_ids: set[int] = set()
+
+    def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
+        self.__class__.thread_ids.add(threading.get_ident())
+        self.__class__.barrier.wait(timeout=2)
+        return super().invoke(request)
+
+
+class Step3Tests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        (self.root / "paper_text.md").write_text("[#result] The observation is reported here.\n", encoding="utf-8")
+        atomic_write_json(self.root / "claims_final.json", {
+            "claim": [
+                {"number": 1, "conclusion": "c", "text": "Observed effect.", "is_pure_data": False},
+                {"number": 2, "conclusion": "c", "text": "Second observed effect.", "is_pure_data": False},
+                {"number": 3, "conclusion": "c", "text": "General mechanism.", "is_pure_data": False},
+            ],
+            "note": [],
+            "relation": [
+                {"connects": [1, 2, 3], "expression": "([1] 和 [2]) 是 [3] 的例子或证据"},
+                {"connects": [1, 2], "expression": "[1] 与 [2] 矛盾"},
+            ],
+        })
+        atomic_write_json(self.root / "manifest.json", {"artifacts": [
+            {"path": "paper_text.md", "kind": "source.paper_text", "media_type": "text/markdown"},
+            {"path": "claims_final.json", "kind": "source.claims_final", "media_type": "application/json"},
+        ]})
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def test_classifies_only_reasoning_type_and_records_audited_input(self) -> None:
+        FakeWeakpointClassifier.calls = []
+        pipeline = {
+            "pipeline_id": "step3-classification-test", "version": "1",
+            "stages": [
+                {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
+                {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+                {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin", "options": {"tool_plugin": f"{__name__}:FakeWeakpointClassifier"}},
+            ],
+        }
+        store = RunStore.create(self.root / "runs", pipeline, input_manifest=self.root / "manifest.json")
+        self.assertEqual("succeeded", run_pipeline(store.run_dir).status)
+        self.assertEqual(1, len(FakeWeakpointClassifier.calls))
+        self.assertEqual("normalize_weakpoint_clusters", FakeWeakpointClassifier.calls[0].operation)
+        record = FakeWeakpointClassifier.calls[0].parameters["clusters"][0]
+        self.assertEqual({"cluster_id", "relation_context_id", "claims", "candidate_relations", "source_excerpts"}, set(record))
+        claims = {item["claim_id"]: item["content"] for item in record["claims"]}
+        self.assertEqual("Observed effect.", claims["claim_1"])
+        self.assertEqual("General mechanism.", claims["claim_3"])
+        formalizations = [item for item in store.load_artifacts() if item.kind == "formalization"]
+        final = json.loads(store.artifact_path(formalizations[-1]).read_text(encoding="utf-8"))
+        self.assertEqual([], final["workflow"]["revisions"])
+        payload = final["workflow"]["weakpoints"][0]["payload"]
+        self.assertEqual("abduction", payload["reasoning_type"])
+        self.assertEqual("[claim_1] 是 [claim_2] 是 [claim_3]", payload["expression"])
+        self.assertEqual(["claim_1", "claim_2"], payload["evidence_claim_ids"])
+        self.assertEqual(["claim_3"], payload["target_claim_id"])
+        self.assertEqual(
+            {
+                "id": "operator_relation_2",
+                "type": "contradiction",
+                "variables": ["claim_1", "claim_2"],
+                "metadata": {"expression": "[1] 与 [2] 矛盾", "source_relation_id": "relation_2"},
+            },
+            final["graph"]["operators"][0],
+        )
+        self.assertEqual(1, len([item for item in store.load_artifacts() if item.kind == "tool.semantic_review.response"]))
+
+    def test_argument_cluster_reorients_and_merges_phenomena_without_expanding_two_hops(self) -> None:
+        anchors = [
+            {"anchor_id": "p1", "source_kind": "source.paper_text"},
+            {"anchor_id": "p2", "source_kind": "source.paper_text"},
+            {"anchor_id": "p3", "source_kind": "source.paper_text"},
+        ]
+        document = {
+            "knowledges": {
+                "claim_E15": {"type": "claim", "content": {"canonical": "Global permutation degraded performance."}, "source_anchor_ids": ["p1"]},
+                "claim_E16": {"type": "claim", "content": {"canonical": "Local permutation moderately degraded performance."}, "source_anchor_ids": ["p1"]},
+                "claim_21": {"type": "claim", "content": {"canonical": "Global and local permutation have the stated effects."}, "source_anchor_ids": ["p1"]},
+                "claim_23": {"type": "claim", "content": {"canonical": "Layerwise mask statistics transfer ticket information."}, "source_anchor_ids": ["p1"]},
+                "claim_20": {"type": "claim", "content": {"canonical": "Mask structure contains useful information."}, "source_anchor_ids": ["p2"]},
+                "claim_99": {"type": "claim", "content": {"canonical": "A remote claim."}, "source_anchor_ids": ["p3"]},
+            },
+            "workflow": {"source_anchors": anchors},
+        }
+
+        def link(key, sources, target, expression, context=None):
+            relation = {"expression": expression}
+            if context is not None:
+                relation["relation_context_id"] = context
+            return {"id": key, "sources": sources, "target": target, "metadata": {"relation": relation}}
+
+        links = [
+            link("relation_27", ["claim_E15"], "claim_21", "[claim_E15] 是 [claim_21] 的证据", "experiment_mask"),
+            link("relation_28", ["claim_E16"], "claim_21", "[claim_E16] 是 [claim_21] 的证据", "experiment_mask"),
+            link("relation_29", ["claim_E15"], "claim_23", "[claim_E15] 是 [claim_23] 的证据", "experiment_mask"),
+            link("relation_30", ["claim_E16"], "claim_23", "[claim_E16] 是 [claim_23] 的证据", "experiment_mask"),
+            link("relation_8", ["claim_21"], "claim_20", "[claim_21] 推出 [claim_20]"),
+            link("relation_remote", ["claim_20"], "claim_99", "[claim_20] 推出 [claim_99]"),
+        ]
+        with patch("agent_pipeline_v2.step3._anchor_excerpt", return_value="Source excerpt"):
+            clusters = _relation_clusters(None, document, links)
+        self.assertEqual(
+            {"relation_27", "relation_28", "relation_29", "relation_30", "relation_8"},
+            {item["relation_id"] for item in clusters[0]["candidate_relations"]},
+        )
+        self.assertEqual(["relation_remote"], [item["relation_id"] for item in clusters[1]["candidate_relations"]])
+        normalized = {"clusters": [
+            {"cluster_id": clusters[0]["cluster_id"], "weakpoints": [
+                {"member_relation_ids": ["relation_27", "relation_28"], "evidence_claim_ids": ["claim_21"],
+                 "target_claim_id": ["claim_E15", "claim_E16"], "reasoning_type": "deduction",
+                 "expression": "[claim_21] 推出 [claim_E15] 和 [claim_E16]"},
+                {"member_relation_ids": ["relation_29", "relation_30"], "evidence_claim_ids": ["claim_21"],
+                 "target_claim_id": ["claim_23"], "reasoning_type": "abduction",
+                 "expression": "[claim_21] 溯因支持 [claim_23]"},
+                {"member_relation_ids": ["relation_8"], "evidence_claim_ids": ["claim_23"],
+                 "target_claim_id": ["claim_20"], "reasoning_type": "deduction",
+                 "expression": "[claim_23] 推出 [claim_20]"},
+            ], "rejected_relation_ids": []},
+            {"cluster_id": clusters[1]["cluster_id"], "weakpoints": [], "rejected_relation_ids": ["relation_remote"]},
+        ]}
+        weakpoints = _validate_cluster_result(document, clusters, normalized)
+        self.assertEqual(
+            [(["claim_21"], ["claim_E15", "claim_E16"]),
+             (["claim_21"], ["claim_23"]),
+             (["claim_23"], ["claim_20"])],
+            [(item["payload"]["evidence_claim_ids"], item["payload"]["target_claim_id"]) for item in weakpoints],
+        )
+
+    def test_clusters_read_one_frozen_input_in_parallel_and_merge_once(self) -> None:
+        claims = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))
+        claims["relation"].append({"connects": [2, 3], "expression": "[2] 推出 [3]"})
+        atomic_write_json(self.root / "claims_final.json", claims)
+        ParallelWeakpointClassifier.calls = []
+        ParallelWeakpointClassifier.thread_ids = set()
+        ParallelWeakpointClassifier.barrier = threading.Barrier(2)
+        pipeline = {
+            "pipeline_id": "step3-parallel-test", "version": "1",
+            "stages": [
+                {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
+                {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+                {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin",
+                 "options": {"tool_plugin": f"{__name__}:ParallelWeakpointClassifier"}},
+            ],
+        }
+        store = RunStore.create(self.root / "parallel-runs", pipeline, input_manifest=self.root / "manifest.json")
+        self.assertEqual("succeeded", run_pipeline(store.run_dir).status)
+        self.assertEqual(2, len(ParallelWeakpointClassifier.calls))
+        self.assertTrue(all(len(call.parameters["clusters"]) == 1 for call in ParallelWeakpointClassifier.calls))
+        self.assertEqual(2, len(ParallelWeakpointClassifier.thread_ids))
+        step3_refs = [ref for ref in store.load_artifacts() if ref.kind == "formalization" and ref.metadata["step"] == 3]
+        self.assertEqual(1, len(step3_refs))
+
+    def test_nested_fixed_expression_is_materialized_as_an_ast(self) -> None:
+        claims = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))
+        claims["relation"] = [{"connects": [1, 2, 3], "expression": "[1] 或 ([2] 且 [3])"}]
+        atomic_write_json(self.root / "claims_final.json", claims)
+        pipeline = {
+            "pipeline_id": "step3-ast-test", "version": "1",
+            "view_adapter": "agent_pipeline_v2.view:V2FormalizationViewAdapter",
+            "stages": [
+                {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
+                {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+                {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin", "options": {}},
+            ],
+        }
+        store = RunStore.create(self.root / "ast-runs", pipeline, input_manifest=self.root / "manifest.json")
+        self.assertEqual("succeeded", run_pipeline(store.run_dir).status)
+        final_ref = next(ref for ref in store.load_artifacts() if ref.kind == "formalization" and ref.metadata["step"] == 3)
+        final = json.loads(store.artifact_path(final_ref).read_text(encoding="utf-8"))
+        by_type = {item["type"]: item for item in final["graph"]["operators"]}
+        self.assertEqual(["claim_2", "claim_3"], by_type["conjunction"]["variables"])
+        helper = by_type["conjunction"]["conclusion"]
+        self.assertEqual(["claim_1", helper], by_type["disjunction"]["variables"])
+        self.assertIn(helper, final["graph"]["nodes"])
+        view = project_run(store.run_dir)
+        helper_node = next(node for node in view.nodes if node.get("step") == 3 and node.get("entity_id") == helper)
+        self.assertEqual("formal_internal", helper_node["details"]["visibility"])
+        self.assertEqual("helpers", helper_node["layer"])
+        self.assertEqual(["standard"], helper_node["visible_at"])
+        self.assertFalse(any(document["title"] == helper for document in view.search_documents))
+
+
+if __name__ == "__main__":
+    unittest.main()
