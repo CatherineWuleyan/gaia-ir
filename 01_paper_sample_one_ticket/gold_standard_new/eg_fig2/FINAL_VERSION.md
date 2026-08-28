@@ -2,7 +2,7 @@
 
 该目录由用户于 2026-08-28 批准冻结。
 
-- 最终实例：`run_20260828T144017Z_6e3f04e3`
+- 最终实例：`gold_standard_new/eg_fig2`
 - 输入：`gold_standard_new/paper_text.md` 与 `gold_standard_new/claims_final.json`
 - Pipeline：`agent-pipeline-v2.1-step1-5`
 - Pipeline 版本：`2.1.0`
@@ -10,9 +10,9 @@
 - 结果：3 条 observation、3 条 Step 4 strategy、0 条未解决 weakpoint
 - Gaia 官方实现：`gaia-lang 0.5.0a7`
 - Viewer：`views/viewer.html`
-- Pipeline 快照：`pipeline_version/`
-  - Harness：`pipeline_version/agent/`
-  - Pipeline v2.1：`pipeline_version/agent-pipeline-v2.1/`
+- Pipeline 快照：`gold_standard_new/pipeline_single_final/`
+  - Harness：`gold_standard_new/pipeline_single_final/agent/`
+  - Pipeline v2.1：`gold_standard_new/pipeline_single_final/agent-pipeline-v2.1/`
 
 ## 冻结哈希
 
@@ -25,4 +25,4 @@
 
 首次 Step 2 attempt 因沙箱 DNS 限制失败，未获得模型响应；同一 run 的第二次 attempt 完成真实调用，之后 Step 3–5 全部成功。失败审计按原样保留。
 
-`pipeline_version/` 是本次成功运行后立即保存的实际源码快照，仅排除 `.env`、`.DS_Store`、Python 缓存和 `*.pyc`，未修改 Pipeline 语义。
+`pipeline_single_final/` 是本次成功运行后立即保存的实际源码快照，仅排除 `.env`、`.DS_Store`、Python 缓存和 `*.pyc`，未修改 Pipeline 语义。
