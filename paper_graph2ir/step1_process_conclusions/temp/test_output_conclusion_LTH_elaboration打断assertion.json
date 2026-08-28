@@ -1,9 +1,0 @@
-﻿{
-  "segments": [
-    {"text": "The iterative Lottery Ticket Hypothesis (LTH) pruning search procedure", "label": "assertion", "number": 1},
-    {"text": "âwhich, starting from a seed network $G_0$ with random initialization $\\Theta_0$, repeats for $T$ iterations: train via teacher-student learning on augmented data to obtain weights $\\Theta_t$, then if $t<T$ compute a binary mask on $\\Theta_t$ to obtain a pruned subgraph $G_p$ from $G_0$, load the homologous subset of initial weights $\\Theta_p \\subset \\Theta_0$ corresponding to surviving parameters, and set the next model $G_{t+1}=G_p(\\Theta_p)$; output the trained pruned model $G_T(\\Theta_T)$â", "label": "elaboration", "of_terms": ["iterative Lottery Ticket Hypothesis (LTH) pruning search procedure"]},
-    {"text": "applied to Inception-based student architectures yields sparse subnetworks that retain or modestly change validation predictive metrics compared to their unpruned seeds while achieving very large parameter reduction", "label": "assertion", "number": 1},
-    {"text": "; visualization and empirical examples demonstrate ", "label": "framing"},
-    {"text": "discovered models with sparsity corresponding to up to a 149x compression rate in the examined shallow Inception student model.", "label": "example", "number": 2, "illustrates": [1]}
-  ]
-}
