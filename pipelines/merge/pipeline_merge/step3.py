@@ -133,35 +133,6 @@ def _validate_operator(item: Mapping[str, Any], records: Mapping[str, JSONDict],
             "conclusion": None, "metadata": {"source": "step2_group"}}
 
 
-def _merge_equivalences(operators: list[JSONDict], records: Mapping[str, JSONDict]) -> list[JSONDict]:
-    parent = {qid: qid for qid in records}
-    merges: list[JSONDict] = []
-    def find(qid: str) -> str:
-        while parent[qid] != qid:
-            parent[qid] = parent[parent[qid]]
-            qid = parent[qid]
-        return qid
-    for op in operators:
-        if op["type"] != "equivalence" or len(op["variables"]) != 2:
-            continue
-        left, right = op["variables"]
-        if records[left].get("category") is None or records[left].get("category") != records[right].get("category"):
-            continue
-        a, b = find(left), find(right)
-        if a == b:
-            continue
-        survivor, alias = min(a, b), max(a, b)
-        parent[alias] = survivor
-        merges.append({"representative_qid": survivor, "merged_qids": [survivor, alias],
-                       "category": records[left]["category"],
-                       "anchor_ids": sorted(set(records[a].get("source_anchor_ids", [])) | set(records[b].get("source_anchor_ids", []))),
-                       "package_provenance": sorted({records[a]["package"], records[b]["package"]})})
-    for op in operators:
-        op["variables"] = [find(qid) for qid in op["variables"]]
-    operators[:] = [op for op in operators if not (op["type"] == "equivalence" and op["variables"][0] == op["variables"][1])]
-    return merges
-
-
 class Step3IdentifyStructuresPlugin:
     stage_name = "step3_identify_structures"
 
@@ -224,12 +195,11 @@ class Step3IdentifyStructuresPlugin:
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())
-            merges = _merge_equivalences(operators, records)
             artifact = {"schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                         "source_context_artifact": {"artifact_id": local_ref.artifact_id, "kind": local_ref.kind, "sha256": local_ref.sha256},
                         "groups": [{"group_id": g["group_id"]} for g in groups if isinstance(g, Mapping) and isinstance(g.get("group_id"), str)],
                         "operators": operators, "weakpoints": weakpoints, "candidate_knowledges": candidate_knowledges,
-                        "equivalence_merges": merges, "package_set": sorted(set(local.get("package_set") or []))}
+                        "package_set": sorted(set(local.get("package_set") or []))}
             output = context.work_dir / "integration_step3_proposals.json"
             atomic_write_json(output, artifact)
             return StageResult("succeeded", artifacts=[ArtifactDraft(output, "integration.step3_proposals", "application/json", {

@@ -57,7 +57,7 @@ class Step3Tests(unittest.TestCase):
         self.assertEqual(proposal["operators"], [])
         self.assertEqual(proposal["weakpoints"], [])
 
-    def test_same_category_equivalence_merges_nodes_and_keeps_anchors(self):
+    def test_same_category_equivalence_is_left_for_step4_merge(self):
         atomic_write_json(self.root/"new.json", _ir("new","a","sparse networks transfer across dataset settings", "O"))
         atomic_write_json(self.root/"old.json", _ir("old","b","sparse networks transfer across dataset settings", "O"))
         atomic_write_json(self.root/"manifest.json", {"artifacts":[{"path":"new.json","kind":"gaia.ir"},{"path":"old.json","kind":"gaia.ir"}]})
@@ -68,8 +68,8 @@ class Step3Tests(unittest.TestCase):
         ref=next(r for r in store.load_artifacts() if r.kind=="integration.step3_proposals")
         proposal=read_json(store.artifact_path(ref))
         self.assertEqual(run.status, "succeeded")
-        self.assertEqual(len(proposal["equivalence_merges"]), 1)
-        self.assertEqual(set(proposal["equivalence_merges"][0]["anchor_ids"]), {"a:new", "a:old"})
+        self.assertNotIn("equivalence_merges", proposal)
+        self.assertEqual(proposal["operators"][0]["variables"], ["papers:new::a", "papers:old::b"])
 
 
 if __name__ == "__main__":
