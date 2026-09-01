@@ -74,7 +74,7 @@ def _compile_v2_formalization(
     try:
         from gaia._meta import IR_SCHEMA
         from gaia.engine.ir.graphs import LocalCanonicalGraph
-        from gaia.engine.ir.knowledge import Knowledge
+        from gaia.engine.ir.knowledge import Knowledge, is_qid
         from gaia.engine.ir.operator import Operator
         from gaia.engine.ir.strategy import Strategy
         from gaia.engine.ir.validator import validate_local_graph
@@ -95,8 +95,11 @@ def _compile_v2_formalization(
             if knowledge_id not in graph_ids:
                 graph_ids.append(knowledge_id)
 
+    # Integration Packages may reference already-qualified Knowledge owned by
+    # Paper Packages.  Preserve those external identities; mint a local QID
+    # only for Integration-owned labels such as candidate K and helper claims.
     bindings = {
-        knowledge_id: _qid(namespace, package_name, knowledge_id)
+        knowledge_id: knowledge_id if is_qid(knowledge_id) else _qid(namespace, package_name, knowledge_id)
         for knowledge_id in graph_ids
     }
     knowledges = []
@@ -109,6 +112,7 @@ def _compile_v2_formalization(
             type="claim" if source["type"] == "observation_claim" else source["type"],
             content=content["canonical"] if content is not None else None,
             metadata={
+                **(dict(source.get("metadata", {})) if isinstance(source.get("metadata"), Mapping) else {}),
                 "source_knowledge_id": knowledge_id,
                 "source_anchor_ids": list(source.get("source_anchor_ids", [])),
             },
