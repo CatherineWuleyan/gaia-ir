@@ -456,6 +456,7 @@ class Step3AnalyzeReasoningPlugin:
     """Normalize bounded relation clusters into weakpoints and retain fixed operators."""
 
     def run(self, context: StageContext) -> StageResult:
+        findings: list[Finding] = []
         try:
             document = copy.deepcopy(_latest_formalization(context))
             frozen_step2 = copy.deepcopy(document)
@@ -519,6 +520,23 @@ class Step3AnalyzeReasoningPlugin:
             graph["operators"] = operators
             workflow["weakpoints"] = weakpoints
             workflow["non_reasoning_links"] = []
+            reasoning_operator_count = sum(
+                1 for operator in operators if operator.get("type") not in {"equivalence"}
+            )
+            observation_count = sum(
+                1 for knowledge in document["knowledges"].values()
+                if knowledge.get("type") == "observation_claim"
+            )
+            if reasoning_operator_count == 0 and observation_count:
+                findings.append(Finding(
+                    "STEP3_NO_TYPED_REASONING", "warning",
+                    "No non-equivalence reasoning operator was produced despite observation claims; route to human review",
+                ))
+            if observation_count == 0:
+                findings.append(Finding(
+                    "STEP3_NO_OBSERVATION_CLAIM", "warning",
+                    "No observation claim survived Step 3; experimental coverage requires human review",
+                ))
             prior = document["revision"]
             revision_id = f"revision_{context.run_id}_step_3"
             document["revision"] = {
