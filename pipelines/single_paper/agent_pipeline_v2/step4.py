@@ -82,7 +82,11 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         if knowledge["type"] not in {"claim", "note"}:
             raise ValueError("Step 4 may introduce only claims and notes")
         content = knowledge["content"]
-        if not isinstance(content, dict) or set(content) != {"canonical"} or not isinstance(content["canonical"], str) or not content["canonical"].strip():
+        if content is None:
+            if knowledge["type"] != "claim" or not key.startswith("AltExp"):
+                raise ValueError(f"new Knowledge {key} requires non-empty content.canonical")
+        elif (not isinstance(content, dict) or set(content) != {"canonical"}
+              or not isinstance(content["canonical"], str) or not content["canonical"].strip()):
             raise ValueError(f"new Knowledge {key} requires non-empty content.canonical")
         if not set(_ids(knowledge["source_anchor_ids"], "source_anchor_ids")) <= anchors:
             raise ValueError(f"new Knowledge {key} must cite supplied original-paper anchors")
@@ -142,14 +146,15 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         if any(item["type"] != "abduction" or item["conclusion"] not in targets for item in strategies):
             raise ValueError("abduction requires each target hypothesis as a non-deductive conclusion")
         for strategy in strategies:
-            if not strategy["premises"] or strategy["premises"][0] not in evidence:
-                raise ValueError("abduction premises must begin with supplied evidence claims")
-            if len(strategy["premises"]) == 2:
-                alternative = strategy["premises"][1]
-                if alternative in evidence or alternative in targets:
-                    raise ValueError("observations and the hypothesis cannot be their own alternative explanation")
-                if alternative not in knowledges or knowledges[alternative]["content"] is None:
-                    raise ValueError("an explicit alternative explanation must be a grounded Knowledge claim")
+            if len(strategy["premises"]) != 2 or strategy["premises"][0] not in evidence:
+                raise ValueError("abduction requires evidence plus an explicit AltExp premise")
+            alternative = strategy["premises"][1]
+            if alternative in evidence or alternative in targets:
+                raise ValueError("observations and the hypothesis cannot be their own alternative explanation")
+            if alternative not in knowledges:
+                raise ValueError("abduction AltExp premise must reference a Knowledge claim")
+            if knowledges[alternative]["content"] is None and not alternative.startswith("AltExp"):
+                raise ValueError("only an explicit AltExp placeholder may have null content")
 
 
 def _clean_proposition(text: str) -> tuple[JSONDict, JSONDict]:
@@ -303,6 +308,32 @@ def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDic
     return result
 
 
+def _ensure_abduction_altexp(result: JSONDict) -> JSONDict:
+    """Make the required AltExp interface explicit before authoring merge."""
+    result = copy.deepcopy(result)
+    knowledges = result.setdefault("knowledges", {})
+    used: set[str] = set(knowledges)
+    for index, strategy in enumerate(result.get("strategies", []), 1):
+        if strategy.get("type") != "abduction":
+            continue
+        premises = list(strategy.get("premises", []))
+        if len(premises) == 2:
+            continue
+        if len(premises) != 1:
+            raise ValueError("abduction requires exactly one evidence premise before AltExp binding")
+        target = str(strategy.get("conclusion", "claim"))
+        base = f"AltExp_{target}_{index}"
+        alt = base
+        suffix = 2
+        while alt in used:
+            alt = f"{base}_{suffix}"
+            suffix += 1
+        knowledges[alt] = {"type": "claim", "content": None, "source_anchor_ids": []}
+        used.add(alt)
+        strategy["premises"] = [premises[0], alt]
+    return result
+
+
 class WeakpointExpansionTool:
     """Use the existing model settings and cleaner for one grounded expansion."""
 
@@ -338,19 +369,19 @@ class WeakpointExpansionTool:
             "If these do not follow from the supplied premises and a source-grounded rule, return empty output.\n"
             "abduction: a supplied phenomenon claim B may support a non-experimental hypothesis A; represent only the B-to-A explanatory links justified by the supplied Group. B may be a non-E claim. "
             "When B is a Step 2 phenomenon E, the actual observation O is already connected by Step 2 equivalence; do not use O directly here. "
-            "If a grounded alternative explanation claim already exists or is explicitly supported by source_excerpts, use ordered premises=[B,AltExp_B], conclusion=A. Otherwise use premises=[B], conclusion=A; the official Gaia formalizer derives its public alternative-explanation interface claim during compilation and viewing. "
+            "Every abduction must expose an explicit ordered alternative-explanation premise: use premises=[B,AltExp_B], conclusion=A. If the source does not provide an alternative, emit AltExp_B as a claim with content=null and source_anchor_ids=[]; it is a visible placeholder, not a factual claim. Never use one-premise abduction. "
             "The premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with B. "
-            "This is non-deductive explanatory inference, NOT strict B -> A. Never create content:null Knowledge or an authoring-state AltExp placeholder. "
+            "This is non-deductive explanatory inference, NOT strict B -> A. The formal direction is (A OR AltExp_B) equivalent to B; when B is E, the existing Step 2 equivalence gives E equivalent to O. "
             "A self-contained phenomenon claim already contains its stated conditions, result, and uncertainty, so use background=[] and do not duplicate those conditions as a note. "
             "Only add a background note when the source states a separate applicability rule that is absent from the self-contained phenomenon claim. "
-            "Do not return empty output solely because the source does not name an alternative: use the one-premise official abduction interface. "
+            "Do not return empty output solely because the source does not name an alternative: emit the required AltExp placeholder. "
             "Never use deduction from observation to hypothesis, or B-prime -> A; repeated abduction instances for one target share that A.\n"
             "analogy: (G_src AND M AND S_target) -> V_target. G_src is an established source law/mechanism/constraint; "
             "M must state the variable mapping and the relations/constraints/causal structure it preserves, not merely similarity; S_target gives explicit target boundary conditions. "
             "Store type=analogy, ordered premises=[G_src,M], conclusion=V_target; S_target must be explicit in background notes. "
             "If multiple source claims need combining, establish the source premise with a grounded deduction strategy. "
             "With bridge and conditions given, the consequence must be strict; keep uncertain bridge M as a claim premise.\n"
-            "Output JSON only with exactly {\"knowledges\":{\"new_id\":{\"type\":\"claim|note\",\"content\":{\"canonical\":\"text\"},\"source_anchor_ids\":[\"...\"]}},"
+            "Output JSON only with exactly {\"knowledges\":{\"new_id\":{\"type\":\"claim|note\",\"content\":{\"canonical\":\"text\"}|null,\"source_anchor_ids\":[\"...\"]}},"
             "\"strategies\":[{\"scope\":\"local\",\"type\":\"deduction|abduction|analogy\",\"premises\":[\"claim_id\"],\"conclusion\":\"claim_id\",\"background\":[\"note_id\"]}]}. "
             "Use fresh identifier names for new Knowledge. Strategy IDs are assigned by official Gaia after reference binding; do not emit IDs. "
             "Do not emit operators, formal_expr, probabilities or extra fields. Premises and conclusion must be distinct. "
@@ -530,7 +561,12 @@ class Step4FormalizeReasoningPlugin:
                         validate_tool_response(current_request, response)
                         if response.status != "succeeded":
                             raise ValueError(str((response.error or {}).get("message", "Step 4 tool failed")))
-                        _validate_expansion(parameters, response.normalized)
+                        normalized = _ensure_abduction_altexp(response.normalized)
+                        _validate_expansion(parameters, normalized)
+                        response = ToolCallResponse(
+                            current_request.call_id, "succeeded", response.raw, normalized=normalized,
+                            metadata={"normalized_alt_exp": True},
+                        )
                         break
                     except Exception as exc:
                         error_message = str(exc)

@@ -123,7 +123,11 @@ def validate(document: Mapping[str, Any]) -> None:
             raise ValueError(f"knowledge {knowledge_id} has unsupported type")
         content = knowledge.get("content")
         if content is None:
-            raise ValueError(f"knowledge {knowledge_id} requires content.canonical; official Gaia derives alternative interfaces")
+            # Abduction keeps an explicit, non-factual alternative-explanation
+            # placeholder in the authoring graph.  Gaia later replaces this
+            # interface claim with its canonical derived identifier.
+            if knowledge.get("type") != "claim" or "AltExp" not in knowledge_id:
+                raise ValueError(f"knowledge {knowledge_id} requires content.canonical")
         elif not isinstance(content, dict) or not isinstance(content.get("canonical"), str) or not content["canonical"].strip():
             raise ValueError(f"knowledge {knowledge_id} requires content.canonical")
         source_ids = knowledge.get("source_anchor_ids", [])
