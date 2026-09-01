@@ -204,6 +204,19 @@ class ClaimsFinalInputImporter:
         except ValueError as exc:
             return StageResult("failed", findings=[Finding("STEP1_INPUT_INVALID", "error", str(exc))])
 
+        # Reuse the existing optional source.original_figure input contract when
+        # callers provide the paper's extracted figures in the manifest.
+        figures = []
+        for figure_ref in context.find_all("source.original_figure"):
+            if figure_ref.media_type not in {"image/jpeg", "image/png"}:
+                continue
+            figures.append({
+                "artifact_id": figure_ref.artifact_id,
+                "sha256": figure_ref.sha256,
+                "media_type": figure_ref.media_type,
+                "figure": figure_ref.metadata.get("figure", figure_ref.metadata.get("source_filename")),
+                "sequence": figure_ref.metadata.get("sequence"),
+            })
         bundle = {
             "schema_version": INPUT_BUNDLE_VERSION,
             "sources": {
@@ -216,13 +229,14 @@ class ClaimsFinalInputImporter:
                     "media_type": claims_ref.media_type, "value": claims_final,
                 }],
             },
-            "figures": [],
+            "figures": figures,
         }
         output = context.work_dir / "input.bundle.json"
         atomic_write_json(output, bundle)
         return StageResult("succeeded", [ArtifactDraft(output, INPUT_BUNDLE_KIND, "application/json", {
             "schema_version": INPUT_BUNDLE_VERSION,
             "source_kinds": [PAPER_TEXT_KIND, CLAIMS_FINAL_KIND],
+            "figure_count": len(figures),
         })])
 
 

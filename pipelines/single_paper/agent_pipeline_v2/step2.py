@@ -25,6 +25,7 @@ from pipeline_harness.domain.tools import (
 from pipeline_harness.models import Finding, JSONDict
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult, instantiate
 from pipeline_harness.store import atomic_write_json, read_json
+from pipeline_harness.domain.vision import DeepSeekFlashVisionTool
 
 from .authoring import content_hash, emit_formalization
 from .step1 import INPUT_BUNDLE_KIND, PAPER_TEXT_KIND
@@ -73,6 +74,90 @@ def _anchors_share_local_context(left: list[str], right: list[str], distance: in
     return any(abs(a - b) <= distance for a in left_numbers for b in right_numbers)
 
 
+def _global_candidate_claims(
+    candidate: JSONDict,
+    document: JSONDict,
+    local_ids: set[str],
+    *,
+    threshold: float = 0.12,
+) -> list[JSONDict]:
+    """Add a bounded global relation-candidate layer across experiment windows."""
+    paragraph_text = " ".join(
+        str(item.get("text", "")) for item in candidate.get("paragraphs", []) if isinstance(item, dict)
+    )
+    query_tokens = _tokens(paragraph_text)
+    if not query_tokens:
+        return []
+    ranked: list[tuple[float, str, JSONDict]] = []
+    for knowledge_id, knowledge in document["knowledges"].items():
+        if knowledge_id in local_ids or knowledge.get("type") != "claim":
+            continue
+        content = str(knowledge.get("content", {}).get("canonical", ""))
+        score = _cosine(query_tokens, _tokens(content))
+        if score >= threshold:
+            ranked.append((score, knowledge_id, {
+                "id": knowledge_id, "type": "claim", "content": content,
+                "source_anchor_ids": list(knowledge.get("source_anchor_ids", [])),
+            }))
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    # Keep the global layer bounded so relation prompts do not become a
+    # quadratic all-claims prompt for long papers.
+    return [item[2] for item in ranked[:24]]
+
+
+def _deduplicate_extractions(
+    claims: list[JSONDict],
+    equivalent_claims: list[JSONDict],
+    relations: list[JSONDict],
+) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict]]:
+    """Globally deduplicate observations and preserve all downstream references."""
+    def key(text: Any) -> str:
+        return re.sub(r"\s+", " ", str(text or "")).strip().casefold()
+
+    canonical_by_key: dict[str, JSONDict] = {}
+    aliases: dict[str, str] = {}
+    unique_claims: list[JSONDict] = []
+    for claim in claims:
+        claim_key = key(claim.get("content"))
+        extraction_key = str(claim.get("_extraction_key", f"generated:{len(unique_claims)}"))
+        if claim_key in canonical_by_key:
+            aliases[extraction_key] = str(canonical_by_key[claim_key].get("_extraction_key", extraction_key))
+            continue
+        canonical_by_key[claim_key] = claim
+        aliases[extraction_key] = extraction_key
+        unique_claims.append(claim)
+
+    unique_equivalents: list[JSONDict] = []
+    seen_observations: set[str] = set()
+    for item in equivalent_claims:
+        old = str(item.get("observation_key", ""))
+        mapped = aliases.get(old, old)
+        if mapped in seen_observations:
+            continue
+        copied = dict(item)
+        copied["observation_key"] = mapped
+        seen_observations.add(mapped)
+        unique_equivalents.append(copied)
+
+    unique_relations: list[JSONDict] = []
+    seen_relations: set[tuple[tuple[str, ...], str, str]] = set()
+    for relation in relations:
+        sources = tuple(sorted(aliases.get(str(value), str(value)) for value in relation.get("phenomenon_keys", [])))
+        signature = (sources, str(relation.get("claim_id", "")), str(relation.get("expression", "")))
+        if signature in seen_relations:
+            continue
+        seen_relations.add(signature)
+        copied = dict(relation)
+        copied["phenomenon_keys"] = list(sources)
+        expression = str(copied.get("expression", ""))
+        for old, mapped in aliases.items():
+            if old != mapped:
+                expression = expression.replace(f"[E:{old}]", f"[E:{mapped}]")
+        copied["expression"] = expression
+        unique_relations.append(copied)
+    return unique_claims, unique_equivalents, unique_relations
+
+
 def _load_deepseek_env() -> None:
     """Load only the supported DeepSeek settings without exposing values."""
     env_path = Path(__file__).resolve().parents[2] / "agent" / ".env"
@@ -83,7 +168,7 @@ def _load_deepseek_env() -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        if key.strip() in {"DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL"}:
+        if key.strip() in {"DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL"}:
             os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
 
 
@@ -989,6 +1074,86 @@ def _tool_call(
     return response.normalized, draft
 
 
+def _vision_call(
+    context: StageContext,
+    candidate: JSONDict,
+    *,
+    call_number: int,
+) -> tuple[list[JSONDict], ArtifactDraft]:
+    """Read a figure after text-only extraction remains evidence-insufficient."""
+    tool = DeepSeekFlashVisionTool()
+    artifacts = {
+        ref.artifact_id: (context.artifact_path(ref), ref.media_type)
+        for ref in context.inputs
+        if ref.kind == "source.original_figure"
+    }
+    tool.bind_artifacts(artifacts)
+    request = ToolCallRequest(
+        call_id=f"semantic_step_2_vision_{context.run_id}_{context.attempt}_{call_number}",
+        tool_name=tool.name,
+        tool_version=tool.version,
+        operation="extract_observation_claims",
+        inputs=[{"artifact_id": ref.artifact_id, "kind": ref.kind, "sha256": ref.sha256} for ref in context.inputs],
+        parameters={
+            "experiment_candidates": [candidate],
+            "source_anchor_ids": [item["anchor_id"] for item in candidate.get("paragraphs", []) if isinstance(item, dict)],
+        },
+    )
+    try:
+        response = tool.invoke(request)
+        if not isinstance(response, ToolCallResponse):
+            raise TypeError(f"vision tool returned {type(response).__name__}, not ToolCallResponse")
+        validate_tool_response(request, response)
+    except Exception as exc:
+        response = ToolCallResponse(request.call_id, "failed", None, error={"type": type(exc).__name__, "message": str(exc)})
+    response_path = context.work_dir / f"semantic_step_2_vision_response_{call_number}.json"
+    atomic_write_json(response_path, {"request": request.to_dict(), "response": response.to_dict()})
+    draft = ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
+        "schema_version": "1.0.0", "step": 2, "tool_call_id": request.call_id,
+        "tool_name": tool.name, "tool_version": tool.version, "status": response.status,
+    })
+    if response.status != "succeeded" or not isinstance(response.normalized, dict):
+        raise ValueError(str((response.error or {}).get("message", "Step 2 vision tool failed")))
+    knowledge = response.normalized.get("snapshot_patch", {}).get("knowledge", [])
+    if not isinstance(knowledge, list):
+        return [], draft
+    claims: list[JSONDict] = []
+    for index, item in enumerate(knowledge):
+        if not isinstance(item, dict) or not isinstance(item.get("content"), dict):
+            continue
+        canonical = item["content"].get("canonical")
+        anchors = item.get("source_anchor_ids", [])
+        if isinstance(canonical, str) and canonical.strip() and isinstance(anchors, list) and anchors:
+            claims.append({
+                "content": canonical.strip(),
+                "paragraph_anchor_ids": list(dict.fromkeys(str(anchor) for anchor in anchors)),
+                "_extraction_key": f"{candidate.get('candidate_id', 'vision')}:{index}",
+            })
+    return claims, draft
+
+
+def _vision_candidate(candidate: JSONDict, context: StageContext) -> JSONDict | None:
+    """Attach an existing source.original_figure artifact to a text candidate."""
+    image_name = str(candidate.get("image_name", "")).casefold()
+    refs = context.find_all("source.original_figure")
+    ref = next((item for item in refs if str(item.metadata.get("source_filename", item.metadata.get("figure", ""))).casefold() == image_name), None)
+    if ref is None:
+        return None
+    paragraphs = list(candidate.get("paragraphs", []))
+    return {
+        "candidate_id": candidate.get("candidate_id"),
+        "figure": {
+            "artifact_id": ref.artifact_id,
+            "media_type": ref.media_type,
+            "label": ref.metadata.get("figure", ref.metadata.get("source_filename", candidate.get("image_name"))),
+            # The existing paragraph anchors remain the source-of-truth locators;
+            # vision adds no new persisted anchor type.
+            "source_anchor_ids": [item["anchor_id"] for item in paragraphs if isinstance(item, dict) and isinstance(item.get("anchor_id"), str)],
+        },
+        "paragraphs": paragraphs,
+    }
+
+
 def _tool_audit_drafts(context: StageContext) -> list[ArtifactDraft]:
     drafts: list[ArtifactDraft] = []
     for path in sorted(context.work_dir.glob("semantic_step_2_tool_response_*.json")):
@@ -1056,6 +1221,7 @@ def _extract_with_expansion(
         focus_anchor_ids = [item["anchor_id"] for item in initial_candidate["paragraphs"]]
         previous_signature: tuple[str, ...] | None = None
         # One initial window plus at most two deterministic expansions.
+        extracted_from_text = False
         for radius in range(1, 4):
             candidates = _experiment_candidates(paragraphs, radius)
             candidate = next((item for item in candidates if item["candidate_id"] == candidate_id), None)
@@ -1069,6 +1235,11 @@ def _extract_with_expansion(
                 if knowledge.get("type") == "claim"
                 and _anchors_share_local_context(candidate_anchor_ids, knowledge.get("source_anchor_ids", []))
             ]
+            local_claim_ids = {item["id"] for item in candidate["related_claims"]}
+            candidate["related_claims"].extend(
+                item for item in _global_candidate_claims(candidate, document, local_claim_ids)
+                if item["id"] not in local_claim_ids
+            )
             signature = tuple(candidate_anchor_ids)
             if signature == previous_signature:
                 continue
@@ -1102,9 +1273,37 @@ def _extract_with_expansion(
             claims.extend(extracted)
             equivalent_claims.extend(equivalents)
             relations.extend({**item, "relation_context_id": candidate_id} for item in extracted_relations)
+            extracted_from_text = True
             break
+        if not extracted_from_text:
+            # Text-only v4-flash has exhausted the deterministic context
+            # expansion. Fall back to the supplied local figure, if any.
+            vision_candidate = _vision_candidate(initial_candidate, context)
+            if vision_candidate is not None:
+                try:
+                    visual_claims, visual_draft = _vision_call(
+                        context, vision_candidate, call_number=next_call_number,
+                    )
+                    drafts.append(visual_draft)
+                    if visual_claims:
+                        claims.extend(visual_claims)
+                        # Keep the existing E/O pipeline intact. The visual
+                        # result is evidence-grounded; its equivalent claim is
+                        # generated by the normal downstream equivalence pass.
+                        equivalent_claims.extend({
+                            "observation_key": item["_extraction_key"],
+                            "content": item["content"],
+                            "paragraph_anchor_ids": list(item["paragraph_anchor_ids"]),
+                        } for item in visual_claims)
+                except Exception:
+                    # Preserve the vision audit artifact; the stage-level
+                    # failure path will report the concrete tool error.
+                    pass
     # Reconstruct the audit list from disk so failed calls are retained even
     # though _tool_call raised before returning its draft.
+    claims, equivalent_claims, relations = _deduplicate_extractions(
+        claims, equivalent_claims, relations,
+    )
     return claims, equivalent_claims, relations, _tool_audit_drafts(context)
 
 
