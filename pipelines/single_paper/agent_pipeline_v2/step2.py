@@ -33,6 +33,7 @@ from .step1 import INPUT_BUNDLE_KIND, PAPER_TEXT_KIND
 STEP_NAME = "step2_complete_observations"
 MODEL_NAME = "deepseek-v4-flash"
 _IMAGE_PATTERN = re.compile(r"!\[[^]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
+_FIGURE_REFERENCE_PATTERN = re.compile(r"\b(?:fig(?:ure)?\.?)\s*([0-9]+[a-z]?)\b", re.IGNORECASE)
 _PARAGRAPH_ANCHOR_PATTERN = re.compile(r"^anchor_paragraph_p(\d+)$")
 
 
@@ -876,6 +877,24 @@ def _experiment_candidates(paragraphs: list[JSONDict], radius: int = 1) -> list[
             for index, paragraph in enumerate(paragraphs)
             if any(alias in re.sub(r"[^a-z0-9]", "", paragraph["text"].lower()) for alias in aliases)
         ]
+        # Keep the local mechanical window, but also retrieve every paragraph
+        # in the source that explicitly cites the same Figure/Fig. number.
+        # This is deterministic and lets the LLM see result/discussion text
+        # that is often far from the image placeholder or caption.
+        referenced_numbers = {
+            match.group(1).lower()
+            for index in matches
+            for match in _FIGURE_REFERENCE_PATTERN.finditer(paragraphs[index]["text"])
+        }
+        if referenced_numbers:
+            matches.extend(
+                index
+                for index, paragraph in enumerate(paragraphs)
+                if any(
+                    match.group(1).lower() in referenced_numbers
+                    for match in _FIGURE_REFERENCE_PATTERN.finditer(paragraph["text"])
+                )
+            )
         indexes = sorted(
             {
                 neighbor
@@ -1024,21 +1043,17 @@ def _extract_with_expansion(
     claims: list[JSONDict] = []
     equivalent_claims: list[JSONDict] = []
     relations: list[JSONDict] = []
+    next_call_number = first_call_number
     for initial_candidate in initial_candidates:
         candidate_id = initial_candidate["candidate_id"]
-        focus_anchor_ids = [
-            item["anchor_id"]
-            for item in initial_candidate["paragraphs"]
-            if isinstance(item, dict) and isinstance(item.get("anchor_id"), str)
-        ]
+        focus_anchor_ids = [item["anchor_id"] for item in initial_candidate["paragraphs"]]
         previous_signature: tuple[str, ...] | None = None
-        attempts = 0
-        # Start from the mechanical image ±1 window, then widen through ±10.
-        for radius in range(1, 11):
+        # One initial window plus at most two deterministic expansions.
+        for radius in range(1, 4):
             candidates = _experiment_candidates(paragraphs, radius)
             candidate = next((item for item in candidates if item["candidate_id"] == candidate_id), None)
             if candidate is None:
-                raise ValueError(f"experiment candidate disappeared while expanding context: {candidate_id}")
+                break
             candidate["focus_anchor_ids"] = focus_anchor_ids
             candidate_anchor_ids = [item["anchor_id"] for item in candidate["paragraphs"]]
             candidate["related_claims"] = [
@@ -1047,42 +1062,43 @@ def _extract_with_expansion(
                 if knowledge.get("type") == "claim"
                 and _anchors_share_local_context(candidate_anchor_ids, knowledge.get("source_anchor_ids", []))
             ]
-            signature = tuple(item["anchor_id"] for item in candidate["paragraphs"])
+            signature = tuple(candidate_anchor_ids)
             if signature == previous_signature:
                 continue
             previous_signature = signature
-            attempts += 1
-            normalized, draft = _tool_call(
-                context,
-                [candidate],
-                call_number=first_call_number + len(drafts),
-                selected_claims=selected_claims,
-                review_advice=review_advice,
-                frozen_claims=frozen_claims,
-            )
-            drafts.append(draft)
-            if normalized.get("status") == "claims_extracted":
-                extracted = normalized.get("claims")
-                if not isinstance(extracted, list) or not all(isinstance(item, dict) for item in extracted):
-                    raise ValueError("semantic tool normalized claims must be objects")
-                equivalents = normalized.get("equivalent_claims")
-                if not isinstance(equivalents, list) or not all(isinstance(item, dict) for item in equivalents):
-                    raise ValueError("semantic tool normalized equivalent claims must be objects")
-                claims.extend(extracted)
-                equivalent_claims.extend(equivalents)
-                extracted_relations = normalized.get("relations", [])
-                if not isinstance(extracted_relations, list) or not all(isinstance(item, dict) for item in extracted_relations):
-                    raise ValueError("semantic tool normalized relations must be objects")
-                relations.extend({**item, "relation_context_id": candidate_id} for item in extracted_relations)
+            try:
+                normalized, _draft = _tool_call(
+                    context,
+                    [candidate],
+                    call_number=next_call_number,
+                    selected_claims=selected_claims,
+                    review_advice=review_advice,
+                    frozen_claims=frozen_claims,
+                )
+            except Exception:
+                next_call_number += 1
                 break
-            if normalized.get("status") != "insufficient_context":
-                raise ValueError("semantic tool returned an unsupported status")
-        else:
-            raise ValueError(
-                f"Step 2 marked {candidate_id} insufficient_context after the initial window and "
-                f"nine mechanical expansions (+1 through +9; {attempts} distinct windows); terminating run"
-            )
-    return claims, equivalent_claims, relations, drafts
+            next_call_number += 1
+            if normalized.get("status") == "insufficient_context":
+                continue
+            if normalized.get("status") != "claims_extracted":
+                break
+            extracted = normalized.get("claims")
+            equivalents = normalized.get("equivalent_claims")
+            extracted_relations = normalized.get("relations", [])
+            if not isinstance(extracted, list) or not all(isinstance(item, dict) for item in extracted):
+                break
+            if not isinstance(equivalents, list) or not all(isinstance(item, dict) for item in equivalents):
+                break
+            if not isinstance(extracted_relations, list) or not all(isinstance(item, dict) for item in extracted_relations):
+                break
+            claims.extend(extracted)
+            equivalent_claims.extend(equivalents)
+            relations.extend({**item, "relation_context_id": candidate_id} for item in extracted_relations)
+            break
+    # Reconstruct the audit list from disk so failed calls are retained even
+    # though _tool_call raised before returning its draft.
+    return claims, equivalent_claims, relations, _tool_audit_drafts(context)
 
 
 def _observation_items(claims: list[JSONDict]) -> tuple[dict[str, JSONDict], dict[str, str]]:

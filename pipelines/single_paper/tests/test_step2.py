@@ -302,7 +302,7 @@ class Step2Tests(unittest.TestCase):
         self.assertEqual("claim", observation["type"])
         self.assertNotIn("role" + "s", observation)
 
-    def test_insufficient_context_expands_mechanical_window(self) -> None:
+    def test_insufficient_context_allows_two_mechanical_expansions(self) -> None:
         (self.root / "paper_text.md").write_text(
             "[#earlier] Earlier experimental context.\n\n"
             "[#intro] Background paragraph.\n\n"
@@ -320,7 +320,7 @@ class Step2Tests(unittest.TestCase):
         self.assertEqual(2, len(ExpandingObservationTool.paragraph_counts))
         self.assertGreater(ExpandingObservationTool.paragraph_counts[1], ExpandingObservationTool.paragraph_counts[0])
 
-    def test_three_expansions_mark_and_terminate_step2_when_context_remains_insufficient(self) -> None:
+    def test_insufficient_context_is_retained_without_terminating_step2(self) -> None:
         paragraphs = [f"[#p{index}] Context paragraph {index}." for index in range(1, 8)]
         paragraphs.insert(3, "[#fig2] ![Figure 2](fig2.png)")
         paragraphs.insert(4, "[#result] Figure 2 reports an experiment.")
@@ -329,17 +329,10 @@ class Step2Tests(unittest.TestCase):
         tool = f"{__name__}:AlwaysInsufficientObservationTool"
         store = RunStore.create(self.root / "runs", self.pipeline(tool), input_manifest=self.root / "manifest.json")
         run = run_pipeline(store.run_dir, max_stages=3)
-        self.assertEqual("failed", run.status)
-        self.assertTrue(
-            any(
-                "nine mechanical expansions (+1 through +9; 4 distinct windows)" in finding["message"]
-                for finding in run.findings
-            )
-        )
-        self.assertEqual(4, len(AlwaysInsufficientObservationTool.paragraph_counts))
+        self.assertEqual("succeeded", run.status)
+        self.assertEqual(3, len(AlwaysInsufficientObservationTool.paragraph_counts))
         self.assertLess(AlwaysInsufficientObservationTool.paragraph_counts[0], AlwaysInsufficientObservationTool.paragraph_counts[1])
         self.assertLess(AlwaysInsufficientObservationTool.paragraph_counts[1], AlwaysInsufficientObservationTool.paragraph_counts[2])
-        self.assertLess(AlwaysInsufficientObservationTool.paragraph_counts[2], AlwaysInsufficientObservationTool.paragraph_counts[3])
 
     def test_model_and_comparison_regime_prompt(self) -> None:
         self.assertEqual("deepseek-v4-flash", MODEL_NAME)
@@ -600,7 +593,7 @@ class Step2Tests(unittest.TestCase):
         tool = f"{__name__}:FailingObservationTool"
         store = RunStore.create(self.root / "runs", self.pipeline(tool), input_manifest=self.root / "manifest.json")
         run = run_pipeline(store.run_dir, max_stages=3)
-        self.assertEqual("failed", run.status)
+        self.assertEqual("succeeded", run.status)
         audits = [ref for ref in store.load_artifacts() if ref.kind == "tool.semantic_review.response"]
         self.assertEqual(1, len(audits))
         audit = read_json(store.artifact_path(audits[0]))

@@ -282,8 +282,8 @@ class AutomatedWorkflowTests(unittest.TestCase):
         raw = {"choices": [{"message": {"content": """{
           \"status\": \"claims_extracted\",
           \"claims\": [
-            {\"S\": \"setting two\", \"A\": \"alternate ticket\", \"B\": \"random ticket\", \"M\": \"accuracy\", \"R\": \"lower\", \"U\": \"uncertainty not reported\", \"paragraph_anchor_ids\": [\"anchor_paragraph_result\"], \"figure_anchor_ids\": [\"anchor_figure_2\"]},
-            {\"S\": \"setting one\", \"A\": \"ticket\", \"B\": \"random ticket\", \"M\": \"accuracy\", \"R\": \"higher\", \"U\": \"uncertainty not reported\", \"paragraph_anchor_ids\": [\"anchor_paragraph_result\"], \"figure_anchor_ids\": [\"anchor_figure_2\"]}
+            {\"S\": \"setting two\", \"A\": \"alternate ticket\", \"B\": \"random ticket\", \"M\": \"accuracy\", \"R\": \"lower\", \"content\": \"The alternate ticket had lower accuracy than the random ticket in setting two.\", \"paragraph_anchor_ids\": [\"anchor_paragraph_result\"], \"figure_anchor_ids\": [\"anchor_figure_2\"]},
+            {\"S\": \"setting one\", \"A\": \"ticket\", \"B\": \"random ticket\", \"M\": \"accuracy\", \"R\": \"higher\", \"content\": \"In setting one, the ticket achieved higher accuracy than the random ticket.\", \"paragraph_anchor_ids\": [\"anchor_paragraph_result\"], \"figure_anchor_ids\": [\"anchor_figure_2\"]}
           ]
         }"""}}]}
         normalized = DeepSeekFlashVisionTool()._normalize(raw, request, candidates)
@@ -293,7 +293,7 @@ class AutomatedWorkflowTests(unittest.TestCase):
         self.assertTrue(all("role" + "s" not in item for item in proposals))
         self.assertTrue(all(item["source_anchor_ids"] == ["anchor_paragraph_result", "anchor_figure_2"] for item in proposals))
         self.assertEqual(
-            "Under setting one, comparing ticket with random ticket on accuracy showed higher; uncertainty: uncertainty not reported.",
+            "In setting one, the ticket achieved higher accuracy than the random ticket.",
             proposals[0]["content"]["canonical"],
         )
 
@@ -318,7 +318,8 @@ class AutomatedWorkflowTests(unittest.TestCase):
         self.assertIn("R (Result) is only the observed numerical or directional outcome", prompt)
         self.assertIn("U (Uncertainty) is explicitly reported uncertainty information", prompt)
         self.assertIn("A change in pruning fraction or pruning range is a change in S", prompt)
-        self.assertIn("only for grammar and fluency", prompt)
+        self.assertIn("for grammar and fluency", prompt)
+        self.assertIn("do not concatenate fields into a fixed template", prompt)
         self.assertIn("must not add, remove, generalize, narrow, reverse, combine", prompt)
 
     def test_vision_insufficient_context_returns_mechanical_gate(self) -> None:

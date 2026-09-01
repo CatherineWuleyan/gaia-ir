@@ -112,17 +112,24 @@ class DeepSeekFlashVisionTool:
             return {"snapshot_patch": {"review": {"status": "needs_review", "issues": [{
                 "code": "EXPERIMENT_CONTEXT_INSUFFICIENT",
                 "message": str(needed),
-                "action": "Return to Step 2.1 and expand the paper paragraph window before retrying extraction.",
+                "action": "Retain this evidence-insufficient audit result and skip the candidate without retrying.",
             }]}}}
         if status != "claims_extracted" or not isinstance(claims, list):
             raise ValueError("DeepSeek vision response must declare claims_extracted with a claims array")
-        normalized_claims: list[tuple[dict[str, str], list[str], list[str]]] = []
+        normalized_claims: list[tuple[dict[str, str], str, list[str], list[str]]] = []
         for index, claim in enumerate(claims):
             if not isinstance(claim, dict):
                 raise ValueError(f"claim {index} must be an object")
             fields = {name: claim.get(name) for name in ("S", "A", "B", "M", "R", "U")}
-            if not all(isinstance(value, str) and value.strip() for value in fields.values()):
-                raise ValueError(f"claim {index} must provide non-empty S/A/B/M/R/U strings")
+            if not all(isinstance(fields[name], str) and fields[name].strip() for name in ("S", "A", "M", "R")):
+                raise ValueError(f"claim {index} must provide non-empty S/A/M/R strings")
+            for optional_name in ("B", "U"):
+                value = fields[optional_name]
+                if value is not None and (not isinstance(value, str) or not value.strip()):
+                    raise ValueError(f"claim {index} optional {optional_name} must be a non-empty string when present")
+            canonical = claim.get("content")
+            if not isinstance(canonical, str) or not canonical.strip():
+                raise ValueError(f"claim {index} must provide one fluent content sentence")
             paragraph_ids = claim.get("paragraph_anchor_ids", [])
             figure_ids = claim.get("figure_anchor_ids", [])
             if not isinstance(paragraph_ids, list) or not paragraph_ids or not all(isinstance(value, str) for value in paragraph_ids):
@@ -131,19 +138,14 @@ class DeepSeekFlashVisionTool:
                 raise ValueError(f"claim {index} must cite one or more figure anchors")
             if not set(paragraph_ids) <= allowed_paragraphs or not set(figure_ids) <= figure_anchors:
                 raise ValueError(f"claim {index} cites anchors outside the selected evidence")
-            normalized_claims.append((fields, paragraph_ids, figure_ids))
+            normalized_claims.append((fields, canonical.strip(), paragraph_ids, figure_ids))
         normalized_claims.sort(key=lambda item: (
-            min((figure_order[anchor_id] for anchor_id in item[2]), default=len(figure_order)),
-            min((paragraph_order[anchor_id] for anchor_id in item[1]), default=len(paragraph_order)),
-            *(item[0][name].casefold() for name in ("S", "A", "B", "M", "R")),
+            min((figure_order[anchor_id] for anchor_id in item[3]), default=len(figure_order)),
+            min((paragraph_order[anchor_id] for anchor_id in item[2]), default=len(paragraph_order)),
+            *(str(item[0].get(name, "")).casefold() for name in ("S", "A", "B", "M", "R")),
         ))
         knowledge: list[JSONDict] = []
-        for number, (fields, paragraph_ids, figure_ids) in enumerate(normalized_claims, 1):
-            canonical = (
-                f"Under {fields['S'].strip()}, comparing {fields['A'].strip()} with "
-                f"{fields['B'].strip()} on {fields['M'].strip()} showed "
-                f"{fields['R'].strip()}; uncertainty: {fields['U'].strip()}."
-            )
+        for number, (_fields, canonical, paragraph_ids, figure_ids) in enumerate(normalized_claims, 1):
             knowledge.append({
                 "id": f"claim_O{number:02d}",
                 "type": "claim",
@@ -196,20 +198,22 @@ class DeepSeekFlashVisionTool:
             "M (Measure) is the measured metric; write it as a concise metric noun phrase. "
             "R (Result) is only the observed numerical or directional outcome of comparing A with B on M; do not put settings, ranges, or evaluation conditions in R. "
             "U (Uncertainty) is explicitly reported uncertainty information, such as random seeds, sample count, confidence intervals, or mean plus or minus standard deviation. "
-            "Use English for every S/A/B/M/R/U value. Phrase the values so that the sentence "
-            "'Under S, comparing A with B on M showed R; uncertainty: U.' reads naturally. You may lightly rephrase the evidence only for grammar and fluency, "
+            "Use English for every supplied S/A/B/M/R/U value. Also write content as one fluent, self-contained English sentence. "
+            "Choose the sentence's grammar, word order, subject, and clause structure naturally from the evidence; do not concatenate fields into a fixed template. "
+            "You may rephrase the evidence for grammar and fluency, "
             "but must not add, remove, generalize, narrow, reverse, combine, or otherwise change its meaning. Preserve all material entities, conditions, "
             "comparison directions, metrics, numerical values, and qualifiers. If the selected paper context is insufficient to extract a complete "
             "experiment claim, return status insufficient_context rather than guessing: "
             "{\"status\":\"insufficient_context\",\"needed_context\":\"...\"}. Otherwise return "
-            "{\"status\":\"claims_extracted\",\"claims\":[{\"S\":\"...\",\"A\":\"...\",\"B\":\"...\","
-            "\"M\":\"...\",\"R\":\"...\",\"U\":\"...\",\"paragraph_anchor_ids\":[\"...\"],"
+            "{\"status\":\"claims_extracted\",\"claims\":[{\"S\":\"...\",\"A\":\"...\",\"M\":\"...\","
+            "\"R\":\"...\",\"content\":\"...\",\"paragraph_anchor_ids\":[\"...\"],"
             "\"figure_anchor_ids\":[\"...\"]}]}. Within one figure, split into separate claims only when at least two "
             "of S/A/B/M/R differ. A change in pruning fraction or pruning range is a change in S; therefore, if extreme-pruning and low-pruning observations "
             "also have different outcomes, both S and R differ and they must be separate claims. Do not split solely for uncertainty differences. "
             f"Allowed paragraph anchors: {[item.get('anchor_id') for item in paragraphs if isinstance(item, dict)]}. "
             f"Allowed figure anchors: {figure.get('source_anchor_ids', [])}. Cite only those anchors. "
-            "Use exactly 'uncertainty not reported' for U when the paper does not report uncertainty; do not infer facts absent from the image or paragraphs.\n\n"
+            "B and U are optional: omit either field when it is not explicitly reported, and never write an absence placeholder such as "
+            "'uncertainty not reported'. Do not infer facts absent from the image or paragraphs.\n\n"
             "Paragraph evidence:\n" + paragraph_text
         )
         return [
