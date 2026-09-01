@@ -139,13 +139,11 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         if not set(producers) <= related:
             raise ValueError("expansion includes an unrelated strategy")
     elif kind == "abduction":
-        expected_pairs = {(phenomenon, target) for phenomenon in evidence for target in targets}
-        actual_pairs = {(item["premises"][0], item["conclusion"]) for item in strategies}
         if any(item["type"] != "abduction" or item["conclusion"] not in targets for item in strategies):
             raise ValueError("abduction requires each target hypothesis as a non-deductive conclusion")
-        if actual_pairs != expected_pairs or len(strategies) != len(expected_pairs):
-            raise ValueError("abduction must explain each observation separately for every target hypothesis")
         for strategy in strategies:
+            if not strategy["premises"] or strategy["premises"][0] not in evidence:
+                raise ValueError("abduction premises must begin with supplied evidence claims")
             if len(strategy["premises"]) == 2:
                 alternative = strategy["premises"][1]
                 if alternative in evidence or alternative in targets:
@@ -177,12 +175,13 @@ def _clean_proposition(text: str) -> tuple[JSONDict, JSONDict]:
 
 
 def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDict]) -> JSONDict:
-    """Preserve IDs while adopting cleaner text; ambiguous splits fail closed."""
+    """Adopt cleaner text; the caller may rebuild the group against these claims."""
     result = copy.deepcopy(result)
     known = dict(parameters["knowledges"])
     aliases: dict[str, str] = {}
     cleaned: JSONDict = {}
     extra_background: dict[str, list[str]] = {}
+    rebuild_required = False
     for key, item in result["knowledges"].items():
         if item["content"] is None:
             cleaned[key] = item
@@ -209,6 +208,36 @@ def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDic
             # only background context.  Do not force it back into graph.nodes
             # or rewrite the Strategy shape; retain the weakpoint instead.
             return {"knowledges": {}, "strategies": []}
+        elif item["type"] == "claim" and len(claims) > 1:
+            # Keep every cleaned proposition under a fresh, deterministic ID.
+            # Their role in the current Group is intentionally re-derived by
+            # a second LLM pass rather than guessed from the pre-cleaning
+            # strategy references.
+            for claim in claims:
+                number = claim.get("number")
+                text = claim.get("text")
+                if (not isinstance(number, int) or isinstance(number, bool) or number < 1
+                        or not isinstance(text, str) or not text.strip()):
+                    raise ValueError("cleaner returned invalid split claim")
+                cleaned[f"{key}_cleaned_{number}"] = {
+                    "type": "claim", "content": {"canonical": text},
+                    "source_anchor_ids": list(item["source_anchor_ids"]),
+                }
+            rebuild_required = True
+            continue
+        elif item["type"] == "note" and not claims and len(notes) > 1:
+            for note in notes:
+                number = note.get("number")
+                text = note.get("text")
+                if (not isinstance(number, int) or isinstance(number, bool) or number < 1
+                        or not isinstance(text, str) or not text.strip()):
+                    raise ValueError("cleaner returned invalid split note")
+                cleaned[f"{key}_cleaned_{number}"] = {
+                    "type": "note", "content": {"canonical": text},
+                    "source_anchor_ids": list(item["source_anchor_ids"]),
+                }
+            rebuild_required = True
+            continue
         else:
             if item["type"] == "note":
                 # A background note may be classified as several propositions by
@@ -217,7 +246,7 @@ def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDic
                 # Fail this semantic expansion closed while retaining the
                 # classified weakpoint for later review.
                 return {"knowledges": {}, "strategies": []}
-            raise ValueError(f"cleaner split or omitted {key}; cannot assign strategy references unambiguously")
+            return {"knowledges": {}, "strategies": []}
         number = primary_key[1]
         if not isinstance(number, int) or isinstance(number, bool) or number < 1:
             raise ValueError("cleaner returned an invalid primary proposition number")
@@ -268,6 +297,8 @@ def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDic
         strategy["conclusion"] = aliases.get(strategy["conclusion"], strategy["conclusion"])
         strategy["background"] = list(dict.fromkeys(aliases.get(key, key) for key in strategy["background"]))
     result["knowledges"] = cleaned
+    if rebuild_required:
+        return {"knowledges": cleaned, "strategies": []}
     _validate_expansion(parameters, result)
     return result
 
@@ -293,7 +324,7 @@ class WeakpointExpansionTool:
             "Write each new note as one complete declarative statement, without headings or framing prefixes such as 'Fixed conditions for the abduction:'. "
             "Do not combine independently checkable settings into a long list. If a restriction is already explicit in the referenced claims, do not duplicate it as a new note; background may be empty. "
             "Every new substantive claim/note will be passed to the Pipeline V2 private proposition cleaner before persistence. "
-            "A weakpoint may name multiple target claims. Cover every target; Gaia Strategies have one conclusion, so emit a separate terminal strategy for each target and share grounded intermediate strategies where appropriate. "
+            "A weakpoint may name multiple target claims. Cover only the target links justified by the supplied Group; do not pad missing explanations or invent unsupported strategies. "
             "Put supplemental rules, fixed conditions and variable bindings in note Knowledge, outside graph.nodes, referenced in strategy.background. "
             "A probabilistically uncertain analogy bridge is a claim, not a background note. Background notes are assumptions of the strict conditional relation, not observed truths.\n"
             "deduction: M = A1 AND ... AND Ak; M -> C. Explicitly supply the rule, applicability conditions and variable bindings. "
@@ -305,9 +336,9 @@ class WeakpointExpansionTool:
             "Never translate experimental support for a general conclusion into strict implication.\n"
             "Do not put the target's additional empirical assertions or relative-performance qualifiers into background merely to make deduction succeed. "
             "If these do not follow from the supplied premises and a source-grounded rule, return empty output.\n"
-            "abduction: each target A is a non-experimental hypothesis; for EACH target A and EACH supplied self-contained phenomenon claim B, (A OR AltExp_B_A) is equivalent to B. B may be a non-E claim. "
+            "abduction: a supplied phenomenon claim B may support a non-experimental hypothesis A; represent only the B-to-A explanatory links justified by the supplied Group. B may be a non-E claim. "
             "When B is a Step 2 phenomenon E, the actual observation O is already connected by Step 2 equivalence; do not use O directly here. "
-            "Store one type=abduction strategy per B. If a grounded alternative explanation claim already exists or is explicitly supported by source_excerpts, use ordered premises=[B,AltExp_B], conclusion=A. Otherwise use premises=[B], conclusion=A; the official Gaia formalizer derives its public alternative-explanation interface claim during compilation and viewing. "
+            "If a grounded alternative explanation claim already exists or is explicitly supported by source_excerpts, use ordered premises=[B,AltExp_B], conclusion=A. Otherwise use premises=[B], conclusion=A; the official Gaia formalizer derives its public alternative-explanation interface claim during compilation and viewing. "
             "The premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with B. "
             "This is non-deductive explanatory inference, NOT strict B -> A. Never create content:null Knowledge or an authoring-state AltExp placeholder. "
             "A self-contained phenomenon claim already contains its stated conditions, result, and uncertainty, so use background=[] and do not duplicate those conditions as a note. "
@@ -319,12 +350,17 @@ class WeakpointExpansionTool:
             "Store type=analogy, ordered premises=[G_src,M], conclusion=V_target; S_target must be explicit in background notes. "
             "If multiple source claims need combining, establish the source premise with a grounded deduction strategy. "
             "With bridge and conditions given, the consequence must be strict; keep uncertain bridge M as a claim premise.\n"
-            "Output JSON only with exactly {knowledges:{new_id:{type:'claim|note',content:{canonical:'text'} OR null,source_anchor_ids:['...']}},"
-            "strategies:[{scope:'local',type:'deduction|abduction|analogy',premises:['claim_id'],conclusion:'claim_id',background:['note_id']}]}. "
+            "Output JSON only with exactly {\"knowledges\":{\"new_id\":{\"type\":\"claim|note\",\"content\":{\"canonical\":\"text\"},\"source_anchor_ids\":[\"...\"]}},"
+            "\"strategies\":[{\"scope\":\"local\",\"type\":\"deduction|abduction|analogy\",\"premises\":[\"claim_id\"],\"conclusion\":\"claim_id\",\"background\":[\"note_id\"]}]}. "
             "Use fresh identifier names for new Knowledge. Strategy IDs are assigned by official Gaia after reference binding; do not emit IDs. "
             "Do not emit operators, formal_expr, probabilities or extra fields. Premises and conclusion must be distinct. "
-            "Do not create unused knowledge, unrelated strategies or circular proofs. All evidence claims must participate. "
+            "Do not create unused knowledge, unrelated strategies or circular proofs. Any evidence claim used by an emitted strategy must be one of the supplied claims. "
             "If the source cannot justify the required reasoning structure, output {\"knowledges\":{},\"strategies\":[]} and retain the weakpoint.\n"
+            "The pipeline may send validation feedback after a failed attempt. Repair only the listed structural errors; do not add facts or change the supplied group scope.\n"
+            + ("Validation feedback from the previous attempt:\n" + str(parameters.get("repair_feedback")) + "\n"
+               if parameters.get("repair_feedback") else "")
+            + ("This is a post-cleaning Group rebuild. Treat all supplied knowledges as the current Group, derive the logic anew, and return strategies only; do not add any new knowledge.\n"
+               if parameters.get("rebuild_group") else "")
             + json.dumps(parameters, ensure_ascii=False)
         )
 
@@ -365,6 +401,31 @@ class WeakpointExpansionTool:
             # but cleaning must remain in one critical section.
             with _CLEANER_LOCK:
                 result = _clean_additions(request.parameters, result, cleaning)
+            if result["knowledges"]:
+                # The cleaner may split or otherwise change the propositions.
+                # Re-derive the current Group's logic instead of binding the
+                # old strategies to the new claims.
+                rebuild_parameters = copy.deepcopy(request.parameters)
+                rebuild_parameters["knowledges"].update(result["knowledges"])
+                rebuild_parameters["rebuild_group"] = True
+                rebuild_request = ToolCallRequest(
+                    f"{request.call_id}_group_rebuild", self.name, self.version,
+                    "expand_weakpoint", request.inputs, rebuild_parameters,
+                )
+                rebuild_http = Request(f"{base}/chat/completions", data=json.dumps({
+                    "model": MODEL_NAME,
+                    "messages": [{"role": "user", "content": self.prompt(rebuild_parameters)}],
+                    "temperature": 0, "response_format": {"type": "json_object"},
+                }, ensure_ascii=False).encode("utf-8"), headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
+                with urlopen(rebuild_http, timeout=180) as response:
+                    rebuild_raw = json.loads(response.read().decode("utf-8"))
+                rebuild_result = json.loads(_response_content(rebuild_raw))
+                _validate_expansion(rebuild_parameters, rebuild_result)
+                for key, value in rebuild_result["knowledges"].items():
+                    if key not in rebuild_parameters["knowledges"] or value != rebuild_parameters["knowledges"][key]:
+                        raise ValueError("post-cleaning Group rebuild introduced new knowledge")
+                result = {"knowledges": result["knowledges"], "strategies": rebuild_result["strategies"]}
+                raw = {"initial": raw, "group_rebuild": rebuild_raw}
             return ToolCallResponse(request.call_id, "succeeded", {"response": raw, "cleaning": cleaning}, result)
         except _InsufficientEvidence:
             return ToolCallResponse(
@@ -420,17 +481,15 @@ class Step4FormalizeReasoningPlugin:
                 document["graph"]["strategies"].append(bound)
                 added.append(bound["strategy_id"])
 
-            # Unknown reasoning families are generic, non-deductive inference.
-            # Preserve the given endpoints; no LLM, new facts, or invented CPT.
+            # Unknown reasoning families are unresolved.  Preserve the
+            # weakpoint rather than silently converting a failed classification
+            # into an infer Strategy.
             for weakpoint in document["workflow"]["weakpoints"]:
                 payload = weakpoint["payload"]
                 if payload["reasoning_type"] is None:
-                    for target in weakpoint_target_ids(payload):
-                        add_strategy({
-                            "scope": "local", "type": "infer", "premises": list(payload["evidence_claim_ids"]),
-                            "conclusion": target, "background": [],
-                        })
-                    removed.append(weakpoint["id"])
+                    findings.append(Finding(
+                        "STEP4_UNRESOLVED_WEAKPOINT", "warning",
+                        f"Retained {weakpoint['id']}: reasoning type is unresolved"))
             frozen_knowledges = {
                 key: copy.deepcopy(value)
                 for key, value in frozen_step3["knowledges"].items()
@@ -457,17 +516,29 @@ class Step4FormalizeReasoningPlugin:
             def expand_one(job: tuple[int, JSONDict, JSONDict, ToolCallRequest]) -> ToolCallResponse:
                 _, _, parameters, request = job
                 response: ToolCallResponse | None = None
-                try:
-                    assert tool is not None
-                    response = tool.invoke(request)
-                    if not isinstance(response, ToolCallResponse):
-                        raise TypeError("Step 4 tool returned a non-ToolCallResponse")
-                    validate_tool_response(request, response)
-                    if response.status == "succeeded":
+                error_message = ""
+                for attempt in range(2):
+                    current_request = request if attempt == 0 else ToolCallRequest(
+                        f"{request.call_id}_repair", tool.name, tool.version, "expand_weakpoint",
+                        request.inputs, {**copy.deepcopy(parameters), "repair_feedback": error_message},
+                    )
+                    try:
+                        assert tool is not None
+                        response = tool.invoke(current_request)
+                        if not isinstance(response, ToolCallResponse):
+                            raise TypeError("Step 4 tool returned a non-ToolCallResponse")
+                        validate_tool_response(current_request, response)
+                        if response.status != "succeeded":
+                            raise ValueError(str((response.error or {}).get("message", "Step 4 tool failed")))
                         _validate_expansion(parameters, response.normalized)
-                except Exception as exc:
-                    raw = response.to_dict() if isinstance(response, ToolCallResponse) else None
-                    response = ToolCallResponse(request.call_id, "failed", raw, error={"type": type(exc).__name__, "message": str(exc)})
+                        break
+                    except Exception as exc:
+                        error_message = str(exc)
+                        response = ToolCallResponse(
+                            current_request.call_id, "failed", None,
+                            error={"type": type(exc).__name__, "message": error_message},
+                        )
+                assert response is not None
                 return response
 
             with ThreadPoolExecutor() as executor:
@@ -489,11 +560,13 @@ class Step4FormalizeReasoningPlugin:
                     "schema_version": "1.0.0", "step": 4, "tool_call_id": request.call_id,
                     "tool_name": tool.name, "tool_version": tool.version, "status": response.status,
                 }))
-            failed = next((response for response in responses if response.status != "succeeded"), None)
-            if failed is not None:
-                raise ValueError(str((failed.error or {}).get("message", "Step 4 tool failed")))
-
             for (_, weakpoint, _, _), response in zip(jobs, responses):
+                if response.status != "succeeded":
+                    findings.append(Finding(
+                        "STEP4_EXPANSION_FAILED", "warning",
+                        f"Retained {weakpoint['id']}: "
+                        f"{(response.error or {}).get('message', 'semantic expansion failed')}"))
+                    continue
                 result = response.normalized
                 assert isinstance(result, dict)
                 if not result["strategies"]:

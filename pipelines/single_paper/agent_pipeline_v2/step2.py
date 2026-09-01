@@ -304,7 +304,10 @@ class DeepSeekV4FlashObservationTool:
             "- null: the supplied material cannot identify one of the above.\n\n"
             "Return JSON only: {\"classifications\":[{\"weakpoint_id\":\"...\",\"reasoning_type\":\"abduction|analogy|deduction|null\"}]}. "
             "Return every supplied ID exactly once and no other fields.\n\n"
-            f"Weakpoints:\n{json.dumps(records, ensure_ascii=False)}"
+            + ("Validation feedback from a previous attempt. Repair only the listed error and return the same IDs:\n"
+               + str(request.parameters.get("repair_feedback")) + "\n\n"
+               if request.parameters.get("repair_feedback") else "")
+            + f"Weakpoints:\n{json.dumps(records, ensure_ascii=False)}"
         )
         body = json.dumps({
             "model": self.model,
@@ -383,10 +386,14 @@ class DeepSeekV4FlashObservationTool:
             "Experimental observations or E claims supporting a general hypothesis are abduction, never deduction.\n\n"
             "Labels: deduction means supplied premises plus source-stated rules/conditions can strictly entail every target; abduction means a phenomenon supports an explanatory hypothesis, mechanism, or generalization while alternatives remain; analogy requires a source-domain law and identifiable cross-domain mapping; null means none can be established from supplied material. "
             "For deduction, do not hide missing rules or empirical assertions. For abduction, premises are phenomena and targets are non-experimental explanations.\n\n"
-            "Return JSON only as {\"clusters\":[{\"cluster_id\":\"...\",\"weakpoints\":[{\"member_relation_ids\":[\"...\"],\"evidence_claim_ids\":[\"...\"],\"target_claim_id\":[\"...\"],\"reasoning_type\":\"deduction|abduction|analogy\" OR null,\"expression\":\"...\"}],\"rejected_relation_ids\":[\"...\"]}]}. "
+            "Return JSON only with exactly this schema: {\"clusters\":[{\"cluster_id\":\"...\",\"weakpoints\":[{\"member_relation_ids\":[\"...\"],\"evidence_claim_ids\":[\"...\"],\"target_claim_id\":[\"...\"],\"reasoning_type\":null,\"expression\":\"...\"}],\"rejected_relation_ids\":[\"...\"]}]}. "
             "Return every cluster exactly once. Every candidate relation ID must occur exactly once, either in one weakpoint's member_relation_ids or in rejected_relation_ids. "
             "Every weakpoint must consume at least one candidate relation. Use only supplied claim IDs, keep evidence and targets non-empty, unique, and disjoint, and cite every endpoint as [claim_id] in expression. "
-            "Reject a candidate only when no supported reasoning relation remains after joint normalization.\n\nClusters:\n"
+            "Reject a candidate only when no supported reasoning relation remains after joint normalization."
+            + ("\n\nValidation feedback from a previous attempt. Repair only these errors; do not change the supplied claims or relation IDs:\n"
+               + str(request.parameters.get("repair_feedback", ""))
+               if request.parameters.get("repair_feedback") else "")
+            + "\n\nClusters:\n"
             + json.dumps(clusters, ensure_ascii=False)
         )
         body = json.dumps({
