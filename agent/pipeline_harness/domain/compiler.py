@@ -213,7 +213,9 @@ class Gaia05OfficialCompilerTool:
     """Shared official compiler for the byte-identical V2/V3 authoring contract."""
 
     name = "gaia-0.5-official-compiler"
-    version = "0.5.0a7"
+    # The currently vendored official Gaia source identifies itself as the
+    # 0.5.0 release (the older a7 prerelease metadata is no longer published).
+    version = "0.5.0"
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
         try:

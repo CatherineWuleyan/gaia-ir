@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-gaia = ["gaia-lang==0.5.0a7"]
+gaia = ["gaia-lang==0.5.0"]
 
 [tool.setuptools.packages.find]
 where = ["."]
