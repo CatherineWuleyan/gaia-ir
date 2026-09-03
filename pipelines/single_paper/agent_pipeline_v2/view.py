@@ -486,6 +486,16 @@ class V2FormalizationViewAdapter:
             if len(matches) == 1:
                 node["details"] = {**node["details"], "expanded_strategy_ids": sorted(matches[0])}
 
+        # Compiled snapshots can expose qualified AltExp IDs as ordinary claim
+        # nodes. Reclassify them at the final projection boundary so the
+        # viewer uses the dedicated red dashed placeholder shape.
+        for node in nodes:
+            if "AltExp" in str(node.get("entity_id", "")) or "AltExp" in str(node.get("id", "")):
+                node["kind"] = "alternative_placeholder"
+                node["layer"] = "claims"
+                node["entity_id"] = "AltExp"
+                node["label"] = node["display_label"] = "AltExp"
+                node["summary"] = "Unknown alternative explanation (content=null)"
         assert latest_document is not None
         latest_step = max(latest_by_step)
         return ViewDocument(
