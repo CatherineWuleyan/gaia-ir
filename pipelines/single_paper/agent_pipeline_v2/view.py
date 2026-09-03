@@ -228,6 +228,25 @@ class V2FormalizationViewAdapter:
                         "step": step, "visible_at": ["standard"], "min_granularity": "standard", "details": operator,
                     })
             alternative_count = 0
+            # The compiled snapshot may retain an AltExp premise as a
+            # qualified Knowledge ID even when its named strategy is lowered
+            # into operators. Ensure every such interface claim has a visible
+            # placeholder node in the standard projection.
+            for knowledge_id, knowledge in document["knowledges"].items():
+                if "AltExp" not in str(knowledge_id) or f"step:{step}:knowledge:{knowledge_id}" in {node["id"] for node in nodes}:
+                    continue
+                nodes.append({
+                    "id": f"step:{step}:knowledge:{knowledge_id}", "entity_id": "AltExp",
+                    "label": "AltExp", "display_label": "AltExp",
+                    "display_meta": "official alternative interface",
+                    "kind": "alternative_placeholder", "layer": "claims", "step": step,
+                    "visible_at": ["standard"], "min_granularity": "standard",
+                    "summary": "Unknown alternative explanation (content=null)",
+                    "source_anchor_ids": [], "fold_group": None,
+                    "details": {"id": knowledge_id, "label": "AltExp", "type": "claim",
+                                "content": None, "derived_for_view": True,
+                                "visibility": "public"},
+                })
             for strategy in document["graph"].get("strategies", []):
                 strategy_id = strategy["strategy_id"]
                 # Strategies are an authoring abstraction only. The viewer always
