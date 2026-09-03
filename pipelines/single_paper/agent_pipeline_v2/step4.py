@@ -57,6 +57,48 @@ def _ids(value: Any, label: str, *, nonempty: bool = True) -> list[str]:
     return value
 
 
+def _normalize_expansion_metadata(parameters: JSONDict, result: Any) -> JSONDict:
+    """Repair mechanical metadata without changing the requested reasoning."""
+    if not isinstance(result, dict) or not isinstance(result.get("knowledges"), dict):
+        return result
+    result = copy.deepcopy(result)
+    supplied = {
+        item["anchor_id"] for item in parameters.get("source_excerpts", [])
+        if isinstance(item, dict) and isinstance(item.get("anchor_id"), str)
+    }
+    weakpoint_anchors = [
+        anchor_id for anchor_id in parameters["weakpoint"]["payload"].get("evidence_anchor_ids", [])
+        if anchor_id in supplied
+    ]
+    alternatives = {
+        strategy["premises"][1]
+        for strategy in result.get("strategies", [])
+        if isinstance(strategy, dict)
+        and strategy.get("type") == "abduction"
+        and isinstance(strategy.get("premises"), list)
+        and len(strategy["premises"]) == 2
+        and isinstance(strategy["premises"][1], str)
+        and strategy["premises"][1] in result["knowledges"]
+    }
+    for key, knowledge in result["knowledges"].items():
+        if not isinstance(knowledge, dict):
+            continue
+        # Newly proposed alternatives without grounded source support are the
+        # explicit non-factual AltExp interface, not propositions for cleaning.
+        if key in alternatives and key not in parameters["knowledges"]:
+            knowledge["content"] = None
+            knowledge["source_anchor_ids"] = []
+            continue
+        source_ids = knowledge.get("source_anchor_ids")
+        if isinstance(source_ids, list):
+            clean = list(dict.fromkeys(item.strip() for item in source_ids if isinstance(item, str) and item.strip()))
+            clean = [item for item in clean if item in supplied]
+            if knowledge.get("content") is not None and not clean:
+                clean = list(weakpoint_anchors)
+            knowledge["source_anchor_ids"] = clean
+    return result
+
+
 def _validate_expansion(parameters: JSONDict, result: Any) -> None:
     """Check references, source locations and the requested logical skeleton."""
     if not isinstance(result, dict) or set(result) != {"knowledges", "strategies"}:
@@ -73,6 +115,17 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
             raise ValueError("an unexpanded weakpoint must not introduce knowledge")
         return
     existing = parameters["knowledges"]
+    # An LLM may return a provisional name/content for the required abduction
+    # alternative.  The interface placeholder is deliberately non-factual;
+    # normalize it before ordinary Knowledge validation so it is not sent to
+    # the proposition cleaner as an unsupported claim.
+    null_alternatives: set[str] = set()
+    for strategy in strategies:
+        premises = strategy.get("premises") if isinstance(strategy, dict) else None
+        if (isinstance(strategy, dict) and strategy.get("type") == "abduction"
+                and isinstance(premises, list) and len(premises) == 2
+                and isinstance(premises[1], str) and premises[1] not in existing):
+            null_alternatives.add(premises[1])
     anchors = {item["anchor_id"] for item in parameters["source_excerpts"]}
     for key, knowledge in additions.items():
         if not isinstance(key, str) or not _ID.fullmatch(key) or key in existing:
@@ -83,7 +136,7 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
             raise ValueError("Step 4 may introduce only claims and notes")
         content = knowledge["content"]
         if content is None:
-            if knowledge["type"] != "claim" or not key.startswith("AltExp"):
+            if knowledge["type"] != "claim" or (not key.startswith("AltExp") and key not in null_alternatives):
                 raise ValueError(f"new Knowledge {key} requires non-empty content.canonical")
         elif (not isinstance(content, dict) or set(content) != {"canonical"}
               or not isinstance(content["canonical"], str) or not content["canonical"].strip()):
@@ -154,7 +207,9 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
                 raise ValueError("observations and the hypothesis cannot be their own alternative explanation")
             if alternative not in knowledges:
                 raise ValueError("abduction AltExp premise must reference a Knowledge claim")
-            if knowledges[alternative]["content"] is None and not alternative.startswith("AltExp"):
+            if (knowledges[alternative]["content"] is None
+                    and not alternative.startswith("AltExp")
+                    and alternative not in null_alternatives):
                 raise ValueError("only an explicit AltExp placeholder may have null content")
 
 
@@ -445,7 +500,7 @@ class WeakpointExpansionTool:
             content = _response_content(raw)
             if not content.strip():
                 raise ValueError("Step 4 model response is empty: content and reasoning_content are blank")
-            result = json.loads(content)
+            result = _normalize_expansion_metadata(request.parameters, json.loads(content))
             _validate_expansion(request.parameters, result)
             # The vendored cleaner uses a shared work directory and a temporary
             # process-wide model override. LLM expansions may run concurrently,
