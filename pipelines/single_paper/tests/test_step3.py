@@ -21,6 +21,14 @@ class FakeWeakpointClassifier:
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
         self.__class__.calls.append(request)
+        if request.operation == "classify_weakpoints":
+            return ToolCallResponse(
+                request.call_id, "succeeded", {},
+                {"classifications": [
+                    {"weakpoint_id": item["weakpoint_id"], "reasoning_type": "abduction"}
+                    for item in request.parameters["weakpoints"]
+                ]},
+            )
         clusters = request.parameters["clusters"]
         normalized = []
         for cluster in clusters:
@@ -43,8 +51,9 @@ class ParallelWeakpointClassifier(FakeWeakpointClassifier):
     thread_ids: set[int] = set()
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
-        self.__class__.thread_ids.add(threading.get_ident())
-        self.__class__.barrier.wait(timeout=2)
+        if request.operation == "normalize_weakpoint_clusters":
+            self.__class__.thread_ids.add(threading.get_ident())
+            self.__class__.barrier.wait(timeout=2)
         return super().invoke(request)
 
 
@@ -85,7 +94,7 @@ class Step3Tests(unittest.TestCase):
         }
         store = RunStore.create(self.root / "runs", pipeline, input_manifest=self.root / "manifest.json")
         self.assertEqual("succeeded", run_pipeline(store.run_dir).status)
-        self.assertEqual(1, len(FakeWeakpointClassifier.calls))
+        self.assertEqual(2, len(FakeWeakpointClassifier.calls))
         self.assertEqual("normalize_weakpoint_clusters", FakeWeakpointClassifier.calls[0].operation)
         record = FakeWeakpointClassifier.calls[0].parameters["clusters"][0]
         self.assertEqual({"cluster_id", "relation_context_id", "claims", "candidate_relations", "source_excerpts"}, set(record))
@@ -109,7 +118,7 @@ class Step3Tests(unittest.TestCase):
             },
             final["graph"]["operators"][0],
         )
-        self.assertEqual(1, len([item for item in store.load_artifacts() if item.kind == "tool.semantic_review.response"]))
+        self.assertEqual(2, len([item for item in store.load_artifacts() if item.kind == "tool.semantic_review.response"]))
 
     def test_argument_cluster_reorients_and_merges_phenomena_without_expanding_two_hops(self) -> None:
         anchors = [
@@ -190,8 +199,10 @@ class Step3Tests(unittest.TestCase):
         }
         store = RunStore.create(self.root / "parallel-runs", pipeline, input_manifest=self.root / "manifest.json")
         self.assertEqual("succeeded", run_pipeline(store.run_dir).status)
-        self.assertEqual(2, len(ParallelWeakpointClassifier.calls))
-        self.assertTrue(all(len(call.parameters["clusters"]) == 1 for call in ParallelWeakpointClassifier.calls))
+        self.assertEqual(3, len(ParallelWeakpointClassifier.calls))
+        cluster_calls = [call for call in ParallelWeakpointClassifier.calls if call.operation == "normalize_weakpoint_clusters"]
+        self.assertEqual(2, len(cluster_calls))
+        self.assertTrue(all(len(call.parameters["clusters"]) == 1 for call in cluster_calls))
         self.assertEqual(2, len(ParallelWeakpointClassifier.thread_ids))
         step3_refs = [ref for ref in store.load_artifacts() if ref.kind == "formalization" and ref.metadata["step"] == 3]
         self.assertEqual(1, len(step3_refs))
