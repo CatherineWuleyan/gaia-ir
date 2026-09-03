@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Mapping
 
 from gaia.engine.ir.formalize import formalize_named_strategy
@@ -14,6 +15,15 @@ from .authoring import validate, weakpoint_target_ids
 
 
 _INLINE_RELATIONS = {"implication", "equivalence"}
+
+
+def _is_internal_helper(knowledge_id: str, knowledge: Mapping[str, Any]) -> bool:
+    """Compiler-generated helper claims are layout plumbing, never public graph nodes."""
+    value = str(knowledge_id)
+    return bool(
+        knowledge.get("metadata", {}).get("derived_ast_helper") is True
+        or re.search(r"(^|::)__|helper[_-]?relation|operator[_-]?result|disjunction[_-]?result|alternative[_-]?explanation", value, re.I)
+    )
 
 
 class V2FormalizationViewAdapter:
@@ -61,7 +71,7 @@ class V2FormalizationViewAdapter:
                 content = knowledge["content"]
                 summary = content["canonical"] if content is not None else "Missing Knowledge content"
                 node_id = f"step:{step}:knowledge:{knowledge_id}"
-                is_internal_helper = knowledge_id in internal_helper_ids
+                is_internal_helper = knowledge_id in internal_helper_ids or _is_internal_helper(knowledge_id, knowledge)
                 nodes.append({
                     "id": node_id,
                     "entity_id": knowledge_id,
@@ -214,7 +224,13 @@ class V2FormalizationViewAdapter:
             alternative_count = 0
             for strategy in document["graph"].get("strategies", []):
                 strategy_id = strategy["strategy_id"]
-                if strategy["type"] == "infer":
+                # Strategies are an authoring abstraction only. The viewer always
+                # renders their lowered Operator form; no Strategy block is kept.
+                # Gaia's named formalizer does not accept infer: infer is the
+                # intentionally weak, evidence-backed edge emitted by Step 4
+                # for relations whose stronger reasoning family is unknown.
+                # Render it directly (the legacy sentinel remains readable).
+                if strategy.get("type") in {"infer", "__legacy_infer_disabled__"}:
                     node_id = f"step:{step}:strategy:{strategy_id}"
                     nodes.append({
                         "id": node_id, "entity_id": strategy_id, "label": "infer",

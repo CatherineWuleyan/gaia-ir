@@ -484,6 +484,7 @@ class Step4FormalizeReasoningPlugin:
             document = copy.deepcopy(document)
             frozen_step3 = copy.deepcopy(document)
             document["graph"].setdefault("strategies", [])
+            graph_nodes = set(document["graph"].get("nodes", []))
             source_excerpts: list[JSONDict] = []
             pending = [item for item in document["workflow"]["weakpoints"] if item["payload"]["reasoning_type"] is not None]
             tool: DomainTool | None = None
@@ -512,15 +513,43 @@ class Step4FormalizeReasoningPlugin:
                 document["graph"]["strategies"].append(bound)
                 added.append(bound["strategy_id"])
 
-            # Unknown reasoning families are unresolved.  Preserve the
-            # weakpoint rather than silently converting a failed classification
-            # into an infer Strategy.
+            # A null classifier result is an explicitly supported, low-risk
+            # relation: the extraction already supplied its premises and
+            # target, while only the stronger reasoning family is unknown.
+            # Lower it mechanically to infer when all IDs are present and the
+            # relation is non-cyclic.  This keeps evidence-backed links visible
+            # without inventing rules, probabilities, or new Knowledge.
             for weakpoint in document["workflow"]["weakpoints"]:
                 payload = weakpoint["payload"]
                 if payload["reasoning_type"] is None:
-                    findings.append(Finding(
-                        "STEP4_UNRESOLVED_WEAKPOINT", "warning",
-                        f"Retained {weakpoint['id']}: reasoning type is unresolved"))
+                    premises = list(dict.fromkeys(payload.get("evidence_claim_ids", [])))
+                    targets = weakpoint_target_ids(payload)
+                    valid = (
+                        bool(premises) and all(item in graph_nodes for item in premises)
+                        and all(item in graph_nodes and item not in premises for item in targets)
+                    )
+                    if valid:
+                        # Infer has no ordered logical rule; stable graph order
+                        # prevents equivalent links from receiving different
+                        # official IDs across retries.
+                        premises.sort(key=lambda item: document["graph"]["nodes"].index(item))
+                        for target in targets:
+                            try:
+                                add_strategy({
+                                    "scope": "local", "type": "infer",
+                                    "premises": premises, "conclusion": target,
+                                    "background": [],
+                                })
+                                removed.append(weakpoint["id"])
+                            except Exception as exc:
+                                findings.append(Finding(
+                                    "STEP4_INFER_LOWERING_FAILED", "warning",
+                                    f"Retained {weakpoint['id']}: {exc}"))
+                                break
+                    else:
+                        findings.append(Finding(
+                            "STEP4_UNRESOLVED_WEAKPOINT", "warning",
+                            f"Retained {weakpoint['id']}: invalid evidence/target IDs for infer lowering"))
             frozen_knowledges = {
                 key: copy.deepcopy(value)
                 for key, value in frozen_step3["knowledges"].items()
