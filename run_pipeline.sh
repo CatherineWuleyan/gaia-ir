@@ -6,7 +6,10 @@ set -euo pipefail
 # stage, artifact kind, schema field, or recovery rule.
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
+# The official compiler contract is tied to Gaia 0.5.0a7. Prefer the
+# repository-local environment so an activated/older Gaia checkout cannot
+# silently change compiler semantics.
+PYTHON_BIN="${PYTHON_BIN:-$ROOT/.venv-gaia-a7/bin/python}"
 
 usage() {
   cat <<'EOF'
@@ -41,13 +44,23 @@ identity() {
 }
 
 module_preflight() {
+  [[ -x "$PYTHON_BIN" ]] || {
+    echo "Gaia Python environment not found: $PYTHON_BIN" >&2
+    echo "Use $ROOT/.venv-gaia-a7 (Gaia 0.5.0a7), or set PYTHON_BIN explicitly to that environment." >&2
+    exit 2
+  }
   PYTHONPATH="$ROOT/agent:$ROOT/pipelines/single_paper" "$PYTHON_BIN" - <<'PY'
 import sys
 import pipeline_harness
 import agent_pipeline_v2
+from gaia._meta import get_library_version
 print(f"pipeline_harness_module={pipeline_harness.__file__}")
 print(f"agent_pipeline_v2_module={agent_pipeline_v2.__file__}")
 print(f"python_executable={sys.executable}")
+version = get_library_version()
+print(f"gaia_version={version}")
+if version != "0.5.0a7":
+    raise SystemExit(f"Gaia version mismatch: required 0.5.0a7, found {version}")
 PY
 }
 

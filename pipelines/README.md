@@ -4,6 +4,10 @@
 `./run_pipeline.sh`，启动器会打印 pipeline 名称、配置绝对路径、配置 hash、
 Git commit、工作树是否干净以及实际导入的 Python 模块路径。
 
+启动器默认使用仓库内的 `.venv-gaia-a7/bin/python`，其中固定安装 Gaia
+`0.5.0a7`；启动前会进行版本预检。若覆盖 `PYTHON_BIN`，仍必须指向 Gaia
+`0.5.0a7` 环境。
+
 | 名称 | 配置/脚本 | 作用 |
 |---|---|---|
 | `single-v2` | `pipelines/single_paper/pipeline.step1-5.json` | 新的单论文 Harness V2，完整 Step 1–5 |
