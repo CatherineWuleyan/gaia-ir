@@ -33,6 +33,14 @@ class Classifier:
     kind: str | None = "deduction"
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
+        if request.operation == "classify_weakpoints":
+            return ToolCallResponse(
+                request.call_id, "succeeded", {},
+                {"classifications": [
+                    {"weakpoint_id": item["weakpoint_id"], "reasoning_type": self.kind}
+                    for item in request.parameters["weakpoints"]
+                ]},
+            )
         clusters = request.parameters["clusters"]
         normalized = []
         for cluster in clusters:
@@ -346,12 +354,14 @@ class Step4Tests(unittest.TestCase):
     def test_later_failure_does_not_commit_an_earlier_successful_expansion(self) -> None:
         self.pipeline["stages"][2]["options"]["tool_plugin"] = f"{__name__}:AllClassifier"
         store, prior, final = self.run_expansion(deduction())
-        self.assertEqual("failed", self.result.status)
-        self.assertIsNone(final)
+        self.assertEqual("succeeded", self.result.status, self.result.findings)
+        self.assertIsNotNone(final)
         self.assertEqual(8, len(prior["knowledges"]))
+        self.assertEqual(len(prior["knowledges"]), len(final["knowledges"]))
+        self.assertTrue(final["workflow"]["weakpoints"])
         audits = [read_json(store.artifact_path(ref)) for ref in store.load_artifacts()
                   if ref.kind == "tool.semantic_review.response" and ref.metadata["step"] == 4]
-        self.assertEqual(["succeeded", "failed"], [item["response"]["status"] for item in audits])
+        self.assertEqual(["failed", "failed"], [item["response"]["status"] for item in audits])
         self.assertTrue(all("prior_tool_call_ids" not in item["request"]["parameters"] for item in audits))
         self.assertEqual(1, len({item["request"]["parameters"]["formalization_ref"] for item in audits}))
         self.assertNotIn("source_excerpts", audits[0]["request"]["parameters"])
