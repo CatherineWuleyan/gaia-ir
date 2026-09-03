@@ -298,7 +298,9 @@ class DeepSeekV4FlashObservationTool:
                 f"{base_url}/chat/completions",
                 data=json.dumps({
                     "model": self.model,
-                    "messages": [{"role": "user", "content": self._equivalent_claim_prompt(normalized["claims"], candidate)}],
+                    "messages": [{"role": "user", "content": self._equivalent_claim_prompt(
+                        normalized["claims"], candidate, request.parameters.get("repair_feedback"),
+                    )}],
                     "temperature": 0,
                     "response_format": {"type": "json_object"},
                 }, ensure_ascii=False).encode("utf-8"),
@@ -391,6 +393,7 @@ class DeepSeekV4FlashObservationTool:
             "with alternatives not ruled out by the supplied material. A target broader than one experiment may still be abduction when the supplied evidence is a legitimate example or partial support; Step 4 may add an AltExp alternative explanation and keep uncertainty in the premises.\n"
             "- analogy: a supplied source-domain law/structure is transferred to a target domain through an identifiable but unexpanded mapping or condition.\n"
             "- null: the supplied material cannot identify one of the above, even after allowing a source-grounded intermediate proposition or an explicit alternative explanation. Do not use null merely because the relation is empirical or the target is broader.\n\n"
+            "Screening gate before any non-null label: every evidence and target ID must be distinct and grounded in at least one supplied original-paper excerpt; reject duplicate/equivalent endpoint content, mere topical co-occurrence, unsupported causal or quantitative leaps, and conclusions whose scope is plainly outside the supplied evidence. If the only problem is a recoverable intermediate rule/claim or an unresolved alternative explanation, keep deduction/abduction and let Step 4 expand it; otherwise return null.\n\n"
             "Return JSON only: {\"classifications\":[{\"weakpoint_id\":\"...\",\"reasoning_type\":\"abduction|analogy|deduction|null\"}]}. "
             "Return every supplied ID exactly once and no other fields.\n\n"
             + ("Validation feedback from a previous attempt. Repair only the listed error and return the same IDs:\n"
@@ -475,6 +478,7 @@ class DeepSeekV4FlashObservationTool:
             "Experimental observations or E claims supporting a general hypothesis are abduction, never deduction.\n\n"
             "Labels: deduction means supplied premises plus source-stated rules/conditions, possibly through a source-grounded intermediate proposition, can strictly entail every target; abduction means a phenomenon supports an explanatory hypothesis, mechanism, or generalization while alternatives remain; analogy requires a source-domain law and identifiable cross-domain mapping; null means none can be established even with a bounded Step 4 expansion. "
             "For deduction, do not hide unsupported rules or empirical assertions, but do mark a relation when the missing rule/intermediate claim is recoverable from the supplied excerpts. For abduction, premises are phenomena and targets may be broader non-experimental explanations or empirical generalizations when the evidence is explicitly supportive.\n\n"
+            "Before assigning a non-null label, screen the relation: endpoints must be valid and distinct, at least one endpoint must have a supplied paper-text excerpt, and the link must be more than topical co-occurrence, an unsupported causal/quantitative leap, or a duplicate/equivalence. If only a source-grounded intermediate layer or alternative explanation is missing, retain the candidate for Step 4 expansion; if the evidence cannot support even that bounded expansion, use null.\n\n"
             "Return JSON only with exactly this schema: {\"clusters\":[{\"cluster_id\":\"...\",\"weakpoints\":[{\"member_relation_ids\":[\"...\"],\"evidence_claim_ids\":[\"...\"],\"target_claim_id\":[\"...\"],\"reasoning_type\":null,\"expression\":\"...\"}],\"rejected_relation_ids\":[\"...\"]}]}. "
             "Return every cluster exactly once. Every candidate relation ID must occur exactly once, either in one weakpoint's member_relation_ids or in rejected_relation_ids. "
             "Every weakpoint must consume at least one candidate relation. Use only supplied claim IDs, keep evidence and targets non-empty, unique, and disjoint, and cite every endpoint as [claim_id] in expression. "
@@ -574,7 +578,9 @@ class DeepSeekV4FlashObservationTool:
         )
 
     @staticmethod
-    def _equivalent_claim_prompt(observations: list[JSONDict], candidate: JSONDict) -> str:
+    def _equivalent_claim_prompt(
+        observations: list[JSONDict], candidate: JSONDict, repair_feedback: Any = None,
+    ) -> str:
         paragraphs = "\n\n".join(
             f"[{item['anchor_id']}] {item['text']}"
             for item in candidate.get("paragraphs", [])
@@ -589,9 +595,11 @@ class DeepSeekV4FlashObservationTool:
             "causal, or more general claim. Do not add, omit, merge, split, explain, or reinterpret facts. Use only the "
             "supplied observations and paper paragraphs. Even when O already omits report-event wording, express E with "
             "different surface wording while preserving exactly the same truth conditions; never copy O's content "
-            "verbatim. Return every observation_key exactly once and no other fields. "
+            "verbatim. If a proposed E would be identical to O after trivial whitespace/case normalization, rewrite "
+            "it again before returning. Return every observation_key exactly once and no other fields. "
             "Return {\"equivalent_claims\":[{\"observation_key\":\"...\",\"content\":\"...\"}]}.\n\n"
-            f"Observations:\n{json.dumps(observations, ensure_ascii=False)}\n\nPaper paragraphs:\n{paragraphs}"
+            + ("\n\nRepair feedback from the previous validation attempt. Correct only the reported issue and return the complete corrected JSON:\n" + str(repair_feedback) if repair_feedback else "")
+            + f"\n\nObservations:\n{json.dumps(observations, ensure_ascii=False)}\n\nPaper paragraphs:\n{paragraphs}"
         )
 
     @staticmethod
@@ -749,6 +757,7 @@ class DeepSeekV4FlashObservationTool:
         selected_claims: Any,
         review_advice: Any,
         frozen_claims: Any,
+        repair_feedback: Any = None,
     ) -> str:
         evidence = []
         for candidate in candidates:
@@ -781,14 +790,18 @@ class DeepSeekV4FlashObservationTool:
             )
         return (
             "Return JSON only. Use only the supplied paper paragraphs. Do not use outside knowledge or infer missing facts. "
-            "Extract each evidence-supported experimental observation as S/A/(optional B)/M/R/(optional U): S is setting "
+            "First decide whether the supplied text actually reports an experiment or measured observation attributable "
+            "to this paper. Do not return method descriptions, background, proposed experiments, or claims about prior "
+            "work as experimental claims; if no attributable result is present, return insufficient_context. "
+            "For each genuine experimental observation, extract S/A/(optional B)/M/(optional R)/(optional U): S is setting "
             "or scope; A is the treatment, method, intervention, or experimental object; B is an optional "
             "baseline or control and may be omitted when the supplied evidence states an observation without one; "
-            "M is the measure; "
-            "R is the observed numerical or directional comparison result; U is optional and contains only an explicitly reported "
+            "M is the measure; R is the observed numerical or directional comparison result and may be omitted only when "
+            "the supplied text reports the experimental observation but does not state a result; U is optional and contains only an explicitly reported "
             "uncertainty value directly corresponding to R. Omit B or U when the evidence does not report it; never emit "
             "'baseline not reported', 'uncertainty not reported', or another absence placeholder. Use English. "
-            "For each claim, directly write content as one fluent, complete English sentence. You may improve grammar and flow, "
+            "A and M are required for every returned claim. S and R may be absent only when the source genuinely does not "
+            "state them; never fill them with guesses or absence placeholders. For each claim, directly write content as one fluent, complete English sentence. You may improve grammar and flow, "
             "but must preserve the meaning, scope, comparison direction, conditions, result, and any reported uncertainty of "
             "S/A/B/M/R and optional U. Do not mechanically concatenate a fixed template. Do not add, omit, merge, generalize, "
             "narrow, reinterpret, or move information between fields. "
@@ -815,6 +828,7 @@ class DeepSeekV4FlashObservationTool:
             "\"R\":\"...\",\"content\":\"...\"," 
             "\"paragraph_anchor_ids\":[\"...\"]}]}."
             + rewrite
+            + ("\n\nRepair feedback from the previous validation attempt. Correct only the reported issue, re-check every claim against the supplied evidence, and return the complete corrected JSON:\n" + str(repair_feedback) if repair_feedback else "")
             + "\n\nEvidence:\n"
             + "\n\n".join(evidence)
         )
@@ -869,8 +883,16 @@ class DeepSeekV4FlashObservationTool:
             if candidate_id not in candidate_order:
                 raise ValueError(f"claim {index} cites an unknown candidate_id")
             fields = {name: claim.get(name) for name in ("S", "A", "M", "R")}
-            if not all(isinstance(value, str) and value.strip() for value in fields.values()):
-                raise ValueError(f"claim {index} must provide non-empty S/A/M/R strings")
+            # A and M are required to establish that this is an experimental
+            # claim. S and R may be absent when the source genuinely omits
+            # scope or an explicit numerical/directional result; never invent
+            # an absence placeholder.
+            for name in ("A", "M"):
+                if not isinstance(fields[name], str) or not fields[name].strip():
+                    raise ValueError(f"claim {index} must provide non-empty {name}")
+            for name in ("S", "R"):
+                if fields[name] is not None and (not isinstance(fields[name], str) or not fields[name].strip()):
+                    raise ValueError(f"claim {index} {name} must be omitted or a non-empty string")
             baseline = claim.get("B")
             if isinstance(baseline, str) and not baseline.strip():
                 baseline = None
@@ -908,7 +930,7 @@ class DeepSeekV4FlashObservationTool:
                     "_extraction_key": f"{candidate_id}:{index}",
                     **({"id": claim_id} if isinstance(claim_id, str) else {}),
                     "candidate_id": candidate_id,
-                    **{name: str(value).strip() for name, value in fields.items()},
+                    **{name: str(value).strip() for name, value in fields.items() if isinstance(value, str) and value.strip()},
                     **({"B": baseline.strip()} if isinstance(baseline, str) else {}),
                     **({"U": uncertainty.strip()} if isinstance(uncertainty, str) else {}),
                     "content": claim_content.strip(),
@@ -1046,18 +1068,36 @@ def _tool_call(
             **({"frozen_claims": frozen_claims} if frozen_claims is not None else {}),
         },
     )
-    try:
-        response = tool.invoke(request)
-        if not isinstance(response, ToolCallResponse):
-            raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
-        validate_tool_response(request, response)
-    except Exception as exc:
-        response = ToolCallResponse(
-            request.call_id,
-            "failed",
-            None,
-            error={"type": type(exc).__name__, "message": str(exc)},
-        )
+    response: ToolCallResponse | None = None
+    current_request = request
+    for attempt in range(2):
+        try:
+            response = tool.invoke(current_request)
+            if not isinstance(response, ToolCallResponse):
+                raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
+            validate_tool_response(current_request, response)
+        except Exception as exc:
+            response = ToolCallResponse(
+                current_request.call_id,
+                "failed",
+                None,
+                error={"type": type(exc).__name__, "message": str(exc)},
+            )
+        if response.status == "succeeded":
+            break
+        message = str((response.error or {}).get("message", ""))
+        # Validation/content failures are actionable prompt violations and
+        # should be repaired by the model once. Billing/auth failures are not
+        # prompt problems and must not be retried repeatedly.
+        if attempt == 0 and message and not re.search(r"HTTP (401|402|403)\b|not configured|Insufficient Balance", message, re.I):
+            current_request = ToolCallRequest(
+                f"{request.call_id}_repair", request.tool_name, request.tool_version,
+                request.operation, request.inputs,
+                {**copy.deepcopy(request.parameters), "repair_feedback": message},
+            )
+            continue
+        break
+    assert response is not None
     response_path = context.work_dir / f"semantic_step_2_tool_response_{call_number}.json"
     atomic_write_json(response_path, {"request": request.to_dict(), "response": response.to_dict()})
     draft = ArtifactDraft(
