@@ -1443,16 +1443,38 @@ def _equivalent_items(
     phenomenon_ids: dict[str, str] = {}
     phenomena: dict[str, JSONDict] = {}
     operators: list[JSONDict] = []
+    existing_phenomena = {
+        key: value for key, value in existing.items()
+        if key.startswith("claim_E") and value.get("type") == "claim"
+        and isinstance(value.get("content"), dict)
+        and isinstance(value["content"].get("canonical"), str)
+    }
+    used_existing_phenomena: set[str] = set()
     for key, observation_id in observation_ids.items():
         suffix = observation_id.removeprefix("claim_O")
-        phenomenon_id = (f"claim_E{suffix}" if observation_id.startswith("claim_O")
-                         else f"claim_E_imported_{observation_id.removeprefix('claim_')}")
+        proposed = by_key[key]["content"]
+        observation_anchors = set(by_key[key]["paragraph_anchor_ids"])
+        matched = next((candidate_id for candidate_id, candidate in existing_phenomena.items()
+                        if candidate_id not in used_existing_phenomena
+                        if _anchors_share_local_context(
+                            list(observation_anchors), list(candidate.get("source_anchor_ids", []))
+                        ) and _cosine(
+                            _tokens(proposed),
+                            _tokens(candidate["content"]["canonical"]),
+                        ) >= 0.72), None)
+        if matched is not None:
+            used_existing_phenomena.add(matched)
+        phenomenon_id = matched or (
+            f"claim_E{suffix}" if observation_id.startswith("claim_O")
+            else f"claim_E_imported_{observation_id.removeprefix('claim_')}"
+        )
         phenomenon_ids[key] = phenomenon_id
-        phenomena[phenomenon_id] = {
-            "type": "claim",
-            "content": {"canonical": by_key[key]["content"]},
-            "source_anchor_ids": list(by_key[key]["paragraph_anchor_ids"]),
-        }
+        if phenomenon_id not in existing:
+            phenomena[phenomenon_id] = {
+                "type": "claim",
+                "content": {"canonical": proposed},
+                "source_anchor_ids": list(by_key[key]["paragraph_anchor_ids"]),
+            }
         operators.append({
             "id": f"operator_equivalence_E{suffix}_O{suffix}",
             "type": "equivalence",

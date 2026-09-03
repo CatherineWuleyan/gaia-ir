@@ -321,6 +321,39 @@ def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> t
     return kept, removed
 
 
+def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
+    """Remove unsupported A→C shortcuts while preserving A→B→C chains.
+
+    A direct edge is redundant only when the same reasoning family already
+    supplies a two-hop path in the same bounded relation context.  This does
+    not collapse legitimate chains; it removes only the transitive shortcut.
+    """
+    edges: list[tuple[int, str, str, str, str]] = []
+    for index, item in enumerate(weakpoints):
+        payload = item.get("payload", {})
+        evidence = payload.get("evidence_claim_ids", [])
+        targets = payload.get("target_claim_id", [])
+        if len(evidence) != 1 or len(targets) != 1:
+            continue
+        relation_context = str(payload.get("relation_context_id", ""))
+        edges.append((index, str(evidence[0]), str(targets[0]),
+                      str(payload.get("reasoning_type", "")), relation_context))
+    remove: set[int] = set()
+    for index, source, target, kind, context in edges:
+        # Treat the current edge as the first hop and search for a second hop.
+        for _, second_source, final, kind1, context1 in edges:
+            if second_source != target or kind1 != kind or context1 != context:
+                continue
+            # The direct source→final edge is the transitive shortcut.
+            for direct_index, left, right, k, c in edges:
+                if direct_index != index and left == source and right == final and k == kind and c == context:
+                    remove.add(direct_index)
+    return (
+        [item for index, item in enumerate(weakpoints) if index not in remove],
+        [str(weakpoints[index].get("id")) for index in sorted(remove)],
+    )
+
+
 def _relation_clusters(context: StageContext, document: JSONDict, links: list[JSONDict]) -> list[JSONDict]:
     """Build experiment-bounded clusters plus one adjacent coarse-relation layer."""
     candidates = [item for item in links if _is_weakpoint_expression(
@@ -709,6 +742,12 @@ class Step3AnalyzeReasoningPlugin:
                     for weakpoint in classification_targets:
                         if str(weakpoint["id"]) not in rejected_ids:
                             weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
+            weakpoints, transitive_ids = _remove_transitive_shortcuts(weakpoints)
+            if transitive_ids:
+                findings.append(Finding(
+                    "STEP3_TRANSITIVE_SHORTCUT_SUPPRESSED", "warning",
+                    f"Suppressed transitive weakpoint shortcuts: {sorted(transitive_ids)}",
+                ))
             graph["operators"] = operators
             workflow["weakpoints"] = weakpoints
             workflow["non_reasoning_links"] = []
