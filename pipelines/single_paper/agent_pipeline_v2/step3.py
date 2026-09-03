@@ -523,29 +523,72 @@ class Step3AnalyzeReasoningPlugin:
                 relation_id = str(link["id"])
                 expression = str(link.get("metadata", {}).get("relation", {}).get("expression", "")).strip()
                 if not expression:
-                    raise ValueError(f"{relation_id} has no relation expression")
+                    findings.append(Finding("STEP3_REJECTED_RELATION", "warning", f"Retained unresolved relation {relation_id}: no relation expression"))
+                    continue
                 sources = list(link["sources"])
                 target = str(link["target"])
-                if not _is_weakpoint_expression(expression):
-                    ast = _fixed_expression_ast(document, expression)
-                    fixed_operators, fixed_added = _materialize_fixed_expression(
-                        document, relation_id, expression, ast,
-                    )
-                    operators.extend(fixed_operators)
-                    added.extend(fixed_added)
-                elif "推出" in expression:
-                    ast = _fixed_expression_ast(document, expression)
-                    fixed_operators, fixed_added = _materialize_fixed_expression(
-                        document, relation_id, expression, ast,
-                    )
-                    operators.extend(fixed_operators)
-                    added.extend(fixed_added)
+                try:
+                    if not _is_weakpoint_expression(expression):
+                        ast = _fixed_expression_ast(document, expression)
+                        fixed_operators, fixed_added = _materialize_fixed_expression(
+                            document, relation_id, expression, ast,
+                        )
+                        operators.extend(fixed_operators)
+                        added.extend(fixed_added)
+                    elif "推出" in expression:
+                        ast = _fixed_expression_ast(document, expression)
+                        fixed_operators, fixed_added = _materialize_fixed_expression(
+                            document, relation_id, expression, ast,
+                        )
+                        operators.extend(fixed_operators)
+                        added.extend(fixed_added)
+                except Exception as exc:
+                    findings.append(Finding("STEP3_REJECTED_RELATION", "warning", f"Retained unresolved relation {relation_id}: {exc}"))
+                    anchor_ids = []
+                    for source_id in sources:
+                        anchor_ids.extend(document["knowledges"].get(source_id, {}).get("source_anchor_ids", []))
+                    fallback_id = f"weakpoint_{relation_id}"
+                    if anchor_ids and not any(item.get("id") == fallback_id for item in existing_weakpoints):
+                        existing_weakpoints.append({
+                            "id": fallback_id,
+                            "payload": {
+                                "evidence_claim_ids": sources,
+                                "target_claim_id": target,
+                                "reasoning_type": None,
+                                "evidence_anchor_ids": list(dict.fromkeys(anchor_ids)),
+                                "expression": expression or f"{sources} 推出 {target}",
+                            },
+                        })
             drafts: list[ArtifactDraft] = []
             clusters = _relation_clusters(context, frozen_step2, frozen_step2["workflow"]["non_reasoning_links"])
             normalized_weakpoints: list[JSONDict] = []
             if clusters:
-                normalized_weakpoints, cluster_drafts = _normalize_clusters(context, frozen_step2, clusters)
-                drafts.extend(cluster_drafts)
+                try:
+                    normalized_weakpoints, cluster_drafts = _normalize_clusters(context, frozen_step2, clusters)
+                    drafts.extend(cluster_drafts)
+                except Exception as exc:
+                    findings.append(Finding("STEP3_CLUSTER_PARTIAL_FAILURE", "warning", f"Cluster normalization partially failed: {exc}"))
+                    for cluster in clusters:
+                        for relation in cluster:
+                            relation_id = str(relation["id"])
+                            sources = list(relation.get("sources", []))
+                            target = str(relation.get("target", ""))
+                            anchors = list(dict.fromkeys(
+                                anchor
+                                for source in sources
+                                for anchor in document["knowledges"].get(source, {}).get("source_anchor_ids", [])
+                            ))
+                            if anchors:
+                                normalized_weakpoints.append({
+                                    "id": f"weakpoint_{relation_id}",
+                                    "payload": {
+                                        "evidence_claim_ids": sources,
+                                        "target_claim_id": target,
+                                        "reasoning_type": None,
+                                        "evidence_anchor_ids": anchors,
+                                        "expression": str(relation.get("metadata", {}).get("relation", {}).get("expression", "")) or f"{sources} 推出 {target}",
+                                    },
+                                })
                 added.extend(item["id"] for item in normalized_weakpoints)
             weakpoints = [*existing_weakpoints, *normalized_weakpoints]
             # Cluster normalization only groups/orients endpoints.  Treat its

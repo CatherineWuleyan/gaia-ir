@@ -492,14 +492,20 @@ class Step4FormalizeReasoningPlugin:
                 tool = instantiate(str(context.options.get("tool_plugin", TOOL_SPEC)))
                 if not isinstance(tool, DomainTool):
                     raise TypeError("Step 4 tool must implement DomainTool")
+                required_anchor_ids = {
+                    anchor_id
+                    for item in pending
+                    for anchor_id in item["payload"].get("evidence_anchor_ids", [])
+                }
                 for anchor in document["workflow"]["source_anchors"]:
-                    if anchor["source_kind"] == PAPER_TEXT_KIND:
+                    if anchor["source_kind"] == PAPER_TEXT_KIND and anchor["anchor_id"] in required_anchor_ids:
                         excerpt = _anchor_excerpt(context, anchor)
                         if not excerpt:
-                            raise ValueError(f"cannot resolve original-paper anchor {anchor['anchor_id']}")
+                            findings.append(Finding("STEP4_MISSING_ANCHOR", "warning", f"Some evidence is unavailable for anchor {anchor['anchor_id']}"))
+                            continue
                         source_excerpts.append({"anchor_id": anchor["anchor_id"], "text": excerpt})
                 if not source_excerpts:
-                    raise ValueError("Step 4 requires original-paper excerpts")
+                    findings.append(Finding("STEP4_MISSING_ANCHOR", "warning", "No resolvable original-paper excerpts; affected weakpoints will be retained"))
             added: list[str] = []
             removed: list[str] = []
 

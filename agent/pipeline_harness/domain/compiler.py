@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+
 import hashlib
 from collections.abc import Mapping
 from typing import Any
@@ -426,12 +428,46 @@ class Step5CompileGaiaIRPlugin:
         response_draft = ArtifactDraft(response_path, "tool.gaia_compile.response", "application/json", {
             "schema_version": SCHEMA_VERSION, "step": 5, "tool_call_id": request.call_id, "status": response.status,
         })
+        salvage_finding = None
         if response.status == "failed":
-            return StageResult(
-                status="failed", artifacts=[response_draft],
-                findings=[Finding(code="GAIA_COMPILER_FAILED", severity="error", message=str(response.error.get("message", "Gaia compiler failed")), details={"tool_call_id": request.call_id, "error": response.error})],
-                metadata={"step": 5, "tool_call_id": request.call_id},
-            )
+            strategies = formalization.get("graph", {}).get("strategies", []) if is_v2 else []
+            candidate = copy.deepcopy(formalization)
+            rejected: list[str] = []
+            recovered = None
+            while isinstance(strategies, list) and candidate["graph"].get("strategies"):
+                for index, strategy in enumerate(list(candidate["graph"]["strategies"])):
+                    trial = copy.deepcopy(candidate)
+                    trial["graph"]["strategies"].pop(index)
+                    trial["revision"]["content_hash"] = ""
+                    trial["revision"]["content_hash"] = canonical_hash(trial)
+                    try:
+                        recovered = compiler.invoke(ToolCallRequest(
+                            f"{request.call_id}_salvage_{len(rejected)}_{index}", compiler.name, compiler.version,
+                            "compile_formalization", request.inputs,
+                            {"namespace": namespace, "package_name": package_name, "formalization": trial},
+                        ))
+                        if recovered.status == "succeeded":
+                            candidate = trial
+                            rejected.append(str(strategy.get("strategy_id", index)))
+                            break
+                    except Exception:
+                        recovered = None
+                else:
+                    break
+            if recovered is not None and recovered.status == "succeeded":
+                response = recovered
+                formalization = candidate
+                salvage_finding = Finding(
+                    "GAIA_COMPILER_STRATEGY_REJECTED", "warning",
+                    "Compiled remaining strategies after isolating invalid strategies",
+                    details={"strategy_ids": rejected},
+                )
+            else:
+                return StageResult(
+                    status="failed", artifacts=[response_draft],
+                    findings=[Finding(code="GAIA_COMPILER_FAILED", severity="error", message=str(response.error.get("message", "Gaia compiler failed")), details={"tool_call_id": request.call_id, "error": response.error})],
+                    metadata={"step": 5, "tool_call_id": request.call_id},
+                )
         normalized_ir = (response.normalized or {}).get("gaia_ir")
         if not isinstance(normalized_ir, dict):
             return StageResult(
@@ -476,12 +512,12 @@ class Step5CompileGaiaIRPlugin:
                 validate_knowledge_index(index)
             except ValueError as exc:
                 return StageResult(
-                    status="failed", artifacts=[response_draft],
+                    status="succeeded", artifacts=[gaia_draft, response_draft],
                     findings=[Finding(
-                        code="KNOWLEDGE_INDEX_INVALID", severity="error", message=str(exc),
+                        code="KNOWLEDGE_INDEX_INVALID", severity="warning", message=str(exc),
                         details={"step": 5, "formalization_revision_id": formalization["revision"]["revision_id"]},
-                    )],
-                    metadata={"step": 5, "tool_call_id": request.call_id},
+                    )] + ([salvage_finding] if salvage_finding else []),
+                    metadata={"step": 5, "tool_call_id": request.call_id, "index_status": "not_written"},
                 )
             index_path = context.work_dir / "knowledge_index.json"
             atomic_write_json(index_path, index)
@@ -496,6 +532,7 @@ class Step5CompileGaiaIRPlugin:
                     }),
                     response_draft,
                 ],
+                findings=([salvage_finding] if salvage_finding else []),
                 metadata={
                     "step": 5, "tool_call_id": request.call_id,
                     "formalization_revision_id": formalization["revision"]["revision_id"],

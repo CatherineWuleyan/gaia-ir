@@ -1367,16 +1367,17 @@ def _equivalent_items(
     equivalent_claims: list[JSONDict],
     observation_ids: dict[str, str],
 ) -> tuple[dict[str, JSONDict], dict[str, str], list[JSONDict]]:
-    if len(equivalent_claims) != len(observation_ids):
-        raise ValueError("Step 2 requires exactly one equivalent claim per observation")
     by_key: dict[str, JSONDict] = {}
     for item in equivalent_claims:
         key = item.get("observation_key")
-        if not isinstance(key, str) or key not in observation_ids or key in by_key:
-            raise ValueError("equivalent claim references an unknown or duplicate observation")
+        if (not isinstance(key, str) or key not in observation_ids or key in by_key
+                or not isinstance(item.get("content"), str) or not item["content"].strip()
+                or not isinstance(item.get("paragraph_anchor_ids"), list)
+                or not item["paragraph_anchor_ids"]
+                or len(item["paragraph_anchor_ids"]) != len(set(item["paragraph_anchor_ids"]))):
+            # Keep valid observations even when one equivalent proposal is bad.
+            continue
         by_key[key] = item
-    if set(by_key) != set(observation_ids):
-        raise ValueError("equivalent claims do not cover every observation")
     phenomenon_ids: dict[str, str] = {}
     phenomena: dict[str, JSONDict] = {}
     operators: list[JSONDict] = []
@@ -1397,32 +1398,38 @@ def _equivalent_items(
     return phenomena, phenomenon_ids, operators
 
 
-def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], document: JSONDict) -> list[JSONDict]:
+def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], document: JSONDict) -> tuple[list[JSONDict], list[str]]:
     links = list(document["workflow"]["non_reasoning_links"])
     existing = {link["id"] for link in links}
     endpoint_keys: set[tuple[tuple[str, ...], str]] = {
         (tuple(sorted(str(item) for item in link.get("sources", []))), str(link.get("target", "")))
         for link in links
     }
+    rejected: list[str] = []
     for index, relation in enumerate(relations, 1):
         phenomenon_keys = relation.get("phenomenon_keys")
         claim_id = relation.get("claim_id")
         if not isinstance(phenomenon_keys, list) or not phenomenon_keys or not isinstance(claim_id, str):
-            raise ValueError("relation references an unknown phenomenon or claim")
+            rejected.append(f"relation_step2_{index}: invalid endpoints")
+            continue
         phenomenon_id_by_key = {key: phenomenon_ids.get(key) for key in phenomenon_keys}
         if any(not isinstance(key, str) or phenomenon_id is None for key, phenomenon_id in phenomenon_id_by_key.items()):
-            raise ValueError("relation references an unknown phenomenon or claim")
+            rejected.append(f"relation_step2_{index}: unknown phenomenon or claim")
+            continue
         link_id = f"relation_step2_{index}"
         if link_id in existing:
-            raise ValueError(f"duplicate relation id: {link_id}")
+            rejected.append(f"{link_id}: duplicate relation id")
+            continue
         expression = relation["expression"]
         relation_context_id = relation.get("relation_context_id")
         if not isinstance(relation_context_id, str) or not relation_context_id:
-            raise ValueError("Step 2 relation requires an experiment context ID")
+            rejected.append(f"{link_id}: missing relation_context_id")
+            continue
         for key, phenomenon_id in phenomenon_id_by_key.items():
             expression = expression.replace(f"[E:{key}]", f"[{phenomenon_id}]")
         if "[E:" in expression:
-            raise ValueError("relation expression references an unknown phenomenon")
+            rejected.append(f"{link_id}: unknown phenomenon in expression")
+            continue
         endpoint_key = (tuple(sorted(phenomenon_id_by_key.values())), claim_id)
         if endpoint_key in endpoint_keys:
             # Overlapping windows may yield different wording for the same
@@ -1437,7 +1444,7 @@ def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], d
         })
         existing.add(link_id)
         endpoint_keys.add(endpoint_key)
-    return links
+    return links, rejected
 
 
 def _revision(
@@ -1506,7 +1513,10 @@ class Step2ExtractObservationsPlugin:
                 if knowledge_id not in document["graph"]["nodes"]
             )
             document["graph"]["operators"].extend(equivalence_operators)
-            document["workflow"]["non_reasoning_links"] = _relation_items(relations, phenomenon_ids, document)
+            document["workflow"]["non_reasoning_links"], rejected_relations = _relation_items(relations, phenomenon_ids, document)
+            findings = [Finding("STEP2_REJECTED_EQUIVALENT", "warning", f"No valid equivalent claim for observation {key}")
+                        for key in sorted(set(observation_ids) - set(phenomenon_ids))]
+            findings.extend(Finding("STEP2_REJECTED_RELATION", "warning", message) for message in rejected_relations)
             _revision(
                 document,
                 context,
@@ -1515,7 +1525,7 @@ class Step2ExtractObservationsPlugin:
                 modified=[*modified, *observations, *phenomena, *(item["id"] for item in equivalence_operators)],
             )
             emitted = emit_formalization(context, document, step=2, step_name=STEP_NAME)
-            return _with_extra_artifacts(emitted, drafts)
+            return StageResult(emitted.status, [*emitted.artifacts, *drafts], [*findings, *emitted.findings], emitted.metadata)
         except Exception as exc:
             return StageResult(
                 "failed",

@@ -147,10 +147,11 @@ def run_pipeline(
                 )
             except Exception as exc:
                 findings.append(
-                    _plugin_failure(
+                    Finding(
                         "ARTIFACT_REGISTRATION_FAILED",
+                        "error" if draft.kind in {"formalization", "gaia.ir"} else "warning",
                         f"could not register artifact from {draft.path.name}: {exc}",
-                        path=str(draft.path),
+                        details={"path": str(draft.path), "kind": draft.kind},
                     )
                 )
 
