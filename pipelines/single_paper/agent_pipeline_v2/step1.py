@@ -301,7 +301,10 @@ class Step1ImportClaimsFinalPlugin:
                     "anchor_id": anchor_id, "artifact_id": claims_entry["artifact_id"], "source_kind": CLAIMS_FINAL_KIND,
                     "locator": {"type": "json_pointer", "pointer": f"/{role}/{index}"}, "relevance": "source_record",
                 })
-                node_type = "obsevation_candidate" if item.get("is_pure_data") is True else knowledge_type
+                # Experimental claims are first-class observations from the
+                # moment they enter the pipeline.  Step 2 refines this same
+                # ID in place; it must not create a parallel candidate node.
+                node_type = "observation_claim" if item.get("is_pure_data") is True else knowledge_type
                 try:
                     references = _claim_reference_closure(item["text"], claim_texts)
                 except ValueError as exc:
@@ -311,11 +314,11 @@ class Step1ImportClaimsFinalPlugin:
                     "content": {"canonical": _self_contained_text(item["text"], references, claim_texts)},
                     "source_anchor_ids": [anchor_id, *(f"anchor_claim_{reference}" for reference in references)],
                 }
-                if node_type == "claim":
+                if node_type in {"claim", "observation_claim"}:
                     document["graph"]["nodes"].append(knowledge_id)
                 if role == "claim":
                     all_claim_ids[number] = knowledge_id
-                    if node_type == "claim":
+                    if node_type in {"claim", "observation_claim"}:
                         claim_ids[number] = knowledge_id
 
         for relation_index, relation in enumerate(claims_final["relation"]):

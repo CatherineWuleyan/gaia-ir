@@ -163,7 +163,9 @@ def _deduplicate_extractions(
 
 def _load_deepseek_env() -> None:
     """Load only the supported DeepSeek settings without exposing values."""
-    env_path = Path(__file__).resolve().parents[2] / "agent" / ".env"
+    source_path = Path(__file__).resolve()
+    env_path = next((parent / "agent" / ".env" for parent in source_path.parents
+                     if (parent / "agent" / ".env").is_file()), source_path.parents[2] / "agent" / ".env")
     if not env_path.is_file():
         return
     for raw_line in env_path.read_text(encoding="utf-8").splitlines():
@@ -176,13 +178,20 @@ def _load_deepseek_env() -> None:
 
 
 def _response_content(raw: Any) -> str:
+    """Prefer content, falling back to reasoning_content for JSON responses."""
     try:
-        content = raw["choices"][0]["message"]["content"]
+        message = raw["choices"][0]["message"]
     except (KeyError, IndexError, TypeError) as exc:
-        raise ValueError("DeepSeek response has no choices[0].message.content") from exc
-    if not isinstance(content, str):
+        raise ValueError("DeepSeek response has no choices[0].message") from exc
+    content = message.get("content")
+    if content is not None and not isinstance(content, str):
         raise ValueError("DeepSeek response content must be a string")
-    return content
+    if isinstance(content, str) and content.strip():
+        return content
+    reasoning = message.get("reasoning_content")
+    if reasoning is not None and not isinstance(reasoning, str):
+        raise ValueError("DeepSeek response reasoning_content must be a string")
+    return reasoning if isinstance(reasoning, str) else ""
 
 
 class DeepSeekV4FlashObservationTool:
@@ -749,6 +758,13 @@ class DeepSeekV4FlashObservationTool:
             if isinstance(item, dict)
             and isinstance(item.get("source_anchor_ids"), list)
             and bool(anchor_ids & set(item["source_anchor_ids"]))
+        ] or [
+            # Legacy claims may only carry claims-file anchors when the
+            # experiment is encoded in a figure.  Let each bounded figure
+            # window assess the targeted claim; windows without evidence
+            # return insufficient_context, while the owning figure preserves
+            # the original ID.
+            item for item in claims if isinstance(item, dict)
         ]
 
     @staticmethod
@@ -1180,7 +1196,11 @@ def _vision_candidate(candidate: JSONDict, context: StageContext) -> JSONDict | 
     """Attach an existing source.original_figure artifact to a text candidate."""
     image_name = str(candidate.get("image_name", "")).casefold()
     refs = context.find_all("source.original_figure")
-    ref = next((item for item in refs if str(item.metadata.get("source_filename", item.metadata.get("figure", ""))).casefold() == image_name), None)
+    def artifact_name(item: Any) -> str:
+        metadata = item.metadata if isinstance(item.metadata, dict) else {}
+        harness = metadata.get("_harness", {})
+        return str(metadata.get("source_filename", metadata.get("figure", harness.get("declared_path", ""))))
+    ref = next((item for item in refs if artifact_name(item).casefold() == image_name), None)
     if ref is None:
         return None
     paragraphs = list(candidate.get("paragraphs", []))
@@ -1255,7 +1275,9 @@ def _extract_with_expansion(
             }
         ]
         if not initial_candidates:
-            raise ValueError("selected claims do not map to any experiment candidate")
+            # Figure-only experiments can have claims-file anchors without a
+            # paragraph anchor; assess all discovered figure windows instead.
+            initial_candidates = _experiment_candidates(paragraphs)
     claims: list[JSONDict] = []
     equivalent_claims: list[JSONDict] = []
     relations: list[JSONDict] = []
@@ -1351,10 +1373,29 @@ def _extract_with_expansion(
     return claims, equivalent_claims, relations, _tool_audit_drafts(context)
 
 
-def _observation_items(claims: list[JSONDict]) -> tuple[dict[str, JSONDict], dict[str, str]]:
-    ids = {str(claim.get("_extraction_key", f"generated:{index}")): f"claim_O{index:02d}" for index, claim in enumerate(claims, 1)}
+def _observation_items(claims: list[JSONDict], existing: dict[str, JSONDict] | None = None) -> tuple[dict[str, JSONDict], dict[str, str]]:
+    existing = existing or {}
+    existing_observations = {
+        key: value for key, value in existing.items() if value.get("type") == "observation_claim"
+    }
+    used_existing: set[str] = set()
+    def stable_id(claim: JSONDict, index: int) -> str:
+        if isinstance(claim.get("id"), str):
+            return str(claim["id"])
+        anchors = set(claim.get("paragraph_anchor_ids", []))
+        match = next((key for key, value in existing_observations.items()
+                      if key not in used_existing and anchors & set(value.get("source_anchor_ids", []))), None)
+        if match:
+            used_existing.add(match)
+            return match
+        return f"claim_O{index:02d}"
+    ids = {
+        str(claim.get("_extraction_key", f"generated:{index}")): (
+            stable_id(claim, index)
+        ) for index, claim in enumerate(claims, 1)
+    }
     return {
-        f"claim_O{index:02d}": {
+        ids[str(claim.get("_extraction_key", f"generated:{index}"))]: {
             "type": "observation_claim",
             "content": {"canonical": claim["content"]},
             "source_anchor_ids": list(claim["paragraph_anchor_ids"]),
@@ -1495,12 +1536,21 @@ class Step2ExtractObservationsPlugin:
                 if best["anchor_id"] not in source_ids:
                     source_ids.append(best["anchor_id"])
                     modified.append(knowledge_id)
-            claims, equivalent_claims, relations, drafts = _extract_with_expansion(context, paragraphs, document)
-            observations, observation_ids = _observation_items(claims)
+            observation_claims = [
+                {"id": key, "content": value["content"]["canonical"],
+                 "source_anchor_ids": list(value.get("source_anchor_ids", []))}
+                for key, value in document["knowledges"].items()
+                if value.get("type") == "observation_claim"
+            ]
+            claims, equivalent_claims, relations, drafts = _extract_with_expansion(
+                context, paragraphs, document, selected_claims=observation_claims or None,
+            )
+            observations, observation_ids = _observation_items(claims, document["knowledges"])
             phenomena, phenomenon_ids, equivalence_operators = _equivalent_items(equivalent_claims, observation_ids)
-            duplicate_ids = set(document["knowledges"]) & (set(observations) | set(phenomena))
-            if duplicate_ids:
-                raise ValueError(f"Step 2 claim ids already exist: {sorted(duplicate_ids)}")
+            for knowledge_id, value in observations.items():
+                if knowledge_id in document["knowledges"]:
+                    document["knowledges"][knowledge_id].update(value)
+            observations = {key: value for key, value in observations.items() if key not in document["knowledges"]}
             existing_operator_ids = {item.get("id") for item in document["graph"]["operators"]}
             duplicate_operator_ids = existing_operator_ids & {item["id"] for item in equivalence_operators}
             if duplicate_operator_ids:

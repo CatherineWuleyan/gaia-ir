@@ -244,6 +244,83 @@ def _paper_anchor_ids(document: JSONDict, knowledge_ids: set[str]) -> set[str]:
     }
 
 
+def _canonicalize_near_duplicate_claims(document: JSONDict) -> dict[str, str]:
+    """Merge same-type claims that express the same fact at high lexical overlap."""
+    token_sets = {
+        key: set(re.findall(r"[a-z0-9]+", str(value.get("content", {}).get("canonical", "")).casefold()))
+        for key, value in document["knowledges"].items()
+        if value.get("type") in {"claim", "observation_claim"} and value.get("content") is not None
+    }
+    aliases: dict[str, str] = {}
+    keys = sorted(token_sets)
+    for index, left in enumerate(keys):
+        if left in aliases or not token_sets[left]:
+            continue
+        for right in keys[index + 1:]:
+            if right in aliases or document["knowledges"][left]["type"] != document["knowledges"][right]["type"]:
+                continue
+            shared = token_sets[left] & token_sets[right]
+            union = token_sets[left] | token_sets[right]
+            overlap = len(shared) / max(1, len(union))
+            # Avoid collapsing short generic labels (e.g. "observation"):
+            # near-duplicate merging requires several shared lexical anchors.
+            if len(shared) >= 3 and overlap >= 0.8:
+                aliases[right] = left
+                merged = document["knowledges"][left].setdefault("source_anchor_ids", [])
+                merged.extend(a for a in document["knowledges"][right].get("source_anchor_ids", []) if a not in merged)
+    if not aliases:
+        return aliases
+    for link in document["workflow"].get("non_reasoning_links", []):
+        link["sources"] = [aliases.get(item, item) for item in link.get("sources", [])]
+        link["target"] = aliases.get(link.get("target"), link.get("target"))
+        relation = link.get("metadata", {}).get("relation")
+        if isinstance(relation, dict) and isinstance(relation.get("expression"), str):
+            relation["expression"] = re.sub(
+                r"\[([^\]]+)\]",
+                lambda match: f"[{aliases.get(match.group(1), match.group(1))}]",
+                relation["expression"],
+            )
+    for operator in document["graph"].get("operators", []):
+        operator["variables"] = [aliases.get(item, item) for item in operator.get("variables", [])]
+        if "conclusion" in operator:
+            operator["conclusion"] = aliases.get(operator["conclusion"], operator["conclusion"])
+    document["graph"]["nodes"] = [item for item in document["graph"].get("nodes", []) if item not in aliases]
+    for duplicate in aliases:
+        document["knowledges"].pop(duplicate, None)
+    return aliases
+
+
+def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
+    """Drop only redundant relation candidates while preserving Step1 imports."""
+    kept: list[JSONDict] = []
+    removed: list[str] = []
+    for link in links:
+        relation = link.get("metadata", {}).get("relation", {})
+        conclusion = str(relation.get("conclusion", ""))
+        target = str(link.get("target", ""))
+        sources = set(link.get("sources", []))
+        redundant = False
+        survivors: list[JSONDict] = []
+        for prior in kept:
+            prior_relation = prior.get("metadata", {}).get("relation", {})
+            if (str(prior_relation.get("conclusion", "")) == conclusion
+                    and str(prior.get("target", "")) == target):
+                prior_sources = set(prior.get("sources", []))
+                if sources <= prior_sources:
+                    redundant = True
+                    break
+                if prior_sources < sources:
+                    removed.append(str(prior.get("id")))
+                    continue
+            survivors.append(prior)
+        if redundant:
+            removed.append(str(link.get("id")))
+            continue
+        survivors.append(link)
+        kept = survivors
+    return kept, removed
+
+
 def _relation_clusters(context: StageContext, document: JSONDict, links: list[JSONDict]) -> list[JSONDict]:
     """Build experiment-bounded clusters plus one adjacent coarse-relation layer."""
     candidates = [item for item in links if _is_weakpoint_expression(
@@ -512,10 +589,18 @@ class Step3AnalyzeReasoningPlugin:
         findings: list[Finding] = []
         try:
             document = copy.deepcopy(_latest_formalization(context))
-            frozen_step2 = copy.deepcopy(document)
             workflow = document["workflow"]
             graph = document["graph"]
-            links = workflow["non_reasoning_links"]
+            links, redundant_relation_ids = _deduplicate_weakpoint_links(document, workflow["non_reasoning_links"])
+            if redundant_relation_ids:
+                findings.append(Finding(
+                    "STEP3_REDUNDANT_RELATION_SUPPRESSED", "warning",
+                    f"Suppressed redundant weakpoint relations: {sorted(set(redundant_relation_ids))}",
+                ))
+            # Freeze only the deduplicated candidate set; Step1/Step2 artifacts
+            # remain untouched and continue to preserve full imports.
+            frozen_step2 = copy.deepcopy(document)
+            frozen_step2["workflow"]["non_reasoning_links"] = links
             existing_weakpoints: list[JSONDict] = list(workflow["weakpoints"])
             operators: list[JSONDict] = list(graph["operators"])
             added: list[str] = []

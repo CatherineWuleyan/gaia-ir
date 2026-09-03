@@ -88,7 +88,8 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         elif (not isinstance(content, dict) or set(content) != {"canonical"}
               or not isinstance(content["canonical"], str) or not content["canonical"].strip()):
             raise ValueError(f"new Knowledge {key} requires non-empty content.canonical")
-        if not set(_ids(knowledge["source_anchor_ids"], "source_anchor_ids")) <= anchors:
+        source_ids = _ids(knowledge["source_anchor_ids"], "source_anchor_ids", nonempty=content is not None)
+        if not set(source_ids) <= anchors:
             raise ValueError(f"new Knowledge {key} must cite supplied original-paper anchors")
     knowledges = {**existing, **additions}
     producers: dict[str, JSONDict] = {}
@@ -419,12 +420,7 @@ class WeakpointExpansionTool:
                 raise RuntimeError(f"Step 4 model request failed: {exc.reason}") from exc
             content = _response_content(raw)
             if not content.strip():
-                return ToolCallResponse(
-                    request.call_id,
-                    "succeeded",
-                    {"response": raw, "cleaning": cleaning},
-                    {"knowledges": {}, "strategies": []},
-                )
+                raise ValueError("Step 4 model response is empty: content and reasoning_content are blank")
             result = json.loads(content)
             _validate_expansion(request.parameters, result)
             # The vendored cleaner uses a shared work directory and a temporary
@@ -450,7 +446,10 @@ class WeakpointExpansionTool:
                 }, ensure_ascii=False).encode("utf-8"), headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
                 with urlopen(rebuild_http, timeout=180) as response:
                     rebuild_raw = json.loads(response.read().decode("utf-8"))
-                rebuild_result = json.loads(_response_content(rebuild_raw))
+                rebuild_content = _response_content(rebuild_raw)
+                if not rebuild_content.strip():
+                    raise ValueError("Step 4 group rebuild response is empty: content and reasoning_content are blank")
+                rebuild_result = json.loads(rebuild_content)
                 _validate_expansion(rebuild_parameters, rebuild_result)
                 for key, value in rebuild_result["knowledges"].items():
                     if key not in rebuild_parameters["knowledges"] or value != rebuild_parameters["knowledges"][key]:

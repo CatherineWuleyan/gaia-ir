@@ -184,6 +184,12 @@ class V2FormalizationViewAdapter:
                         "details": visible_weakpoint,
                     })
             for operator in document["graph"]["operators"]:
+                # Binary conjunction helpers are compiler plumbing.  Showing
+                # each nested helper as a separate caret makes a ternary
+                # relation look duplicated; the weakpoint projection below
+                # carries the complete source set and target instead.
+                if operator.get("metadata", {}).get("derived_ast_helper") is True:
+                    continue
                 operator_id = str(operator["id"])
                 if operator["type"] in _INLINE_RELATIONS:
                     left, right = operator["variables"]

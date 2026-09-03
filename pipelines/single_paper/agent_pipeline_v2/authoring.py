@@ -19,8 +19,6 @@ WORKFLOW_FIELDS = {"source_records", "source_anchors", "weakpoints", "gaps", "no
 KNOWLEDGE_TYPES = {
     "claim",
     "note",
-    "obsevation_candidate",
-    "observation_proposal",
     "observation_claim",
 }
 OPERATOR_TYPES = {
