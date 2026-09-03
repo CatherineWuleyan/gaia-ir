@@ -6,7 +6,9 @@ import json
 import os
 from itertools import combinations
 from typing import Any, Mapping
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+import time
 
 from pipeline_harness.models import Finding, JSONDict
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult
@@ -18,7 +20,7 @@ from pipelines.single_paper.agent_pipeline_v2.step2 import _load_deepseek_env, _
 LOCAL_CONTEXT_SCHEMA = "gaia.integration.local_context"
 PROPOSAL_SCHEMA = "gaia.integration.step3_proposals"
 SCHEMA_VERSION = "1.1.0"
-MODEL_NAME = "deepseek-v4-flash"
+DEFAULT_MODEL_NAME = "deepseek-v4-flash"
 OPERATOR_TYPES = {"equivalence", "contradiction", "negation", "conjunction", "disjunction"}
 WEAKPOINT_TYPES = {"deduction", "abduction", "analogy", "infer"}
 
@@ -79,12 +81,28 @@ def _post_json(prompt: str) -> Any:
     if not key:
         raise RuntimeError("DEEPSEEK_API_KEY is not configured")
     base = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
-    body = json.dumps({"model": MODEL_NAME, "messages": [{"role": "user", "content": prompt}],
+    model = os.environ.get("DEEPSEEK_MODEL", DEFAULT_MODEL_NAME)
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}],
                        "temperature": 0, "response_format": {"type": "json_object"}}, ensure_ascii=False).encode("utf-8")
     request = Request(f"{base}/chat/completions", data=body,
                       headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
-    with urlopen(request, timeout=180) as response:  # noqa: S310
-        return json.loads(_response_content(json.loads(response.read().decode("utf-8"))))
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            with urlopen(request, timeout=180) as response:  # noqa: S310
+                raw = response.read().decode("utf-8", errors="replace")
+            if not raw.strip():
+                raise ValueError("DeepSeek returned an empty response body")
+            try:
+                envelope = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"DeepSeek returned non-JSON response: {raw[:200]!r}") from exc
+            return json.loads(_response_content(envelope))
+        except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+    raise RuntimeError(f"DeepSeek request failed after 3 attempts: {last_error}") from last_error
 
 
 def _decode(prompt: str, key: str) -> list[JSONDict]:

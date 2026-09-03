@@ -1407,7 +1407,9 @@ def _observation_items(claims: list[JSONDict], existing: dict[str, JSONDict] | N
 def _equivalent_items(
     equivalent_claims: list[JSONDict],
     observation_ids: dict[str, str],
+    existing: dict[str, JSONDict] | None = None,
 ) -> tuple[dict[str, JSONDict], dict[str, str], list[JSONDict]]:
+    existing = existing or {}
     by_key: dict[str, JSONDict] = {}
     for item in equivalent_claims:
         key = item.get("observation_key")
@@ -1419,12 +1421,32 @@ def _equivalent_items(
             # Keep valid observations even when one equivalent proposal is bad.
             continue
         by_key[key] = item
+    # Imported observation claims must receive the same E/O interface as
+    # observations extracted from figures.  Reuse their canonical text and
+    # paper anchors; this is a deterministic identity pairing, not a new
+    # semantic claim.
+    imported = {
+        f"existing:{observation_id}": (observation_id, value)
+        for observation_id, value in existing.items()
+        if value.get("type") == "observation_claim"
+        and observation_id not in observation_ids.values()
+        and isinstance(value.get("content"), dict)
+        and isinstance(value["content"].get("canonical"), str)
+        and value["content"]["canonical"].strip()
+    }
+    for key, (observation_id, value) in imported.items():
+        observation_ids[key] = observation_id
+        by_key[key] = {
+            "content": value["content"]["canonical"],
+            "paragraph_anchor_ids": list(value.get("source_anchor_ids", [])),
+        }
     phenomenon_ids: dict[str, str] = {}
     phenomena: dict[str, JSONDict] = {}
     operators: list[JSONDict] = []
     for key, observation_id in observation_ids.items():
         suffix = observation_id.removeprefix("claim_O")
-        phenomenon_id = f"claim_E{suffix}"
+        phenomenon_id = (f"claim_E{suffix}" if observation_id.startswith("claim_O")
+                         else f"claim_E_imported_{observation_id.removeprefix('claim_')}")
         phenomenon_ids[key] = phenomenon_id
         phenomena[phenomenon_id] = {
             "type": "claim",
@@ -1439,8 +1461,24 @@ def _equivalent_items(
     return phenomena, phenomenon_ids, operators
 
 
-def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], document: JSONDict) -> tuple[list[JSONDict], list[str]]:
+def _relation_items(
+    relations: list[JSONDict], phenomenon_ids: dict[str, str],
+    observation_ids: dict[str, str], document: JSONDict,
+) -> tuple[list[JSONDict], list[str]]:
     links = list(document["workflow"]["non_reasoning_links"])
+    observation_to_phenomenon = {
+        observation_ids[key]: phenomenon_ids[key]
+        for key in observation_ids
+        if key in phenomenon_ids
+    }
+    if observation_to_phenomenon:
+        for link in links:
+            link["sources"] = [observation_to_phenomenon.get(source, source) for source in link.get("sources", [])]
+            expression = str(link.get("metadata", {}).get("relation", {}).get("expression", ""))
+            for observation_id, phenomenon_id in observation_to_phenomenon.items():
+                expression = expression.replace(f"[{observation_id}]", f"[{phenomenon_id}]")
+            if isinstance(link.get("metadata"), dict) and isinstance(link["metadata"].get("relation"), dict):
+                link["metadata"]["relation"]["expression"] = expression
     existing = {link["id"] for link in links}
     endpoint_keys: set[tuple[tuple[str, ...], str]] = {
         (tuple(sorted(str(item) for item in link.get("sources", []))), str(link.get("target", "")))
@@ -1546,7 +1584,9 @@ class Step2ExtractObservationsPlugin:
                 context, paragraphs, document, selected_claims=observation_claims or None,
             )
             observations, observation_ids = _observation_items(claims, document["knowledges"])
-            phenomena, phenomenon_ids, equivalence_operators = _equivalent_items(equivalent_claims, observation_ids)
+            phenomena, phenomenon_ids, equivalence_operators = _equivalent_items(
+                equivalent_claims, observation_ids, document["knowledges"],
+            )
             for knowledge_id, value in observations.items():
                 if knowledge_id in document["knowledges"]:
                     document["knowledges"][knowledge_id].update(value)
@@ -1563,7 +1603,9 @@ class Step2ExtractObservationsPlugin:
                 if knowledge_id not in document["graph"]["nodes"]
             )
             document["graph"]["operators"].extend(equivalence_operators)
-            document["workflow"]["non_reasoning_links"], rejected_relations = _relation_items(relations, phenomenon_ids, document)
+            document["workflow"]["non_reasoning_links"], rejected_relations = _relation_items(
+                relations, phenomenon_ids, observation_ids, document,
+            )
             findings = [Finding("STEP2_REJECTED_EQUIVALENT", "warning", f"No valid equivalent claim for observation {key}")
                         for key in sorted(set(observation_ids) - set(phenomenon_ids))]
             findings.extend(Finding("STEP2_REJECTED_RELATION", "warning", message) for message in rejected_relations)
