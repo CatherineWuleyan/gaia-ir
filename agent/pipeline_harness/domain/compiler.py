@@ -113,7 +113,7 @@ def _compile_v2_formalization(
         # carry text. Materialize only this interface placeholder at the
         # lowering boundary; the authoring contract and viewer semantics stay
         # explicitly null/non-factual.
-        if content is None and str(knowledge_id).startswith("AltExp"):
+        if content is None and "AltExp" in str(knowledge_id):
             content = {"canonical": "Unknown alternative explanation (content=null)"}
         knowledges.append(Knowledge(
             id=bindings[knowledge_id],
