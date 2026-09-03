@@ -105,6 +105,28 @@ def _global_candidate_claims(
     return [item[2] for item in ranked[:24]]
 
 
+def _attach_related_claims(candidate: JSONDict, document: JSONDict) -> JSONDict:
+    """Attach the same bounded local/global target set to every extractor path."""
+    candidate = copy.deepcopy(candidate)
+    candidate_anchor_ids = [
+        item["anchor_id"] for item in candidate.get("paragraphs", [])
+        if isinstance(item, dict) and isinstance(item.get("anchor_id"), str)
+    ]
+    candidate["related_claims"] = [
+        {"id": knowledge_id, "type": "claim", "content": knowledge["content"]["canonical"],
+         "source_anchor_ids": knowledge.get("source_anchor_ids", [])}
+        for knowledge_id, knowledge in document["knowledges"].items()
+        if knowledge.get("type") == "claim"
+        and _anchors_share_local_context(candidate_anchor_ids, knowledge.get("source_anchor_ids", []))
+    ]
+    local_claim_ids = {item["id"] for item in candidate["related_claims"]}
+    candidate["related_claims"].extend(
+        item for item in _global_candidate_claims(candidate, document, local_claim_ids)
+        if item["id"] not in local_claim_ids
+    )
+    return candidate
+
+
 def _deduplicate_extractions(
     claims: list[JSONDict],
     equivalent_claims: list[JSONDict],
@@ -200,6 +222,40 @@ class DeepSeekV4FlashObservationTool:
     name = "deepseek-v4-flash-observation"
     version = "7"
     model = MODEL_NAME
+
+    @classmethod
+    def _extract_relations(
+        cls, candidate: JSONDict, phenomena: list[JSONDict], base_url: str,
+    ) -> tuple[list[JSONDict], list[Any]]:
+        """Run relation review for an already extracted observation batch."""
+        relations: list[JSONDict] = []
+        raw_responses: list[Any] = []
+        groups = cls._relation_groups(phenomena, candidate)
+        for component in cls._relation_group_components(groups):
+            relation_request = Request(
+                f"{base_url}/chat/completions",
+                data=json.dumps({
+                    "model": cls.model,
+                    "messages": [{"role": "user", "content": cls._relation_prompt(component)}],
+                    "temperature": 0,
+                    "response_format": {"type": "json_object"},
+                }, ensure_ascii=False).encode("utf-8"),
+                headers={"Authorization": f"Bearer {os.environ['DEEPSEEK_API_KEY']}", "Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urlopen(relation_request, timeout=180) as response:  # noqa: S310
+                    relation_raw: Any = json.loads(response.read().decode("utf-8"))
+            except HTTPError as exc:
+                raise RuntimeError(f"DeepSeek relation request failed with HTTP {exc.code}") from exc
+            except URLError as exc:
+                raise RuntimeError(f"DeepSeek relation request failed: {exc.reason}") from exc
+            raw_responses.append(relation_raw)
+            try:
+                relations.extend(cls._normalize_group_relations(_response_content(relation_raw), component))
+            except Exception as exc:
+                raise ValueError(f"DeepSeek relation response normalization failed: {exc}") from exc
+        return relations, raw_responses
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
         if request.operation == "normalize_weakpoint_clusters":
@@ -331,33 +387,14 @@ class DeepSeekV4FlashObservationTool:
             except Exception as exc:
                 return normalization_failure(exc)
             equivalent_claims.extend(candidate_equivalents)
-            groups = self._relation_groups(candidate_equivalents, candidate)
-            # Each small overlap component is an independent semantic request;
-            # only pairwise-overlap triangles share context.
-            for component in self._relation_group_components(groups):
-                relation_request = Request(
-                    f"{base_url}/chat/completions",
-                    data=json.dumps({
-                        "model": self.model,
-                        "messages": [{"role": "user", "content": self._relation_prompt(component)}],
-                        "temperature": 0,
-                        "response_format": {"type": "json_object"},
-                    }, ensure_ascii=False).encode("utf-8"),
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    method="POST",
+            try:
+                extracted_relations, relation_responses = self._extract_relations(
+                    candidate, candidate_equivalents, base_url,
                 )
-                try:
-                    with urlopen(relation_request, timeout=180) as response:  # noqa: S310
-                        relation_raw: Any = json.loads(response.read().decode("utf-8"))
-                except HTTPError as exc:
-                    raise RuntimeError(f"DeepSeek relation request failed with HTTP {exc.code}") from exc
-                except URLError as exc:
-                    raise RuntimeError(f"DeepSeek relation request failed: {exc.reason}") from exc
-                raw_responses.append(relation_raw)
-                try:
-                    relations.extend(self._normalize_group_relations(_response_content(relation_raw), component))
-                except Exception as exc:
-                    return normalization_failure(exc)
+                raw_responses.extend(relation_responses)
+                relations.extend(extracted_relations)
+            except Exception as exc:
+                return normalization_failure(exc)
         if isinstance(selected_claims, list):
             expected_ids = {item["id"] for item in selected_claims if isinstance(item, dict) and isinstance(item.get("id"), str)}
             actual_ids = [item.get("id") for item in claims]
@@ -1339,17 +1376,7 @@ def _extract_with_expansion(
                 break
             candidate["focus_anchor_ids"] = focus_anchor_ids
             candidate_anchor_ids = [item["anchor_id"] for item in candidate["paragraphs"]]
-            candidate["related_claims"] = [
-                {"id": knowledge_id, "type": "claim", "content": knowledge["content"]["canonical"], "source_anchor_ids": knowledge.get("source_anchor_ids", [])}
-                for knowledge_id, knowledge in document["knowledges"].items()
-                if knowledge.get("type") == "claim"
-                and _anchors_share_local_context(candidate_anchor_ids, knowledge.get("source_anchor_ids", []))
-            ]
-            local_claim_ids = {item["id"] for item in candidate["related_claims"]}
-            candidate["related_claims"].extend(
-                item for item in _global_candidate_claims(candidate, document, local_claim_ids)
-                if item["id"] not in local_claim_ids
-            )
+            candidate = _attach_related_claims(candidate, document)
             signature = tuple(candidate_anchor_ids)
             if signature == previous_signature:
                 continue
@@ -1405,6 +1432,38 @@ def _extract_with_expansion(
                             "content": item["content"],
                             "paragraph_anchor_ids": list(item["paragraph_anchor_ids"]),
                         } for item in visual_claims)
+                        # Vision extraction must use the same relation pass as
+                        # text extraction; otherwise every new visual claim
+                        # can only receive its E/O equivalence edge.
+                        expanded_candidates = _experiment_candidates(paragraphs, radius=3)
+                        relation_base = next(
+                            (item for item in expanded_candidates if item["candidate_id"] == candidate_id),
+                            initial_candidate,
+                        )
+                        relation_candidate = _attach_related_claims(relation_base, document)
+                        relation_tool = DeepSeekV4FlashObservationTool()
+                        _load_deepseek_env()
+                        api_key = os.environ.get("DEEPSEEK_API_KEY")
+                        base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+                        if not api_key:
+                            raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+                        visual_relations, relation_responses = relation_tool._extract_relations(
+                            relation_candidate,
+                            [{"observation_key": item["_extraction_key"],
+                              "content": item["content"],
+                              "paragraph_anchor_ids": list(item["paragraph_anchor_ids"])}
+                             for item in visual_claims],
+                            base_url,
+                        )
+                        relations.extend({**item, "relation_context_id": candidate_id} for item in visual_relations)
+                        if relation_responses:
+                            response_path = context.work_dir / f"semantic_step_2_relation_response_{next_call_number}.json"
+                            atomic_write_json(response_path, {"responses": relation_responses})
+                            drafts.append(ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
+                                "schema_version": "1.0.0", "step": 2,
+                                "tool_name": relation_tool.name, "tool_version": relation_tool.version,
+                                "status": "succeeded",
+                            }))
                 except Exception:
                     # Preserve the vision audit artifact; the stage-level
                     # failure path will report the concrete tool error.
