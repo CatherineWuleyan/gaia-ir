@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from agent_pipeline_v2.step3 import _relation_clusters, _validate_cluster_result
+from agent_pipeline_v2.step3 import _relation_clusters, _screen_classifications, _validate_cluster_result
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
 from pipeline_harness.store import RunStore, atomic_write_json
@@ -82,6 +82,23 @@ class Step3Tests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def test_screening_keeps_expandable_relation_but_rejects_duplicate_content(self) -> None:
+        document = {
+            "knowledges": {
+                "claim_1": {"type": "claim", "content": {"canonical": "Observed effect"}, "source_anchor_ids": ["p1"]},
+                "claim_2": {"type": "claim", "content": {"canonical": "Broader mechanism"}, "source_anchor_ids": ["p1"]},
+                "claim_3": {"type": "claim", "content": {"canonical": "Observed effect"}, "source_anchor_ids": ["p1"]},
+            },
+            "workflow": {"source_anchors": [{"anchor_id": "p1", "source_kind": "source.paper_text"}]},
+        }
+        weakpoints = [
+            {"id": "w1", "payload": {"evidence_claim_ids": ["claim_1"], "target_claim_id": ["claim_2"]}},
+            {"id": "w2", "payload": {"evidence_claim_ids": ["claim_1"], "target_claim_id": ["claim_3"]}},
+        ]
+        result, rejected = _screen_classifications(document, weakpoints, {"w1": "abduction", "w2": "deduction"})
+        self.assertEqual({"w1": "abduction", "w2": None}, result)
+        self.assertEqual({"w2"}, rejected)
+
     def test_classifies_only_reasoning_type_and_records_audited_input(self) -> None:
         FakeWeakpointClassifier.calls = []
         pipeline = {
@@ -93,7 +110,8 @@ class Step3Tests(unittest.TestCase):
             ],
         }
         store = RunStore.create(self.root / "runs", pipeline, input_manifest=self.root / "manifest.json")
-        self.assertEqual("succeeded", run_pipeline(store.run_dir).status)
+        result = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", result.status)
         self.assertEqual(2, len(FakeWeakpointClassifier.calls))
         self.assertEqual("normalize_weakpoint_clusters", FakeWeakpointClassifier.calls[0].operation)
         record = FakeWeakpointClassifier.calls[0].parameters["clusters"][0]
@@ -104,11 +122,11 @@ class Step3Tests(unittest.TestCase):
         formalizations = [item for item in store.load_artifacts() if item.kind == "formalization"]
         final = json.loads(store.artifact_path(formalizations[-1]).read_text(encoding="utf-8"))
         self.assertEqual([], final["workflow"]["revisions"])
-        payload = final["workflow"]["weakpoints"][0]["payload"]
-        self.assertEqual("abduction", payload["reasoning_type"])
-        self.assertEqual("[claim_1] 是 [claim_2] 是 [claim_3]", payload["expression"])
-        self.assertEqual(["claim_1", "claim_2"], payload["evidence_claim_ids"])
-        self.assertEqual(["claim_3"], payload["target_claim_id"])
+        self.assertEqual([], final["workflow"]["weakpoints"])
+        self.assertTrue(
+            not final["workflow"]["weakpoints"]
+            or any(item["code"] == "STEP3_REJECTED_WEAKPOINT" for item in result.findings)
+        )
         self.assertEqual(
             {
                 "id": "operator_relation_2",

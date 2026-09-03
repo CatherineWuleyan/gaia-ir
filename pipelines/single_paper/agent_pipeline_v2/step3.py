@@ -179,6 +179,59 @@ def _classification_records(context: StageContext, document: JSONDict, weakpoint
     return records
 
 
+def _screen_classifications(
+    document: JSONDict, weakpoints: list[JSONDict], classifications: dict[str, str | None],
+) -> tuple[dict[str, str | None], set[str]]:
+    """Apply conservative, domain-agnostic gates before Step 4 expansion.
+
+    A non-null label authorizes a later expansion, so it must at least have
+    valid distinct endpoints and a paper-text anchor.  Semantic decisions
+    about whether an intermediate rule is recoverable remain with the model;
+    this gate only rejects structurally unsupported or plainly duplicated
+    links and never upgrades a null label.
+    """
+    knowledge = document["knowledges"]
+    paper_anchor_ids = {
+        str(item["anchor_id"])
+        for item in document["workflow"]["source_anchors"]
+        if item.get("source_kind") == PAPER_TEXT_KIND
+    }
+    screened: dict[str, str | None] = {}
+    rejected: set[str] = set()
+    for weakpoint in weakpoints:
+        weakpoint_id = str(weakpoint["id"])
+        label = classifications.get(weakpoint_id)
+        if label is None:
+            screened[weakpoint_id] = None
+            continue
+        payload = weakpoint["payload"]
+        evidence = list(dict.fromkeys(payload.get("evidence_claim_ids", [])))
+        targets = list(dict.fromkeys(weakpoint_target_ids(payload)))
+        valid_ids = (
+            bool(evidence) and bool(targets)
+            and all(item in knowledge for item in [*evidence, *targets])
+            and not set(evidence) & set(targets)
+        )
+        anchors = {
+            anchor_id
+            for item in [*evidence, *targets]
+            for anchor_id in knowledge[item].get("source_anchor_ids", [])
+        }
+        canonical = {
+            str(knowledge[item].get("content", {}).get("canonical", "")).strip().casefold()
+            for item in [*evidence, *targets]
+        }
+        # Identical endpoint content is an equivalence/duplicate candidate,
+        # not a reasoning edge, and must not be forced into Step 4.
+        duplicate_content = len(canonical) < len(evidence) + len(targets)
+        if not valid_ids or not (anchors & paper_anchor_ids) or duplicate_content:
+            screened[weakpoint_id] = None
+            rejected.add(weakpoint_id)
+        else:
+            screened[weakpoint_id] = label
+    return screened, rejected
+
+
 def _paper_anchor_ids(document: JSONDict, knowledge_ids: set[str]) -> set[str]:
     paper_anchors = {
         item["anchor_id"] for item in document["workflow"]["source_anchors"]
@@ -518,8 +571,16 @@ class Step3AnalyzeReasoningPlugin:
                         "STEP3_UNRESOLVED_CLASSIFICATION", "warning",
                         "Retained weakpoints whose reasoning classification could not be completed"))
                 else:
+                    classifications, rejected_ids = _screen_classifications(document, classification_targets, classifications)
+                    if rejected_ids:
+                        weakpoints = [item for item in weakpoints if str(item["id"]) not in rejected_ids]
+                        findings.extend(
+                            Finding("STEP3_REJECTED_WEAKPOINT", "warning", f"Deleted {item_id}: screening gate rejected the relation")
+                            for item_id in sorted(rejected_ids)
+                        )
                     for weakpoint in classification_targets:
-                        weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
+                        if str(weakpoint["id"]) not in rejected_ids:
+                            weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
             graph["operators"] = operators
             workflow["weakpoints"] = weakpoints
             workflow["non_reasoning_links"] = []
