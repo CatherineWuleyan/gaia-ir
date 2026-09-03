@@ -9,7 +9,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from agent_pipeline_v2.compiler_projection import project_for_official_compiler
-from agent_pipeline_v2.step2 import DeepSeekV4FlashObservationTool, MODEL_NAME, _best_paragraph_anchor
+from agent_pipeline_v2.step2 import (
+    DeepSeekV4FlashObservationTool, MODEL_NAME, _best_paragraph_anchor,
+    _deduplicate_extractions,
+)
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
 from pipeline_harness.store import RunStore, atomic_write_json, read_json
@@ -154,6 +157,23 @@ class Step2Tests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_relation_dedup_uses_endpoints_not_model_wording(self) -> None:
+        claims = [
+            {"_extraction_key": "o1", "content": "Observation one"},
+            {"_extraction_key": "o2", "content": "Observation two"},
+        ]
+        equivalents = [
+            {"observation_key": "o1", "content": "Phenomenon one"},
+            {"observation_key": "o2", "content": "Phenomenon two"},
+        ]
+        relations = [
+            {"phenomenon_keys": ["o1", "o2"], "claim_id": "claim_2", "expression": "first wording"},
+            {"phenomenon_keys": ["o2", "o1"], "claim_id": "claim_2", "expression": "second wording"},
+        ]
+        _, _, unique = _deduplicate_extractions(claims, equivalents, relations)
+        self.assertEqual(1, len(unique))
+        self.assertEqual(["o1", "o2"], unique[0]["phenomenon_keys"])
 
     def test_prompts_exclude_prior_work_and_require_nonverbatim_equivalent(self) -> None:
         candidate = {

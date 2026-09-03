@@ -140,10 +140,13 @@ def _deduplicate_extractions(
         unique_equivalents.append(copied)
 
     unique_relations: list[JSONDict] = []
-    seen_relations: set[tuple[tuple[str, ...], str, str]] = set()
+    # Relation identity is the endpoint pair, not the model's wording.  A
+    # single source/target pair must have one canonical relation even when
+    # overlapping figure windows produce different expressions.
+    seen_relations: set[tuple[tuple[str, ...], str]] = set()
     for relation in relations:
         sources = tuple(sorted(aliases.get(str(value), str(value)) for value in relation.get("phenomenon_keys", [])))
-        signature = (sources, str(relation.get("claim_id", "")), str(relation.get("expression", "")))
+        signature = (sources, str(relation.get("claim_id", "")))
         if signature in seen_relations:
             continue
         seen_relations.add(signature)
@@ -1357,6 +1360,10 @@ def _equivalent_items(
 def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], document: JSONDict) -> list[JSONDict]:
     links = list(document["workflow"]["non_reasoning_links"])
     existing = {link["id"] for link in links}
+    endpoint_keys: set[tuple[tuple[str, ...], str]] = {
+        (tuple(sorted(str(item) for item in link.get("sources", []))), str(link.get("target", "")))
+        for link in links
+    }
     for index, relation in enumerate(relations, 1):
         phenomenon_keys = relation.get("phenomenon_keys")
         claim_id = relation.get("claim_id")
@@ -1376,6 +1383,12 @@ def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], d
             expression = expression.replace(f"[E:{key}]", f"[{phenomenon_id}]")
         if "[E:" in expression:
             raise ValueError("relation expression references an unknown phenomenon")
+        endpoint_key = (tuple(sorted(phenomenon_id_by_key.values())), claim_id)
+        if endpoint_key in endpoint_keys:
+            # Overlapping windows may yield different wording for the same
+            # endpoints. Keep the first deterministic relation and discard
+            # only the duplicate, never a distinct endpoint pair.
+            continue
         links.append({
             "id": link_id, "link_type": "imported_relation", "sources": list(phenomenon_id_by_key.values()), "target": claim_id,
             "reasoning": False, "metadata": {"relation": {
@@ -1383,6 +1396,7 @@ def _relation_items(relations: list[JSONDict], phenomenon_ids: dict[str, str], d
             }},
         })
         existing.add(link_id)
+        endpoint_keys.add(endpoint_key)
     return links
 
 
