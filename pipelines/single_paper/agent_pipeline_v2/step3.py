@@ -354,6 +354,41 @@ def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSOND
     )
 
 
+def _flatten_redundant_premises(weakpoints: list[JSONDict]) -> list[str]:
+    """Substitute derived premises with their direct evidence when redundant.
+
+    This handles multi-premise triangles such as ``A→B`` and
+    ``(A+B+X)→C`` without rejecting legitimate multi-hop reasoning.
+    """
+    changed: list[str] = []
+    for item in weakpoints:
+        payload = item.get("payload", {})
+        evidence = list(payload.get("evidence_claim_ids", []))
+        targets = list(payload.get("target_claim_id", []))
+        if len(targets) != 1:
+            continue
+        for candidate in weakpoints:
+            source = list(candidate.get("payload", {}).get("evidence_claim_ids", []))
+            derived = list(candidate.get("payload", {}).get("target_claim_id", []))
+            if (len(derived) != 1 or derived[0] not in evidence
+                    or candidate.get("payload", {}).get("reasoning_type") != payload.get("reasoning_type")
+                    or not source or set(source) & set(evidence) == set(evidence)):
+                continue
+            if set(source) <= (set(evidence) - {derived[0]}):
+                evidence = [key for key in evidence if key != derived[0]]
+                for key in source:
+                    if key not in evidence:
+                        evidence.append(key)
+                payload["evidence_claim_ids"] = evidence
+                expression = payload.get("expression")
+                if isinstance(expression, str):
+                    expression = re.sub(rf"\[{re.escape(str(derived[0]))}\]", " ".join(f"[{key}]" for key in source), expression)
+                    payload["expression"] = expression
+                changed.append(str(item.get("id")))
+                break
+    return changed
+
+
 def _relation_clusters(context: StageContext, document: JSONDict, links: list[JSONDict]) -> list[JSONDict]:
     """Build experiment-bounded clusters plus one adjacent coarse-relation layer."""
     candidates = [item for item in links if _is_weakpoint_expression(
@@ -742,7 +777,13 @@ class Step3AnalyzeReasoningPlugin:
                     for weakpoint in classification_targets:
                         if str(weakpoint["id"]) not in rejected_ids:
                             weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
+            flattened_ids = _flatten_redundant_premises(weakpoints)
             weakpoints, transitive_ids = _remove_transitive_shortcuts(weakpoints)
+            if flattened_ids:
+                findings.append(Finding(
+                    "STEP3_DERIVED_PREMISE_FLATTENED", "warning",
+                    f"Flattened redundant derived premises in: {sorted(set(flattened_ids))}",
+                ))
             if transitive_ids:
                 findings.append(Finding(
                     "STEP3_TRANSITIVE_SHORTCUT_SUPPRESSED", "warning",

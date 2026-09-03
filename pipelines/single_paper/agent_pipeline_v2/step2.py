@@ -332,12 +332,15 @@ class DeepSeekV4FlashObservationTool:
                 return normalization_failure(exc)
             equivalent_claims.extend(candidate_equivalents)
             groups = self._relation_groups(candidate_equivalents, candidate)
-            if groups:
+            # Each target-centered group is an independent semantic request.
+            # Never batch unrelated targets: this prevents cross-group IDs or
+            # conclusions from leaking through the model context.
+            for group in groups:
                 relation_request = Request(
                     f"{base_url}/chat/completions",
                     data=json.dumps({
                         "model": self.model,
-                        "messages": [{"role": "user", "content": self._relation_prompt(groups)}],
+                        "messages": [{"role": "user", "content": self._relation_prompt([group])}],
                         "temperature": 0,
                         "response_format": {"type": "json_object"},
                     }, ensure_ascii=False).encode("utf-8"),
@@ -353,7 +356,7 @@ class DeepSeekV4FlashObservationTool:
                     raise RuntimeError(f"DeepSeek relation request failed: {exc.reason}") from exc
                 raw_responses.append(relation_raw)
                 try:
-                    relations.extend(self._normalize_group_relations(_response_content(relation_raw), groups))
+                    relations.extend(self._normalize_group_relations(_response_content(relation_raw), [group]))
                 except Exception as exc:
                     return normalization_failure(exc)
         if isinstance(selected_claims, list):
@@ -1421,25 +1424,6 @@ def _equivalent_items(
             # Keep valid observations even when one equivalent proposal is bad.
             continue
         by_key[key] = item
-    # Imported observation claims must receive the same E/O interface as
-    # observations extracted from figures.  Reuse their canonical text and
-    # paper anchors; this is a deterministic identity pairing, not a new
-    # semantic claim.
-    imported = {
-        f"existing:{observation_id}": (observation_id, value)
-        for observation_id, value in existing.items()
-        if value.get("type") == "observation_claim"
-        and observation_id not in observation_ids.values()
-        and isinstance(value.get("content"), dict)
-        and isinstance(value["content"].get("canonical"), str)
-        and value["content"]["canonical"].strip()
-    }
-    for key, (observation_id, value) in imported.items():
-        observation_ids[key] = observation_id
-        by_key[key] = {
-            "content": value["content"]["canonical"],
-            "paragraph_anchor_ids": list(value.get("source_anchor_ids", [])),
-        }
     phenomenon_ids: dict[str, str] = {}
     phenomena: dict[str, JSONDict] = {}
     operators: list[JSONDict] = []
@@ -1451,6 +1435,10 @@ def _equivalent_items(
     }
     used_existing_phenomena: set[str] = set()
     for key, observation_id in observation_ids.items():
+        # An observation without a validated equivalent must remain
+        # unresolved; never synthesize E by copying O.
+        if key not in by_key:
+            continue
         suffix = observation_id.removeprefix("claim_O")
         proposed = by_key[key]["content"]
         observation_anchors = set(by_key[key]["paragraph_anchor_ids"])
