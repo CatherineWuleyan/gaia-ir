@@ -495,27 +495,30 @@ class Step3AnalyzeReasoningPlugin:
                 drafts.extend(cluster_drafts)
                 added.extend(item["id"] for item in normalized_weakpoints)
             weakpoints = [*existing_weakpoints, *normalized_weakpoints]
-            # Newly normalized weakpoints already carry the model's reasoning
-            # label.  Conservative fallbacks intentionally remain null and
-            # are handled as unresolved in Step 4; do not classify them again.
+            # Cluster normalization only groups/orients endpoints.  Treat its
+            # newly created weakpoints exactly like direct input weakpoints and
+            # send them through the canonical classifier as well.  If that
+            # second call fails, retain any non-null cluster label as a safe
+            # fallback and leave only genuinely unresolved items as null.
             unclassified_existing = [
                 item for item in existing_weakpoints if item["payload"]["reasoning_type"] is None
             ]
-            if unclassified_existing:
+            classification_targets = [*unclassified_existing, *normalized_weakpoints]
+            if classification_targets:
                 try:
-                    classifications, classification_draft = _classify_weakpoints(context, document, unclassified_existing)
+                    classifications, classification_draft = _classify_weakpoints(context, document, classification_targets)
                 except Exception as exc:
                     classifications, classification_draft = {}, None
                     findings.append(Finding("STEP3_UNRESOLVED_CLASSIFICATION", "warning", str(exc)))
                 if classification_draft is not None:
                     drafts.append(classification_draft)
-                expected = {str(item["id"]) for item in unclassified_existing}
+                expected = {str(item["id"]) for item in classification_targets}
                 if set(classifications) != expected:
                     findings.append(Finding(
                         "STEP3_UNRESOLVED_CLASSIFICATION", "warning",
-                        "Retained weakpoints whose reasoning classification could not be repaired"))
+                        "Retained weakpoints whose reasoning classification could not be completed"))
                 else:
-                    for weakpoint in unclassified_existing:
+                    for weakpoint in classification_targets:
                         weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
             graph["operators"] = operators
             workflow["weakpoints"] = weakpoints
