@@ -319,6 +319,30 @@ def _ensure_abduction_altexp(result: JSONDict) -> JSONDict:
             continue
         premises = list(strategy.get("premises", []))
         if len(premises) == 2:
+            # Models sometimes emit a null second premise under a generic name
+            # such as ``alt_claim_8_18``.  It is semantically the required
+            # alternative-explanation placeholder, not substantive Knowledge;
+            # normalize it before the structural validator requires a canonical
+            # text for ordinary claims.
+            candidate = premises[1]
+            candidate_item = knowledges.get(candidate)
+            if (
+                isinstance(candidate_item, dict)
+                and candidate_item.get("type") == "claim"
+                and candidate_item.get("content") is None
+                and not str(candidate).startswith("AltExp")
+            ):
+                target = str(strategy.get("conclusion", "claim"))
+                base = f"AltExp_{target}_{index}"
+                alt = base
+                suffix = 2
+                while alt in used:
+                    alt = f"{base}_{suffix}"
+                    suffix += 1
+                knowledges[alt] = {"type": "claim", "content": None, "source_anchor_ids": []}
+                del knowledges[candidate]
+                strategy["premises"][1] = alt
+                used.add(alt)
             continue
         if len(premises) != 1:
             raise ValueError("abduction requires exactly one evidence premise before AltExp binding")
