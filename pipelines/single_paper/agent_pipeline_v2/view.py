@@ -260,6 +260,24 @@ class V2FormalizationViewAdapter:
                     })
                     search_ref = node_id
                 else:
+                    # AltExp is an interface premise (not a generated helper),
+                    # so Gaia's formalizer leaves it in operator.variables.
+                    # Materialize it explicitly for the viewer as a public
+                    # red dashed placeholder node.
+                    for premise in strategy["premises"]:
+                        if "AltExp" in str(premise) and f"step:{step}:knowledge:{premise}" not in {node["id"] for node in nodes}:
+                            nodes.append({
+                                "id": f"step:{step}:knowledge:{premise}", "entity_id": "AltExp",
+                                "label": "AltExp", "display_label": "AltExp",
+                                "display_meta": "official alternative interface",
+                                "kind": "alternative_placeholder", "layer": "claims", "step": step,
+                                "visible_at": ["standard"], "min_granularity": "standard",
+                                "summary": "Unknown alternative explanation (content=null)",
+                                "source_anchor_ids": [], "fold_group": strategy_id,
+                                "details": {"id": premise, "label": "AltExp", "type": "claim",
+                                            "content": None, "derived_for_view": True,
+                                            "strategy_id": strategy_id, "visibility": "public"},
+                            })
                     lowered = formalize_named_strategy(
                         scope=strategy["scope"], type_=strategy["type"], premises=list(strategy["premises"]),
                         conclusion=strategy["conclusion"], namespace="viewer", package_name="display",
