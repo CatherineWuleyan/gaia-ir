@@ -267,7 +267,7 @@ class Step4Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "every target"):
             _validate_expansion(parameters, expansion)
 
-    def test_abduction_derives_distinct_official_alternatives_for_view(self) -> None:
+    def test_abduction_without_grounded_alternative_keeps_evidence_only_strategy(self) -> None:
         Classifier.kind = "abduction"
         store, prior, final = self.run_expansion(abduction())
         self.assertEqual("succeeded", self.result.status, self.result.findings)
@@ -280,25 +280,14 @@ class Step4Tests(unittest.TestCase):
         self.assertEqual(prior["graph"]["operators"], final["graph"]["operators"])
         view = project_run(store.run_dir)
         alternatives = [node for node in view.nodes if node["step"] == 4 and node["kind"] == "alternative_placeholder"]
-        self.assertEqual(2, len(alternatives))
-        self.assertTrue(all(node["display_label"] == "AltExp" for node in alternatives))
+        self.assertEqual([], alternatives)
         self.assertTrue(all(node["layer"] == "claims" for node in alternatives))
-        self.assertFalse(any(node["kind"] == "strategy" and node["details"]["type"] == "abduction"
-                             for node in view.nodes if node["step"] == 4))
+        self.assertTrue(any(node["kind"] == "strategy" and node["details"]["type"] == "abduction"
+                            for node in view.nodes if node["step"] == 4))
         abduction_operators = [node["details"] for node in view.nodes
                                if node["step"] == 4 and node["kind"] == "operator"
                                and node["details"]["metadata"].get("formalization_template") == "abduction"]
-        self.assertEqual(2, sum(item["type"] == "disjunction" for item in abduction_operators))
-        alternative_ids = {node["details"]["id"] for node in alternatives}
-        self.assertEqual(alternative_ids,
-                         {item["variables"][1] for item in abduction_operators if item["type"] == "disjunction"})
-        abduction_equivalences = [
-            edge["details"] for edge in view.edges
-            if edge["step"] == 4 and edge["semantic_type"] == "equivalence"
-            and edge["details"]["metadata"].get("formalization_template") == "abduction"
-        ]
-        self.assertEqual({"claim_1", "claim_2"},
-                         {item["variables"][1] for item in abduction_equivalences})
+        self.assertEqual([], abduction_operators)
         validate(final)
 
     def test_abduction_can_reuse_alternative_and_explicit_background_condition(self) -> None:

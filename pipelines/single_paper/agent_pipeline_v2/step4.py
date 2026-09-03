@@ -200,9 +200,12 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         if any(item["type"] != "abduction" or item["conclusion"] not in targets for item in strategies):
             raise ValueError("abduction requires each target hypothesis as a non-deductive conclusion")
         for strategy in strategies:
-            if len(strategy["premises"]) != 2 or strategy["premises"][0] not in evidence:
-                raise ValueError("abduction requires evidence plus an explicit AltExp premise")
-            alternative = strategy["premises"][1]
+            premises = strategy["premises"]
+            if len(premises) not in {1, 2} or premises[0] not in evidence:
+                raise ValueError("abduction requires evidence and may include one explicit AltExp premise")
+            if len(premises) == 1:
+                continue
+            alternative = premises[1]
             if alternative in evidence or alternative in targets:
                 raise ValueError("observations and the hypothesis cannot be their own alternative explanation")
             if alternative not in knowledges:
@@ -365,52 +368,24 @@ def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDic
 
 
 def _ensure_abduction_altexp(result: JSONDict) -> JSONDict:
-    """Make the required AltExp interface explicit before authoring merge."""
+    """Remove unsupported null alternatives and retain minimal abductions."""
     result = copy.deepcopy(result)
     knowledges = result.setdefault("knowledges", {})
-    used: set[str] = set(knowledges)
-    for index, strategy in enumerate(result.get("strategies", []), 1):
+    for strategy in result.get("strategies", []):
         if strategy.get("type") != "abduction":
             continue
         premises = list(strategy.get("premises", []))
         if len(premises) == 2:
-            # Models sometimes emit a null second premise under a generic name
-            # such as ``alt_claim_8_18``.  It is semantically the required
-            # alternative-explanation placeholder, not substantive Knowledge;
-            # normalize it before the structural validator requires a canonical
-            # text for ordinary claims.
             candidate = premises[1]
             candidate_item = knowledges.get(candidate)
-            if (
-                isinstance(candidate_item, dict)
-                and candidate_item.get("type") == "claim"
-                and candidate_item.get("content") is None
-                and not str(candidate).startswith("AltExp")
-            ):
-                target = str(strategy.get("conclusion", "claim"))
-                base = f"AltExp_{target}_{index}"
-                alt = base
-                suffix = 2
-                while alt in used:
-                    alt = f"{base}_{suffix}"
-                    suffix += 1
-                knowledges[alt] = {"type": "claim", "content": None, "source_anchor_ids": []}
+            if (isinstance(candidate_item, dict)
+                    and candidate_item.get("type") == "claim"
+                    and candidate_item.get("content") is None):
                 del knowledges[candidate]
-                strategy["premises"][1] = alt
-                used.add(alt)
+                strategy["premises"] = [premises[0]]
             continue
         if len(premises) != 1:
-            raise ValueError("abduction requires exactly one evidence premise before AltExp binding")
-        target = str(strategy.get("conclusion", "claim"))
-        base = f"AltExp_{target}_{index}"
-        alt = base
-        suffix = 2
-        while alt in used:
-            alt = f"{base}_{suffix}"
-            suffix += 1
-        knowledges[alt] = {"type": "claim", "content": None, "source_anchor_ids": []}
-        used.add(alt)
-        strategy["premises"] = [premises[0], alt]
+            raise ValueError("abduction requires one evidence premise, optionally followed by a grounded alternative")
     return result
 
 
@@ -449,12 +424,12 @@ class WeakpointExpansionTool:
             "If these do not follow from the supplied premises and a source-grounded rule, return empty output.\n"
             "abduction: a supplied phenomenon claim B may support a non-experimental hypothesis A; represent only the B-to-A explanatory links justified by the supplied Group. B may be a non-E claim. "
             "When B is a Step 2 phenomenon E, the actual observation O is already connected by Step 2 equivalence; do not use O directly here. "
-            "Every abduction must expose an explicit ordered alternative-explanation premise: use premises=[B,AltExp_B], conclusion=A. If the source does not provide an alternative, emit AltExp_B as a claim with content=null and source_anchor_ids=[]; it is a visible placeholder, not a factual claim. Never use one-premise abduction. "
-            "The premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with B. "
+            "Every abduction may use premises=[B], conclusion=A when no source-grounded alternative explanation is supplied. If a grounded alternative exists, use ordered premises=[B,AltExp_B], conclusion=A. Never invent an alternative or emit an empty placeholder Knowledge. "
+            "When an alternative is present, its premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with B. Evidence-only abductions remain one-premise strategies. "
             "This is non-deductive explanatory inference, NOT strict B -> A. The formal direction is (A OR AltExp_B) equivalent to B; when B is E, the existing Step 2 equivalence gives E equivalent to O. "
             "A self-contained phenomenon claim already contains its stated conditions, result, and uncertainty, so use background=[] and do not duplicate those conditions as a note. "
             "Only add a background note when the source states a separate applicability rule that is absent from the self-contained phenomenon claim. "
-            "Do not return empty output solely because the source does not name an alternative: emit the required AltExp placeholder. "
+            "Do not return empty output solely because the source does not name an alternative: emit the evidence-only abduction. "
             "Never use deduction from observation to hypothesis, or B-prime -> A; repeated abduction instances for one target share that A.\n"
             "analogy: (G_src AND M AND S_target) -> V_target. G_src is an established source law/mechanism/constraint; "
             "M must state the variable mapping and the relations/constraints/causal structure it preserves, not merely similarity; S_target gives explicit target boundary conditions. "
