@@ -108,6 +108,13 @@ def _compile_v2_formalization(
     for knowledge_id in graph_ids:
         source = registry[knowledge_id]
         content = source["content"]
+        # Authoring keeps AltExp placeholders non-factual (content=null), but
+        # Gaia's LocalCanonicalGraph requires every local Knowledge node to
+        # carry text. Materialize only this interface placeholder at the
+        # lowering boundary; the authoring contract and viewer semantics stay
+        # explicitly null/non-factual.
+        if content is None and str(knowledge_id).startswith("AltExp"):
+            content = {"canonical": "Unknown alternative explanation (content=null)"}
         knowledges.append(Knowledge(
             id=bindings[knowledge_id],
             label=knowledge_id,
