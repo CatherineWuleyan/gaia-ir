@@ -701,9 +701,6 @@ class DeepSeekV4FlashObservationTool:
                     "phenomenon": phenomenon["content"],
                 }
                 for phenomenon in phenomena
-                if _anchors_share_local_context(
-                    phenomenon["paragraph_anchor_ids"], item.get("source_anchor_ids", [])
-                )
             ]
             if evidence_candidates:
                 groups.append({
