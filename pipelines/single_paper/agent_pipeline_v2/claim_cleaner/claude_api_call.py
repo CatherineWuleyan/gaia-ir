@@ -287,10 +287,12 @@ def call_claude(
     interrupt_on_error: bool = True,
     **extra,
 ) -> str | None:
-    # Step 4's temporary override reuses this entry point and every native
-    # cleaning prompt/check. Claude-specific budgets and fallback model names
-    # do not apply to DeepSeek; all attempts use the explicit override model.
-    if override_model := os.environ.get("DEEPSEEK_MODEL"):
+    # The pipeline's claim cleaner is provider-neutral at the call sites, but
+    # in the Gaia run it must use DeepSeek Flash.  Keep the old function name
+    # for compatibility with the cleaner modules and ignore their Claude model
+    # names/retry tiers when DeepSeek credentials are present.
+    if os.environ.get("DEEPSEEK_API_KEY"):
+        override_model = "deepseek-v4-flash"
         key = os.environ.get("DEEPSEEK_API_KEY")
         if not key:
             raise RuntimeError("DeepSeek cleaning requires DEEPSEEK_API_KEY")
@@ -303,7 +305,11 @@ def call_claude(
             "Authorization": f"Bearer {key}", "Content-Type": "application/json",
         }, method="POST")
         try:
-            with urlopen(request, timeout=180) as response:
+            # Cleaner prompts can contain an entire claim batch.  A 180s
+            # socket deadline caused Step 4 to fail while the upstream model
+            # was still generating; use the same ten-minute budget as the
+            # former Anthropic client.
+            with urlopen(request, timeout=_DEFAULT_TIMEOUT_SECONDS) as response:
                 raw = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             raise RuntimeError(f"DeepSeek cleaning request failed with HTTP {exc.code}") from exc

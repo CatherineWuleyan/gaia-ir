@@ -109,7 +109,9 @@ def main():
         print("需要传入文本内容(直接传参数,或者用 --file 指定一个文件)")
         sys.exit(1)
 
-    key_name = "DEEPSEEK_API_KEY" if os.environ.get("DEEPSEEK_MODEL") else "ANTHROPIC_API_KEY"
+    # DeepSeek is the supported provider for the pipeline cleaner; the model
+    # is fixed to Flash inside claude_api_call.py.
+    key_name = "DEEPSEEK_API_KEY" if os.environ.get("DEEPSEEK_API_KEY") else "ANTHROPIC_API_KEY"
     if not os.environ.get(key_name):
         print(f"流水线需要配置 {key_name} 环境变量。")
         sys.exit(1)

@@ -115,7 +115,7 @@ def main():
     else:
         paper_id = input("请输入 paper_id: ").strip()
 
-    key_name = "DEEPSEEK_API_KEY" if os.environ.get("DEEPSEEK_MODEL") else "ANTHROPIC_API_KEY"
+    key_name = "DEEPSEEK_API_KEY" if os.environ.get("DEEPSEEK_API_KEY") else "ANTHROPIC_API_KEY"
     if not os.environ.get(key_name):
         print(f"流水线需要配置 {key_name} 环境变量。")
         sys.exit(1)
