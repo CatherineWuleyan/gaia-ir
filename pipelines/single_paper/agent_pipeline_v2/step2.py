@@ -332,15 +332,14 @@ class DeepSeekV4FlashObservationTool:
                 return normalization_failure(exc)
             equivalent_claims.extend(candidate_equivalents)
             groups = self._relation_groups(candidate_equivalents, candidate)
-            # Each target-centered group is an independent semantic request.
-            # Never batch unrelated targets: this prevents cross-group IDs or
-            # conclusions from leaking through the model context.
-            for group in groups:
+            # Each small overlap component is an independent semantic request;
+            # only pairwise-overlap triangles share context.
+            for component in self._relation_group_components(groups):
                 relation_request = Request(
                     f"{base_url}/chat/completions",
                     data=json.dumps({
                         "model": self.model,
-                        "messages": [{"role": "user", "content": self._relation_prompt([group])}],
+                        "messages": [{"role": "user", "content": self._relation_prompt(component)}],
                         "temperature": 0,
                         "response_format": {"type": "json_object"},
                     }, ensure_ascii=False).encode("utf-8"),
@@ -356,7 +355,7 @@ class DeepSeekV4FlashObservationTool:
                     raise RuntimeError(f"DeepSeek relation request failed: {exc.reason}") from exc
                 raw_responses.append(relation_raw)
                 try:
-                    relations.extend(self._normalize_group_relations(_response_content(relation_raw), [group]))
+                    relations.extend(self._normalize_group_relations(_response_content(relation_raw), component))
                 except Exception as exc:
                     return normalization_failure(exc)
         if isinstance(selected_claims, list):
@@ -677,6 +676,48 @@ class DeepSeekV4FlashObservationTool:
                     "evidence_candidates": evidence_candidates,
                 })
         return groups
+
+    @staticmethod
+    def _relation_group_components(groups: list[JSONDict], max_groups: int = 6) -> list[list[JSONDict]]:
+        """Batch small pairwise-overlap triangles, not long overlap chains."""
+        if len(groups) < 3:
+            return [[group] for group in groups]
+        claim_sets = [
+            {str(group["target_claim_id"]), *{
+                str(item["phenomenon_key"])
+                for item in group.get("evidence_candidates", [])
+            }}
+            for group in groups
+        ]
+        parent = list(range(len(groups)))
+
+        def find(index: int) -> int:
+            while parent[index] != index:
+                parent[index] = parent[parent[index]]
+                index = parent[index]
+            return index
+
+        def union(left: int, right: int) -> None:
+            root_left, root_right = find(left), find(right)
+            if root_left != root_right:
+                parent[root_right] = root_left
+
+        for i in range(len(groups)):
+            for j in range(i + 1, len(groups)):
+                for k in range(j + 1, len(groups)):
+                    if (claim_sets[i] & claim_sets[j]
+                            and claim_sets[i] & claim_sets[k]
+                            and claim_sets[j] & claim_sets[k]):
+                        roots = {find(i), find(j), find(k)}
+                        size = sum(find(x) in roots for x in range(len(groups)))
+                        if size <= max_groups:
+                            union(i, j)
+                            union(i, k)
+                        break
+        components: dict[int, list[JSONDict]] = {}
+        for index, group in enumerate(groups):
+            components.setdefault(find(index), []).append(group)
+        return list(components.values())
 
     @staticmethod
     def _relation_prompt(groups: list[JSONDict]) -> str:
