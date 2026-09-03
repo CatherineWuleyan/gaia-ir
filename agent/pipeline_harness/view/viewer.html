@@ -14,6 +14,9 @@
     input,select,button.toolbar { border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:white; }
     button.toolbar { cursor:pointer; }
     #search { width:min(360px,30vw); }
+    #file-input { display:none; }
+    #drop-file { cursor:pointer; }
+    body.file-dragging::after { content:'释放以打开 formalization.json'; position:fixed; inset:12px; display:grid; place-items:center; border:3px dashed var(--accent); border-radius:16px; background:rgba(238,244,255,.94); color:var(--accent); font-size:20px; font-weight:800; z-index:20; pointer-events:none; }
     #developer-badge { padding:5px 8px; border-radius:999px; color:#6941c6; background:#f4f3ff; font-size:12px; font-weight:700; }
     main { display:grid; grid-template-columns:180px minmax(560px,1fr) 380px; min-height:calc(100vh - 59px); }
     aside { background:white; padding:14px; overflow:auto; }
@@ -24,6 +27,7 @@
     .edge { fill:none; stroke:#667085; stroke-width:1.7; marker-end:url(#arrow); cursor:pointer; }
     .edge.non-reasoning { stroke:#98a2b3; stroke-dasharray:7 5; }
     .edge.reasoning-candidate { stroke:#b54708; stroke-dasharray:2 5; }
+    .edge.infer { stroke:#667085; stroke-dasharray:8 5; }
     .edge.relational { marker-end:none; }
     .edge.equivalence { marker-start:url(#arrow-start); marker-end:url(#arrow); }
     .edge.selected { stroke:var(--accent); stroke-width:3.5; }
@@ -45,8 +49,8 @@
     .node.observation-proposal .node-shape { stroke-dasharray:8 5; stroke-width:2.4; }
     .node.relation-display .node-shape { stroke-dasharray:6 4; stroke-width:2.2; }
     .tone-hypothesis .node-shape { fill:#f3e5f5; stroke:#7b1fa2; }
-    .tone-caveat .node-shape,.tone-alternative .node-shape { fill:#fff3e0; stroke:#ef6c00; }
-    .tone-alternative .node-shape { stroke-dasharray:5 4; }
+    .tone-caveat .node-shape { fill:#fff3e0; stroke:#ef6c00; }
+    .tone-alternative .node-shape { fill:#fff1f0; stroke:#d92d20; stroke-dasharray:5 4; }
     .tone-limit .node-shape { fill:#ffebee; stroke:#c62828; }
     .tone-bridge .node-shape { fill:#fffde7; stroke:#f9a825; }
     .tone-setting .node-shape { fill:#f5f5f5; stroke:#616161; stroke-dasharray:5 4; }
@@ -94,12 +98,11 @@
     <h1 id="title">Gaia Formalization Viewer</h1>
     <span id="developer-badge" hidden>开发者模式</span>
     <input id="search" type="search" placeholder="搜索 claim ID 或正文…">
+    <input id="file-input" type="file" accept=".json,application/json">
+    <button id="drop-file" class="toolbar" type="button">打开 formalization</button>
     <span id="validation-status"></span>
     <select id="stage" aria-label="图版本" hidden></select>
-    <select id="view-mode" aria-label="查看模式">
-      <option value="overview" selected>Overview</option>
-      <option value="standard">Standard</option>
-    </select>
+    <select id="view-mode" aria-label="查看模式" hidden><option value="standard" selected>Standard</option></select>
     <button id="reset-layout" class="toolbar" type="button">重置布局</button>
   </header>
   <main>
@@ -122,14 +125,44 @@
   <script>__DAGRE_SCRIPT__</script>
   <script id="view-data" type="application/json">__VIEW_DATA__</script>
   <script>
-    const rawViewData=document.getElementById('view-data').textContent.trim();
+    function formalizationToView(document) {
+      const isHelperId=id => /(^|::)__|helper[_-]?relation|operator[_-]?result|disjunction[_-]?result|alternative[_-]?explanation/i.test(String(id));
+      const isGaiaIr=!document?.graph && Array.isArray(document?.knowledges);
+      const knowledges=isGaiaIr ? Object.fromEntries(document.knowledges.map(item=>[item.id,item])) : (document?.knowledges || {});
+      const graph=isGaiaIr ? {nodes:Object.keys(knowledges).filter(id=>!isHelperId(id)), operators:(document.operators || []).map(op=>({...op,type:op.type || op.operator})), strategies:document.strategies || []} : (document?.graph || {});
+      const step=4, nodes=[], edges=[], search_documents=[];
+      const ids=(Array.isArray(graph.nodes) ? graph.nodes : Object.keys(knowledges)).filter(id=>!isHelperId(id));
+      const strategyOperators=(graph.strategies || []).flatMap(strategy => (strategy.formal_expr?.operators || []).map((op,index)=>({...op,id:op.id || `${strategy.strategy_id || strategy.id || 'strategy'}:operator:${index+1}`,type:op.type || op.operator})));
+      const nodeId=id => `step:${step}:knowledge:${id}`;
+      ids.forEach(id => { const k=knowledges[id] || {}, content=k.content, summary=typeof content==='string' ? content : (content?.canonical || content?.text || '');
+        nodes.push({id:nodeId(id), entity_id:id, label:id, display_label:id, display_meta:k.type || 'claim', kind:k.type || 'claim', layer:'claims', step, summary, text:summary, details:k, min_granularity:'overview'});
+        search_documents.push({id:nodeId(id), title:id, text:summary, tags:[k.type || 'claim'], refs:[nodeId(id)]}); });
+      [...(graph.operators || []),...strategyOperators].forEach((op,index) => { const type=String(op.type || op.operator || 'operator').toLowerCase(), vars=(op.variables || []).filter(id=>ids.includes(id)), conclusion=op.conclusion && ids.includes(op.conclusion) ? op.conclusion : null;
+        if (type !== 'equivalence' && type !== 'implication') nodes.push({id:`step:${step}:operator:${op.id || index}`, entity_id:op.id || `operator_${index}`, label:type, display_label:type, display_meta:type, kind:'operator', layer:'operators', step, summary:op.metadata?.expression || type, details:{...op,type,variables:vars,conclusion}, min_granularity:'standard'});
+        const opNode=`step:${step}:operator:${op.id || index}`;
+        if (type === 'equivalence' || type === 'implication') { if (vars.length >= 2) edges.push({id:`step:${step}:op:${op.id || index}`,source:nodeId(vars[0]),target:nodeId(vars[1]),label:type === 'equivalence' ? '=' : '→',semantic_type:type,layer:'operators',step,reasoning_state:'confirmed'}); }
+        else { vars.forEach((source,i)=>edges.push({id:`step:${step}:op:${op.id || index}:in:${i}`,source:nodeId(source),target:opNode,label:'input',semantic_type:type,layer:'operators',step,reasoning_state:'confirmed'})); if (conclusion) edges.push({id:`step:${step}:op:${op.id || index}:out`,source:opNode,target:nodeId(conclusion),label:'output',semantic_type:type,layer:'operators',step,reasoning_state:'confirmed'}); }
+      });
+      (graph.strategies || []).forEach((strategy,index) => { const premises=(strategy.premises || []).filter(id=>ids.includes(id)), conclusion=strategy.conclusion && ids.includes(strategy.conclusion) ? strategy.conclusion : null; if (!strategy.formal_expr?.operators?.length && conclusion) premises.forEach((source,i)=>edges.push({id:`step:${step}:strategy:${strategy.strategy_id || index}:${i}`,source:nodeId(source),target:nodeId(conclusion),label:'→',semantic_type:'implication',layer:'operators',step,reasoning_state:'confirmed'})); });
+      return {title:`${document?.package?.name || 'Formalization'} · Step 4`, source_artifacts:[], nodes, edges, search_documents, layers:[{id:'claims',label:'Formal nodes',default_visible:true},{id:'operators',label:'Operators',default_visible:true}], metadata:{latest_step:step, standalone_formalization:true}, stages:[{number:step,name:'formalization',validation_status:'unknown'}], source_targets:[]};
+    }
+    function openFormalization(file) { if (!file || (!file.name.toLowerCase().endsWith('.json') && file.type !== 'application/json')) return; const reader=new FileReader(); reader.onload=()=>{ try { const parsed=JSON.parse(reader.result); sessionStorage.setItem('gaia-view-data', JSON.stringify(formalizationToView(parsed))); location.reload(); } catch (error) { alert(`无法读取 formalization JSON：${error.message}`); } }; reader.readAsText(file); }
+    const fileInput=document.getElementById('file-input');
+    document.getElementById('drop-file').addEventListener('click',()=>fileInput.click());
+    fileInput.addEventListener('change',event=>openFormalization(event.target.files[0]));
+    ['dragenter','dragover'].forEach(type=>document.addEventListener(type,event=>{event.preventDefault(); document.body.classList.add('file-dragging');}));
+    ['dragleave','drop'].forEach(type=>document.addEventListener(type,event=>{event.preventDefault(); document.body.classList.remove('file-dragging');}));
+    document.addEventListener('drop',event=>openFormalization(event.dataTransfer?.files?.[0]));
+    const storedViewData=sessionStorage.getItem('gaia-view-data');
+    const rawViewData=storedViewData || document.getElementById('view-data').textContent.trim();
+    if (storedViewData) sessionStorage.removeItem('gaia-view-data');
     if (rawViewData === '__VIEW_' + 'DATA__') {
       document.body.innerHTML='<main style="display:block;max-width:760px;min-height:0;margin:48px auto;padding:28px;background:white;border:1px solid #d0d5dd;border-radius:12px"><h1>这是 Viewer 模板</h1><p>请先执行 <code>python3 -m pipeline_harness view --run &lt;run-dir&gt;</code>，再打开生成的 <code>views/viewer.html</code>。</p></main>';
     } else {
     const view=JSON.parse(rawViewData);
     const devMode=new URLSearchParams(location.search).get('dev') === '1';
     const latestStep=String(view.metadata?.latest_step ?? 'all');
-    const state={mode:'overview',step:devMode?latestStep:'3',query:'',visibleLayers:new Set(),hits:new Set(),expandedWeakpoints:new Set(),manualPositions:new Map(),positions:new Map(),routes:new Map(),nodeMap:new Map(),edgeMap:new Map(),selectedId:null,drag:null};
+    const state={mode:'standard',step:devMode?latestStep:availableStep('4'),query:'',visibleLayers:new Set(),hits:new Set(),expandedWeakpoints:new Set(),manualPositions:new Map(),positions:new Map(),routes:new Map(),nodeMap:new Map(),edgeMap:new Map(),selectedId:null,drag:null};
     const byId=new Map(view.nodes.map(node => [node.id,node]));
     const sourceByKey=new Map((view.source_targets || []).map(target => [`${target.step}:${target.anchor_id}`,target]));
     const esc=value => String(value ?? '').replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -191,7 +224,7 @@
 
     function configureModeControls() {
       const mode=document.getElementById('view-mode'), stage=document.getElementById('stage'), badge=document.getElementById('developer-badge');
-      if (!devMode) {mode.hidden=false; stage.hidden=true; badge.hidden=true; updateModeNote(); return;}
+      if (!devMode) {mode.hidden=true; stage.hidden=true; badge.hidden=true; updateModeNote(); return;}
       mode.hidden=true; stage.hidden=false; badge.hidden=false; updateDeveloperModeNote();
       const stages=view.stages || [];
       stages.forEach(item => {
@@ -218,7 +251,7 @@
     function updateModeNote() {
       document.getElementById('mode-note').textContent=state.mode === 'overview'
         ? 'Overview：Step 3 宏观图；↝ 表示已识别但尚未展开的 weakpoint。'
-        : 'Standard：Step 4 细图；显示 claim、Gaia 展开的 Operator、infer Strategy 和未展开 weakpoint。';
+        : 'Standard：显示 claim、实验 claim、输入 claim 及展开后的 Operator；infer 使用虚线边表示。';
     }
     function updateValidationStatus() {
       const host=document.getElementById('validation-status'), target=modeStep();
@@ -238,7 +271,7 @@
         }[state.step] || new Set(['claims']);
         return view.layers.filter(layer => ids.has(layer.id));
       }
-      const normalLayers=new Set(['claims','weakpoints','operators','strategies']);
+      const normalLayers=new Set(['claims','weakpoints','operators']);
       return view.layers.filter(layer => normalLayers.has(layer.id));
     }
     function buildLayers(reset=false) {
@@ -255,6 +288,11 @@
     }
 
     function overviewProjection(step=modeStep('overview')) {
+      const weakpoints=view.nodes.filter(node => String(node.step) === String(step) && node.kind === 'weakpoint');
+      const weakpointIds=new Set(weakpoints.map(node => node.id));
+      weakpoints.forEach(node => { const payload=node.details?.payload || {}; [...(payload.evidence_claim_ids || []),payload.target_claim_id].filter(Boolean).forEach(entity => { const knowledge=knowledgeNode(step,entity); if (knowledge) weakpointIds.add(knowledge.id); }); });
+      if (view.metadata?.standalone_formalization || weakpoints.length) return {nodes:view.nodes.filter(node => weakpointIds.has(node.id)),edges:view.edges.filter(edge => weakpointIds.has(edge.source) && weakpointIds.has(edge.target) && (edge.layer === 'weakpoints' || edge.layer === 'registry'))};
+      return {nodes:[],edges:[]};
       step=String(step); const units=strategyNodes(step).filter(node => node.details?.form === 'coarse');
       if (!units.length) {
         const weakpoints=view.nodes.filter(node => String(node.step) === step && node.kind === 'weakpoint');
@@ -309,14 +347,22 @@
     function standardProjection(step=modeStep('standard')) {
       step=String(step); const operators=view.nodes.filter(node => String(node.step) === step && node.kind === 'operator');
       const ids=new Set(operators.map(node => node.id));
+      // Never hide domain claims merely because their reasoning expansion is
+      // unresolved; observation_claims remain visible in standard mode.
+      view.nodes.filter(node => String(node.step) === step && node.layer === 'claims').forEach(node => ids.add(node.id));
+      const inferEdges=[];
+      view.nodes.filter(node => String(node.step) === step && node.kind === 'strategy' && String(node.details?.type || node.label).toLowerCase() === 'infer').forEach(node => {
+        const details=node.details || {}, premises=details.premises || [], conclusion=details.conclusion;
+        premises.map(entity => knowledgeNode(step,entity)).filter(Boolean).forEach(source => { ids.add(source.id); inferEdges.push({id:`infer:${step}:${node.entity_id}:${source.entity_id}`,semantic_id:node.entity_id,source:source.id,target:knowledgeNode(step,conclusion)?.id,label:'infer',layer:'operators',edge_class:'reasoning',semantic_type:'infer',reasoning_state:'confirmed',step,visible_at:['standard'],min_granularity:'standard',details}); });
+        const target=knowledgeNode(step,conclusion); if (target) ids.add(target.id);
+      });
       operators.forEach(node => {
         [...(node.details?.variables || []),node.details?.conclusion].filter(Boolean).forEach(entity => {
           const target=knowledgeNode(step,entity); if (target) ids.add(target.id);
         });
       });
       directOperatorEdges(step).forEach(edge => { ids.add(edge.source); ids.add(edge.target); });
-      view.nodes.filter(node => String(node.step) === step && (node.kind === 'weakpoint' ||
-        (node.kind === 'strategy' && !node.details?.form && !node.details?.formal_expr))).forEach(node => {
+      view.nodes.filter(node => String(node.step) === step && node.kind === 'weakpoint').forEach(node => {
         ids.add(node.id);
         const details=node.details || {}, payload=details.payload || {};
         [...(details.premises || payload.evidence_claim_ids || []),details.conclusion || payload.target_claim_id].filter(Boolean).forEach(entity => {
@@ -324,7 +370,7 @@
         });
       });
       const nodes=view.nodes.filter(node => ids.has(node.id));
-      const edges=view.edges.filter(edge => String(edge.step) === step && ['operators','strategies','weakpoints'].includes(edge.layer) && ids.has(edge.source) && ids.has(edge.target));
+      const edges=view.edges.filter(edge => String(edge.step) === step && ['operators','weakpoints'].includes(edge.layer) && ids.has(edge.source) && ids.has(edge.target)).concat(inferEdges);
       return compactFormalGraph(nodes,edges);
     }
     function compactFormalGraph(inputNodes,inputEdges) {
@@ -426,7 +472,7 @@
       matches.forEach(({doc}) => {const button=document.createElement('button');button.className='result';button.innerHTML=`<strong>${esc(doc.title||doc.id)}</strong><br><span class="muted">${esc(doc.id)}</span>`;button.addEventListener('click',()=>selectItem(byId.get((doc.refs||[])[0])||doc));host.appendChild(button);}); renderGraph();
     }
 
-    function isAlternativePlaceholder(node){const id=String(node?.entity_id||'');return (id==='AltExp'||id.startsWith('AltExp_'))&&node?.summary==='Unknown alternative explanation (content=null)';}
+    function isAlternativePlaceholder(node){const id=String(node?.entity_id||'');return node?.kind==='alternative_placeholder'||((id==='AltExp'||id.startsWith('AltExp_'))&&node?.summary==='Unknown alternative explanation (content=null)');}
     function nodeSize(node,mini=false) {if(node.kind==='operator')return mini?{w:34,h:28}:{w:58,h:42};if(isAlternativePlaceholder(node))return mini?{w:62,h:26}:{w:104,h:38};if(node.kind==='strategy'||node.kind==='weakpoint')return mini?{w:112,h:48}:{w:156,h:62};return mini?{w:118,h:54}:{w:240,h:86};}
     function rankedLayout(nodes,edges,mini=false,useManual=true) {
       const ids=new Set(nodes.map(node=>node.id)),ranks=new Map(nodes.map(node=>[node.id,0])),indegree=new Map(nodes.map(node=>[node.id,0])),outgoing=new Map();
@@ -507,7 +553,7 @@
     function splitText(value,limit=36,maxLines=2){let rest=String(value||'').replace(/\s+/g,' ').trim();const lines=[];while(rest&&lines.length<maxLines){if(rest.length<=limit){lines.push(rest);rest='';break;}const sample=rest.slice(0,limit+1),space=sample.lastIndexOf(' '),cut=space>=Math.floor(limit*.55)?space:limit;lines.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim();}if(rest&&lines.length)lines[lines.length-1]=`${lines.at(-1).replace(/[.…]+$/,'')}…`;return lines;}
     function shapeMarkup(node,size){const type=operatorType(node),w=size.w,h=size.h;if(node.kind!=='operator')return `<rect class="node-shape" width="${w}" height="${h}" rx="${node.kind==='strategy'||node.kind==='weakpoint'?26:9}"></rect>`;if(type==='conjunction')return `<polygon class="node-shape" points="${w/2},0 ${w},${h/2} ${w/2},${h} 0,${h/2}"></polygon>`;if(type==='disjunction')return `<polygon class="node-shape" points="${w*.22},0 ${w*.78},0 ${w},${h/2} ${w*.78},${h} ${w*.22},${h} 0,${h/2}"></polygon>`;if(type==='equivalence')return `<ellipse class="node-shape" cx="${w/2}" cy="${h/2}" rx="${w/2-1}" ry="${h/2-1}"></ellipse><ellipse class="node-shape" cx="${w/2}" cy="${h/2}" rx="${w/2-5}" ry="${h/2-5}" fill="none"></ellipse>`;if(type==='contradiction')return `<polygon class="node-shape" points="${w*.22},0 ${w*.78},0 ${w},${h*.25} ${w},${h*.75} ${w*.78},${h} ${w*.22},${h} 0,${h*.75} 0,${h*.25}"></polygon>`;return `<rect class="node-shape" width="${w}" height="${h}" rx="${h/2}"></rect>`;}
     function nodeMarkup(node,position,mini=false,interactive=true){const size=nodeSize(node,mini),tone=nodeTone(node),proposal=node.kind==='observation_proposal'?' observation-proposal':'',relationDisplay=node.kind==='relation_display'?' relation-display':'',hit=state.hits.has(node.id)?' hit':'',selected=state.selectedId===node.id?' selected':'',validation=node.validation_status==='failed'?' validation-failed':node.validation_status==='warning'?' validation-warning':'',data=interactive?` data-node="${esc(node.id)}"`:'';let text='';if(node.kind==='operator')text=`<text class="node-title" x="${size.w/2}" y="${size.h/2+1}">${esc(operatorSymbol(operatorType(node)))}</text>`;else if(isAlternativePlaceholder(node))text=`<text class="node-title" x="${size.w/2}" y="${size.h/2+1}" text-anchor="middle" dominant-baseline="middle">${esc(nodeIdentifier(node))}</text>`;else if(node.kind==='strategy'||node.kind==='weakpoint')text=`<text class="node-title" x="12" y="23">↝ ${esc(node.kind==='weakpoint'?'weakpoint':nodeIdentifier(node))}</text><text class="node-summary" x="12" y="44">${esc(node.kind==='weakpoint'?'evidence / example':weakpointType(node))}</text>`;else{const lines=splitText(node.summary,mini?21:38,2),title=esc(nodeIdentifier(node));text=`<text class="node-title" x="${mini?7:12}" y="${mini?17:24}">${title}</text>${lines.map((line,index)=>`<text class="node-summary" x="${mini?7:12}" y="${(mini?33:51)+index*(mini?11:17)}">${esc(line)}</text>`).join('')}`;}return `<g class="node ${tone}${proposal}${relationDisplay}${hit}${selected}${validation}"${data} transform="translate(${position.x},${position.y})"><title>${esc([node.entity_id,node.summary].filter(Boolean).join('\n'))}</title>${shapeMarkup(node,size)}${text}</g>`;}
-    function edgeMarkup(edge,positions,nodeMap,mini=false,interactive=true,routes=new Map()){const source=nodeMap.get(edge.source),target=nodeMap.get(edge.target),a=positions.get(edge.source),b=positions.get(edge.target);if(!source||!target||!a||!b)return '';const geometry=edgeGeometry(a,b,source,target,mini,routes.get(edge.id)),non=edge.edge_class==='non_reasoning'?' non-reasoning':'',candidate=edge.edge_class==='reasoning'&&edge.reasoning_state==='candidate'?' reasoning-candidate':'',relational=['contradiction','complement'].includes(edge.semantic_type)?' relational':'',equivalence=edge.semantic_type==='equivalence'?' equivalence':'',validation=edge.validation_status==='failed'?' validation-failed':edge.validation_status==='warning'?' validation-warning':'',selected=state.selectedId===edge.id?' selected':'',data=interactive?` data-edge="${esc(edge.id)}" data-source="${esc(edge.source)}" data-target="${esc(edge.target)}"`:'',showAuditLabel=devMode&&['1','2'].includes(state.step),label=showAuditLabel?(edge.details?.metadata?.relation_id||edge.label):edge.semantic_type==='background'?'background':'';return `<path class="edge${non}${candidate}${relational}${equivalence}${validation}${selected}"${data} d="${geometry.d}"></path>${label?`<text class="edge-label${selected}"${data} x="${geometry.lx}" y="${geometry.ly}">${esc(label)}</text>`:''}`;}
+    function edgeMarkup(edge,positions,nodeMap,mini=false,interactive=true,routes=new Map()){const source=nodeMap.get(edge.source),target=nodeMap.get(edge.target),a=positions.get(edge.source),b=positions.get(edge.target);if(!source||!target||!a||!b)return '';const geometry=edgeGeometry(a,b,source,target,mini,routes.get(edge.id)),non=edge.edge_class==='non_reasoning'?' non-reasoning':'',candidate=edge.edge_class==='reasoning'&&edge.reasoning_state==='candidate'?' reasoning-candidate':'',infer=edge.semantic_type==='infer'?' infer':'',relational=['contradiction','complement'].includes(edge.semantic_type)?' relational':'',equivalence=edge.semantic_type==='equivalence'?' equivalence':'',arrows=edge.semantic_type==='equivalence'?` marker-start="url(#${mini?'mini-':''}arrow-start)" marker-end="url(#${mini?'mini-':''}arrow)"`:` marker-end="url(#${mini?'mini-':''}arrow)"`,validation=edge.validation_status==='failed'?' validation-failed':edge.validation_status==='warning'?' validation-warning':'',selected=state.selectedId===edge.id?' selected':'',data=interactive?` data-edge="${esc(edge.id)}" data-source="${esc(edge.source)}" data-target="${esc(edge.target)}"`:'',showAuditLabel=devMode&&['1','2'].includes(state.step),label=showAuditLabel?(edge.details?.metadata?.relation_id||edge.label):edge.semantic_type==='background'||edge.semantic_type==='infer'?edge.label:'';return `<path class="edge${non}${candidate}${infer}${relational}${equivalence}${validation}${selected}"${arrows}${data} d="${geometry.d}"></path>${label?`<text class="edge-label${selected}"${data} x="${geometry.lx}" y="${geometry.ly}">${esc(label)}</text>`:''}`;}
     function updateConnectedEdges(nodeId){document.querySelectorAll('#graph [data-edge]').forEach(element=>{if(element.dataset.source!==nodeId&&element.dataset.target!==nodeId)return;const source=state.nodeMap.get(element.dataset.source),target=state.nodeMap.get(element.dataset.target),a=state.positions.get(element.dataset.source),b=state.positions.get(element.dataset.target);if(!source||!target||!a||!b)return;const geometry=edgeGeometry(a,b,source,target,false);if(element.tagName.toLowerCase()==='path')element.setAttribute('d',geometry.d);else{element.setAttribute('x',geometry.lx);element.setAttribute('y',geometry.ly);}});}
     function svgPoint(event,svg){const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;return point.matrixTransform(svg.getScreenCTM().inverse());}
     function bindDragging(svg){svg.querySelectorAll('.node[data-node]').forEach(element=>{element.addEventListener('pointerdown',event=>{const id=element.dataset.node,origin=state.positions.get(id),point=svgPoint(event,svg);state.drag={id,element,dx:point.x-origin.x,dy:point.y-origin.y};element.classList.add('dragging');element.setPointerCapture(event.pointerId);event.preventDefault();});element.addEventListener('pointermove',event=>{if(!state.drag||state.drag.id!==element.dataset.node)return;const point=svgPoint(event,svg),next={x:Math.max(10,point.x-state.drag.dx),y:Math.max(10,point.y-state.drag.dy)};state.positions.set(state.drag.id,next);state.manualPositions.set(state.drag.id,next);element.setAttribute('transform',`translate(${next.x},${next.y})`);updateConnectedEdges(state.drag.id);});const finish=()=>{if(state.drag?.element===element){element.classList.remove('dragging');state.drag=null;}};element.addEventListener('pointerup',finish);element.addEventListener('pointercancel',finish);});}
