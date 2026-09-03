@@ -637,29 +637,47 @@ class Step4FormalizeReasoningPlugin:
                 if not result["strategies"]:
                     findings.append(Finding("STEP4_INSUFFICIENT_EVIDENCE", "warning", f"Retained {weakpoint['id']}: source does not justify the reasoning structure"))
                     continue
-                prefix = f"step4_{weakpoint['id']}_"
-                bindings: dict[str, str] = {}
-                for key, value in result["knowledges"].items():
-                    bindings[key] = f"{value['type']}_{prefix}{key}"
-                for key, knowledge in result["knowledges"].items():
-                    final_id = bindings[key]
-                    if final_id in document["knowledges"]:
-                        raise ValueError(f"Knowledge ID collision: {final_id}")
-                    knowledge = copy.deepcopy(knowledge)
-                    if knowledge["content"] is not None:
-                        knowledge["content"]["canonical"] = _rewrite_references(knowledge["content"]["canonical"], bindings)
-                    document["knowledges"][final_id] = knowledge
-                    if knowledge["type"] == "claim":
-                        document["graph"]["nodes"].append(final_id)
-                    added.append(final_id)
-                for strategy in result["strategies"]:
-                    add_strategy({
-                        "scope": "local", "type": strategy["type"],
-                        "premises": [bindings.get(key, key) for key in strategy["premises"]],
-                        "conclusion": bindings.get(strategy["conclusion"], strategy["conclusion"]),
-                        "background": [bindings.get(key, key) for key in strategy["background"]],
-                    })
-                removed.append(weakpoint["id"])
+                # Merge each weakpoint transactionally.  A malformed expansion
+                # or official-ID collision must not roll back unrelated
+                # weakpoints that already passed validation.
+                knowledge_before = copy.deepcopy(document["knowledges"])
+                nodes_before = list(document["graph"]["nodes"])
+                strategies_before = copy.deepcopy(document["graph"]["strategies"])
+                added_before = list(added)
+                removed_before = list(removed)
+                try:
+                    prefix = f"step4_{weakpoint['id']}_"
+                    bindings: dict[str, str] = {}
+                    for key, value in result["knowledges"].items():
+                        bindings[key] = f"{value['type']}_{prefix}{key}"
+                    for key, knowledge in result["knowledges"].items():
+                        final_id = bindings[key]
+                        if final_id in document["knowledges"]:
+                            raise ValueError(f"Knowledge ID collision: {final_id}")
+                        knowledge = copy.deepcopy(knowledge)
+                        if knowledge["content"] is not None:
+                            knowledge["content"]["canonical"] = _rewrite_references(knowledge["content"]["canonical"], bindings)
+                        document["knowledges"][final_id] = knowledge
+                        if knowledge["type"] == "claim":
+                            document["graph"]["nodes"].append(final_id)
+                        added.append(final_id)
+                    for strategy in result["strategies"]:
+                        add_strategy({
+                            "scope": "local", "type": strategy["type"],
+                            "premises": [bindings.get(key, key) for key in strategy["premises"]],
+                            "conclusion": bindings.get(strategy["conclusion"], strategy["conclusion"]),
+                            "background": [bindings.get(key, key) for key in strategy["background"]],
+                        })
+                    removed.append(weakpoint["id"])
+                except Exception as exc:
+                    document["knowledges"] = knowledge_before
+                    document["graph"]["nodes"] = nodes_before
+                    document["graph"]["strategies"] = strategies_before
+                    added[:] = added_before
+                    removed[:] = removed_before
+                    findings.append(Finding(
+                        "STEP4_EXPANSION_FAILED", "warning",
+                        f"Retained {weakpoint['id']}: {exc}"))
             workflow, graph = document["workflow"], document["graph"]
             workflow["weakpoints"] = [item for item in workflow["weakpoints"] if item["id"] not in removed]
             prior = document["revision"]
