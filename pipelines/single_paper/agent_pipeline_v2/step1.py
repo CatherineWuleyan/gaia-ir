@@ -354,5 +354,4 @@ class Step1ImportClaimsFinalPlugin:
                     "metadata": {"relation_index": relation_index, "relation": relation},
                 })
 
-        document["revision"]["content_hash"] = content_hash(document)
         return emit_step1(context, document)

@@ -145,6 +145,23 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         if not set(source_ids) <= anchors:
             raise ValueError(f"new Knowledge {key} must cite supplied original-paper anchors")
     knowledges = {**existing, **additions}
+    # Observation-layer O claims may only be connected to their normalized
+    # phenomenon E claims by Step 2 equivalence operators.  They must never
+    # enter a named reasoning strategy directly, since that creates a
+    # cross-layer edge (O -> hypothesis/claim).  Reject the expansion so the
+    # caller retains the weakpoint without committing the invalid strategy.
+    for strategy in strategies:
+        references = [*strategy.get("premises", []), strategy.get("conclusion")]
+        if any(
+            isinstance(key, str)
+            and key in knowledges
+            and knowledges[key].get("type") == "observation_claim"
+            for key in references
+        ):
+            raise ValueError(
+                "cross-layer reasoning edge: observation claims may only connect "
+                "to phenomenon claims through equivalence operators"
+            )
     producers: dict[str, JSONDict] = {}
     referenced: set[str] = set()
     for strategy in strategies:
@@ -201,19 +218,22 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
             raise ValueError("abduction requires each target hypothesis as a non-deductive conclusion")
         for strategy in strategies:
             premises = strategy["premises"]
-            if len(premises) not in {1, 2} or premises[0] not in evidence:
-                raise ValueError("abduction requires evidence and may include one explicit AltExp premise")
-            if len(premises) == 1:
-                continue
-            alternative = premises[1]
-            if alternative in evidence or alternative in targets:
-                raise ValueError("observations and the hypothesis cannot be their own alternative explanation")
-            if alternative not in knowledges:
-                raise ValueError("abduction AltExp premise must reference a Knowledge claim")
-            if (knowledges[alternative]["content"] is None
-                    and not alternative.startswith("AltExp")
-                    and alternative not in null_alternatives):
-                raise ValueError("only an explicit AltExp placeholder may have null content")
+            if len(premises) < 1 or premises[0] not in evidence:
+                raise ValueError("abduction requires at least one evidence premise")
+            # All evidence premises may participate in a multi-cause
+            # abduction.  At most one trailing premise may be an explicit
+            # alternative explanation interface.
+            non_evidence = [item for item in premises[1:] if item not in evidence]
+            if len(non_evidence) > 1:
+                raise ValueError("abduction allows at most one alternative explanation premise")
+            if non_evidence:
+                alternative = non_evidence[0]
+                if alternative in targets or alternative not in knowledges:
+                    raise ValueError("abduction AltExp premise must reference a Knowledge claim")
+                if (knowledges[alternative]["content"] is None
+                        and not alternative.startswith("AltExp")
+                        and alternative not in null_alternatives):
+                    raise ValueError("only an explicit AltExp placeholder may have null content")
 
 
 def _clean_proposition(text: str) -> tuple[JSONDict, JSONDict]:
@@ -375,17 +395,20 @@ def _ensure_abduction_altexp(result: JSONDict) -> JSONDict:
         if strategy.get("type") != "abduction":
             continue
         premises = list(strategy.get("premises", []))
-        if len(premises) == 2:
-            candidate = premises[1]
+        null_candidates = [candidate for candidate in premises[1:]
+                           if isinstance(knowledges.get(candidate), dict)
+                           and knowledges[candidate].get("content") is None]
+        if null_candidates:
+            candidate = null_candidates[-1]
             candidate_item = knowledges.get(candidate)
             if (isinstance(candidate_item, dict)
                     and candidate_item.get("type") == "claim"
                     and candidate_item.get("content") is None):
                 del knowledges[candidate]
-                strategy["premises"] = [premises[0]]
+                strategy["premises"] = [item for item in premises if item != candidate]
             continue
-        if len(premises) != 1:
-            raise ValueError("abduction requires one evidence premise, optionally followed by a grounded alternative")
+        if len(premises) < 1:
+            raise ValueError("abduction requires at least one evidence premise")
     return result
 
 
@@ -424,8 +447,8 @@ class WeakpointExpansionTool:
             "If these do not follow from the supplied premises and a source-grounded rule, return empty output.\n"
             "abduction: a supplied phenomenon claim B may support a non-experimental hypothesis A; represent only the B-to-A explanatory links justified by the supplied Group. B may be a non-E claim. "
             "When B is a Step 2 phenomenon E, the actual observation O is already connected by Step 2 equivalence; do not use O directly here. "
-            "Every abduction may use premises=[B], conclusion=A when no source-grounded alternative explanation is supplied. If a grounded alternative exists, use ordered premises=[B,AltExp_B], conclusion=A. Never invent an alternative or emit an empty placeholder Knowledge. "
-            "When an alternative is present, its premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with B. Evidence-only abductions remain one-premise strategies. "
+            "An abduction may use one or more observation premises, e.g. premises=[B1,B2,...], conclusion=A, when several causes jointly support the hypothesis. If a grounded alternative exists, append it as the final premise [B1,B2,...,AltExp_B]. Never invent an alternative or emit an empty placeholder Knowledge. "
+            "When an alternative is present, its premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with the observation conjunction. Do not split a multi-observation abduction into independent singleton strategies. "
             "This is non-deductive explanatory inference, NOT strict B -> A. The formal direction is (A OR AltExp_B) equivalent to B; when B is E, the existing Step 2 equivalence gives E equivalent to O. "
             "A self-contained phenomenon claim already contains its stated conditions, result, and uncertainty, so use background=[] and do not duplicate those conditions as a note. "
             "Only add a background note when the source states a separate applicability rule that is absent from the self-contained phenomenon claim. "
@@ -743,7 +766,6 @@ class Step4FormalizeReasoningPlugin:
             revision_id = f"revision_{context.run_id}_step_4"
             document["revision"] = {"revision_id": revision_id, "supersedes": prior["revision_id"], "parent_hash": prior["content_hash"], "content_hash": ""}
             workflow["revisions"] = []
-            document["revision"]["content_hash"] = content_hash(document)
             emitted = emit_formalization(context, document, step=4, step_name=STEP_NAME)
             return StageResult(emitted.status, [*drafts, *emitted.artifacts], [*findings, *emitted.findings], emitted.metadata)
         except Exception as exc:
