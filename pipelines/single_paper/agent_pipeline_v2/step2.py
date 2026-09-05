@@ -254,7 +254,11 @@ class DeepSeekV4FlashObservationTool:
             try:
                 relations.extend(cls._normalize_group_relations(_response_content(relation_raw), component))
             except Exception as exc:
-                raise ValueError(f"DeepSeek relation response normalization failed: {exc}") from exc
+                failure = ValueError(f"DeepSeek relation response normalization failed: {exc}")
+                # Preserve the received provider payload for the caller's
+                # existing semantic-review audit artifact.
+                failure.raw_responses = list(raw_responses)  # type: ignore[attr-defined]
+                raise failure from exc
         return relations, raw_responses
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
@@ -266,6 +270,63 @@ class DeepSeekV4FlashObservationTool:
         candidates = request.parameters.get("experiment_candidates")
         if not isinstance(candidates, list):
             raise ValueError("experiment_candidates must be a list")
+        if not candidates and isinstance(request.parameters.get("selected_claims"), list):
+            selected = request.parameters["selected_claims"]
+            observations = []
+            for item in selected:
+                if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                    raise ValueError("selected claims require string ids")
+                content = item.get("content")
+                if isinstance(content, dict):
+                    content = content.get("canonical")
+                if not isinstance(content, str) or not content.strip():
+                    raise ValueError("selected claims require non-empty content")
+                anchors = item.get("source_anchor_ids", [])
+                if not isinstance(anchors, list) or not anchors:
+                    raise ValueError("selected claims require source anchors")
+                observations.append({
+                    "_extraction_key": item["id"],
+                    "observation_key": item["id"],
+                    "content": content.strip(),
+                    "paragraph_anchor_ids": list(anchors),
+                })
+            if not observations:
+                raise ValueError("selected claims must be non-empty")
+            _load_deepseek_env()
+            api_key = os.environ.get("DEEPSEEK_API_KEY")
+            if not api_key:
+                raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+            base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+            request_body = json.dumps({
+                "model": self.model,
+                "messages": [{"role": "user", "content": self._equivalent_claim_prompt(observations, {"paragraphs": []})}],
+                "temperature": 0,
+                "response_format": {"type": "json_object"},
+            }, ensure_ascii=False).encode("utf-8")
+            http_request = Request(
+                f"{base_url}/chat/completions", data=request_body,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urlopen(http_request, timeout=180) as response:
+                    raw = json.loads(response.read().decode("utf-8"))
+            except HTTPError as exc:
+                raise RuntimeError(f"DeepSeek equivalent-claim request failed with HTTP {exc.code}") from exc
+            except URLError as exc:
+                raise RuntimeError(f"DeepSeek equivalent-claim request failed: {exc.reason}") from exc
+            equivalents = self._normalize_equivalent_claims(_response_content(raw), observations)
+            claims = [{
+                "id": item["_extraction_key"],
+                "content": item["content"],
+                "paragraph_anchor_ids": list(item["paragraph_anchor_ids"]),
+                "_extraction_key": item["_extraction_key"],
+            } for item in observations]
+            return ToolCallResponse(
+                request.call_id, "succeeded", {"responses": [raw]},
+                {"status": "claims_extracted", "claims": claims, "equivalent_claims": equivalents, "relations": []},
+                metadata={"candidate_count": 0, "request_count": 1, "model": self.model},
+            )
         if not candidates:
             return ToolCallResponse(
                 request.call_id,
@@ -394,6 +455,7 @@ class DeepSeekV4FlashObservationTool:
                 raw_responses.extend(relation_responses)
                 relations.extend(extracted_relations)
             except Exception as exc:
+                raw_responses.extend(getattr(exc, "raw_responses", []))
                 return normalization_failure(exc)
         if isinstance(selected_claims, list):
             expected_ids = {item["id"] for item in selected_claims if isinstance(item, dict) and isinstance(item.get("id"), str)}
@@ -641,13 +703,13 @@ class DeepSeekV4FlashObservationTool:
             "direction, result, conditions, and uncertainty, but remove report-event wording such as 'the experiment "
             "showed', 'we observed', or 'the paper reports'. Do not turn a measured result into a latent, population, "
             "causal, or more general claim. Do not add, omit, merge, split, explain, or reinterpret facts. Use only the "
-            "supplied observations and paper paragraphs. Even when O already omits report-event wording, express E with "
+            "the supplied observations. Even when O already omits report-event wording, express E with "
             "different surface wording while preserving exactly the same truth conditions; never copy O's content "
             "verbatim. If a proposed E would be identical to O after trivial whitespace/case normalization, rewrite "
             "it again before returning. Return every observation_key exactly once and no other fields. "
             "Return {\"equivalent_claims\":[{\"observation_key\":\"...\",\"content\":\"...\"}]}.\n\n"
             + ("\n\nRepair feedback from the previous validation attempt. Correct only the reported issue and return the complete corrected JSON:\n" + str(repair_feedback) if repair_feedback else "")
-            + f"\n\nObservations:\n{json.dumps(observations, ensure_ascii=False)}\n\nPaper paragraphs:\n{paragraphs}"
+            + f"\n\nObservations:\n{json.dumps(observations, ensure_ascii=False)}"
         )
 
     @staticmethod
@@ -1462,9 +1524,11 @@ def _extract_with_expansion(
                                 "status": "succeeded",
                             }))
                 except Exception:
-                    # Preserve the vision audit artifact; the stage-level
-                    # failure path will report the concrete tool error.
-                    pass
+                    # Do not silently discard relation failures.  The runner
+                    # must mark the stage failed so the audit identifies an
+                    # API/normalization problem instead of emitting only O/E
+                    # equivalence edges.
+                    raise
     # Reconstruct the audit list from disk so failed calls are retained even
     # though _tool_call raised before returning its draft.
     claims, equivalent_claims, relations = _deduplicate_extractions(
@@ -1687,9 +1751,35 @@ class Step2ExtractObservationsPlugin:
                 for key, value in document["knowledges"].items()
                 if value.get("type") == "observation_claim"
             ]
-            claims, equivalent_claims, relations, drafts = _extract_with_expansion(
-                context, paragraphs, document, selected_claims=observation_claims or None,
+            imported_claims: list[JSONDict] = []
+            imported_equivalents: list[JSONDict] = []
+            imported_drafts: list[ArtifactDraft] = []
+            direct_equivalent_mode = (
+                bool(observation_claims)
+                and context.options.get("tool_plugin") == f"{__name__}:DeepSeekV4FlashObservationTool"
             )
+            if direct_equivalent_mode:
+                # Imported experimental propositions already contain the
+                # measured result.  Generate their phenomenon E claims from
+                # the proposition itself; figure/paragraph context is neither
+                # required nor allowed to gate this normalization.
+                normalized, imported_draft = _tool_call(
+                    context,
+                    [],
+                    call_number=1,
+                    selected_claims=observation_claims,
+                )
+                imported_claims = list(normalized.get("claims", []))
+                imported_equivalents = list(normalized.get("equivalent_claims", []))
+                imported_drafts.append(imported_draft)
+            claims, equivalent_claims, relations, drafts = _extract_with_expansion(
+                context, paragraphs, document,
+                selected_claims=(observation_claims or None) if not direct_equivalent_mode else None,
+                first_call_number=2 if direct_equivalent_mode else 1,
+            )
+            claims = [*imported_claims, *claims]
+            equivalent_claims = [*imported_equivalents, *equivalent_claims]
+            drafts = [*imported_drafts, *drafts]
             observations, observation_ids = _observation_items(claims, document["knowledges"])
             phenomena, phenomenon_ids, equivalence_operators = _equivalent_items(
                 equivalent_claims, observation_ids, document["knowledges"],
