@@ -45,25 +45,23 @@ class Step1Tests(unittest.TestCase):
             self.assertEqual([], formalization["workflow"]["weakpoints"])
             self.assertEqual([], formalization["workflow"]["revisions"])
             self.assertEqual({"claim_1", "claim_2", "claim_3", "claim_4", "note_1"}, set(formalization["knowledges"]))
-            self.assertEqual("obsevation_candidate", formalization["knowledges"]["claim_1"]["type"])
-            self.assertEqual(["claim_2", "claim_3", "claim_4"], formalization["graph"]["nodes"])
+            self.assertEqual("observation_claim", formalization["knowledges"]["claim_1"]["type"])
+            self.assertEqual(["claim_1", "claim_2", "claim_3", "claim_4"], formalization["graph"]["nodes"])
             paper_anchors = [
                 anchor for anchor in formalization["workflow"]["source_anchors"]
                 if anchor["source_kind"] == "source.paper_text"
             ]
             self.assertEqual(["anchor_paragraph_p0001", "anchor_paragraph_p0002"], [item["anchor_id"] for item in paper_anchors])
             links = formalization["workflow"]["non_reasoning_links"]
-            self.assertEqual(1, len(links))
+            self.assertEqual(2, len(links))
             self.assertEqual((['claim_3', 'claim_2'], 'claim_4'), (links[0]["sources"], links[0]["target"]))
-            # A relation touching a pure-data candidate cannot enter the formal graph.
-            self.assertNotIn("claim_1", formalization["graph"]["nodes"])
             # Notes are non-probabilistic background, not formal graph nodes.
             self.assertNotIn("note_1", formalization["graph"]["nodes"])
             projected = project_for_official_compiler(formalization)
-            self.assertEqual(["claim_2", "claim_3", "claim_4"], [item["id"] for item in projected["graph"]["knowledges"]])
+            self.assertEqual(["claim_1", "claim_2", "claim_3", "claim_4"], [item["id"] for item in projected["graph"]["knowledges"]])
             view = project_run(store.run_dir)
-            self.assertEqual(4, len(view.nodes))
-            self.assertEqual(3, len(view.edges))
+            self.assertEqual(6, len(view.nodes))
+            self.assertEqual(5, len(view.edges))
             relation_node = next(node for node in view.nodes if node["kind"] == "relation_display")
             self.assertTrue(relation_node["details"]["display_only"])
             viewer = (store.run_dir / "views" / "viewer.html").read_text(encoding="utf-8")
