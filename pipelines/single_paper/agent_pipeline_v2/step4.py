@@ -764,7 +764,6 @@ class Step4FormalizeReasoningPlugin:
             prior = document["revision"]
             revision_id = f"revision_{context.run_id}_step_4"
             document["revision"] = {"revision_id": revision_id, "supersedes": prior["revision_id"], "parent_hash": prior["content_hash"], "content_hash": ""}
-            workflow["revisions"] = []
             emitted = emit_formalization(context, document, step=4, step_name=STEP_NAME)
             return StageResult(emitted.status, [*drafts, *emitted.artifacts], [*findings, *emitted.findings], emitted.metadata)
         except Exception as exc:

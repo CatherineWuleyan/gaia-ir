@@ -815,7 +815,6 @@ class Step3AnalyzeReasoningPlugin:
                 "revision_id": revision_id, "supersedes": prior.get("revision_id"),
                 "parent_hash": prior.get("content_hash"), "content_hash": "",
             }
-            workflow["revisions"] = []
             emitted = emit_formalization(context, document, step=3, step_name=STEP_NAME)
             return StageResult(
                 emitted.status,
