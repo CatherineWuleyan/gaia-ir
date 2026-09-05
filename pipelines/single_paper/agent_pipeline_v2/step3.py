@@ -13,7 +13,7 @@ from pipeline_harness.models import Finding, JSONDict
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult, instantiate
 from pipeline_harness.store import atomic_write_json
 
-from .authoring import REASONING_TYPES, content_hash, emit_formalization, weakpoint_target_ids
+from .authoring import REASONING_TYPES, emit_formalization, weakpoint_target_ids
 from .step1 import PAPER_TEXT_KIND
 
 

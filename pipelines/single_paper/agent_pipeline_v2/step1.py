@@ -15,7 +15,7 @@ from pipeline_harness.models import Finding
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult
 from pipeline_harness.store import atomic_write_json
 
-from .authoring import content_hash, emit_step1
+from .authoring import emit_step1
 
 
 INPUT_BUNDLE_KIND = "input.bundle"

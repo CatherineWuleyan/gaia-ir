@@ -23,7 +23,6 @@ from .authoring import (
     REASONING_TYPES,
     STRATEGY_FIELDS,
     canonical_strategy,
-    content_hash,
     emit_formalization,
     validate,
     weakpoint_target_ids,
