@@ -544,6 +544,20 @@ class WeakpointExpansionTool:
             return ToolCallResponse(request.call_id, "failed", {"response": raw, "cleaning": cleaning}, error={"type": type(exc).__name__, "message": str(exc)})
 
 
+def _suppress_strategy_shortcuts(strategies):
+    edges=[(i,set(map(str,x.get("premises",[]))),str(x.get("conclusion","")),str(x.get("type",""))) for i,x in enumerate(strategies) if x.get("premises")]
+    remove=set()
+    for di,ds,dc,k in edges:
+        for fi,fs,mid,k1 in edges:
+            if fi==di or k1!=k or not fs<=ds: continue
+            for si,ss,sc,k2 in edges:
+                if si in (di,fi) or k2!=k or sc!=dc or mid not in ss: continue
+                if ss-{mid}<=ds: remove.add(di); break
+            if di in remove: break
+    if remove: strategies[:]=[x for i,x in enumerate(strategies) if i not in remove]
+    return len(remove)
+
+
 class Step4FormalizeReasoningPlugin:
     """Expand one frozen Step 3 snapshot and commit one deterministic revision."""
 
@@ -760,6 +774,9 @@ class Step4FormalizeReasoningPlugin:
                         "STEP4_EXPANSION_FAILED", "warning",
                         f"Retained {weakpoint['id']}: {exc}"))
             workflow, graph = document["workflow"], document["graph"]
+            suppressed = _suppress_strategy_shortcuts(graph["strategies"])
+            if suppressed:
+                findings.append(Finding("STEP4_TRANSITIVE_SHORTCUT_SUPPRESSED", "warning", f"Suppressed {suppressed} strategy shortcuts"))
             workflow["weakpoints"] = [item for item in workflow["weakpoints"] if item["id"] not in removed]
             prior = document["revision"]
             revision_id = f"revision_{context.run_id}_step_4"
