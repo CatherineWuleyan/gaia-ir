@@ -367,7 +367,11 @@ def build_local_context(context: StageContext) -> JSONDict:
             identity = f"{package.get('namespace')}:{package.get('name')}"
             if identity in packages:
                 formalizations[identity] = document
-    one_hop = _one_hop(hits, packages, formalizations)
+    # A query seed is itself a direct entry point.  Expand its existing
+    # one-hop structures alongside retrieved cross-package hits; otherwise an
+    # incremental run can omit the new paper's own weakpoints and strategies.
+    expansion_hits = list({item["qid"]: item for item in [*seed_records, *hits]}.values())
+    one_hop = _one_hop(expansion_hits, packages, formalizations)
     groups = _build_groups(seed_records, hits, one_hop)
     package_set = sorted({item["package"] for item in hits} | {item["package"] for item in one_hop})
     return {
