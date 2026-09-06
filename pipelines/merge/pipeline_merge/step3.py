@@ -204,7 +204,9 @@ class Step3IdentifyStructuresPlugin:
                         # A domain weakpoint must connect at least two source
                         # Packages; same-Package reasoning belongs to Pipeline
                         # 7.0 and should not be reintroduced by merge.
-                        if len({records[qid]["package"] for qid in evidence}) < 2:
+                        package_ids = {records[qid]["package"] for qid in evidence}
+                        package_ids.update(records[qid]["package"] for qid in targets if qid in records)
+                        if len(package_ids) < 2:
                             continue
                         if item.get("candidate_target"):
                             target = _stable_id("candidate_K", [group["group_id"], *evidence])
