@@ -1,0 +1,21 @@
+{
+  "schema_version": "1",
+  "artifacts": [
+    {
+      "artifact_id": "source_1189913057497710595_ocr",
+      "path": "ocr.md",
+      "declared_path": "ocr.md",
+      "kind": "source.paper_text",
+      "media_type": "text/markdown",
+      "sha256": "789da2a8f8b9f46ef50361c1e254cc51bd0d41340e8b5eef50f7def1304eb8e6"
+    },
+    {
+      "artifact_id": "source_1189913057497710595_claims_final",
+      "path": "claims_final.json",
+      "declared_path": "claims_final.json",
+      "kind": "source.claims_final",
+      "media_type": "application/json",
+      "sha256": "fe9c52556d8375a04b9d92b35b727b253352b6f0fc358ddc23f49da344c1f444"
+    }
+  ]
+}

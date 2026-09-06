@@ -1,0 +1,343 @@
+[
+  {
+    "id": "paper:867746711882170612::conclusion_1",
+    "global_id": "gcn_27ec2154bddb4a3e",
+    "order": 1,
+    "title": "Existence of winning tickets in noisy textual domains and improved generalization at moderate sparsity",
+    "content": "A binary sentiment analysis task on five Amazon Reviews domains (Books, Electronics, Movies, CDs, Home) using a CNN with three filter heights $h\\in\\{3,4,5\\}$, each with 127 channels, ReLU activation, 1-max pooling, one hidden MLP layer of dimension 117, embedding dimension $d=417$, max sequence length $n=500$, embeddings initialized from $\\mathcal{N}(0,1)$ and convolutional/MLP layers initialized with He initialization (weights uniformly sampled from $\\mathcal{U}(-b,b)$ where $b=\\sqrt{\\frac{6}{(1+a^2)\\times\\text{fan\\_in}}}$ with $a$ and $\\text{fan\\_in}$ being per-weight parameters), trained with Adam at learning rate $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$, and iterative magnitude pruning with layerwise magnitude selection (prune fraction $p=35\\%$ per round, total rounds $r_{total}=20$, yielding sparsity $1-(1-0.35)^{20}$) produces sparse subnetworks (tickets) that, when reinitialized to their original initial values (TICKET-RESET) and retrained in isolation, achieve test accuracy comparable to or better than the unpruned full model (FULL-MODEL) for moderate sparsity levels, with TICKET-RESET outperforming FULL-MODEL in the early-to-moderate sparsification regime (approximately 0%–90% sparsity) for the Books, Electronics, and Home domains.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "A binary sentiment analysis task on five Amazon Reviews domains (Books, Electronics, Movies, CDs, Home) using a CNN with three filter heights $h\\in\\{3,4,5\\}$, each with 127 channels, ReLU activation, 1-max pooling, one hidden MLP layer of dimension 117, embedding dimension $d=417$, max sequence length $n=500$, embeddings initialized from $\\mathcal{N}(0,1)$ and convolutional/MLP layers initialized with He initialization",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 424
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(weights uniformly sampled from $\\mathcal{U}(-b,b)$ where $b=\\sqrt{\\frac{6}{(1+a^2)\\times\\text{fan\\_in}}}$ with $a$ and $\\text{fan\\_in}$ being per-weight parameters)",
+        "source_spans": [
+          {
+            "start": 424,
+            "end": 587
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": ", trained with Adam at learning rate $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$, and iterative magnitude pruning with layerwise magnitude selection",
+        "source_spans": [
+          {
+            "start": 587,
+            "end": 781
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(prune fraction $p=35\\%$ per round, total rounds $r_{total}=20$, yielding sparsity $1-(1-0.35)^{20}$)",
+        "source_spans": [
+          {
+            "start": 781,
+            "end": 880
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "produces sparse subnetworks (tickets) that, when reinitialized to their original initial values (TICKET-RESET) and retrained in isolation, achieve test accuracy comparable to or better than the unpruned full model (FULL-MODEL) for moderate sparsity levels, with TICKET-RESET outperforming FULL-MODEL in the early-to-moderate sparsification regime (approximately 0%–90% sparsity) for the Books, Electronics, and Home domains.",
+        "source_spans": [
+          {
+            "start": 880,
+            "end": 1306
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867746711882170612::conclusion_2",
+    "global_id": "gcn_37a47b99712e4e9f",
+    "order": 2,
+    "title": "Random re-initialization performs comparably to original initialization up to high sparsity (~96%)",
+    "content": "On the five Amazon Reviews domains (Books, Electronics, Movies, CDs, Home) with a CNN architecture (three filter heights $h\\in\\{3,4,5\\}$, each with 127 channels, ReLU activation, 1-max pooling, one hidden MLP layer of dimension 117, embedding dimension $d=417$, max sequence length $n=500$, embeddings initialized from $\\mathcal{N}(0,1)$ and convolutional/MLP layers initialized by He initialization with weights uniformly sampled from $\\mathcal{U}(-b,b)$ where $b=\\sqrt{6/((1+a^2)\\times\\text{fan\\_in})}$ with $a$ and $\\text{fan\\_in}$ per-weight parameters) trained with Adam at learning rate $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$, and iterative magnitude pruning (prune fraction $p=35\\%$ per round, $r_{total}=20$ rounds), resetting the retained weights of a sparse subnetwork to random draws from the original initialization distributions (TICKET-RANDOM) yields test performance statistically similar to resetting to the original initial values (TICKET-RESET) for sparsity levels up to approximately $96\\%$. Specifically, for sparsities below $96\\%$, the mean test accuracies and standard deviations of TICKET-RANDOM and TICKET-RESET overlap closely across all evaluated domains.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "On the five Amazon Reviews domains (Books, Electronics, Movies, CDs, Home) with a CNN architecture (three filter heights $h\\in\\{3,4,5\\}$, each with 127 channels, ReLU activation, 1-max pooling, one hidden MLP layer of dimension 117, embedding dimension $d=417$, max sequence length $n=500$, embeddings initialized from $\\mathcal{N}(0,1)$ and convolutional/MLP layers initialized by He initialization with weights uniformly sampled from $\\mathcal{U}(-b,b)$ where $b=\\sqrt{6/((1+a^2)\\times\\text{fan\\_in})}$ with $a$ and $\\text{fan\\_in}$ per-weight parameters) trained with Adam at learning rate $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$, and iterative magnitude pruning (prune fraction $p=35\\%$ per round, $r_{total}=20$ rounds),",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 773
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "resetting the retained weights of a sparse subnetwork to random draws from the original initialization distributions (TICKET-RANDOM) yields test performance statistically similar to resetting to the original initial values (TICKET-RESET) for sparsity levels up to approximately $96\\%$.",
+        "source_spans": [
+          {
+            "start": 773,
+            "end": 1059
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [2]",
+        "content": "Specifically, for sparsities below $96\\%$, the mean test accuracies and standard deviations of TICKET-RANDOM and TICKET-RESET overlap closely across all evaluated domains.",
+        "source_spans": [
+          {
+            "start": 1059,
+            "end": 1230
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867746711882170612::conclusion_3",
+    "global_id": "gcn_6fbbf3de75494c7c",
+    "order": 3,
+    "title": "Phase transition at approximately 96% sparsity where original initialization yields greater stability and accuracy",
+    "content": "Using the five Amazon Reviews domains (Books, Electronics, Movies, CDs, Home) and the CNN architecture (three filter heights $h\\in\\{3,4,5\\}$, 127 channels, ReLU, 1-max pooling, MLP dim 117, embedding dim 417, max seq length 500, embeddings from $\\mathcal{N}(0,1)$, conv/MLP He initialization (weights from $\\mathcal{U}(-b,b)$ with $b=\\sqrt{6/((1+a^2)\\times\\text{fan\\_in})}$), Adam lr $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$) with iterative magnitude pruning ($p=35\\%$, $r_{total}=20$), a phase transition occurs at approximately $96\\%$ sparsity: beyond this threshold, subnetworks reinitialized to random draws from the original initialization distributions (TICKET-RANDOM) exhibit rapid test accuracy degradation and high instability, whereas subnetworks reinitialized to their original initial values (TICKET-RESET) maintain substantially better and more stable test accuracy, even at sparsity levels exceeding $99.9\\%$. Thus, the choice of initialization is largely immaterial below approximately $96\\%$ sparsity but becomes crucial for preserving accuracy and reducing variance in the extreme-sparsity regime.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "Using the five Amazon Reviews domains (Books, Electronics, Movies, CDs, Home) and the CNN architecture (three filter heights $h\\in\\{3,4,5\\}$, 127 channels, ReLU, 1-max pooling, MLP dim 117, embedding dim 417, max seq length 500, embeddings from $\\mathcal{N}(0,1)$, conv/MLP He initialization (weights from $\\mathcal{U}(-b,b)$ with $b=\\sqrt{6/((1+a^2)\\times\\text{fan\\_in})}$), Adam lr $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$) with iterative magnitude pruning ($p=35\\%$, $r_{total}=20$),",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 533
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "a phase transition occurs at approximately $96\\%$ sparsity: beyond this threshold, subnetworks reinitialized to random draws from the original initialization distributions (TICKET-RANDOM) exhibit rapid test accuracy degradation and high instability, whereas subnetworks reinitialized to their original initial values (TICKET-RESET) maintain substantially better and more stable test accuracy, even at sparsity levels exceeding $99.9\\%$.",
+        "source_spans": [
+          {
+            "start": 533,
+            "end": 970
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "relation of the assertions [2,4]",
+        "content": "Thus,",
+        "source_spans": [
+          {
+            "start": 970,
+            "end": 976
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "the choice of initialization is largely immaterial below approximately $96\\%$ sparsity but becomes crucial for preserving accuracy and reducing variance in the extreme-sparsity regime.",
+        "source_spans": [
+          {
+            "start": 976,
+            "end": 1160
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867746711882170612::conclusion_4",
+    "global_id": "gcn_9045dfe1f9264580",
+    "order": 4,
+    "title": "Sparse masks transfer across distinct text domains with modest accuracy loss up to high sparsity (≈90%)",
+    "content": "Under the iterative magnitude pruning procedure (prune fraction $p=35\\%$, $r_{total}=20$) with the CNN architecture and training details (five Amazon Reviews domains, CNN with filters $h\\in\\{3,4,5\\}$, 127 channels, ReLU, 1-max pooling, MLP dim 117, embedding dim 417, max seq length 500, embeddings from $\\mathcal{N}(0,1)$, conv/MLP He initialization (weights from $\\mathcal{U}(-b,b)$ with $b=\\sqrt{6/((1+a^2)\\times\\text{fan\\_in})}$), Adam lr $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$), when sparse masks $m$ obtained from a source domain $\\mathcal{D}_s$ are applied to a target domain $\\mathcal{D}_t$ (with $\\mathcal{D}_s \\neq \\mathcal{D}_t$) and the retained parameters are reinitialized either to the source-domain original values (MASKS-RESET) or to random draws from the original initialization distributions (MASKS-RANDOM), the resulting subnetworks retrain in the target domain with only modest accuracy degradation relative to tickets obtained directly in the target domain via the same procedure (TICKET-TARGET) for sparsity levels up to approximately $90\\%$. Quantitatively, for transfers from Books and Electronics source domains, the test-accuracy dropoff is roughly $3–5\\%$ (absolute) up to $\\sim90\\%$ sparsity; overall, both MASKS-RESET and MASKS-RANDOM maintain relatively stable accuracies from 0% to 90% sparsity and decline more significantly only beyond this range.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "Under the iterative magnitude pruning procedure (prune fraction $p=35\\%$, $r_{total}=20$) with the CNN architecture and training details (five Amazon Reviews domains, CNN with filters $h\\in\\{3,4,5\\}$, 127 channels, ReLU, 1-max pooling, MLP dim 117, embedding dim 417, max seq length 500, embeddings from $\\mathcal{N}(0,1)$, conv/MLP He initialization (weights from $\\mathcal{U}(-b,b)$ with $b=\\sqrt{6/((1+a^2)\\times\\text{fan\\_in})}$), Adam lr $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$),",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 532
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "when sparse masks $m$ obtained from a source domain $\\mathcal{D}_s$ are applied to a target domain $\\mathcal{D}_t$ (with $\\mathcal{D}_s \\neq \\mathcal{D}_t$) and the retained parameters are reinitialized either to the source-domain original values (MASKS-RESET) or to random draws from the original initialization distributions (MASKS-RANDOM), the resulting subnetworks retrain in the target domain with only modest accuracy degradation relative to tickets obtained directly in the target domain via the same procedure (TICKET-TARGET) for sparsity levels up to approximately $90\\%$.",
+        "source_spans": [
+          {
+            "start": 532,
+            "end": 1114
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [2]",
+        "content": "Quantitatively, for transfers from Books and Electronics source domains, the test-accuracy dropoff is roughly $3–5\\%$ (absolute) up to $\\sim90\\%$ sparsity;",
+        "source_spans": [
+          {
+            "start": 1114,
+            "end": 1270
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "proof of the assertion [2]",
+        "content": "overall, both MASKS-RESET and MASKS-RANDOM maintain relatively stable accuracies from 0% to 90% sparsity and decline more significantly only beyond this range.",
+        "source_spans": [
+          {
+            "start": 1270,
+            "end": 1429
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867746711882170612::conclusion_5",
+    "global_id": "gcn_af4bb873a21c4003",
+    "order": 5,
+    "title": "Domain-specific exceptional robustness: CDs-derived masks outperform target-domain tickets even at extreme sparsity",
+    "content": "Across the five Amazon review domains (Books, Electronics, Movies, CDs, Home) under the lottery ticket transfer procedure (iterative magnitude pruning with $p=35\\%$, $r_{total}=20$, CNN architecture with $h\\in\\{3,4,5\\}$, 127 channels, ReLU, 1-max pooling, MLP dim 117, embedding dim 417, max seq length 500, embeddings from $\\mathcal{N}(0,1)$, conv/MLP He initialization, Adam lr $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$), masks obtained from the CDs domain and applied to any other target domain (with MASKS-RESET or MASKS-RANDOM) outperform the subnetworks obtained directly in that target domain (TICKET-TARGET) and retain stronger performance even at sparsity levels exceeding $99\\%$.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Across the five Amazon review domains (Books, Electronics, Movies, CDs, Home) under the lottery ticket transfer procedure masks obtained from the CDs domain and applied to any other target domain outperform the subnetworks obtained directly in that target domain and retain stronger performance even at sparsity levels exceeding $99\\%$.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 122
+          },
+          {
+            "start": 469,
+            "end": 543
+          },
+          {
+            "start": 578,
+            "end": 645
+          },
+          {
+            "start": 661,
+            "end": 734
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(iterative magnitude pruning with $p=35\\%$, $r_{total}=20$, CNN architecture with $h\\in\\{3,4,5\\}$, 127 channels, ReLU, 1-max pooling, MLP dim 117, embedding dim 417, max seq length 500, embeddings from $\\mathcal{N}(0,1)$, conv/MLP He initialization, Adam lr $1\\mathrm{e}{-3}$, $\\ell_2$ weight $1\\mathrm{e}{-5}$, batch size 32, dropout $p=0.285$),",
+        "source_spans": [
+          {
+            "start": 122,
+            "end": 469
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(with MASKS-RESET or MASKS-RANDOM)",
+        "source_spans": [
+          {
+            "start": 543,
+            "end": 578
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(TICKET-TARGET)",
+        "source_spans": [
+          {
+            "start": 645,
+            "end": 661
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:867746711882170612::conclusion_6",
+    "global_id": "gcn_bc22c46d417249d3",
+    "order": 6,
+    "title": "Public release of code and datasets used for experiments",
+    "content": "The code and datasets used for the lottery ticket experiments (iterative magnitude pruning, domain transfer on five Amazon Reviews sentiment classification tasks using a CNN) are publicly released (repository link provided by the authors).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "The code and datasets used for the lottery ticket experiments",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 63
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(iterative magnitude pruning, domain transfer on five Amazon Reviews sentiment classification tasks using a CNN)",
+        "source_spans": [
+          {
+            "start": 63,
+            "end": 173
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "are publicly released",
+        "source_spans": [
+          {
+            "start": 173,
+            "end": 198
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(repository link provided by the authors)",
+        "source_spans": [
+          {
+            "start": 198,
+            "end": 237
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "other",
+        "content": ".",
+        "source_spans": [
+          {
+            "start": 237,
+            "end": 239
+          }
+        ]
+      }
+    ]
+  }
+]

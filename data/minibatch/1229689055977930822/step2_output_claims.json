@@ -1,0 +1,190 @@
+[
+  {
+    "conclusion": "conclusion_1",
+    "number": 5,
+    "label": "assertion",
+    "text": "The MESSAGE, AGGREGATE, and UPDATE functions of any message-passing GNN are replaced by their quaternion counterparts so that the layerwise message-passing semantics are preserved in quaternion space.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 1,
+    "label": "assertion",
+    "text": "Representing layer weights as quaternion matrices and grouping four real feature channels into one quaternion reduces the number of independent trainable real parameters by a factor of four relative to an equivalent real-valued GNN weight matrix.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 2,
+    "label": "论据",
+    "supports": [
+      1
+    ],
+    "text": "A quaternion weight mapping from $F$ real input features to $F'$ real outputs uses $F/4\\times F'/4$ quaternion entries, yielding one-fourth the degrees of freedom of the corresponding real weight matrix.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 5,
+    "label": "论据",
+    "supports": [
+      8
+    ],
+    "text": "Quaternion matrix multiplications have the same asymptotic time complexity as the corresponding real matrix multiplications.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_2",
+    "number": 8,
+    "label": "assertion",
+    "text": "The parameter reduction described in 【1】 is achieved without increasing matrix-multiplication time complexity.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 1,
+    "label": "assertion",
+    "text": "When QMPNN variants of standard GNN architectures are trained under the same hyperparameters as those standard GNN architectures and evaluated on standard datasets, the quaternion models achieve comparable or better accuracy, ROC-AUC, or Hits@K (proportion of top-K predictions that are correct) while using roughly one-fourth of the trainable parameters of those standard GNN architectures.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 5,
+    "label": "example",
+    "illustrates": [
+      1
+    ],
+    "text": "(a) node classification on Cora: real GCN 85.2 ± 1.3 accuracy with 140.5K parameters vs QGCN 84.1 ± 1.5 accuracy with 42.1K parameters;",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 6,
+    "label": "example",
+    "illustrates": [
+      1
+    ],
+    "text": "(b) node classification on PubMed: GCN 79.1 ± 1.2 with 131.9K parameters vs QGCN 78.4 ± 1.4 with 41.7K parameters;",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 7,
+    "label": "example",
+    "illustrates": [
+      1
+    ],
+    "text": "(c) link prediction on CORA: GCN ROC-AUC 79.27 ± 0.47 with 96.0K parameters vs QGCN ROC-AUC 83.55 ± 0.03 with 27.2K parameters;",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 8,
+    "label": "example",
+    "illustrates": [
+      1
+    ],
+    "text": "(d) graph classification on MUTAG: GCN 83.54 ± 0.40 accuracy with 4.8K parameters vs QGCN 88.61 ± 0.66 accuracy with 4.4K parameters.",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_3",
+    "number": 9,
+    "label": "assertion",
+    "text": "Across all tasks and datasets evaluated, quaternion variants of standard GNN architectures frequently perform within a small margin of the corresponding real models and sometimes exceed their performance while consistently having approximately one-fourth the trainable parameter count of the corresponding real models.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 1,
+    "label": "assertion",
+    "text": "Winning graph-lottery tickets exist for both real-valued GNNs and QMPNNs.",
+    "is_pure_data": false,
+    "needs_more_context": [
+      "QMPNNs"
+    ],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_5",
+    "number": 2,
+    "label": "论据",
+    "supports": [
+      1
+    ],
+    "text": "Magnitude-based iterative pruning identifies subnetworks that match baseline performance at sparsity levels down to approximately 1–20% of the original parameter count across multiple architectures and tasks.",
+    "is_pure_data": false,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 1,
+    "label": "assertion",
+    "text": "QMPNN variants scale to large graph datasets and maintain performance comparable to real-valued GNNs while using fewer parameters.",
+    "is_pure_data": false,
+    "needs_more_context": [
+      "QMPNN"
+    ],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 2,
+    "label": "论据",
+    "supports": [
+      1,
+      5
+    ],
+    "text": "on OGBN-Arxiv node classification, GCN achieves 72.8 ± 1.5 accuracy with 145.1K parameters versus QGCN 72.3 ± 1.6 with 43.5K parameters;",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 3,
+    "label": "论据",
+    "supports": [
+      1,
+      5
+    ],
+    "text": "on OGBG-COLLAB link prediction, QGCN achieves Hits@50 45.80 ± 1.35 with 6.4K parameters compared to GCN 44.02 ± 1.57 with 12.5K parameters.",
+    "is_pure_data": true,
+    "needs_more_context": [],
+    "instance_removed": false
+  },
+  {
+    "conclusion": "conclusion_6",
+    "number": 5,
+    "label": "assertion",
+    "text": "the quaternion reparameterization is effective on large-scale graph benchmarks.",
+    "is_pure_data": false,
+    "needs_more_context": [
+      "quaternion reparameterization"
+    ],
+    "instance_removed": false
+  }
+]

@@ -1,0 +1,573 @@
+[
+  {
+    "id": "paper:1229689055977930822::conclusion_1",
+    "global_id": "gcn_0545a34250154170",
+    "order": 1,
+    "title": "Quaternion Message Passing Neural Network (QMPNN) construction",
+    "content": "A general construction that maps any real-valued message-passing GNN layer into a quaternion-valued layer is specified by (i) grouping every node feature vector $h_v^{(l)}\\in\\mathbb{R}^F$ into $F/4$ quaternions $h_v^{(l),Q}=h_r^{(l)}+h_i^{(l)}\\mathrm{i}+h_j^{(l)}\\mathrm{j}+h_k^{(l)}\\mathrm{k}$ (requiring $F$ divisible by $4$), (ii) representing the layer parameters as a quaternion weight matrix $W^{(l),Q}=W_r^{(l)}+W_i^{(l)}\\mathrm{i}+W_j^{(l)}\\mathrm{j}+W_k^{(l)}\\mathrm{k}$ where $W_r^{(l)},W_i^{(l)},W_j^{(l)},W_k^{(l)}$ are real-valued component matrices, and (iii) performing feature transforms using the Hamilton product $W^{(l),Q}\\otimes h_v^{(l),Q}$ so that the transformed components are computed by the block matrix formula\n      $$\n      \\begin{bmatrix}\n      \\mathcal{R}(W^{(l),Q}\\otimes h_v^{(l),Q})\\\\[6pt]\n      \\mathcal{I}(W^{(l),Q}\\otimes h_v^{(l),Q})\\\\[6pt]\n      \\mathcal{J}(W^{(l),Q}\\otimes h_v^{(l),Q})\\\\[6pt]\n      \\mathcal{K}(W^{(l),Q}\\otimes h_v^{(l),Q})\n      \\end{bmatrix}\n      =\n      \\begin{bmatrix}\n      W_{r}^{(l)} & -W_{i}^{(l)} & -W_{j}^{(l)} & -W_{k}^{(l)}\\\\[3pt]\n      W_{i}^{(l)} & W_{r}^{(l)} & -W_{k}^{(l)} & W_{j}^{(l)}\\\\[3pt]\n      W_{j}^{(l)} & W_{k}^{(l)} & W_{r}^{(l)} & -W_{i}^{(l)}\\\\[3pt]\n      W_{k}^{(l)} & -W_{j}^{(l)} & W_{i}^{(l)} & W_{r}^{(l)}\n      \\end{bmatrix}\n      \\begin{bmatrix}\n      h_{r}^{(l)}\\\\[3pt]\n      h_{i}^{(l)}\\\\[3pt]\n      h_{j}^{(l)}\\\\[3pt]\n      h_{k}^{(l)}\n      \\end{bmatrix},\n      $$\n      where $\\mathcal{R},\\mathcal{I},\\mathcal{J},\\mathcal{K}$ denote the resulting real and three imaginary component vectors. Using this construction, the MESSAGE, AGGREGATE, and UPDATE functions of any message-passing GNN are replaced by their quaternion counterparts so that the layerwise message-passing semantics are preserved in quaternion space.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "A general construction that maps any real-valued message-passing GNN layer into a quaternion-valued layer",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 106
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "is specified by (i) grouping every node feature vector $h_v^{(l)}\\in\\mathbb{R}^F$ into $F/4$ quaternions $h_v^{(l),Q}=h_r^{(l)}+h_i^{(l)}\\mathrm{i}+h_j^{(l)}\\mathrm{j}+h_k^{(l)}\\mathrm{k}$ (requiring $F$ divisible by $4$), (ii) representing the layer parameters as a quaternion weight matrix $W^{(l),Q}=W_r^{(l)}+W_i^{(l)}\\mathrm{i}+W_j^{(l)}\\mathrm{j}+W_k^{(l)}\\mathrm{k}$ where $W_r^{(l)},W_i^{(l)},W_j^{(l)},W_k^{(l)}$ are real-valued component matrices, and (iii) performing feature transforms using the Hamilton product $W^{(l),Q}\\otimes h_v^{(l),Q}$ so that the transformed components are computed by the block matrix formula $$ \\begin{bmatrix} \\mathcal{R}(W^{(l),Q}\\otimes h_v^{(l),Q})\\\\[6pt] \\mathcal{I}(W^{(l),Q}\\otimes h_v^{(l),Q})\\\\[6pt] \\mathcal{J}(W^{(l),Q}\\otimes h_v^{(l),Q})\\\\[6pt] \\mathcal{K}(W^{(l),Q}\\otimes h_v^{(l),Q}) \\end{bmatrix} = \\begin{bmatrix} W_{r}^{(l)} & -W_{i}^{(l)} & -W_{j}^{(l)} & -W_{k}^{(l)}\\\\[3pt] W_{i}^{(l)} & W_{r}^{(l)} & -W_{k}^{(l)} & W_{j}^{(l)}\\\\[3pt] W_{j}^{(l)} & W_{k}^{(l)} & W_{r}^{(l)} & -W_{i}^{(l)}\\\\[3pt] W_{k}^{(l)} & -W_{j}^{(l)} & W_{i}^{(l)} & W_{r}^{(l)} \\end{bmatrix} \\begin{bmatrix} h_{r}^{(l)}\\\\[3pt] h_{i}^{(l)}\\\\[3pt] h_{j}^{(l)}\\\\[3pt] h_{k}^{(l)} \\end{bmatrix}, $$ where $\\mathcal{R},\\mathcal{I},\\mathcal{J},\\mathcal{K}$ denote the resulting real and three imaginary component vectors.",
+        "source_spans": [
+          {
+            "start": 106,
+            "end": 1591
+          }
+        ],
+        "of_terms": [
+          "A general construction that maps any real-valued message-passing GNN layer into a quaternion-valued layer"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "Using this construction,",
+        "source_spans": [
+          {
+            "start": 1591,
+            "end": 1616
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "the MESSAGE, AGGREGATE, and UPDATE functions of any message-passing GNN are replaced by their quaternion counterparts so that",
+        "source_spans": [
+          {
+            "start": 1616,
+            "end": 1742
+          }
+        ],
+        "of": [
+          5
+        ]
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "the layerwise message-passing semantics are preserved in quaternion space.",
+        "source_spans": [
+          {
+            "start": 1742,
+            "end": 1816
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1229689055977930822::conclusion_2",
+    "global_id": "gcn_726de8bc43d94ff7",
+    "order": 2,
+    "title": "Parameter-count reduction by quaternion parameterization with preserved time complexity",
+    "content": "Representing layer weights as quaternion matrices and grouping four real feature channels into one quaternion reduces the number of independent trainable real parameters by a factor of four relative to an equivalent real-valued GNN weight matrix: a quaternion weight mapping from $F$ real input features to $F'$ real outputs uses $F/4\\times F'/4$ quaternion entries (each with four components shared by the Hamilton product), yielding one-fourth the degrees of freedom of the corresponding real weight matrix. At the same time, quaternion matrix multiplications implemented via the Hamilton-product block structure have the same asymptotic time complexity as the corresponding real matrix multiplications, so the parameter reduction is achieved without increasing matrix-multiplication time complexity.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Representing layer weights as quaternion matrices and grouping four real feature channels into one quaternion reduces the number of independent trainable real parameters by a factor of four relative to an equivalent real-valued GNN weight matrix:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 247
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "a quaternion weight mapping from $F$ real input features to $F'$ real outputs uses $F/4\\times F'/4$ quaternion entries , yielding one-fourth the degrees of freedom of the corresponding real weight matrix.",
+        "source_spans": [
+          {
+            "start": 247,
+            "end": 366
+          },
+          {
+            "start": 424,
+            "end": 510
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(each with four components shared by the Hamilton product)",
+        "source_spans": [
+          {
+            "start": 366,
+            "end": 424
+          }
+        ],
+        "of_terms": [
+          "quaternion entries"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "connection",
+        "content": "At the same time,",
+        "source_spans": [
+          {
+            "start": 510,
+            "end": 528
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "论据",
+        "content": "quaternion matrix multiplications have the same asymptotic time complexity as the corresponding real matrix multiplications,",
+        "source_spans": [
+          {
+            "start": 528,
+            "end": 562
+          },
+          {
+            "start": 615,
+            "end": 706
+          }
+        ],
+        "supports": [
+          8
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "implemented via the Hamilton-product block structure",
+        "source_spans": [
+          {
+            "start": 562,
+            "end": 615
+          }
+        ],
+        "of_terms": [
+          "quaternion matrix multiplications"
+        ]
+      },
+      {
+        "number": 7,
+        "label": "relation",
+        "content": "so",
+        "source_spans": [
+          {
+            "start": 706,
+            "end": 709
+          }
+        ],
+        "connects": [
+          5,
+          8
+        ],
+        "expression": "[5] 推出 [8]"
+      },
+      {
+        "number": 8,
+        "label": "assertion",
+        "content": "the parameter reduction is achieved without increasing matrix-multiplication time complexity.",
+        "source_spans": [
+          {
+            "start": 709,
+            "end": 802
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1229689055977930822::conclusion_3",
+    "global_id": "gcn_4b139fd27ea64086",
+    "order": 3,
+    "title": "Empirical parity or improvement of QMPNNs vs real GNNs across node, link, and graph tasks",
+    "content": "When QMPNN variants of standard GNN architectures (QGCN, QGAT, QSAGE) are trained under the same hyperparameters and evaluated on standard datasets, the quaternion models achieve comparable or better accuracy, ROC-AUC, or Hits@K (proportion of top-K predictions that are correct) while using roughly one-fourth of the trainable parameters. For example: (a) node classification on Cora: real GCN 85.2 ± 1.3 accuracy with 140.5K parameters vs QGCN 84.1 ± 1.5 accuracy with 42.1K parameters; (b) node classification on PubMed: GCN 79.1 ± 1.2 with 131.9K parameters vs QGCN 78.4 ± 1.4 with 41.7K parameters; (c) link prediction on CORA: GCN ROC-AUC 79.27 ± 0.47 with 96.0K parameters vs QGCN ROC-AUC 83.55 ± 0.03 with 27.2K parameters; (d) graph classification on MUTAG: GCN 83.54 ± 0.40 accuracy with 4.8K parameters vs QGCN 88.61 ± 0.66 accuracy with 4.4K parameters. Across all tasks and datasets evaluated, quaternion variants frequently perform within a small margin of the corresponding real models and sometimes exceed their performance while consistently having approximately one-fourth the trainable parameter count.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "When QMPNN variants of standard GNN architectures are trained under the same hyperparameters and evaluated on standard datasets, the quaternion models achieve comparable or better accuracy, ROC-AUC, or Hits@K while using roughly one-fourth of the trainable parameters.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 50
+          },
+          {
+            "start": 70,
+            "end": 229
+          },
+          {
+            "start": 280,
+            "end": 340
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "instance",
+        "content": "(QGCN, QGAT, QSAGE)",
+        "source_spans": [
+          {
+            "start": 50,
+            "end": 70
+          }
+        ],
+        "of_terms": [
+          "QMPNN variants of standard GNN architectures"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "(proportion of top-K predictions that are correct)",
+        "source_spans": [
+          {
+            "start": 229,
+            "end": 280
+          }
+        ],
+        "of_terms": [
+          "Hits@K"
+        ]
+      },
+      {
+        "number": 4,
+        "label": "framing",
+        "content": "For example:",
+        "source_spans": [
+          {
+            "start": 340,
+            "end": 353
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "example",
+        "content": "(a) node classification on Cora: real GCN 85.2 ± 1.3 accuracy with 140.5K parameters vs QGCN 84.1 ± 1.5 accuracy with 42.1K parameters;",
+        "source_spans": [
+          {
+            "start": 353,
+            "end": 489
+          }
+        ],
+        "illustrates": [
+          1
+        ]
+      },
+      {
+        "number": 6,
+        "label": "example",
+        "content": "(b) node classification on PubMed: GCN 79.1 ± 1.2 with 131.9K parameters vs QGCN 78.4 ± 1.4 with 41.7K parameters;",
+        "source_spans": [
+          {
+            "start": 489,
+            "end": 604
+          }
+        ],
+        "illustrates": [
+          1
+        ]
+      },
+      {
+        "number": 7,
+        "label": "example",
+        "content": "(c) link prediction on CORA: GCN ROC-AUC 79.27 ± 0.47 with 96.0K parameters vs QGCN ROC-AUC 83.55 ± 0.03 with 27.2K parameters;",
+        "source_spans": [
+          {
+            "start": 604,
+            "end": 732
+          }
+        ],
+        "illustrates": [
+          1
+        ]
+      },
+      {
+        "number": 8,
+        "label": "example",
+        "content": "(d) graph classification on MUTAG: GCN 83.54 ± 0.40 accuracy with 4.8K parameters vs QGCN 88.61 ± 0.66 accuracy with 4.4K parameters.",
+        "source_spans": [
+          {
+            "start": 732,
+            "end": 866
+          }
+        ],
+        "illustrates": [
+          1
+        ]
+      },
+      {
+        "number": 9,
+        "label": "assertion",
+        "content": "Across all tasks and datasets evaluated, quaternion variants frequently perform within a small margin of the corresponding real models and sometimes exceed their performance while consistently having approximately one-fourth the trainable parameter count.",
+        "source_spans": [
+          {
+            "start": 866,
+            "end": 1121
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1229689055977930822::conclusion_4",
+    "global_id": "gcn_236746629eaa493f",
+    "order": 4,
+    "title": "Graph-lottery-ticket formulation and pruning algorithms for GNNs and QMPNNs",
+    "content": "A graph-lottery-ticket definition and an algorithmic procedure specialized to GNNs and QMPNNs are provided: (i) a sparsification subroutine that alternately updates model weights W and a continuous mask m via gradient steps (updating W by $W^{(i+1)} = W^{(i)} - \\eta \\nabla_W \\mathcal{L}_{\\text{task}}$ and updating m by $m^{i+1} = m^i - \\lambda \\nabla_{m^i} \\mathcal{L}_{\\text{task}}$), and finally thresholds the lowest-magnitude 20% entries of m to obtain a binary mask; and (ii) an iterative prune-rewind loop that applies the sparsification repeatedly while resetting weights to the original initialization $W^0$ to discover a binary mask m such that the masked subnetwork $f((\\mathcal{V},\\mathcal{E},\\mathbf{X}), m \\odot W^0)$ is the proposed winning graph lottery ticket. This formulation explicitly avoids pruning the input graph and instead searches for sparse parameter masks, making the resulting tickets applicable to graph-level tasks and transfer learning.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "framing",
+        "content": "A graph-lottery-ticket definition and an algorithmic procedure specialized to GNNs and QMPNNs are provided:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 108
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(i) a sparsification subroutine that alternately updates model weights W and a continuous mask m via gradient steps (updating W by $W^{(i+1)} = W^{(i)} - \\eta \\nabla_W \\mathcal{L}_{\\text{task}}$ and updating m by $m^{i+1} = m^i - \\lambda \\nabla_{m^i} \\mathcal{L}_{\\text{task}}$), and finally thresholds the lowest-magnitude 20% entries of m to obtain a binary mask;",
+        "source_spans": [
+          {
+            "start": 108,
+            "end": 474
+          }
+        ],
+        "of_terms": [
+          "algorithmic procedure specialized to GNNs and QMPNNs"
+        ]
+      },
+      {
+        "number": 3,
+        "label": "connection",
+        "content": "and",
+        "source_spans": [
+          {
+            "start": 474,
+            "end": 478
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(ii) an iterative prune-rewind loop that applies the sparsification repeatedly while resetting weights to the original initialization $W^0$ to discover a binary mask m such that the masked subnetwork $f((\\mathcal{V},\\mathcal{E},\\mathbf{X}), m \\odot W^0)$ is the proposed winning graph lottery ticket.",
+        "source_spans": [
+          {
+            "start": 478,
+            "end": 779
+          }
+        ],
+        "of_terms": [
+          "graph-lottery-ticket definition",
+          "algorithmic procedure specialized to GNNs and QMPNNs"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "other",
+        "content": "This formulation",
+        "source_spans": [
+          {
+            "start": 779,
+            "end": 796
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "elaboration",
+        "content": "explicitly avoids pruning the input graph and instead searches for sparse parameter masks, making the resulting tickets applicable to graph-level tasks and transfer learning.",
+        "source_spans": [
+          {
+            "start": 796,
+            "end": 970
+          }
+        ],
+        "of_terms": [
+          "This formulation"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1229689055977930822::conclusion_5",
+    "global_id": "gcn_7234732f33ac4c79",
+    "order": 5,
+    "title": "Existence of graph lottery tickets (GLTs) in QMPNNs at high sparsity",
+    "content": "Winning graph-lottery tickets exist for both real-valued GNNs and QMPNNs: magnitude-based iterative pruning identifies subnetworks that match baseline performance at sparsity levels down to approximately 1–20% of the original parameter count (i.e., retaining 1–20% of weights) across multiple architectures (QGCN, QGAT, QSAGE) and tasks.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "Winning graph-lottery tickets exist for both real-valued GNNs and QMPNNs:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 74
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "magnitude-based iterative pruning identifies subnetworks that match baseline performance at sparsity levels down to approximately 1–20% of the original parameter count across multiple architectures and tasks.",
+        "source_spans": [
+          {
+            "start": 74,
+            "end": 242
+          },
+          {
+            "start": 277,
+            "end": 307
+          },
+          {
+            "start": 327,
+            "end": 337
+          }
+        ],
+        "supports": [
+          1
+        ]
+      },
+      {
+        "number": 3,
+        "label": "framing",
+        "content": "(i.e., )",
+        "source_spans": [
+          {
+            "start": 242,
+            "end": 249
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "(retaining 1–20% of weights)",
+        "source_spans": [
+          {
+            "start": 249,
+            "end": 277
+          }
+        ],
+        "of_terms": [
+          "1–20% of the original parameter count"
+        ]
+      },
+      {
+        "number": 5,
+        "label": "instance",
+        "content": "(QGCN, QGAT, QSAGE)",
+        "source_spans": [
+          {
+            "start": 307,
+            "end": 327
+          }
+        ],
+        "of_terms": [
+          "architectures"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1229689055977930822::conclusion_6",
+    "global_id": "gcn_e7f6e155496d4676",
+    "order": 6,
+    "title": "QMPNNs scale to large graphs while preserving performance",
+    "content": "QMPNN variants scale to large graph datasets and maintain performance comparable to real-valued GNNs while using fewer parameters: on OGBN-Arxiv node classification, GCN achieves 72.8 ± 1.5 accuracy with 145.1K parameters versus QGCN 72.3 ± 1.6 with 43.5K parameters; on OGBG-COLLAB link prediction, QGCN achieves Hits@50 45.80 ± 1.35 with 6.4K parameters compared to GCN 44.02 ± 1.57 with 12.5K parameters. Thus the quaternion reparameterization is effective on large-scale graph benchmarks.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "QMPNN variants scale to large graph datasets and maintain performance comparable to real-valued GNNs while using fewer parameters:",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 131
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "论据",
+        "content": "on OGBN-Arxiv node classification, GCN achieves 72.8 ± 1.5 accuracy with 145.1K parameters versus QGCN 72.3 ± 1.6 with 43.5K parameters;",
+        "source_spans": [
+          {
+            "start": 131,
+            "end": 268
+          }
+        ],
+        "supports": [
+          1,
+          5
+        ]
+      },
+      {
+        "number": 3,
+        "label": "论据",
+        "content": "on OGBG-COLLAB link prediction, QGCN achieves Hits@50 45.80 ± 1.35 with 6.4K parameters compared to GCN 44.02 ± 1.57 with 12.5K parameters.",
+        "source_spans": [
+          {
+            "start": 268,
+            "end": 408
+          }
+        ],
+        "supports": [
+          1,
+          5
+        ]
+      },
+      {
+        "number": 4,
+        "label": "relation",
+        "content": "Thus",
+        "source_spans": [
+          {
+            "start": 408,
+            "end": 413
+          }
+        ],
+        "connects": [
+          1,
+          2,
+          3,
+          5
+        ],
+        "expression": "([1] 且 [2] 且 [3]) 推出 [5]"
+      },
+      {
+        "number": 5,
+        "label": "assertion",
+        "content": "the quaternion reparameterization is effective on large-scale graph benchmarks.",
+        "source_spans": [
+          {
+            "start": 413,
+            "end": 492
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,40 @@
+[
+  {
+    "conclusion": "conclusion_3",
+    "instance_number": 2,
+    "instance_content": "(QGCN, QGAT, QSAGE)",
+    "instance_span": {
+      "start": 50,
+      "end": 70
+    },
+    "targets": [
+      {
+        "term": "QMPNN variants of standard GNN architectures",
+        "certainty": "certain",
+        "content": "QMPNN variants of standard GNN architectures",
+        "start": 5,
+        "end": 49,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_5",
+    "instance_number": 5,
+    "instance_content": "(QGCN, QGAT, QSAGE)",
+    "instance_span": {
+      "start": 307,
+      "end": 327
+    },
+    "targets": [
+      {
+        "term": "architectures",
+        "certainty": "certain",
+        "content": "architectures",
+        "start": 293,
+        "end": 306,
+        "candidates": []
+      }
+    ]
+  }
+]
