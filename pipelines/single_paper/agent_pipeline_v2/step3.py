@@ -322,36 +322,20 @@ def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> t
 
 
 def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
-    """Remove unsupported A→C shortcuts while preserving A→B→C chains.
-
-    A direct edge is redundant only when the same reasoning family already
-    supplies a two-hop path in the same bounded relation context.  This does
-    not collapse legitimate chains; it removes only the transitive shortcut.
-    """
-    edges: list[tuple[int, str, str, str, str]] = []
-    for index, item in enumerate(weakpoints):
-        payload = item.get("payload", {})
-        evidence = payload.get("evidence_claim_ids", [])
-        targets = payload.get("target_claim_id", [])
-        if len(evidence) != 1 or len(targets) != 1:
-            continue
-        relation_context = str(payload.get("relation_context_id", ""))
-        edges.append((index, str(evidence[0]), str(targets[0]),
-                      str(payload.get("reasoning_type", "")), relation_context))
-    remove: set[int] = set()
-    for index, source, target, kind, context in edges:
-        # Treat the current edge as the first hop and search for a second hop.
-        for _, second_source, final, kind1, context1 in edges:
-            if second_source != target or kind1 != kind:
-                continue
-            # The direct source→final edge is the transitive shortcut.
-            for direct_index, left, right, k, c in edges:
-                if direct_index != index and left == source and right == final and k == kind:
-                    remove.add(direct_index)
-    return (
-        [item for index, item in enumerate(weakpoints) if index not in remove],
-        [str(weakpoints[index].get("id")) for index in sorted(remove)],
-    )
+    """Remove same-type transitive shortcuts over evidence hyperedges."""
+    edges=[]
+    for i,item in enumerate(weakpoints):
+        p=item.get("payload",{}); ev=frozenset(map(str,p.get("evidence_claim_ids",[]))); ts=p.get("target_claim_id",[])
+        if ev and len(ts)==1: edges.append((i,ev,str(ts[0]),str(p.get("reasoning_type",""))))
+    remove=set()
+    for di,ds,dc,kind in edges:
+        for fi,fs,mid,fk in edges:
+            if fi==di or fk!=kind or not fs<=ds: continue
+            for si,ss,sc,sk in edges:
+                if si in {di,fi} or sk!=kind or sc!=dc or mid not in ss: continue
+                if (ss-{mid})<=ds: remove.add(di); break
+            if di in remove: break
+    return ([x for i,x in enumerate(weakpoints) if i not in remove],[str(weakpoints[i].get("id")) for i in sorted(remove)])
 
 
 def _flatten_redundant_premises(weakpoints: list[JSONDict]) -> list[str]:
