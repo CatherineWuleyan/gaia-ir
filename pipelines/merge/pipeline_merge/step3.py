@@ -125,7 +125,10 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
     else:
         instruction = ("Classify non-operator relations as deduction, abduction, analogy, or infer. Use only supplied IDs/content. "
                        "Deduction needs every premise; analogy needs a supplied bridge claim; abduction must identify observation "
-                       "and hypothesis. If insufficient, omit it. A new domain conclusion may use candidate_target=true and a "
+                       "and hypothesis. Abduction may use several observation premises, but at most one explicit alternative "
+                       "explanation; multiple alternatives must already be represented by one supplied disjunction claim. "
+                       "Make the expression show which IDs are observations and which is the alternative. If insufficient, omit it. "
+                       "A new domain conclusion may use candidate_target=true and a "
                        "stable target_id, but never invent its content.")
         shape = '{"weakpoints":[{"candidate_id":"...","evidence_claim_ids":["..."],"target_claim_id":["..."],"reasoning_type":"...","evidence_anchor_ids":[],"expression":"...","candidate_target":false}]}'
     return ("You are a constrained scientific relation judge. Use ONLY this frozen Step 2 group; do not retrieve, read paper "
