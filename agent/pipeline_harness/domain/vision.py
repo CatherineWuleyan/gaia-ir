@@ -56,7 +56,9 @@ class DeepSeekFlashVisionTool:
             raise RuntimeError("DEEPSEEK_API_KEY is not configured")
         content: list[JSONDict] = [{"type": "text", "text": (
             "You are a scientific figure reader. Use only the supplied figures and cited paper paragraphs. "
-            "Do not infer facts not visible in the evidence. Return one JSON object aggregating every supported observation claim."
+            "Do not infer facts not visible in the evidence. If the figure is a schematic or contains no measured result, "
+            "return {\"status\":\"insufficient_context\",\"needed_context\":\"no measured experimental result is visible\",\"claims\":[]}. "
+            "Otherwise return one JSON object aggregating every supported observation claim."
         )}]
         for candidate in candidates:
             content.extend(self._candidate_content(candidate))
@@ -135,7 +137,7 @@ class DeepSeekFlashVisionTool:
             if not isinstance(paragraph_ids, list) or not paragraph_ids or not all(isinstance(value, str) for value in paragraph_ids):
                 raise ValueError(f"claim {index} must cite one or more paragraph anchors")
             if not isinstance(figure_ids, list) or not figure_ids or not all(isinstance(value, str) for value in figure_ids):
-                raise ValueError(f"claim {index} must cite one or more figure anchors")
+                return {"snapshot_patch": {"review": {"status": "needs_review", "issues": [{"code": "EXPERIMENT_CONTEXT_INSUFFICIENT", "message": "vision response produced a claim without figure anchors", "action": "Skip this figure candidate and retain the evidence-insufficient audit result."}]}}}
             if not set(paragraph_ids) <= allowed_paragraphs or not set(figure_ids) <= figure_anchors:
                 raise ValueError(f"claim {index} cites anchors outside the selected evidence")
             normalized_claims.append((fields, canonical.strip(), paragraph_ids, figure_ids))
