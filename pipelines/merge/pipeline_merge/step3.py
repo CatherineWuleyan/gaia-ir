@@ -201,6 +201,11 @@ class Step3IdentifyStructuresPlugin:
                         targets = [str(x) for x in targets]
                         if any(x not in records for x in evidence + [x for x in targets if not x.startswith("integration:")]):
                             continue
+                        # A domain weakpoint must connect at least two source
+                        # Packages; same-Package reasoning belongs to Pipeline
+                        # 7.0 and should not be reintroduced by merge.
+                        if len({records[qid]["package"] for qid in evidence}) < 2:
+                            continue
                         if item.get("candidate_target"):
                             target = _stable_id("candidate_K", [group["group_id"], *evidence])
                             targets = [target]
