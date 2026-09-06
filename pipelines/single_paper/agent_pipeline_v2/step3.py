@@ -342,11 +342,11 @@ def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSOND
     for index, source, target, kind, context in edges:
         # Treat the current edge as the first hop and search for a second hop.
         for _, second_source, final, kind1, context1 in edges:
-            if second_source != target or kind1 != kind or context1 != context:
+            if second_source != target or kind1 != kind:
                 continue
             # The direct source→final edge is the transitive shortcut.
             for direct_index, left, right, k, c in edges:
-                if direct_index != index and left == source and right == final and k == kind and c == context:
+                if direct_index != index and left == source and right == final and k == kind:
                     remove.add(direct_index)
     return (
         [item for index, item in enumerate(weakpoints) if index not in remove],
