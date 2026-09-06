@@ -558,6 +558,25 @@ def _suppress_strategy_shortcuts(strategies):
     return len(remove)
 
 
+def _suppress_abduction_shortcuts(weakpoints):
+    """Use observation-headed projections only to prune redundant abductions."""
+    edges=[]
+    for i,w in enumerate(weakpoints):
+        q=w.get("payload",{})
+        if q.get("reasoning_type") != "abduction": continue
+        ev=frozenset(map(str,q.get("evidence_claim_ids",[]))); ts=q.get("target_claim_id",[])
+        if ev and len(ts)==1: edges.append((i,ev,str(ts[0])))
+    remove=set()
+    for di,ds,dc in edges:
+        for fi,fs,mid in edges:
+            if fi==di or not fs<=ds: continue
+            for si,ss,sc in edges:
+                if si in {di,fi} or sc!=dc or mid not in ss: continue
+                if ss-{mid}<=ds: remove.add(di); break
+            if di in remove: break
+    return [w for i,w in enumerate(weakpoints) if i not in remove], [str(weakpoints[i].get("id")) for i in sorted(remove)]
+
+
 class Step4FormalizeReasoningPlugin:
     """Expand one frozen Step 3 snapshot and commit one deterministic revision."""
 
@@ -576,6 +595,9 @@ class Step4FormalizeReasoningPlugin:
             graph_nodes = set(document["graph"].get("nodes", []))
             source_excerpts: list[JSONDict] = []
             pending = [item for item in document["workflow"]["weakpoints"] if item["payload"]["reasoning_type"] is not None]
+            pending, suppressed_abduction_ids = _suppress_abduction_shortcuts(pending)
+            if suppressed_abduction_ids:
+                findings.append(Finding("STEP4_ABDUCTION_SHORTCUT_SUPPRESSED", "warning", f"Suppressed abduction shortcuts: {sorted(suppressed_abduction_ids)}"))
             tool: DomainTool | None = None
             if pending:
                 tool = instantiate(str(context.options.get("tool_plugin", TOOL_SPEC)))
