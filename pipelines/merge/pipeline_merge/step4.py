@@ -186,8 +186,10 @@ def _abduction_premises(payload: Mapping[str, Any], records: Mapping[str, JSONDi
     evidence = [str(qid) for qid in payload["evidence_claim_ids"]]
     if len(evidence) == 1:
         return evidence
-    if len(evidence) != 2:
-        raise ValueError("abduction requires one observation and at most one explicit alternative explanation")
+    if len(evidence) > 2:
+        # Multi-cause abduction is valid: preserve every supplied evidence
+        # claim instead of forcing the relation into a binary shape.
+        return evidence
     expression = str(payload.get("expression") or "")
     mentioned = _BRACKET_ID.findall(expression)
     observation = next((qid for qid in reversed(mentioned) if qid in evidence), None)
@@ -214,8 +216,8 @@ def _strategies_from_weakpoint(weakpoint: Mapping[str, Any], records: Mapping[st
         return [{"scope": "local", "type": kind, "premises": premises,
                  "conclusion": target, "background": []} for target in targets]
     if kind == "analogy":
-        if len(evidence) != 2:
-            raise ValueError("analogy requires exactly a source law and a bridge claim")
+        if len(evidence) < 2:
+            raise ValueError("analogy requires at least a source law and a bridge claim")
         background = _background_from_expression(payload, records)
         if not background:
             raise ValueError("analogy requires an explicit target-condition note")

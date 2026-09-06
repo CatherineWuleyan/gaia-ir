@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import time
 import re
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -33,6 +34,21 @@ from .step1 import INPUT_BUNDLE_KIND, PAPER_TEXT_KIND
 
 STEP_NAME = "step2_complete_observations"
 MODEL_NAME = "deepseek-v4-flash"
+_API_RETRIES = 3
+
+
+def _urlopen_with_retry(request: Request, *, timeout: int = 180):
+    """Retry transient DNS/transport failures without masking HTTP errors."""
+    last_error = None
+    for attempt in range(_API_RETRIES):
+        try:
+            return urlopen(request, timeout=timeout)  # noqa: S310
+        except URLError as exc:
+            last_error = exc
+            if attempt == _API_RETRIES - 1:
+                raise
+            time.sleep(2 ** attempt)
+    raise last_error  # pragma: no cover
 _IMAGE_PATTERN = re.compile(r"!\[[^]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
 _FIGURE_REFERENCE_PATTERN = re.compile(r"\b(?:fig(?:ure)?\.?)\s*([0-9]+[a-z]?)\b", re.IGNORECASE)
 _PARAGRAPH_ANCHOR_PATTERN = re.compile(r"^anchor_paragraph_p(\d+)$")
@@ -244,7 +260,7 @@ class DeepSeekV4FlashObservationTool:
                 method="POST",
             )
             try:
-                with urlopen(relation_request, timeout=180) as response:  # noqa: S310
+                with _urlopen_with_retry(relation_request) as response:  # noqa: S310
                     relation_raw: Any = json.loads(response.read().decode("utf-8"))
             except HTTPError as exc:
                 raise RuntimeError(f"DeepSeek relation request failed with HTTP {exc.code}") from exc
@@ -309,7 +325,7 @@ class DeepSeekV4FlashObservationTool:
                 method="POST",
             )
             try:
-                with urlopen(http_request, timeout=180) as response:
+                with _urlopen_with_retry(http_request) as response:
                     raw = json.loads(response.read().decode("utf-8"))
             except HTTPError as exc:
                 raise RuntimeError(f"DeepSeek equivalent-claim request failed with HTTP {exc.code}") from exc
@@ -394,7 +410,7 @@ class DeepSeekV4FlashObservationTool:
                 method="POST",
             )
             try:
-                with urlopen(http_request, timeout=180) as response:  # noqa: S310
+                with _urlopen_with_retry(http_request) as response:  # noqa: S310
                     raw: Any = json.loads(response.read().decode("utf-8"))
             except HTTPError as exc:
                 detail = exc.read().decode("utf-8", errors="replace").strip()
@@ -434,7 +450,7 @@ class DeepSeekV4FlashObservationTool:
                 method="POST",
             )
             try:
-                with urlopen(phenomenon_request, timeout=180) as response:  # noqa: S310
+                with _urlopen_with_retry(phenomenon_request) as response:  # noqa: S310
                     phenomenon_raw: Any = json.loads(response.read().decode("utf-8"))
             except HTTPError as exc:
                 raise RuntimeError(f"DeepSeek equivalent-claim request failed with HTTP {exc.code}") from exc
@@ -522,7 +538,7 @@ class DeepSeekV4FlashObservationTool:
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
         )
         try:
-            with urlopen(http_request, timeout=180) as response:  # noqa: S310
+            with _urlopen_with_retry(http_request) as response:  # noqa: S310
                 raw: Any = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace").strip()
@@ -610,7 +626,7 @@ class DeepSeekV4FlashObservationTool:
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
         )
         try:
-            with urlopen(http_request, timeout=180) as response:  # noqa: S310
+            with _urlopen_with_retry(http_request) as response:  # noqa: S310
                 raw: Any = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace").strip()

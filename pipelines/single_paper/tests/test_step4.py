@@ -235,6 +235,28 @@ class Step4Tests(unittest.TestCase):
         self.assertTrue(any(node["kind"] == "operator" and node.get("fold_group")
                             for node in view.nodes if node["step"] == 4))
 
+    def test_cross_layer_observation_edge_is_rejected(self) -> None:
+        parameters = {
+            "weakpoint": {
+                "payload": {
+                    "reasoning_type": "abduction",
+                    "evidence_claim_ids": ["claim_O01"],
+                    "target_claim_id": ["claim_A"],
+                },
+            },
+            "knowledges": {
+                "claim_O01": knowledge("Measured result.", "observation_claim"),
+                "claim_A": knowledge("General hypothesis."),
+            },
+            "source_excerpts": [],
+        }
+        expansion = {
+            "knowledges": {},
+            "strategies": [strategy("abduction", ["claim_O01"], "claim_A")],
+        }
+        with self.assertRaisesRegex(ValueError, "cross-layer reasoning edge"):
+            _validate_expansion(parameters, expansion)
+
     def test_all_null_weakpoints_become_infer_without_tools_new_facts_or_probabilities(self) -> None:
         Classifier.kind = None
         self.pipeline["stages"][-1]["options"]["tool_plugin"] = "missing_plugin:MustNotBeLoaded"

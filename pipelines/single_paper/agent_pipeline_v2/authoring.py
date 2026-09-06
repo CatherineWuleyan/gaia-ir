@@ -64,10 +64,14 @@ def canonical_strategy(payload: Mapping[str, Any]) -> dict[str, Any]:
             or len(premises) != len(set(premises))
             or not isinstance(conclusion, str) or not conclusion or conclusion in premises):
         raise ValueError("strategy requires local scope, a supported type and distinct claim inputs/output")
-    if payload["type"] == "abduction" and len(premises) not in {1, 2}:
-        raise ValueError("abduction requires an observation and may include one explicit alternative explanation")
-    if payload["type"] == "analogy" and len(premises) != 2:
-        raise ValueError("analogy requires exactly two ordered premises")
+    # Reasoning arity is not intrinsically binary.  Abduction may combine
+    # several observations (and optionally an alternative explanation), while
+    # analogy may require several bridge/source premises.  Keep only the
+    # semantic minimums here; downstream formalization creates conjunctions.
+    if payload["type"] == "abduction" and len(premises) < 1:
+        raise ValueError("abduction requires at least one premise")
+    if payload["type"] == "analogy" and len(premises) < 2:
+        raise ValueError("analogy requires at least two ordered premises")
     if (not isinstance(background, list) or any(not isinstance(key, str) or not key for key in background)
             or len(background) != len(set(background))):
         raise ValueError("strategy.background must be a list of unique Knowledge note IDs")
