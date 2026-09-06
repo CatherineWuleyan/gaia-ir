@@ -1,0 +1,713 @@
+[
+  {
+    "id": "paper:1043046276138008659::conclusion_1",
+    "global_id": "gcn_64c6c7d14a394e4b",
+    "order": 1,
+    "title": "Sparse neural networks often match or exceed dense models on hard samples at certain sparsity levels",
+    "content": "Across extensive experiments on CIFAR-100, TinyImageNet, and CIFAR-10 using standard architectures (ResNet18/34, VGG16/19) and a broad set of unstructured sparsification methods (Sparse Evolutionary Training (SET) with the Erdős–Rényi–Kernel (ERK) distribution, Single-shot Network Pruning (SNIP), Gradual Magnitude Pruning (GMP), Lottery Ticket Hypothesis (LTH) using one-shot magnitude pruning at initialization, and One-shot Magnitude Pruning (OMP) after full dense training), sparse neural networks trained on challenging samples (intrinsically difficult examples selected by Error L2 Norm (EL2N) scores, images with common corruptions such as Gaussian noise and blurring, or adversarially perturbed inputs via Projected Gradient Descent (PGD)) often achieve test accuracy that matches or surpasses the corresponding dense models at particular overall sparsity ratios in the 10%–90% range. This behavior is observed for clean test accuracy and, in adversarial training regimes, for adversarial accuracy (accuracy on perturbed test data) as well.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Across extensive experiments on CIFAR-100, TinyImageNet, and CIFAR-10 using standard architectures ",
+          "label": "framing"
+        },
+        {
+          "text": "(ResNet18/34, VGG16/19)",
+          "label": "instance",
+          "of_terms": [
+            "standard architectures"
+          ]
+        },
+        {
+          "text": " and a broad set of unstructured sparsification methods ",
+          "label": "framing"
+        },
+        {
+          "text": "(Sparse Evolutionary Training (SET) with the Erdős–Rényi–Kernel (ERK) distribution, Single-shot Network Pruning (SNIP), Gradual Magnitude Pruning (GMP), Lottery Ticket Hypothesis (LTH) using one-shot magnitude pruning at initialization, and One-shot Magnitude Pruning (OMP) after full dense training)",
+          "label": "instance",
+          "of_terms": [
+            "unstructured sparsification methods"
+          ]
+        },
+        {
+          "text": ", sparse neural networks trained on challenging samples ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(intrinsically difficult examples selected by Error L2 Norm (EL2N) scores, images with common corruptions such as Gaussian noise and blurring, or adversarially perturbed inputs via Projected Gradient Descent (PGD))",
+          "label": "instance",
+          "of_terms": [
+            "challenging samples"
+          ]
+        },
+        {
+          "text": " often achieve test accuracy that matches or surpasses the corresponding dense models at particular overall sparsity ratios in the 10%–90% range. ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "This behavior is observed for clean test accuracy ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "and",
+          "label": "connection"
+        },
+        {
+          "text": ", in adversarial training regimes, for adversarial accuracy ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(accuracy on perturbed test data)",
+          "label": "elaboration",
+          "of_terms": [
+            "adversarial accuracy"
+          ]
+        },
+        {
+          "text": " as well.",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1043046276138008659::conclusion_2",
+    "global_id": "gcn_7efaf1d62e8b460b",
+    "order": 2,
+    "title": "Sparse neural networks provide larger accuracy gains under limited training data",
+    "content": "When training data are scarce (where the data ratio, the fraction of the challenging subset used for training, is reduced from the full set; examined values include 0.5 and 0.3), sparse neural networks—notably Sparse Evolutionary Training (SET) using the Erdős–Rényi–Kernel (ERK) distribution, and Single-shot Network Pruning (SNIP) using connection sensitivity pruning before training—tend to outperform dense counterparts more markedly than in the full-data regime, with the advantage being most pronounced at higher overall sparsity levels (e.g., 70%–90% sparsity) in the reported experiments.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "When training data are scarce ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(where the data ratio, ",
+          "label": "elaboration",
+          "of_terms": [
+            "training data are scarce"
+          ]
+        },
+        {
+          "text": "the fraction of the challenging subset used for training",
+          "label": "elaboration",
+          "of_terms": [
+            "the data ratio"
+          ]
+        },
+        {
+          "text": ", is reduced from the full set; ",
+          "label": "elaboration",
+          "of_terms": [
+            "training data are scarce"
+          ]
+        },
+        {
+          "text": "examined values include ",
+          "label": "framing"
+        },
+        {
+          "text": "0.5 and 0.3",
+          "label": "instance",
+          "of_terms": [
+            "the data ratio"
+          ]
+        },
+        {
+          "text": "), ",
+          "label": "other"
+        },
+        {
+          "text": "sparse neural networks",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "—",
+          "label": "other"
+        },
+        {
+          "text": "notably ",
+          "label": "framing"
+        },
+        {
+          "text": "Sparse Evolutionary Training (SET) using the Erdős–Rényi–Kernel (ERK) distribution, and Single-shot Network Pruning (SNIP) using connection sensitivity pruning before training",
+          "label": "instance",
+          "of_terms": [
+            "sparse neural networks"
+          ]
+        },
+        {
+          "text": "—",
+          "label": "other"
+        },
+        {
+          "text": "tend to outperform dense counterparts more markedly than in the full-data regime",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": ", with ",
+          "label": "connection"
+        },
+        {
+          "text": "the advantage being most pronounced at higher overall sparsity levels ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "70%–90% sparsity",
+          "label": "instance",
+          "of_terms": [
+            "higher overall sparsity levels"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " in the reported experiments.",
+          "label": "assertion",
+          "number": 2
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1043046276138008659::conclusion_3",
+    "global_id": "gcn_de0218568a244a84",
+    "order": 3,
+    "title": "Sparse neural networks improve adversarial robustness while retaining clean accuracy at high sparsity",
+    "content": "Under adversarial training with Projected Gradient Descent (PGD), with training objective $\\min_{\\theta}\\mathbb{E}_{(x,y)\\in\\mathcal{D}}\\max_{\\|\\delta\\|_{p}\\le\\varepsilon}\\mathcal{L}(f(x+\\delta;\\theta),y)$ (evaluation used 20-step PGD with maximum perturbation $\\varepsilon=8/255$ and step size 2/255), sparse models at high sparsity (e.g., 90% overall sparsity) achieve comparable clean test accuracy and superior adversarial test accuracy compared to dense models on the examined benchmarks (VGG16 on CIFAR-10 and ResNet18 on CIFAR-100). This trend holds at both full and reduced data volumes (e.g., data ratio 0.5) tested in the paper.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Under adversarial training with Projected Gradient Descent (PGD), ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "with training objective $\\min_{\\theta}\\mathbb{E}_{(x,y)\\in\\mathcal{D}}\\max_{\\|\\delta\\|_{p}\\le\\varepsilon}\\mathcal{L}(f(x+\\delta;\\theta),y)$ ",
+          "label": "elaboration",
+          "of_terms": [
+            "adversarial training with Projected Gradient Descent (PGD)"
+          ]
+        },
+        {
+          "text": "(evaluation used 20-step PGD with maximum perturbation $\\varepsilon=8/255$ and step size 2/255), ",
+          "label": "elaboration"
+        },
+        {
+          "text": "sparse models at high sparsity ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "90% overall sparsity",
+          "label": "instance",
+          "of_terms": [
+            "high sparsity"
+          ]
+        },
+        {
+          "text": ") ",
+          "label": "other"
+        },
+        {
+          "text": "achieve comparable clean test accuracy ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "and ",
+          "label": "connection"
+        },
+        {
+          "text": "superior adversarial test accuracy compared to dense models on the examined benchmarks ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(VGG16 on CIFAR-10 and ResNet18 on CIFAR-100)",
+          "label": "elaboration",
+          "of_terms": [
+            "examined benchmarks"
+          ]
+        },
+        {
+          "text": ".",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " This trend holds at both full and reduced data volumes ",
+          "label": "assertion",
+          "number": 3
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "data ratio 0.5",
+          "label": "instance",
+          "of_terms": [
+            "reduced data volumes"
+          ]
+        },
+        {
+          "text": ") ",
+          "label": "other"
+        },
+        {
+          "text": "tested in the paper",
+          "label": "elaboration",
+          "of_terms": [
+            "data volumes"
+          ]
+        },
+        {
+          "text": ".",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1043046276138008659::conclusion_4",
+    "global_id": "gcn_e1cba1eff7454ebd",
+    "order": 4,
+    "title": "Layer-wise density allocation (higher shallow-layer density) correlates with better sparse-model performance",
+    "content": "Sparse methods that allocate higher relative density (proportion of non-zero weights) to early (shallower) layers—for example, Erdős–Rényi–Kernel (ERK) allocations used with Sparse Evolutionary Training (SET) and the density patterns observed for Single-shot Network Pruning (SNIP)—tend to yield higher test accuracy on hard-sample training than uniform per-layer pruning. Empirically, layer-wise density profiles with richer shallow-layer connectivity correlate with improved performance across training on EL2N-selected samples, corrupted images with common corruptions, and adversarial training scenarios (using PGD).",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Sparse methods that allocate higher relative density ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(proportion of non-zero weights) ",
+          "label": "elaboration",
+          "of_terms": [
+            "relative density"
+          ]
+        },
+        {
+          "text": "to early ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(shallower) ",
+          "label": "elaboration",
+          "of_terms": [
+            "early"
+          ]
+        },
+        {
+          "text": "layers",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "—for example, ",
+          "label": "framing"
+        },
+        {
+          "text": "Erdős–Rényi–Kernel (ERK) allocations used with Sparse Evolutionary Training (SET) and the density patterns observed for Single-shot Network Pruning (SNIP)",
+          "label": "instance",
+          "of_terms": [
+            "Sparse methods that allocate higher relative density"
+          ]
+        },
+        {
+          "text": "—tend to yield higher test accuracy on hard-sample training than uniform per-layer pruning. ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "Empirically, ",
+          "label": "framing"
+        },
+        {
+          "text": "layer-wise density profiles with richer shallow-layer connectivity correlate with improved performance across training on EL2N-selected samples, corrupted images with common corruptions, and adversarial training scenarios ",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "(using PGD).",
+          "label": "elaboration",
+          "of_terms": [
+            "adversarial training scenarios"
+          ]
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1043046276138008659::conclusion_5",
+    "global_id": "gcn_0e2a83fb0a514b93",
+    "order": 5,
+    "title": "Effect of pre-trained initialization: pre-training can compensate for low shallow-layer density; LTH masks may be suboptimal for hard samples",
+    "content": "Methods that derive sparse topologies from pre-trained dense models (e.g., One-shot Magnitude Pruning (OMP) after full dense training, and the one-shot variant of Lottery Ticket Hypothesis (LTH) using pruning at initialization) can tolerate sparser shallow layers because pre-trained weights have already encoded low-level features; however, LTH in the studied setup (one-shot pruning at initialization with rewinding to t=0) sometimes exhibits degraded performance when trained on hard samples (EL2N-selected or corrupted), indicating that masks produced from dense pre-training are not universally optimal for hard-sample regimes. Thus, whether a sparse method starts from a pre-trained dense model or from scratch materially affects performance on hard samples and interacts with the layer-wise density allocation.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Methods that derive sparse topologies from pre-trained dense models ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "One-shot Magnitude Pruning (OMP) after full dense training, and the one-shot variant of Lottery Ticket Hypothesis (LTH) using pruning at initialization",
+          "label": "instance",
+          "of_terms": [
+            "Methods that derive sparse topologies from pre-trained dense models"
+          ]
+        },
+        {
+          "text": ") ",
+          "label": "other"
+        },
+        {
+          "text": "can tolerate sparser shallow layers ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "because ",
+          "label": "relation",
+          "connects": [
+            2,
+            1
+          ],
+          "expression": "[2] 推出 [1]"
+        },
+        {
+          "text": "pre-trained weights have already encoded low-level features",
+          "label": "论据",
+          "number": 2,
+          "supports": [
+            1
+          ]
+        },
+        {
+          "text": "; however, ",
+          "label": "connection"
+        },
+        {
+          "text": "LTH in the studied setup",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " (one-shot pruning at initialization with rewinding to t=0)",
+          "label": "elaboration",
+          "of_terms": [
+            "the studied setup"
+          ]
+        },
+        {
+          "text": " sometimes exhibits degraded performance when trained on hard samples",
+          "label": "论据",
+          "number": 3,
+          "supports": [
+            4
+          ]
+        },
+        {
+          "text": " (EL2N-selected or corrupted)",
+          "label": "instance",
+          "of_terms": [
+            "hard samples"
+          ]
+        },
+        {
+          "text": ", indicating that ",
+          "label": "relation",
+          "connects": [
+            3,
+            4
+          ],
+          "expression": "[3] 推出 [4]"
+        },
+        {
+          "text": "masks produced from dense pre-training are not universally optimal for hard-sample regimes.",
+          "label": "assertion",
+          "number": 4
+        },
+        {
+          "text": " Thus, ",
+          "label": "relation",
+          "connects": [
+            1,
+            3,
+            4,
+            5
+          ],
+          "expression": "([1] 且 [3] 且 [4]) 推出 [5]"
+        },
+        {
+          "text": "whether a sparse method starts from a pre-trained dense model or from scratch materially affects performance on hard samples and interacts with the layer-wise density allocation.",
+          "label": "assertion",
+          "number": 5
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1043046276138008659::conclusion_6",
+    "global_id": "gcn_6c506d537c3c49d4",
+    "order": 6,
+    "title": "Trade-offs in computational cost: SET and SNIP reduce FLOPs and parameters while matching or improving accuracy; LTH/OMP incur extra FLOPs from pre-training",
+    "content": "Dynamic-sparse training methods that form sparse topologies before or early during training (e.g., Sparse Evolutionary Training (SET) with Erdős–Rényi–Kernel (ERK) distribution, and Single-shot Network Pruning (SNIP)) achieve the dual benefit of test accuracy improvement and reduced training floating-point operations (FLOPs) and parameter counts in the evaluated hard-sample regimes (EL2N-selected, corrupted, adversarial); by contrast, dense-to-sparse procedures that require obtaining a fully trained dense model (e.g., Lottery Ticket Hypothesis (LTH) with one-shot pruning at initialization and One-shot Magnitude Pruning (OMP) after full training) incur additional training FLOPs due to dense pre-training, even though the resulting sparse models may have fewer parameters.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "Dynamic-sparse training methods",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " that form sparse topologies before or early during training",
+          "label": "elaboration",
+          "of_terms": [
+            "Dynamic-sparse training methods"
+          ]
+        },
+        {
+          "text": " (",
+          "label": "other"
+        },
+        {
+          "text": "e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "Sparse Evolutionary Training (SET) with Erdős–Rényi–Kernel (ERK) distribution",
+          "label": "instance",
+          "of_terms": [
+            "Dynamic-sparse training methods"
+          ]
+        },
+        {
+          "text": ", and ",
+          "label": "connection"
+        },
+        {
+          "text": "Single-shot Network Pruning (SNIP)",
+          "label": "instance",
+          "of_terms": [
+            "Dynamic-sparse training methods"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " achieve the dual benefit of test accuracy improvement and reduced training floating-point operations",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (FLOPs)",
+          "label": "elaboration",
+          "of_terms": [
+            "floating-point operations"
+          ]
+        },
+        {
+          "text": " and parameter counts in the evaluated hard-sample regimes",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": " (EL2N-selected, corrupted, adversarial)",
+          "label": "elaboration",
+          "of_terms": [
+            "the evaluated hard-sample regimes"
+          ]
+        },
+        {
+          "text": "; by contrast,",
+          "label": "connection"
+        },
+        {
+          "text": " dense-to-sparse procedures",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": " that require obtaining a fully trained dense model",
+          "label": "elaboration",
+          "of_terms": [
+            "dense-to-sparse procedures"
+          ]
+        },
+        {
+          "text": " (",
+          "label": "other"
+        },
+        {
+          "text": "e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "Lottery Ticket Hypothesis (LTH) with one-shot pruning at initialization",
+          "label": "instance",
+          "of_terms": [
+            "dense-to-sparse procedures"
+          ]
+        },
+        {
+          "text": " and ",
+          "label": "connection"
+        },
+        {
+          "text": "One-shot Magnitude Pruning (OMP) after full training",
+          "label": "instance",
+          "of_terms": [
+            "dense-to-sparse procedures"
+          ]
+        },
+        {
+          "text": ")",
+          "label": "other"
+        },
+        {
+          "text": " incur additional training FLOPs due to dense pre-training",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": ", even though",
+          "label": "connection"
+        },
+        {
+          "text": " the resulting sparse models may have fewer parameters.",
+          "label": "assertion",
+          "number": 3
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  },
+  {
+    "id": "paper:1043046276138008659::conclusion_7",
+    "global_id": "gcn_9966281b613f4736",
+    "order": 7,
+    "title": "SNN advantage varies with corruption severity and can diminish at extreme corruption levels",
+    "content": "When training on inputs corrupted by common visible degradations (e.g., Gaussian noise, blurring, impulse noise) at a training data ratio of 0.3 (using 30% of the corrupted subset), the relative benefit of sparse neural networks (SNNs) over dense models grows as corruption severity increases from low to moderate levels (severity 2 to severity 4 on the 1–6 scale), but at extreme corruption severity (severity 6) the relative improvement shrinks or disappears for some sparse methods.",
+    "labeled_segments": {
+      "segments": [
+        {
+          "text": "When training on inputs corrupted by common visible degradations ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(e.g., ",
+          "label": "framing"
+        },
+        {
+          "text": "Gaussian noise, blurring, impulse noise)",
+          "label": "instance",
+          "of_terms": [
+            "common visible degradations"
+          ]
+        },
+        {
+          "text": " at a training data ratio of 0.3 ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(using 30% of the corrupted subset)",
+          "label": "elaboration",
+          "of_terms": [
+            "a training data ratio of 0.3"
+          ]
+        },
+        {
+          "text": ", the relative benefit of sparse neural networks ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(SNNs)",
+          "label": "elaboration",
+          "of_terms": [
+            "sparse neural networks"
+          ]
+        },
+        {
+          "text": " over dense models grows as corruption severity increases from low to moderate levels ",
+          "label": "assertion",
+          "number": 1
+        },
+        {
+          "text": "(severity 2 to severity 4 on the 1–6 scale)",
+          "label": "elaboration",
+          "of_terms": [
+            "low to moderate levels"
+          ]
+        },
+        {
+          "text": ", but",
+          "label": "connection"
+        },
+        {
+          "text": " at extreme corruption severity ",
+          "label": "assertion",
+          "number": 2
+        },
+        {
+          "text": "(severity 6)",
+          "label": "elaboration",
+          "of_terms": [
+            "extreme corruption severity"
+          ]
+        },
+        {
+          "text": " the relative improvement shrinks or disappears for some sparse methods.",
+          "label": "assertion",
+          "number": 2
+        }
+      ]
+    },
+    "labeling_status": "ok"
+  }
+]

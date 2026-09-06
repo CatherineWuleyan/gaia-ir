@@ -1,0 +1,312 @@
+{
+  "claim": [
+    {
+      "conclusion": "conclusion_1",
+      "text": "Distilled Pruning, an operational procedure that replaces the real-data inner-loop training of Iterative Magnitude Pruning (IMP) with training on a small synthetic dataset produced by a dataset distillation method that matches training trajectories, reduces the number of real training points used to select a sparsity mask by orders of magnitude relative to standard IMP.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 1
+    },
+    {
+      "conclusion": "conclusion_1",
+      "text": "Distilled Pruning, an operational procedure that replaces the real-data inner-loop training of Iterative Magnitude Pruning (IMP) with training on a small synthetic dataset produced by a dataset distillation method that matches training trajectories, produces sparse subnetworks at initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 2
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Sparse subnetworks discovered by Distilled Pruning often train to solutions that are linearly mode connected across different shufflings of the real training data, i.e., the solutions exhibit low or zero loss barriers under linear interpolation between weights trained on different data orders.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 3
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Empirically, for studied settings the dense initialization is unstable, i.e., trained models land in different minima.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 4
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Empirically, for studied settings, the synthetic subnetworks obtained by pruning on distilled data, i.e., Sparse subnetworks discovered by Distilled Pruning, are stable to SGD noise at initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 5
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Interpolating between two independently trained versions of the same synthetic subnetwork, i.e., one of the Sparse subnetworks discovered by Distilled Pruning, shows little or no increase in training loss.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 6
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "Subnetworks produced by distilled pruning exhibit quantitatively and visually flatter loss landscapes than both the dense model and IMP-chosen subnetworks.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 7
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "In two-dimensional loss landscape visualizations around trained models on ConvNet-3 and CIFAR-10, synthetic subnetworks produced by distilled pruning fall into a single, flat basin across different random seeds.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 8
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "In two-dimensional loss landscape visualizations around trained models on ConvNet-3 and CIFAR-10, the dense and IMP cases (the dense model and IMP-chosen subnetworks) display separate minima separated by barriers.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 9
+    },
+    {
+      "conclusion": "conclusion_3",
+      "text": "The diagonal of the empirical Hessian computed over training batches for ConvNet-3 on CIFAR-10 shows that synthetic subnetworks produced by distilled pruning have a distribution of diagonal Hessian entries concentrated closer to zero with smaller variance and lower average magnitude than the dense model or IMP subnetworks at matched sparsities (sampled sparsities included 60% and 90% in the reported study).",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 10
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "Applying Iterative Magnitude Pruning (IMP) with weight rewinding to a sparsity mask obtained by distilled pruning (starting IMP from a distilled-pruning-produced sparse initialization rather than the original dense initialization) yields sparse initializations that behave as true lottery tickets at substantially higher overall sparsities than IMP applied to the original dense initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [
+        "distilled pruning",
+        "true lottery tickets"
+      ],
+      "number": 11
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "performing 8 distilled-pruning iterations (pruning 20% of weights per iteration to produce an intermediate stable mask at 83% sparsity) and then running Iterative Magnitude Pruning (IMP) (still rewinding to initialization) finds sparse initializations that match or exceed the performance of IMP with weight rewinding to the third training epoch and that reach higher sparsities than achievable by IMP from the original dense initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [
+        "distilled pruning"
+      ],
+      "number": 12
+    },
+    {
+      "conclusion": "conclusion_4",
+      "text": "On ImageNet-10 with ResNet-10, the hybrid method of performing 8 distilled-pruning iterations (pruning 20% of weights per iteration to produce an intermediate stable mask at 83% sparsity) and then running Iterative Magnitude Pruning (IMP) (still rewinding to initialization) yields lottery tickets with up to an order of magnitude fewer parameters compared to IMP applied to the original dense initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [
+        "distilled pruning",
+        "lottery tickets"
+      ],
+      "number": 13
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "When using trajectory-matching distilled datasets of appropriate quality for the target model, Distilled Pruning matches the test accuracy of traditional IMP on ResNet-18 trained on CIFAR-10.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 14
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "Distilled Pruning uses roughly 150x fewer real training points than traditional IMP to generate the sparsity mask.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 15
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "Across a range of datasets and compression ratios, the performance of synthetic subnetworks relative to traditional IMP depends strongly on the distilled-data accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 16
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "On more complex tasks or when distilled data under-performs, synthetic subnetworks tend to be more stable than traditional IMP.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 17
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "Synthetic subnetworks can underperform traditional IMP in final test accuracy.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 18
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "Distilled Pruning provides an empirical trade-off: substantial reductions in inner-loop data usage and increased stability, at the cost of relying on high-quality distilled data to preserve performance.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 19
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "The locations of pruned parameters chosen by distilled pruning are nearly independent from those chosen by IMP even when starting from the same random initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 20
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "For the binary sparsity masks produced from the same random initialization, the distribution of zeros across layers does not reveal a consistent structural pattern that differentiates distilled pruning and IMP.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 21
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "For the binary sparsity masks produced from the same random initialization, the magnitudes of weights that are pruned at initialization follow similar distributions between distilled pruning and IMP.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 22
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "Distilled pruning and IMP select largely distinct sets of parameters to remove even when starting from the same initialization.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 23
+    },
+    {
+      "conclusion": "conclusion_6",
+      "text": "Distilled pruning and IMP produce different downstream stability and curvature properties.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 24
+    },
+    {
+      "conclusion": "conclusion_2",
+      "text": "Empirically, for ConvNet-3 on CIFAR-10 and ResNet-10 on ImageNet-10 the dense initialization is unstable, i.e., trained models land in different minima.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 25
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "When using Efficient Dataset Condensation tuned for the target architecture and of appropriate quality for the target model, Distilled Pruning matches the test accuracy of traditional IMP on ResNet-18 trained on CIFAR-10.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 26
+    },
+    {
+      "conclusion": "conclusion_5",
+      "text": "On CIFAR-100 or larger datasets with poorer distilled accuracy, synthetic subnetworks tend to be more stable than traditional IMP.",
+      "is_pure_data": false,
+      "needs_more_context": [],
+      "number": 27
+    }
+  ],
+  "note": [
+    {
+      "conclusion": "conclusion_5",
+      "text": "elaboration of claim 19: : substantial reductions in inner-loop data usage and increased stability, at the cost of relying on high-quality distilled data to preserve performance.",
+      "number": 1
+    }
+  ],
+  "relation": [
+    {
+      "conclusion": "conclusion_5",
+      "connects": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "expression": "[14] 且 [15] 且 [16] 且 [17] 且 [18] 推出 [19]"
+    },
+    {
+      "conclusion": "conclusion_2",
+      "connects": [
+        6,
+        5
+      ],
+      "expression": "[6] 是 [5] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_3",
+      "connects": [
+        8,
+        7
+      ],
+      "expression": "[8] 是 [7] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_3",
+      "connects": [
+        9,
+        7
+      ],
+      "expression": "[9] 是 [7] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_3",
+      "connects": [
+        10,
+        7
+      ],
+      "expression": "[10] 是 [7] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_4",
+      "connects": [
+        12,
+        11
+      ],
+      "expression": "[12] 是 [11] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_4",
+      "connects": [
+        13,
+        11
+      ],
+      "expression": "[13] 是 [11] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        21,
+        20,
+        23
+      ],
+      "expression": "[21] 是 ([20] 和 [23]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_6",
+      "connects": [
+        22,
+        20,
+        23
+      ],
+      "expression": "[22] 是 ([20] 和 [23]) 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_2",
+      "connects": [
+        25,
+        4
+      ],
+      "expression": "[25] 是 [4] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_5",
+      "connects": [
+        26,
+        14
+      ],
+      "expression": "[26] 是 [14] 的例子或证据"
+    },
+    {
+      "conclusion": "conclusion_5",
+      "connects": [
+        27,
+        17
+      ],
+      "expression": "[27] 是 [17] 的例子或证据"
+    }
+  ]
+}

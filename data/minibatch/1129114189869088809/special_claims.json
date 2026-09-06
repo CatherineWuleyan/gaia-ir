@@ -1,0 +1,12 @@
+[
+  {
+    "conclusion": "conclusion_2",
+    "claim_number": 1,
+    "text": "For sparse training of a model from a random initialization independent of the initialization used to discover the Lottery Ticket Hypothesis (LTH) mask $\\mathfrak{m}_A$, using the permuted mask $\\pi(\\mathfrak{m}_A)$ yields consistently higher test accuracy than using the non-permuted mask $\\mathfrak{m}_A$ across the architectures ResNet20, VGG11, and ResNet50, the datasets CIFAR-10, CIFAR-100, and ImageNet, sparsity levels $S\\in\\{0.80,0.90,0.95,0.97\\}$, and rewind points $k$ (the epoch from which weights are reset before sparse training).",
+    "certain_instances_given": [
+      4,
+      5
+    ],
+    "uncertain_instances_given": []
+  }
+]

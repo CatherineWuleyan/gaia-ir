@@ -1,0 +1,40 @@
+[
+  {
+    "conclusion": "conclusion_8",
+    "instance_number": 5,
+    "instance_content": "($1$)",
+    "instance_span": {
+      "start": 410,
+      "end": 415
+    },
+    "targets": [
+      {
+        "term": "a chosen constant",
+        "certainty": "certain",
+        "content": "a chosen constant",
+        "start": 385,
+        "end": 402,
+        "candidates": []
+      }
+    ]
+  },
+  {
+    "conclusion": "conclusion_9",
+    "instance_number": 6,
+    "instance_content": "spred initialization, $L_1$ on $m$ only, and standard $L_1$ on $x$",
+    "instance_span": {
+      "start": 391,
+      "end": 457
+    },
+    "targets": [
+      {
+        "term": "baselines",
+        "certainty": "certain",
+        "content": "baselines",
+        "start": 371,
+        "end": 380,
+        "candidates": []
+      }
+    ]
+  }
+]

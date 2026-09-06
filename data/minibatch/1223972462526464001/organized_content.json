@@ -1,0 +1,404 @@
+[
+  {
+    "id": "paper:1223972462526464001::conclusion_1",
+    "global_id": "gcn_31f09af1dfd64790",
+    "order": 1,
+    "title": "Adaptive-pruning objective with multiple subset-specific masks",
+    "content": "Routing the Lottery (RTL) models pruning for heterogeneous data by partitioning a dataset $\\mathcal{D}$ into $K$ disjoint subsets $\\{\\mathcal{D}_1,\\dots,\\mathcal{D}_K\\}$ and learning a dedicated binary mask $m_k\\in\\{0,1\\}^d$ for each subset over a shared parameter vector $\\theta\\in\\mathbb{R}^d$; the elementwise (Hadamard) product $m_k\\odot\\theta$ selects a subset-specific subnetwork $\\varphi_{m_k}(x)=f(x;m_k\\odot\\theta)$ that is evaluated on inputs $x\\in\\mathcal{D}_k$. The masks $\\{m_1,\\dots,m_K\\}$ are learned jointly by minimizing the summed expected task loss across subsets,\n      $$\n      \\mathcal{L}_{\\mathcal{M}^*} \\;=\\; \\min_{m_1,\\dots,m_K}\\sum_{k=1}^K \\mathbb{E}_{(x,y)\\sim\\mathcal{D}_k}\\big[\\ell\\big(y,f(x;m_k\\odot\\theta)\\big)\\big],\n      $$\n      subject to the per-subnetwork sparsity constraint $\\|m_k\\|_0 \\le s$ for every $k$, where $\\ell(\\cdot,\\cdot)$ denotes the task loss and the integer $s$ bounds the maximum number of active (nonzero) parameters allowed in each specialized subnetwork.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "Routing the Lottery (RTL) models pruning for heterogeneous data by partitioning a dataset $\\mathcal{D}$ into $K$ disjoint subsets $\\{\\mathcal{D}_1,\\dots,\\mathcal{D}_K\\}$ and learning a dedicated binary mask $m_k\\in\\{0,1\\}^d$ for each subset over a shared parameter vector $\\theta\\in\\mathbb{R}^d$;",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 297
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "the elementwise (Hadamard) product $m_k\\odot\\theta$ selects a subset-specific subnetwork $\\varphi_{m_k}(x)=f(x;m_k\\odot\\theta)$ that is evaluated on inputs $x\\in\\mathcal{D}_k$.",
+        "source_spans": [
+          {
+            "start": 297,
+            "end": 474
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "other",
+        "content": "The masks $\\{m_1,\\dots,m_K\\}$ are learned jointly by minimizing the summed expected task loss across subsets, $$ \\mathcal{L}_{\\mathcal{M}^*} \\;=\\; \\min_{m_1,\\dots,m_K}\\sum_{k=1}^K \\mathbb{E}_{(x,y)\\sim\\mathcal{D}_k}\\big[\\ell\\big(y,f(x;m_k\\odot\\theta)\\big)\\big], $$ subject to the per-subnetwork sparsity constraint $\\|m_k\\|_0 \\le s$ for every $k$,",
+        "source_spans": [
+          {
+            "start": 474,
+            "end": 846
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "where $\\ell(\\cdot,\\cdot)$ denotes the task loss and the integer $s$ bounds the maximum number of active (nonzero) parameters allowed in each specialized subnetwork.",
+        "source_spans": [
+          {
+            "start": 846,
+            "end": 1010
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_2",
+    "global_id": "gcn_8f5a2bda41234e48",
+    "order": 2,
+    "title": "Iterative Magnitude Pruning (IMP)-style adaptive-ticket extraction",
+    "content": "RTL extracts $K$ adaptive tickets (one binary mask $m_k$ per data subset) from a shared random initialization $\\theta_0$ using an Iterative Magnitude Pruning (IMP)-style train–prune–rewind loop: for each subset $d_k$ (one element of the partition of $\\mathcal{D}$) the network is trained from the shared initialization $\\theta_0$ for $T$ optimization steps to obtain temporary weights $\\theta_T^{(k)}$, then a fraction $p$ of the lowest-magnitude weights in $\\theta_T^{(k)}$ is removed to form or update the binary mask $m_k$, and the remaining (unpruned) weights are reset (rewound) to the shared initialization $\\theta_0$; this sequential per-subset pruning cycle (iterating over an ordering of the $K$ subsets) is repeated until each mask reaches the target sparsity level $s$, producing a final mask set $\\mathcal{M}=\\{m_1,\\dots,m_K\\}$ that defines specialized subnetworks $f(x;m_k\\odot\\theta_0)$ applied to inputs from subset $\\mathcal{D}_k$.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "RTL extracts $K$ adaptive tickets (one binary mask $m_k$ per data subset) from a shared random initialization $\\theta_0$ using an Iterative Magnitude Pruning (IMP)-style train–prune–rewind loop: for each subset $d_k$ (one element of the partition of $\\mathcal{D}$) the network is trained from the shared initialization $\\theta_0$ for $T$ optimization steps to obtain temporary weights $\\theta_T^{(k)}$, then a fraction $p$ of the lowest-magnitude weights in $\\theta_T^{(k)}$ is removed to form or update the binary mask $m_k$, and the remaining (unpruned) weights are reset (rewound) to the shared initialization $\\theta_0$; this sequential per-subset pruning cycle (iterating over an ordering of the $K$ subsets) is repeated until each mask reaches the target sparsity level $s$, producing a final mask set $\\mathcal{M}=\\{m_1,\\dots,m_K\\}$ that defines specialized subnetworks $f(x;m_k\\odot\\theta_0)$ applied to inputs from subset $\\mathcal{D}_k$.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 947
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_3",
+    "global_id": "gcn_25f1c7701ed042d7",
+    "order": 3,
+    "title": "Joint retraining with balanced subset batching and masked gradient updates",
+    "content": "After mask extraction, RTL performs a joint retraining phase that preserves each mask topology and updates only the active weights selected by each mask while maintaining a single shared dense parameter tensor $\\theta$. During this phase the training set is partitioned into $K$ subsets and converted into per-subset mini-batch lists $\\mathcal{B}^k=\\{B_1^k,\\dots,B_{M_k}^k\\}$; smaller subsets repeat their batches cyclically so that every subset contributes the same number $M=\\max(M_1,\\dots,M_K)$ of batches per epoch. For epoch index $j$ and batch index $m$, subnetwork $k$ is instantiated as $f_k(\\cdot;\\theta)=f(\\cdot;m_k\\odot\\theta)$ (where $m_k\\in\\{0,1\\}^d$) and its parameters are updated on batch $(x_m^k,y_m^k)\\in B_m^k$ by a masked gradient step\n      $$\n      \\theta \\leftarrow \\theta - \\eta\\big(\\nabla_\\theta \\mathcal{L}\\big(f(m_k\\odot\\theta;x_m^k),y_m^k\\big)\\odot m_k\\big),\n      $$\n      where $\\eta$ is the learning rate, $\\mathcal{L}$ is the empirical loss, $\\nabla_\\theta$ denotes gradients with respect to the shared parameters, and $\\odot$ is elementwise multiplication; by zeroing gradients on pruned coordinates via $\\odot m_k$, only the weights retained by mask $m_k$ are trained on data from subset $\\mathcal{D}_k$ while keeping all subnetworks tied to the same shared parameter tensor $\\theta$.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "After mask extraction, RTL performs a joint retraining phase that preserves each mask topology and updates only the active weights selected by each mask while maintaining a single shared dense parameter tensor $\\theta$.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 220
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "other",
+        "content": "During this phase the training set is partitioned into $K$ subsets and converted into per-subset mini-batch lists $\\mathcal{B}^k=\\{B_1^k,\\dots,B_{M_k}^k\\}$;",
+        "source_spans": [
+          {
+            "start": 220,
+            "end": 377
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "elaboration",
+        "content": "smaller subsets repeat their batches cyclically so that every subset contributes the same number $M=\\max(M_1,\\dots,M_K)$ of batches per epoch.",
+        "source_spans": [
+          {
+            "start": 377,
+            "end": 520
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "other",
+        "content": "For epoch index $j$ and batch index $m$, subnetwork $k$ is instantiated as $f_k(\\cdot;\\theta)=f(\\cdot;m_k\\odot\\theta)$ (where $m_k\\in\\{0,1\\}^d$) and its parameters are updated on batch $(x_m^k,y_m^k)\\in B_m^k$ by a masked gradient step $$ \\theta \\leftarrow \\theta - \\eta\\big(\\nabla_\\theta \\mathcal{L}\\big(f(m_k\\odot\\theta;x_m^k),y_m^k\\big)\\odot m_k\\big), $$",
+        "source_spans": [
+          {
+            "start": 520,
+            "end": 902
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "elaboration",
+        "content": "where $\\eta$ is the learning rate, $\\mathcal{L}$ is the empirical loss, $\\nabla_\\theta$ denotes gradients with respect to the shared parameters, and $\\odot$ is elementwise multiplication;",
+        "source_spans": [
+          {
+            "start": 902,
+            "end": 1090
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "by zeroing gradients on pruned coordinates via $\\odot m_k$, only the weights retained by mask $m_k$ are trained on data from subset $\\mathcal{D}_k$ while keeping all subnetworks tied to the same shared parameter tensor $\\theta$.",
+        "source_spans": [
+          {
+            "start": 1090,
+            "end": 1318
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_4",
+    "global_id": "gcn_554a8880ce624469",
+    "order": 4,
+    "title": "Class- and cluster-specialized pruning yields higher balanced accuracy and recall on CIFAR",
+    "content": "In CIFAR-10 experiments with $K=10$ class-specific subnetworks, RTL attains balanced accuracy values of 0.781, 0.778, and 0.772 at 25%, 50%, and 75% weight sparsity respectively, outperforming a single shared-mask Iterative Magnitude Pruning (IMP) baseline (0.711, 0.711, 0.732) and matching or exceeding independent per-class IMP models trained without weight sharing (0.712, 0.710, 0.760); at the same sparsity levels RTL achieves recall 0.821 / 0.810 / 0.816 versus 0.480 / 0.480 / 0.518 for the single-mask IMP baseline and 0.701 / 0.702 / 0.766 for independent per-class IMP models, while using 103K / 72K / 38K trainable parameters (RTL) compared to 944K / 629K / 314K parameters for the independent per-class models. In CIFAR-100 experiments where $K=8$ semantically derived clusters are used as subsets, RTL achieves balanced accuracy 0.765 / 0.751 / 0.759 and recall 0.764 / 0.729 / 0.754 at 25% / 50% / 75% sparsity, surpassing a single-mask IMP baseline (balanced accuracy 0.722 / 0.707 / 0.742; recall 0.420 / 0.421 / 0.463) and independent-model IMP (balanced accuracy 0.712 / 0.700 / 0.744; recall 0.660 / 0.637 / 0.732) while using 108K / 76K / 40K parameters versus 944K / 629K / 314K for independent models.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "In CIFAR-10 experiments with $K=10$ class-specific subnetworks, RTL attains balanced accuracy values of 0.781, 0.778, and 0.772 at 25%, 50%, and 75% weight sparsity respectively, outperforming a single shared-mask Iterative Magnitude Pruning (IMP) baseline (0.711, 0.711, 0.732) and matching or exceeding independent per-class IMP models trained without weight sharing (0.712, 0.710, 0.760); at the same sparsity levels RTL achieves recall 0.821 / 0.810 / 0.816 versus 0.480 / 0.480 / 0.518 for the single-mask IMP baseline and 0.701 / 0.702 / 0.766 for independent per-class IMP models, while using 103K / 72K / 38K trainable parameters (RTL) compared to 944K / 629K / 314K parameters for the independent per-class models.",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 724
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "In CIFAR-100 experiments where $K=8$ semantically derived clusters are used as subsets, RTL achieves balanced accuracy 0.765 / 0.751 / 0.759 and recall 0.764 / 0.729 / 0.754 at 25% / 50% / 75% sparsity, surpassing a single-mask IMP baseline (balanced accuracy 0.722 / 0.707 / 0.742; recall 0.420 / 0.421 / 0.463) and independent-model IMP (balanced accuracy 0.712 / 0.700 / 0.744; recall 0.660 / 0.637 / 0.732) while using 108K / 76K / 40K parameters versus 944K / 629K / 314K for independent models.",
+        "source_spans": [
+          {
+            "start": 724,
+            "end": 1224
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_5",
+    "global_id": "gcn_83951f21a3f74838",
+    "order": 5,
+    "title": "Region-specialized subnetworks improve INR reconstruction PSNR on ADE20K",
+    "content": "In implicit neural representation (INR) reconstruction experiments on 10 ADE20K images where semantic segmentation masks define within-image regions and RTL learns region-specialized subnetworks, RTL achieves higher peak signal-to-noise ratio (PSNR) than a single-mask IMP baseline at all reported sparsity levels: PSNR 18.86 / 17.25 / 14.87 for RTL versus 15.94 / 14.72 / 12.69 for the single-mask IMP baseline at 25% / 50% / 75% sparsity, with corresponding trainable parameter counts 48.0K / 36.5K / 22.0K for RTL and 40.5K / 27.0K / 13.5K for the IMP baseline.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "In implicit neural representation (INR) reconstruction experiments on 10 ADE20K images where semantic segmentation masks define within-image regions and RTL learns region-specialized subnetworks,",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 196
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "RTL achieves higher peak signal-to-noise ratio (PSNR) than a single-mask IMP baseline at all reported sparsity levels:",
+        "source_spans": [
+          {
+            "start": 196,
+            "end": 315
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [2]",
+        "content": "PSNR 18.86 / 17.25 / 14.87 for RTL versus 15.94 / 14.72 / 12.69 for the single-mask IMP baseline at 25% / 50% / 75% sparsity, with corresponding trainable parameter counts 48.0K / 36.5K / 22.0K for RTL and 40.5K / 27.0K / 13.5K for the IMP baseline.",
+        "source_spans": [
+          {
+            "start": 315,
+            "end": 564
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_6",
+    "global_id": "gcn_439bfd95b7e04a22",
+    "order": 6,
+    "title": "Environment-specialized subnetworks improve SI-SNRi for speech enhancement",
+    "content": "On a speech enhancement task constructed by mixing clean speech from the DNS-2020 dataset with noise from TAU Urban Acoustic Scenes 2020 and grouping noises into three acoustic-environment subsets (indoor, outdoor, transportation), RTL achieves higher scale-invariant signal-to-noise ratio improvement (SI-SNRi) than both a single-mask IMP baseline and independently pruned IMP models at 25% / 50% / 75% sparsity: SI-SNRi of 7.248 / 7.178 / 6.992 for RTL, compared to 6.885 / 6.970 / 6.967 for the single-mask IMP baseline and 5.295 / 5.775 / 5.899 for independent-model IMP; the corresponding trainable parameter counts are 32.0K / 22.8K / 12.3K (RTL), 28.0K / 18.6K / 9.3K (single-mask IMP), and 84.1K / 56.1K / 28.0K (independent models).",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "elaboration",
+        "content": "On a speech enhancement task constructed by mixing clean speech from the DNS-2020 dataset with noise from TAU Urban Acoustic Scenes 2020 and grouping noises into three acoustic-environment subsets (indoor, outdoor, transportation),",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 232
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "assertion",
+        "content": "RTL achieves higher scale-invariant signal-to-noise ratio improvement (SI-SNRi) than both a single-mask IMP baseline and independently pruned IMP models at 25% / 50% / 75% sparsity:",
+        "source_spans": [
+          {
+            "start": 232,
+            "end": 414
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [2]",
+        "content": "SI-SNRi of 7.248 / 7.178 / 6.992 for RTL, compared to 6.885 / 6.970 / 6.967 for the single-mask IMP baseline and 5.295 / 5.775 / 5.899 for independent-model IMP;",
+        "source_spans": [
+          {
+            "start": 414,
+            "end": 576
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "elaboration",
+        "content": "the corresponding trainable parameter counts are 32.0K / 22.8K / 12.3K (RTL), 28.0K / 18.6K / 9.3K (single-mask IMP), and 84.1K / 56.1K / 28.0K (independent models).",
+        "source_spans": [
+          {
+            "start": 576,
+            "end": 741
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_7",
+    "global_id": "gcn_07cce89b0b5045b3",
+    "order": 7,
+    "title": "Mask Jaccard similarity as a label-free diagnostic of subnetwork collapse",
+    "content": "RTL identifies a failure mode called subnetwork collapse in which aggressive pruning causes specialized subnetworks to converge toward excessive overlap in their retained weights, coinciding with sharp performance degradation; overlap is quantified by the pairwise mask Jaccard similarity\n      $$\n      J(M_i,M_j)=\\frac{|M_i\\cap M_j|}{|M_i\\cup M_j|},\n      $$\n      where $M_i,M_j\\in\\{0,1\\}^d$ are binary masks and set operations are taken elementwise across prunable parameters. By plotting, for each subnetwork, balanced accuracy against its average Jaccard similarity to the other subnetworks across increasing sparsity, the experiments on CIFAR-10 and CIFAR-100 show that balanced accuracy remains stable while average mask similarity remains bounded, but that a rapid rise in average similarity coincides with a steep accuracy drop; this empirical coincidence supports the use of mask similarity as a label-free early-warning indicator of oversparsification.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "assertion",
+        "content": "RTL identifies a failure mode called subnetwork collapse in which aggressive pruning causes specialized subnetworks to converge toward excessive overlap in their retained weights, coinciding with sharp performance degradation;",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 227
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "overlap is quantified by the pairwise mask Jaccard similarity $$ J(M_i,M_j)=\\frac{|M_i\\cap M_j|}{|M_i\\cup M_j|}, $$ where $M_i,M_j\\in\\{0,1\\}^d$ are binary masks and set operations are taken elementwise across prunable parameters.",
+        "source_spans": [
+          {
+            "start": 227,
+            "end": 481
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "proof of the assertion [1]",
+        "content": "By plotting, for each subnetwork, balanced accuracy against its average Jaccard similarity to the other subnetworks across increasing sparsity, the experiments on CIFAR-10 and CIFAR-100 show that balanced accuracy remains stable while average mask similarity remains bounded, but that a rapid rise in average similarity coincides with a steep accuracy drop;",
+        "source_spans": [
+          {
+            "start": 481,
+            "end": 839
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "this empirical coincidence supports the use of mask similarity as a label-free early-warning indicator of oversparsification.",
+        "source_spans": [
+          {
+            "start": 839,
+            "end": 964
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "paper:1223972462526464001::conclusion_8",
+    "global_id": "gcn_0dc84725c1ed4315",
+    "order": 8,
+    "title": "Mask structural similarity aligns with WordNet semantic similarity in CIFAR-10",
+    "content": "In CIFAR-10 the paper measures structural similarity between subnetworks by per-layer mask Jaccard similarity and compares these values to semantic proximity between class labels computed via WordNet path similarity (a lexical-semantic distance metric derived from the WordNet taxonomy); averaged mask similarity is reported to be approximately 0.86 in shallow layers and approximately 0.31 in deep layers, and Spearman rank-order correlations between WordNet semantic proximity and mask similarity vary with layer depth and pruning level, increasing during training and—specifically in deep layers—rising up to moderate sparsity (around 55% weight pruning) before declining at excessive sparsity, which together indicate that deeper mask structure increasingly reflects high-level semantic relations until aggressive pruning destroys that alignment.",
+    "organized_parts": [
+      {
+        "number": 1,
+        "label": "other",
+        "content": "In CIFAR-10 the paper measures structural similarity between subnetworks by per-layer mask Jaccard similarity and compares these values to semantic proximity between class labels computed via WordNet path similarity",
+        "source_spans": [
+          {
+            "start": 0,
+            "end": 216
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "label": "elaboration",
+        "content": "(a lexical-semantic distance metric derived from the WordNet taxonomy)",
+        "source_spans": [
+          {
+            "start": 216,
+            "end": 286
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "label": "assertion",
+        "content": "; averaged mask similarity is reported to be approximately 0.86 in shallow layers and approximately 0.31 in deep layers,",
+        "source_spans": [
+          {
+            "start": 286,
+            "end": 407
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "label": "assertion",
+        "content": "and Spearman rank-order correlations between WordNet semantic proximity and mask similarity vary with layer depth and pruning level, increasing during training and—specifically in deep layers—rising up to moderate sparsity (around 55% weight pruning) before declining at excessive sparsity,",
+        "source_spans": [
+          {
+            "start": 407,
+            "end": 698
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "label": "relation of the assertions [3,4]",
+        "content": "which together indicate that",
+        "source_spans": [
+          {
+            "start": 698,
+            "end": 727
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "label": "assertion",
+        "content": "deeper mask structure increasingly reflects high-level semantic relations until aggressive pruning destroys that alignment.",
+        "source_spans": [
+          {
+            "start": 727,
+            "end": 850
+          }
+        ]
+      }
+    ]
+  }
+]
