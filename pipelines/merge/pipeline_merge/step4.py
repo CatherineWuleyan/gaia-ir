@@ -185,18 +185,25 @@ def _materialize_candidates(
 def _abduction_premises(payload: Mapping[str, Any], records: Mapping[str, JSONDict]) -> list[str]:
     evidence = [str(qid) for qid in payload["evidence_claim_ids"]]
     if len(evidence) == 1:
-        return evidence
-    if len(evidence) > 2:
-        # Multi-cause abduction is valid: preserve every supplied evidence
-        # claim instead of forcing the relation into a binary shape.
+        # The formalizer supplies the generic AltExp interface for an
+        # observation-only abduction.  Do not invent a second premise here.
         return evidence
     expression = str(payload.get("expression") or "")
     mentioned = _BRACKET_ID.findall(expression)
-    observation = next((qid for qid in reversed(mentioned) if qid in evidence), None)
-    if observation is None:
-        raise ValueError("abduction expression does not identify its observation")
-    alternative = next(qid for qid in evidence if qid != observation)
-    return [observation, alternative]
+    if "或" in expression or " or " in expression.lower():
+        separator = "等价" if "等价" in expression else " equivalent "
+        left, right = expression.split(separator, 1) if separator in expression else (expression, "")
+        alternatives = list(dict.fromkeys(qid for qid in mentioned if qid in evidence and f"[{qid}]" in left))
+        if len(alternatives) > 1:
+            raise ValueError("abduction alternatives must be combined into one disjunction")
+        if alternatives and right:
+            observations = list(dict.fromkeys(qid for qid in mentioned if qid in evidence and f"[{qid}]" in right))
+            if not observations:
+                raise ValueError("abduction expression does not identify its observation")
+            return [*observations, alternatives[0]]
+    # Several observation premises are valid; only explicit alternatives are
+    # restricted, and their disjunction must already be represented upstream.
+    return evidence
 
 
 def _background_from_expression(payload: Mapping[str, Any], records: Mapping[str, JSONDict]) -> list[str]:

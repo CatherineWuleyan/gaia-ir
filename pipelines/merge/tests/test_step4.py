@@ -45,6 +45,23 @@ class Step4Tests(unittest.TestCase):
         strategies = _strategies_from_weakpoint({"payload": payload}, {})
         self.assertEqual(["obs", "alt"], strategies[0]["premises"])
 
+    def test_abduction_rejects_multiple_uncombined_alternatives(self):
+        payload = {"evidence_claim_ids": ["obs", "h1", "h2"], "target_claim_id": ["hyp"],
+                   "reasoning_type": "abduction", "expression": "([hyp] 或 [h1] 或 [h2]) 等价 [obs]"}
+        with self.assertRaises(ValueError):
+            _abduction_premises(payload, {})
+
+    def test_abduction_allows_multiple_observation_premises(self):
+        payload = {"evidence_claim_ids": ["obs1", "obs2"], "target_claim_id": ["hyp"],
+                   "reasoning_type": "abduction", "expression": "[hyp] 等价 ([obs1] 且 [obs2])"}
+        self.assertEqual(["obs1", "obs2"], _abduction_premises(payload, {}))
+
+    def test_abduction_orders_multiple_observations_before_one_alternative(self):
+        payload = {"evidence_claim_ids": ["alt", "obs1", "obs2"], "target_claim_id": ["hyp"],
+                   "reasoning_type": "abduction",
+                   "expression": "([hyp] 或 [alt]) 等价 ([obs1] 且 [obs2])"}
+        self.assertEqual(["obs1", "obs2", "alt"], _abduction_premises(payload, {}))
+
     def test_analogy_without_target_condition_note_is_not_expanded(self):
         weakpoint = {"payload": {"evidence_claim_ids": ["law", "bridge"], "target_claim_id": ["target"],
                      "reasoning_type": "analogy", "expression": "[law] 通过 [bridge] 类比 [target]"}}

@@ -317,7 +317,7 @@ def _one_hop(
             payload = weakpoint.get("payload", weakpoint)
             if not isinstance(payload, Mapping):
                 continue
-            refs = [*payload.get("evidence_claim_ids", []), *payload.get("target_claim_ids", [])]
+            refs = [*payload.get("evidence_claim_ids", []), *payload.get("target_claim_id", [])]
             if any(isinstance(value, str) and any(value == qid or qid.endswith(f"::{value}") for qid in hit_qids) for value in refs):
                 weakpoint_id = str(weakpoint.get("id", weakpoint.get("weakpoint_id", "")))
                 nodes[("weakpoint", weakpoint_id, identity)] = {
