@@ -56,7 +56,7 @@ def _load_records(context: StageContext) -> dict[str, JSONDict]:
             if not isinstance(qid, str) or not qid or not isinstance(content, str) or not content.strip():
                 continue
             metadata = item.get("metadata") if isinstance(item.get("metadata"), Mapping) else {}
-            if metadata.get("helper_visibility") == "formal_internal":
+            if metadata.get("helper_visibility") == "formal_internal" or metadata.get("visibility") == "strategy_interface" or metadata.get("generated_kind") == "interface_claim":
                 continue
             records[qid] = {"qid": qid, "package": package, "content": content,
                             "type": item.get("type", "claim"), "metadata": dict(metadata),

@@ -79,7 +79,11 @@ def _knowledge_records(
         metadata = item.get("metadata")
         metadata = metadata if isinstance(metadata, Mapping) else {}
         visibility = metadata.get("visibility", metadata.get("helper_visibility"))
-        if visibility == "formal_internal":
+        # Strategy interface claims (for example AltExp placeholders) are
+        # compiler scaffolding, not paper propositions.  Retrieving them
+        # creates spurious cross-paper candidates and can swamp the actual
+        # evidence needed by merge.
+        if visibility in {"formal_internal", "strategy_interface"} or metadata.get("generated_kind") == "interface_claim":
             continue
         records.append({
             "qid": qid,
