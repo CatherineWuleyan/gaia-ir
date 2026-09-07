@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from itertools import combinations
 from typing import Any, Mapping
 from urllib.error import HTTPError, URLError
@@ -157,6 +158,59 @@ def _validate_operator(item: Mapping[str, Any], records: Mapping[str, JSONDict],
 class Step3IdentifyStructuresPlugin:
     stage_name = "step3_identify_structures"
 
+    @staticmethod
+    def _process_group(group: Mapping[str, Any], records: Mapping[str, JSONDict]):
+        """Run the existing gate/type/weakpoint sequence for one group."""
+        if not isinstance(group, Mapping) or not isinstance(group.get("group_id"), str):
+            raise ValueError("invalid Step 2 group")
+        candidates = _group_candidates(group, records)
+        if not candidates:
+            return [], [], []
+        operators: list[JSONDict] = []
+        weakpoints: list[JSONDict] = []
+        candidate_knowledges: list[JSONDict] = []
+        gate = _decode(_prompt("operator_gate", group["group_id"], candidates), "decisions")
+        operator_ids = {str(x.get("candidate_id")) for x in gate if x.get("decision") == "operator_candidate"}
+        operator_candidates = [x for x in candidates if x["candidate_id"] in operator_ids]
+        if operator_candidates:
+            typed = _decode(_prompt("operator_type", group["group_id"], operator_candidates), "decisions")
+            for item in typed:
+                op = _validate_operator(item, records, {x["candidate_id"] for x in operator_candidates})
+                if op is not None:
+                    operators.append(op)
+        non_operator = [x for x in candidates if x["candidate_id"] not in operator_ids]
+        if non_operator:
+            judged = _decode(_prompt("weakpoint", group["group_id"], non_operator), "weakpoints")
+            allowed = {x["candidate_id"] for x in non_operator}
+            for item in judged:
+                if item.get("candidate_id") not in allowed or item.get("reasoning_type") not in WEAKPOINT_TYPES:
+                    continue
+                evidence = item.get("evidence_claim_ids")
+                targets = item.get("target_claim_id")
+                if not isinstance(evidence, list) or not evidence or not isinstance(targets, list) or not targets:
+                    continue
+                evidence = [str(x) for x in evidence]
+                targets = [str(x) for x in targets]
+                if any(x not in records for x in evidence + [x for x in targets if not x.startswith("integration:")]):
+                    continue
+                package_ids = {records[qid]["package"] for qid in evidence}
+                package_ids.update(records[qid]["package"] for qid in targets if qid in records)
+                if len(package_ids) < 2:
+                    continue
+                if item.get("candidate_target"):
+                    target = _stable_id("candidate_K", [group["group_id"], *evidence])
+                    targets = [target]
+                    candidate_knowledges.append({"id": target, "kind": "candidate_claim", "content": None,
+                                                 "status": "placeholder", "provenance_qids": evidence})
+                if set(evidence) & set(targets) or not str(item.get("expression") or "").strip():
+                    continue
+                weakpoints.append({"id": _stable_id("weakpoint", [group["group_id"], str(item["candidate_id"])]),
+                                   "payload": {"evidence_claim_ids": evidence, "target_claim_id": targets,
+                                               "reasoning_type": item["reasoning_type"],
+                                               "evidence_anchor_ids": list(item.get("evidence_anchor_ids") or []),
+                                               "expression": str(item["expression"])}})
+        return operators, weakpoints, candidate_knowledges
+
     def run(self, context: StageContext) -> StageResult:
         try:
             validate_step1_inputs(context)
@@ -171,55 +225,15 @@ class Step3IdentifyStructuresPlugin:
             operators: list[JSONDict] = []
             weakpoints: list[JSONDict] = []
             candidate_knowledges: list[JSONDict] = []
-            for group in groups:
-                if not isinstance(group, Mapping) or not isinstance(group.get("group_id"), str):
-                    raise ValueError("invalid Step 2 group")
-                candidates = _group_candidates(group, records)
-                if not candidates:
-                    continue
-                gate = _decode(_prompt("operator_gate", group["group_id"], candidates), "decisions")
-                operator_ids = {str(x.get("candidate_id")) for x in gate if x.get("decision") == "operator_candidate"}
-                operator_candidates = [x for x in candidates if x["candidate_id"] in operator_ids]
-                if operator_candidates:
-                    typed = _decode(_prompt("operator_type", group["group_id"], operator_candidates), "decisions")
-                    for item in typed:
-                        op = _validate_operator(item, records, {x["candidate_id"] for x in operator_candidates})
-                        if op is not None:
-                            operators.append(op)
-                non_operator = [x for x in candidates if x["candidate_id"] not in operator_ids]
-                if non_operator:
-                    judged = _decode(_prompt("weakpoint", group["group_id"], non_operator), "weakpoints")
-                    allowed = {x["candidate_id"] for x in non_operator}
-                    for item in judged:
-                        if item.get("candidate_id") not in allowed or item.get("reasoning_type") not in WEAKPOINT_TYPES:
-                            continue
-                        evidence = item.get("evidence_claim_ids")
-                        targets = item.get("target_claim_id")
-                        if not isinstance(evidence, list) or not evidence or not isinstance(targets, list) or not targets:
-                            continue
-                        evidence = [str(x) for x in evidence]
-                        targets = [str(x) for x in targets]
-                        if any(x not in records for x in evidence + [x for x in targets if not x.startswith("integration:")]):
-                            continue
-                        # A domain weakpoint must connect at least two source
-                        # Packages; same-Package reasoning belongs to Pipeline
-                        # 7.0 and should not be reintroduced by merge.
-                        package_ids = {records[qid]["package"] for qid in evidence}
-                        package_ids.update(records[qid]["package"] for qid in targets if qid in records)
-                        if len(package_ids) < 2:
-                            continue
-                        if item.get("candidate_target"):
-                            target = _stable_id("candidate_K", [group["group_id"], *evidence])
-                            targets = [target]
-                            candidate_knowledges.append({"id": target, "kind": "candidate_claim", "content": None,
-                                                         "status": "placeholder", "provenance_qids": evidence})
-                        if set(evidence) & set(targets) or not str(item.get("expression") or "").strip():
-                            continue
-                        weakpoints.append({"id": _stable_id("weakpoint", [group["group_id"], str(item["candidate_id"])]),
-                                           "payload": {"evidence_claim_ids": evidence, "target_claim_id": targets,
-                                                       "reasoning_type": item["reasoning_type"],
-                                                       "evidence_anchor_ids": list(item.get("evidence_anchor_ids") or []),
-                                                       "expression": str(item["expression"])}})
+            # Groups are independent API jobs.  Keep the worker bounded and
+            # collect results in input order so artifact bytes remain stable.
+            with ThreadPoolExecutor(max_workers=min(4, max(1, len(groups)))) as pool:
+                group_results = list(pool.map(lambda group: self._process_group(group, records), groups))
+            for group_result in group_results:
+                group_operators, group_weakpoints, group_candidates = group_result
+                operators.extend(group_operators)
+                weakpoints.extend(group_weakpoints)
+                candidate_knowledges.extend(group_candidates)
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())
