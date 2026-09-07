@@ -10,12 +10,8 @@
         "scope": {
           "domain": "lottery-ticket-hypothesis",
           "selection": [
-            "papers:paper_1032903864883347458",
-            "papers:paper_867750889056633390",
-            "papers:paper_867752822639165809",
-            "papers:paper_867757662605934651",
-            "papers:paper_867760083600146646",
-            "papers:paper_867771291879342656"
+            "papers:paper_24bac745",
+            "papers:paper_24f05bae"
           ]
         }
       }

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1",
+  "artifacts": [
+    {"path": "/Users/catherinewu/Documents/gaia-ir/outputs/pipeline_single_runs/run_20260906T144445Z_24bac745/artifacts/blobs/artifact_85c67cf8f1ef4176929d026020a3eeeb.json", "kind": "gaia.ir", "media_type": "application/json"},
+    {"path": "/Users/catherinewu/Documents/gaia-ir/outputs/pipeline_single_runs/run_20260906T144445Z_24bac745/artifacts/blobs/artifact_bd5675a424d94afc84e3580a1b6df0dd.json", "kind": "formalization", "media_type": "application/json"},
+    {"path": "/Users/catherinewu/Documents/gaia-ir/outputs/pipeline_single_runs/run_20260906T144445Z_24bac745/artifacts/blobs/artifact_5f2880801dc84ab69c50f98eda1449f7.json", "kind": "knowledge.index", "media_type": "application/json"},
+    {"path": "/Users/catherinewu/Documents/gaia-ir/outputs/pipeline_single_runs/run_20260907T130930Z_02dd89ad/artifacts/blobs/artifact_e8b6f0fb4c4b4b2bb6e1e1c29f51330f.json", "kind": "gaia.ir", "media_type": "application/json"},
+    {"path": "/Users/catherinewu/Documents/gaia-ir/outputs/pipeline_single_runs/run_20260907T130930Z_02dd89ad/artifacts/blobs/artifact_eb3f2ab7f35f41ae80fe9600a3e9ad1e.json", "kind": "formalization", "media_type": "application/json"},
+    {"path": "/Users/catherinewu/Documents/gaia-ir/outputs/pipeline_single_runs/run_20260907T130930Z_02dd89ad/artifacts/blobs/artifact_c75d3cdffe6947948d736dac9bf75f88.json", "kind": "knowledge.index", "media_type": "application/json"}
+  ]
+}
