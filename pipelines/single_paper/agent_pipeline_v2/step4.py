@@ -112,6 +112,39 @@ def _normalize_expansion_metadata(parameters: JSONDict, result: Any) -> JSONDict
     return result
 
 
+def _coerce_expansion_shape(result: Any) -> Any:
+    """Keep only the named-strategy payload and discard unused decoration.
+
+    DeepSeek occasionally returns an otherwise usable expansion together with
+    explanatory ``operators``/``formal_expr`` fields, or emits a helper note
+    that is not referenced by any strategy.  Those fields are outside the
+    Step 4 contract; removing them is a mechanical normalization, not a new
+    inference.  A payload with no strategies is represented as an explicit
+    evidence-insufficient expansion.
+    """
+    if not isinstance(result, dict):
+        return result
+    knowledges = result.get("knowledges")
+    strategies = result.get("strategies")
+    if not isinstance(knowledges, dict) or not isinstance(strategies, list):
+        return result
+    if not strategies:
+        return {"knowledges": {}, "strategies": []}
+    referenced: set[str] = set()
+    for strategy in strategies:
+        if not isinstance(strategy, dict):
+            continue
+        referenced.update(item for item in strategy.get("premises", []) if isinstance(item, str))
+        conclusion = strategy.get("conclusion")
+        if isinstance(conclusion, str):
+            referenced.add(conclusion)
+        referenced.update(item for item in strategy.get("background", []) if isinstance(item, str))
+    return {
+        "knowledges": {key: value for key, value in knowledges.items() if key in referenced},
+        "strategies": strategies,
+    }
+
+
 def _validate_expansion(parameters: JSONDict, result: Any) -> None:
     """Check references, source locations and the requested logical skeleton."""
     if not isinstance(result, dict) or set(result) != {"knowledges", "strategies"}:
@@ -752,7 +785,11 @@ class Step4FormalizeReasoningPlugin:
                 _, _, parameters, request = job
                 response: ToolCallResponse | None = None
                 error_message = ""
+                last_provider_succeeded = False
+                last_failure_was_validation = False
                 for attempt in range(2):
+                    provider_succeeded = False
+                    last_failure_was_validation = False
                     current_request = request if attempt == 0 else ToolCallRequest(
                         f"{request.call_id}_repair", tool.name, tool.version, "expand_weakpoint",
                         request.inputs, {**copy.deepcopy(parameters), "repair_feedback": error_message},
@@ -764,8 +801,21 @@ class Step4FormalizeReasoningPlugin:
                             raise TypeError("Step 4 tool returned a non-ToolCallResponse")
                         validate_tool_response(current_request, response)
                         if response.status != "succeeded":
+                            # The tool wraps local schema/logic validation
+                            # errors around an otherwise successful provider
+                            # payload.  Those can safely become an explicit
+                            # evidence-insufficient expansion below; network
+                            # and HTTP failures cannot.
+                            last_provider_succeeded = (
+                                isinstance(response.raw, dict)
+                                and (response.error or {}).get("type") == "ValueError"
+                            )
+                            last_failure_was_validation = last_provider_succeeded
                             raise ValueError(str((response.error or {}).get("message", "Step 4 tool failed")))
-                        normalized = _ensure_abduction_altexp(response.normalized)
+                        provider_succeeded = True
+                        normalized = _coerce_expansion_shape(
+                            _ensure_abduction_altexp(response.normalized)
+                        )
                         _validate_expansion(parameters, normalized)
                         response = ToolCallResponse(
                             current_request.call_id, "succeeded", response.raw, normalized=normalized,
@@ -774,11 +824,31 @@ class Step4FormalizeReasoningPlugin:
                         break
                     except Exception as exc:
                         error_message = str(exc)
+                        last_provider_succeeded = last_provider_succeeded or provider_succeeded
+                        last_failure_was_validation = provider_succeeded
                         response = ToolCallResponse(
                             current_request.call_id, "failed", None,
                             error={"type": type(exc).__name__, "message": error_message},
                         )
                 assert response is not None
+                # A provider response that is syntactically valid but cannot
+                # be made to satisfy the strict named-strategy contract is
+                # evidence-insufficient for this weakpoint. Preserve it as an
+                # explicit empty expansion (the existing unresolved-
+                # weakpoint path), rather than inventing an edge or failing
+                # the entire paper. Transport/API failures remain failures.
+                if response.status != "succeeded" and last_failure_was_validation:
+                    response = ToolCallResponse(
+                        request.call_id,
+                        "succeeded",
+                        response.raw,
+                        normalized={"knowledges": {}, "strategies": []},
+                        metadata={
+                            "normalized_alt_exp": True,
+                            "evidence_insufficient": True,
+                            "validation_error": error_message,
+                        },
+                    )
                 return response
 
             # Bound concurrent provider requests.  The default worker count
