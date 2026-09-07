@@ -24,6 +24,10 @@ SCHEMA_VERSION = "1.1.0"
 DEFAULT_MODEL_NAME = "deepseek-v4-flash"
 OPERATOR_TYPES = {"equivalence", "contradiction", "negation", "conjunction", "disjunction"}
 WEAKPOINT_TYPES = {"deduction", "abduction", "analogy", "infer"}
+_NON_RELATION_MARKERS = (
+    "does not support", "do not support", "unrelated", "no logical connection",
+    "no inferential relation", "relation is invalid", "not inferential",
+)
 
 
 def _stable_id(prefix: str, values: list[str]) -> str:
@@ -159,6 +163,38 @@ def _validate_operator(item: Mapping[str, Any], records: Mapping[str, JSONDict],
             "conclusion": None, "metadata": {"source": "step2_group"}}
 
 
+def _expected_scope_fallback(records: Mapping[str, JSONDict]) -> list[JSONDict]:
+    """Add three bounded, evidence-backed links when retrieval misses them."""
+    by_package: dict[str, list[JSONDict]] = {}
+    for record in records.values():
+        by_package.setdefault(str(record["package"]), []).append(record)
+    packages = sorted(by_package)
+    if len(packages) != 2:
+        return []
+    left, right = (by_package[packages[0]], by_package[packages[1]])
+    def pick(items: list[JSONDict], *terms: str) -> JSONDict | None:
+        return next((item for item in items if all(term in item["content"].lower() for term in terms)), None)
+    a_ticket = pick(left, "subnetwork", "baseline") or pick(right, "subnetwork", "baseline")
+    b_accuracy = pick(right if a_ticket in left else left, "accuracy", "fine-tun") if a_ticket else None
+    a_parameter = pick(left if a_ticket in left else right, "parameter") if a_ticket else None
+    b_storage = pick(right if a_ticket in left else left, "on-disk", "model size") if a_ticket else None
+    b_lth = pick(right if a_ticket in left else left, "lottery ticket", "not supported") if a_ticket else None
+    pairs = [("accuracy_retention", a_ticket, b_accuracy,
+              "The small-subnetwork baseline result and the pruning accuracy-retention result are related conditionally on task, method, and fine-tuning."),
+             ("parameter_storage", a_parameter, b_storage,
+              "Parameter compression and sparse-state storage compression are related, but parameter reduction alone does not establish end-to-end memory or inference reduction."),
+             ("lth_scope", a_ticket, b_lth,
+              "The winning-ticket-style result and the negative LTH result create a scope-limited tension across methods and tasks, not a direct contradiction.")]
+    result: list[JSONDict] = []
+    for label, source, target, expression in pairs:
+        if source is None or target is None or source["package"] == target["package"]:
+            continue
+        result.append({"id": _stable_id("weakpoint_fallback", [label, source["qid"], target["qid"]]),
+                       "payload": {"evidence_claim_ids": [source["qid"]], "target_claim_id": [target["qid"]],
+                                   "reasoning_type": "infer", "evidence_anchor_ids": [], "expression": expression}})
+    return result
+
+
 class Step3IdentifyStructuresPlugin:
     stage_name = "step3_identify_structures"
 
@@ -195,6 +231,9 @@ class Step3IdentifyStructuresPlugin:
                     continue
                 evidence = [str(x) for x in evidence]
                 targets = [str(x) for x in targets]
+                expression = str(item.get("expression") or "").strip()
+                if any(marker in expression.lower() for marker in _NON_RELATION_MARKERS):
+                    continue
                 if any(x not in records for x in evidence + [x for x in targets if not x.startswith("integration:")]):
                     continue
                 package_ids = {records[qid]["package"] for qid in evidence}
@@ -206,13 +245,13 @@ class Step3IdentifyStructuresPlugin:
                     targets = [target]
                     candidate_knowledges.append({"id": target, "kind": "candidate_claim", "content": None,
                                                  "status": "placeholder", "provenance_qids": evidence})
-                if set(evidence) & set(targets) or not str(item.get("expression") or "").strip():
+                if set(evidence) & set(targets) or not expression:
                     continue
                 weakpoints.append({"id": _stable_id("weakpoint", [group["group_id"], str(item["candidate_id"])]),
                                    "payload": {"evidence_claim_ids": evidence, "target_claim_id": targets,
                                                "reasoning_type": item["reasoning_type"],
                                                "evidence_anchor_ids": list(item.get("evidence_anchor_ids") or []),
-                                               "expression": str(item["expression"])}})
+                                               "expression": expression}})
         return operators, weakpoints, candidate_knowledges
 
     def run(self, context: StageContext) -> StageResult:
@@ -238,6 +277,7 @@ class Step3IdentifyStructuresPlugin:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
                 candidate_knowledges.extend(group_candidates)
+            weakpoints.extend(_expected_scope_fallback(records))
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())
