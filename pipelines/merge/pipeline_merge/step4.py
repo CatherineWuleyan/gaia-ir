@@ -277,7 +277,21 @@ def _build_document(
                 key: {"type": "claim", "content": value} for key, value in candidate_contents.items()}}))
         except ValueError as exc:
             findings.append(Finding("STEP4_WEAKPOINT_NOT_EXPANDED", "warning", f"Retained {weakpoint['id']}: {exc}"))
-    _validate_acyclic(raw_strategies)
+    # LLM weakpoint judgments can point in both directions across overlapping
+    # retrieval groups.  A single cycle must not discard the entire merge: keep
+    # a deterministic maximal acyclic subset and report the omitted strategy.
+    acyclic_strategies: list[JSONDict] = []
+    for strategy in raw_strategies:
+        try:
+            _validate_acyclic([*acyclic_strategies, strategy])
+        except ValueError as exc:
+            findings.append(Finding(
+                "STEP4_CYCLIC_STRATEGY_SKIPPED", "warning",
+                f"Skipped cyclic integration strategy {strategy.get('strategy_id', '<unbound>')}: {exc}",
+            ))
+            continue
+        acyclic_strategies.append(strategy)
+    raw_strategies = acyclic_strategies
     supported_candidates = {str(strategy["conclusion"]) for strategy in raw_strategies} & set(candidate_contents)
     for candidate_id in sorted(set(candidate_contents) - supported_candidates):
         findings.append(Finding("STEP4_CANDIDATE_K_UNSUPPORTED", "warning",
