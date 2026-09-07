@@ -22,7 +22,7 @@
     {"name": "step4_formalize_integration", "plugin": "pipeline_merge.step4:Step4FormalizeIntegrationPlugin", "options": {}},
     {
       "name": "step5_compile_gaia_ir",
-      "plugin": "pipeline_harness.domain.compiler:Step5CompileGaiaIRPlugin",
+      "plugin": "pipeline_merge.step5:Step5CompileMergedGaiaIRPlugin",
       "options": {"compiler_plugin": "pipeline_harness.domain.compiler:Gaia05OfficialCompilerTool"}
     }
   ]
