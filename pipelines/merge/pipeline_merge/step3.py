@@ -27,6 +27,7 @@ WEAKPOINT_TYPES = {"deduction", "abduction", "analogy", "infer"}
 _NON_RELATION_MARKERS = (
     "does not support", "do not support", "unrelated", "no logical connection",
     "no inferential relation", "relation is invalid", "not inferential",
+    "inference is weak", "weak because", "not universally",
 )
 
 
