@@ -43,6 +43,25 @@ class _InsufficientEvidence(ValueError):
     """A semantic expansion that must remain an unresolved weakpoint."""
 
 
+def _step4_anchor_excerpt(context: StageContext, anchor: JSONDict) -> str | None:
+    """Resolve source anchors across harness fork artifact-ID remapping."""
+    excerpt = _anchor_excerpt(context, anchor)
+    if excerpt is not None:
+        return excerpt
+    source_id = anchor.get("artifact_id")
+    if not isinstance(source_id, str):
+        return None
+    for reference in context.inputs:
+        fork = reference.metadata.get("_fork", {})
+        if isinstance(fork, dict) and fork.get("source_artifact_id") == source_id:
+            remapped = dict(anchor)
+            remapped["artifact_id"] = reference.artifact_id
+            excerpt = _anchor_excerpt(context, remapped)
+            if excerpt is not None:
+                return excerpt
+    return None
+
+
 def _rewrite_references(text: str, bindings: dict[str, str]) -> str:
     """Rewrite explicit ID references, never ordinary words or variable names."""
     return re.sub(r"\[([A-Za-z_][A-Za-z0-9_]*)\]", lambda match: f"[{bindings.get(match[1], match[1])}]", text)
@@ -701,7 +720,7 @@ class Step4FormalizeReasoningPlugin:
                 }
                 for anchor in document["workflow"]["source_anchors"]:
                     if anchor["source_kind"] == PAPER_TEXT_KIND and anchor["anchor_id"] in required_anchor_ids:
-                        excerpt = _anchor_excerpt(context, anchor)
+                        excerpt = _step4_anchor_excerpt(context, anchor)
                         if not excerpt:
                             findings.append(Finding("STEP4_MISSING_ANCHOR", "warning", f"Some evidence is unavailable for anchor {anchor['anchor_id']}"))
                             continue
