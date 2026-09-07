@@ -164,6 +164,26 @@ def _coerce_expansion_shape(result: Any) -> Any:
     }
 
 
+def _scope_compatible_support(target: str, support: set[str], knowledges: dict[str, JSONDict]) -> bool:
+    """Preserve explicit experimental qualifiers in evidence-to-claim edges."""
+    target_content = knowledges.get(target, {}).get("content")
+    if not isinstance(target_content, dict):
+        return True
+    target_text = str(target_content.get("canonical", "")).lower()
+    if "without fine-tuning" not in target_text and "without fine tuning" not in target_text:
+        return True
+    support_text = " ".join(
+        str(knowledges.get(key, {}).get("content", {}).get("canonical", "")).lower()
+        for key in support
+        if isinstance(knowledges.get(key, {}).get("content"), dict)
+    )
+    no_tuning = any(phrase in support_text for phrase in (
+        "without fine-tuning", "without fine tuning", "not combined with fine-tuning",
+        "not combined with fine tuning", "no fine-tuning", "no fine tuning",
+    ))
+    return no_tuning and "global" in support_text and "fine-grained" in support_text
+
+
 def _validate_expansion(parameters: JSONDict, result: Any) -> None:
     """Check references, source locations and the requested logical skeleton."""
     if not isinstance(result, dict) or set(result) != {"knowledges", "strategies"}:
@@ -312,6 +332,12 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
                     raise ValueError("multiple evidence premises require a grounded summary claim before abduction")
             elif not evidence <= ancestry(observation):
                 raise ValueError("abduction observation summary must derive from every evidence premise")
+            if not _scope_compatible_support(
+                strategy["conclusion"], ancestry(observation), knowledges
+            ):
+                raise _InsufficientEvidence(
+                    "abduction support omits an explicit scope qualifier from the target claim"
+                )
             if len(premises) == 2:
                 alternative = premises[1]
                 if alternative in evidence or alternative in targets or alternative not in knowledges:
@@ -756,6 +782,16 @@ class Step4FormalizeReasoningPlugin:
                         and all(item in graph_nodes and item not in premises for item in targets)
                     )
                     if valid:
+                        if any(
+                            not _scope_compatible_support(
+                                target, set(premises), document["knowledges"]
+                            )
+                            for target in targets
+                        ):
+                            findings.append(Finding(
+                                "STEP4_SCOPE_MISMATCH", "warning",
+                                f"Retained {weakpoint['id']}: evidence omits an explicit target scope qualifier"))
+                            continue
                         # Infer has no ordered logical rule; stable graph order
                         # prevents equivalent links from receiving different
                         # official IDs across retries.

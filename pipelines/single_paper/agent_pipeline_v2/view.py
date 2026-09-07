@@ -22,7 +22,12 @@ def _is_internal_helper(knowledge_id: str, knowledge: Mapping[str, Any]) -> bool
     value = str(knowledge_id)
     return bool(
         knowledge.get("metadata", {}).get("derived_ast_helper") is True
-        or re.search(r"(^|::)__|helper[_-]?relation|operator[_-]?result|disjunction[_-]?result|alternative[_-]?explanation", value, re.I)
+        or re.search(
+            r"(^|::)__|helper[_-]?relation|operator[_-]?result|disjunction[_-]?result|"
+            r"alternative[_-]?explanation|step4_weakpoint_",
+            value,
+            re.I,
+        )
     )
 
 
