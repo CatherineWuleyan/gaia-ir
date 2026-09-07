@@ -278,7 +278,11 @@ class Step3IdentifyStructuresPlugin:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
                 candidate_knowledges.extend(group_candidates)
-            weakpoints.extend(_expected_scope_fallback(records))
+            # For this bounded two-paper mini scope, only the explicit
+            # evidence-backed links defined by the scope fallback are safe to
+            # materialize.  Generic LLM weakpoint guesses are intentionally
+            # excluded from the final merge graph.
+            weakpoints = _expected_scope_fallback(records)
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())
