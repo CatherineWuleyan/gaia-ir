@@ -65,8 +65,22 @@ def _normalize_expansion_metadata(parameters: JSONDict, result: Any) -> JSONDict
         item["anchor_id"] for item in parameters.get("source_excerpts", [])
         if isinstance(item, dict) and isinstance(item.get("anchor_id"), str)
     }
+    weakpoint = parameters["weakpoint"]["payload"]
+    # In the multi-evidence path the original-paper excerpts are deliberately
+    # omitted.  A newly generated summary claim A is nevertheless grounded by
+    # the existing evidence claims, so their already-validated anchors are the
+    # only additional anchors that may be copied into A.
+    if weakpoint.get("reasoning_type") == "abduction" and len(weakpoint.get("evidence_claim_ids", [])) > 1:
+        existing = parameters.get("knowledges", {})
+        evidence_anchors = {
+            anchor_id
+            for claim_id in weakpoint.get("evidence_claim_ids", [])
+            for anchor_id in existing.get(claim_id, {}).get("source_anchor_ids", [])
+            if isinstance(anchor_id, str) and anchor_id.strip()
+        }
+        supplied |= evidence_anchors
     weakpoint_anchors = [
-        anchor_id for anchor_id in parameters["weakpoint"]["payload"].get("evidence_anchor_ids", [])
+        anchor_id for anchor_id in weakpoint.get("evidence_anchor_ids", [])
         if anchor_id in supplied
     ]
     alternatives = {
@@ -450,7 +464,9 @@ class WeakpointExpansionTool:
             prompt_parameters = copy.deepcopy(parameters)
             prompt_parameters["source_excerpts"] = []
             if not parameters.get("rebuild_group"):
-                keep_ids = set(evidence_ids) | set(weakpoint.get("target_claim_id", []))
+                target_id = weakpoint.get("target_claim_id")
+                target_ids = ([target_id] if isinstance(target_id, str) else list(target_id or []))
+                keep_ids = set(evidence_ids) | set(target_ids)
                 prompt_parameters["knowledges"] = {
                     key: value for key, value in parameters["knowledges"].items() if key in keep_ids
                 }
@@ -765,7 +781,11 @@ class Step4FormalizeReasoningPlugin:
                 assert response is not None
                 return response
 
-            with ThreadPoolExecutor() as executor:
+            # Bound concurrent provider requests.  The default worker count
+            # scales with host CPUs and can exceed the configured endpoint's
+            # connection capacity, turning transient refusals into retained
+            # weakpoints while the run is incorrectly marked successful.
+            with ThreadPoolExecutor(max_workers=min(4, max(1, len(jobs)))) as executor:
                 responses = list(executor.map(expand_one, jobs))
 
             # executor.map preserves the frozen weakpoint order. Audit and
