@@ -83,7 +83,10 @@ def _knowledge_records(
         # compiler scaffolding, not paper propositions.  Retrieving them
         # creates spurious cross-paper candidates and can swamp the actual
         # evidence needed by merge.
-        if visibility in {"formal_internal", "strategy_interface"} or metadata.get("generated_kind") == "interface_claim":
+        source_knowledge_id = str(metadata.get("source_knowledge_id") or "")
+        if (visibility in {"formal_internal", "strategy_interface"}
+                or metadata.get("generated_kind") == "interface_claim"
+                or "step4_weakpoint_relation" in source_knowledge_id):
             continue
         records.append({
             "qid": qid,
