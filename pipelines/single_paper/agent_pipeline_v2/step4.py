@@ -752,7 +752,10 @@ class Step4FormalizeReasoningPlugin:
                 _, _, parameters, request = job
                 response: ToolCallResponse | None = None
                 error_message = ""
-                for attempt in range(2):
+                # Invalid structured expansions are semantic failures, not
+                # acceptable retained weakpoints. Give the provider a few
+                # repair opportunities before failing the stage explicitly.
+                for attempt in range(4):
                     current_request = request if attempt == 0 else ToolCallRequest(
                         f"{request.call_id}_repair", tool.name, tool.version, "expand_weakpoint",
                         request.inputs, {**copy.deepcopy(parameters), "repair_feedback": error_message},
@@ -807,8 +810,8 @@ class Step4FormalizeReasoningPlugin:
             for (_, weakpoint, _, _), response in zip(jobs, responses):
                 if response.status != "succeeded":
                     findings.append(Finding(
-                        "STEP4_EXPANSION_FAILED", "warning",
-                        f"Retained {weakpoint['id']}: "
+                        "STEP4_EXPANSION_FAILED", "error",
+                        f"Semantic expansion failed for {weakpoint['id']}: "
                         f"{(response.error or {}).get('message', 'semantic expansion failed')}"))
                     continue
                 result = response.normalized
@@ -857,6 +860,11 @@ class Step4FormalizeReasoningPlugin:
                     findings.append(Finding(
                         "STEP4_EXPANSION_FAILED", "warning",
                         f"Retained {weakpoint['id']}: {exc}"))
+            # A failed semantic response must never be promoted into a
+            # succeeded run. The failed response artifact is retained for
+            # audit, while the harness leaves the run retryable/failed.
+            if any(item.code == "STEP4_EXPANSION_FAILED" and item.severity == "error" for item in findings):
+                return StageResult("failed", drafts, findings)
             workflow, graph = document["workflow"], document["graph"]
             suppressed = _suppress_strategy_shortcuts(graph["strategies"])
             if suppressed:
