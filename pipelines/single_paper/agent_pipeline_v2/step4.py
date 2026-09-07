@@ -825,7 +825,7 @@ class Step4FormalizeReasoningPlugin:
                     except Exception as exc:
                         error_message = str(exc)
                         last_provider_succeeded = last_provider_succeeded or provider_succeeded
-                        last_failure_was_validation = provider_succeeded
+                        last_failure_was_validation = last_failure_was_validation or provider_succeeded
                         response = ToolCallResponse(
                             current_request.call_id, "failed", None,
                             error={"type": type(exc).__name__, "message": error_message},
