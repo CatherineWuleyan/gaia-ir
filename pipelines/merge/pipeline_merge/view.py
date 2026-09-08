@@ -49,6 +49,7 @@ class MergeFormalizationViewAdapter:
                 "label": label,
                 "kind": knowledge.get("type", "claim"),
                 "layer": "claims",
+                "step": 4,
                 "min_granularity": "overview",
                 "visible_at": ["overview", "standard"],
                 "summary": canonical,
@@ -73,40 +74,26 @@ class MergeFormalizationViewAdapter:
             strategy_id = str(strategy.get("strategy_id", ""))
             if not strategy_id:
                 continue
-            strategy_node = f"strategy:{strategy_id}"
             strategy_type = str(strategy.get("type", "infer"))
-            nodes.append({
-                "id": strategy_node,
-                "label": strategy_type,
-                "kind": "strategy",
-                "layer": "strategies",
-                "min_granularity": "overview",
-                "visible_at": ["overview", "standard"],
-                "summary": strategy_type,
-                "details": strategy,
-            })
-            for index, premise in enumerate(strategy.get("premises", [])):
-                source = f"claim:{premise}"
-                if source in {node["id"] for node in nodes}:
-                    edges.append({
-                        "id": f"{strategy_node}:premise:{index}",
-                        "source": source,
-                        "target": strategy_node,
-                        "label": "premise",
-                        "min_granularity": "overview",
-                        "visible_at": ["overview", "standard"],
-                    })
             conclusion = strategy.get("conclusion")
             target = f"claim:{conclusion}" if isinstance(conclusion, str) else ""
             if target and target in {node["id"] for node in nodes}:
-                edges.append({
-                    "id": f"{strategy_node}:conclusion",
-                    "source": strategy_node,
-                    "target": target,
-                    "label": "conclusion",
-                    "min_granularity": "overview",
-                    "visible_at": ["overview", "standard"],
-                })
+                for index, premise in enumerate(strategy.get("premises", [])):
+                    source = f"claim:{premise}"
+                    if source in {node["id"] for node in nodes}:
+                        edges.append({
+                            "id": f"strategy:{strategy_id}:{index}",
+                            "source": source,
+                            "target": target,
+                            "label": "→",
+                            "semantic_type": strategy_type,
+                            "layer": "operators",
+                            "edge_class": "reasoning",
+                            "reasoning_state": "confirmed",
+                            "step": 4,
+                            "min_granularity": "standard",
+                            "visible_at": ["standard"],
+                        })
 
         return ViewDocument(
             title="Merged semantic graph",
@@ -116,7 +103,7 @@ class MergeFormalizationViewAdapter:
             search_documents=search_documents,
             layers=[
                 {"id": "claims", "label": "Claims", "default_visible": True},
-                {"id": "strategies", "label": "Strategies", "default_visible": True},
+                {"id": "operators", "label": "Relations", "default_visible": True},
             ],
             metadata={
                 "adapter": "merge_formalization",
