@@ -21,15 +21,31 @@ class MergeFormalizationViewAdapter:
     ) -> ViewDocument:
         candidates = [
             ref for ref in artifacts
-            if ref.kind == "formalization"
-            and ref.metadata.get("step_name") == "step4_formalize_integration"
+            if ref.kind == "gaia.ir"
+            and ref.producer_stage == "step5_compile_gaia_ir"
         ]
+        source_kind = "gaia.ir"
         if not candidates:
-            raise ValueError("merge run has no step4 integration formalization")
+            candidates = [
+                ref for ref in artifacts
+                if ref.kind == "formalization"
+                and ref.metadata.get("step_name") == "step4_formalize_integration"
+            ]
+            source_kind = "formalization"
+        if not candidates:
+            raise ValueError("merge run has no final Gaia IR or integration formalization")
         ref = candidates[-1]
         document = json.loads(store.artifact_path(ref).read_text(encoding="utf-8"))
-        graph = document.get("graph", {})
-        knowledges = document.get("knowledges", {})
+        if source_kind == "gaia.ir":
+            graph = {"strategies": document.get("strategies", [])}
+            raw_knowledges = document.get("knowledges", [])
+            knowledges = {
+                item.get("id"): item for item in raw_knowledges
+                if isinstance(item, dict) and isinstance(item.get("id"), str)
+            }
+        else:
+            graph = document.get("graph", {})
+            knowledges = document.get("knowledges", {})
         if not isinstance(graph, dict) or not isinstance(knowledges, dict):
             raise ValueError("integration formalization has invalid graph or knowledges")
 
@@ -40,8 +56,11 @@ class MergeFormalizationViewAdapter:
             if not isinstance(knowledge_id, str) or not isinstance(knowledge, dict):
                 continue
             node_ids.add(knowledge_id)
-            content = knowledge.get("content", {})
-            canonical = content.get("canonical", "") if isinstance(content, dict) else ""
+            content = knowledge.get("content", "")
+            if isinstance(content, dict):
+                canonical = content.get("canonical", "")
+            else:
+                canonical = str(content)
             label = knowledge_id.rsplit("::", 1)[-1]
             node_id = f"claim:{knowledge_id}"
             nodes.append({
