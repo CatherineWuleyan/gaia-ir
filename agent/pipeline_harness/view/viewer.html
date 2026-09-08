@@ -134,7 +134,8 @@
       const ids=(Array.isArray(graph.nodes) ? graph.nodes : Object.keys(knowledges)).filter(id=>!isHelperId(id));
       const strategyOperators=(graph.strategies || []).flatMap(strategy => (strategy.formal_expr?.operators || []).map((op,index)=>({...op,id:op.id || `${strategy.strategy_id || strategy.id || 'strategy'}:operator:${index+1}`,type:op.type || op.operator})));
       const nodeId=id => `step:${step}:knowledge:${id}`;
-      const displayClaimLabel=id => { const value=String(id), parts=value.split('::'); return parts.length === 2 ? `${parts[0].split(':').pop()}-${parts[1]}` : value; };
+      const articleName=String(document?.package?.name || '');
+      const displayClaimLabel=id => { const value=String(id), parts=value.split('::'); return parts.length === 2 ? `${parts[0].split(':').pop()}-${parts[1]}` : (articleName ? `${articleName}-${value}` : value); };
       ids.forEach(id => { const k=knowledges[id] || {}, content=k.content, summary=typeof content==='string' ? content : (content?.canonical || content?.text || '');
         nodes.push({id:nodeId(id), entity_id:id, label:displayClaimLabel(id), display_label:displayClaimLabel(id), display_meta:k.type || 'claim', kind:k.type || 'claim', layer:'claims', step, summary, text:summary, details:k, min_granularity:'overview'});
         search_documents.push({id:nodeId(id), title:displayClaimLabel(id), text:summary, tags:[k.type || 'claim'], refs:[nodeId(id)]}); });
