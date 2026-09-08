@@ -1,7 +1,7 @@
 {
   "pipeline_id": "pipeline-merge-step5",
   "version": "0.6.0",
-  "view_adapter": "pipeline_merge.view:MergeFormalizationViewAdapter",
+  "view_adapter": "agent_pipeline_v2.view:V2FormalizationViewAdapter",
   "stages": [
     {
       "name": "step0_select_scope",
