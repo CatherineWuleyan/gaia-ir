@@ -31,6 +31,15 @@ def _is_internal_helper(knowledge_id: str, knowledge: Mapping[str, Any]) -> bool
     )
 
 
+def _display_claim_label(knowledge_id: str) -> str:
+    """Keep stable IDs internally while making paper claim labels readable."""
+    if "::" in knowledge_id:
+        package, claim = knowledge_id.split("::", 1)
+        article = package.split(":", 1)[-1]
+        return f"{article}-{claim}"
+    return knowledge_id
+
+
 class V2FormalizationViewAdapter:
     version = "4"
 
@@ -80,8 +89,8 @@ class V2FormalizationViewAdapter:
                 nodes.append({
                     "id": node_id,
                     "entity_id": knowledge_id,
-                    "label": knowledge_id,
-                    "display_label": knowledge_id,
+                    "label": _display_claim_label(knowledge_id),
+                    "display_label": _display_claim_label(knowledge_id),
                     "display_meta": "formal internal helper" if is_internal_helper else knowledge["type"],
                     "kind": knowledge["type"],
                     "layer": "helpers" if is_internal_helper else "claims",

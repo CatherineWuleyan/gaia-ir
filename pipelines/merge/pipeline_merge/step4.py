@@ -77,12 +77,20 @@ def _load_source_graph(context: StageContext, records: Mapping[str, JSONDict]) -
     nodes: list[str] = []
     operators: list[JSONDict] = []
     strategies: list[JSONDict] = []
-    for ref in context.find_all("gaia.ir"):
+    for ref in context.find_all("formalization"):
         payload = _read_json(context, ref)
-        for item in payload.get("knowledges") or []:
-            if isinstance(item, Mapping) and isinstance(item.get("id"), str) and item["id"] in records:
-                nodes.append(item["id"])
-        for item in payload.get("operators") or []:
+        knowledge_map = payload.get("knowledges") if isinstance(payload.get("knowledges"), Mapping) else {}
+        for item in payload.get("graph", {}).get("nodes", []):
+            if isinstance(item, str) and item in knowledge_map:
+                nodes.append(item)
+                knowledge = knowledge_map[item]
+                content = knowledge.get("content", {}) if isinstance(knowledge, Mapping) else {}
+                canonical = content.get("canonical") if isinstance(content, Mapping) else None
+                if item not in records and isinstance(canonical, str) and canonical.strip():
+                    records[item] = {"qid": item, "package": "papers:source", "content": canonical,
+                                      "type": knowledge.get("type", "claim"), "metadata": {},
+                                      "category": None, "source_anchor_ids": []}
+        for item in payload.get("graph", {}).get("operators", []) or []:
             if not isinstance(item, Mapping):
                 continue
             variables = [str(value) for value in item.get("variables") or []]
@@ -93,7 +101,7 @@ def _load_source_graph(context: StageContext, records: Mapping[str, JSONDict]) -
                                   "type": str(item.get("operator") or item.get("type") or "infer"),
                                   "variables": variables, "conclusion": str(conclusion) if conclusion is not None else None,
                                   "metadata": {"source": "paper_internal", **dict(item.get("metadata") or {})}})
-        for item in payload.get("strategies") or []:
+        for item in payload.get("graph", {}).get("strategies", []) or []:
             if not isinstance(item, Mapping):
                 continue
             premises = [str(value) for value in item.get("premises") or []]

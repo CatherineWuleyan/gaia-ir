@@ -134,9 +134,10 @@
       const ids=(Array.isArray(graph.nodes) ? graph.nodes : Object.keys(knowledges)).filter(id=>!isHelperId(id));
       const strategyOperators=(graph.strategies || []).flatMap(strategy => (strategy.formal_expr?.operators || []).map((op,index)=>({...op,id:op.id || `${strategy.strategy_id || strategy.id || 'strategy'}:operator:${index+1}`,type:op.type || op.operator})));
       const nodeId=id => `step:${step}:knowledge:${id}`;
+      const displayClaimLabel=id => { const value=String(id), parts=value.split('::'); return parts.length === 2 ? `${parts[0].split(':').pop()}-${parts[1]}` : value; };
       ids.forEach(id => { const k=knowledges[id] || {}, content=k.content, summary=typeof content==='string' ? content : (content?.canonical || content?.text || '');
-        nodes.push({id:nodeId(id), entity_id:id, label:id, display_label:id, display_meta:k.type || 'claim', kind:k.type || 'claim', layer:'claims', step, summary, text:summary, details:k, min_granularity:'overview'});
-        search_documents.push({id:nodeId(id), title:id, text:summary, tags:[k.type || 'claim'], refs:[nodeId(id)]}); });
+        nodes.push({id:nodeId(id), entity_id:id, label:displayClaimLabel(id), display_label:displayClaimLabel(id), display_meta:k.type || 'claim', kind:k.type || 'claim', layer:'claims', step, summary, text:summary, details:k, min_granularity:'overview'});
+        search_documents.push({id:nodeId(id), title:displayClaimLabel(id), text:summary, tags:[k.type || 'claim'], refs:[nodeId(id)]}); });
       [...(graph.operators || []),...strategyOperators].forEach((op,index) => { const type=String(op.type || op.operator || 'operator').toLowerCase(), vars=(op.variables || []).filter(id=>ids.includes(id)), conclusion=op.conclusion && ids.includes(op.conclusion) ? op.conclusion : null;
         if (type !== 'equivalence' && type !== 'implication') nodes.push({id:`step:${step}:operator:${op.id || index}`, entity_id:op.id || `operator_${index}`, label:type, display_label:type, display_meta:type, kind:'operator', layer:'operators', step, summary:op.metadata?.expression || type, details:{...op,type,variables:vars,conclusion}, min_granularity:'standard'});
         const opNode=`step:${step}:operator:${op.id || index}`;
