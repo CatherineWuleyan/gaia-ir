@@ -29,7 +29,7 @@ def _heuristic_mock_call_claude(prompt, **kwargs):
     return "false"
 
 
-def test_real_data_conclusion_4_claim_20_is_true():
+def test_real_data_instance_containment_true_and_false():
     step2c.call_claude = _heuristic_mock_call_claude
 
     paper_dir = step2c.DATA_DIR / "867752822639165809"
@@ -55,9 +55,11 @@ def test_real_data_conclusion_4_claim_20_is_true():
 
     by_key = {(r["conclusion"], r["number"]): r for r in records}
 
-    assert by_key[("conclusion_4", 20)]["instance_containment"] is True
+    assert by_key[("conclusion_6", 10)]["instance_containment"] is True
+    assert by_key[("conclusion_7", 11)]["instance_containment"] is True
     assert by_key[("conclusion_4", 15)]["instance_containment"] is False
     assert by_key[("conclusion_4", 18)]["instance_containment"] is False
+    assert by_key[("conclusion_4", 20)]["instance_containment"] is False
 
     no_instance = [r for r in records if not r.get("是纯实验数据") and r["conclusion"] not in conc_instances]
     assert no_instance and all(

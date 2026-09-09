@@ -201,7 +201,7 @@ class Step3Tests(unittest.TestCase):
 
     def test_clusters_read_one_frozen_input_in_parallel_and_merge_once(self) -> None:
         claims = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))
-        claims["relation"].append({"connects": [2, 3], "expression": "[2] 推出 [3]"})
+        claims["relation"].append({"connects": [2, 1], "expression": "[2] 推出 [1]"})
         atomic_write_json(self.root / "claims_final.json", claims)
         ParallelWeakpointClassifier.calls = []
         ParallelWeakpointClassifier.thread_ids = set()

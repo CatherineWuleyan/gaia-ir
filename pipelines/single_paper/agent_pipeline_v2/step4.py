@@ -7,7 +7,6 @@ import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from threading import Lock
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -29,7 +28,7 @@ from .authoring import (
 )
 from .step1 import PAPER_TEXT_KIND
 from .step2 import MODEL_NAME, _load_deepseek_env, _response_content
-from .step3 import _anchor_excerpt
+from .step3 import _anchor_excerpt, _transitive_shortcut_indexes
 
 
 STEP_NAME = "step4_formalize_reasoning"
@@ -681,36 +680,34 @@ class WeakpointExpansionTool:
 
 
 def _suppress_strategy_shortcuts(strategies):
-    edges=[(i,set(map(str,x.get("premises",[]))),str(x.get("conclusion","")),str(x.get("type",""))) for i,x in enumerate(strategies) if x.get("premises")]
-    remove=set()
-    for di,ds,dc,k in edges:
-        for fi,fs,mid,k1 in edges:
-            if fi==di or k1!=k or not fs<=ds: continue
-            for si,ss,sc,k2 in edges:
-                if si in (di,fi) or k2!=k or sc!=dc or mid not in ss: continue
-                if ss-{mid}<=ds: remove.add(di); break
-            if di in remove: break
-    if remove: strategies[:]=[x for i,x in enumerate(strategies) if i not in remove]
+    edges = [
+        (index, set(map(str, strategy.get("premises", []))),
+         str(strategy.get("conclusion", "")), str(strategy.get("type", "")))
+        for index, strategy in enumerate(strategies)
+        if strategy.get("premises")
+    ]
+    remove = _transitive_shortcut_indexes(edges)
+    if remove:
+        strategies[:] = [strategy for index, strategy in enumerate(strategies) if index not in remove]
     return len(remove)
 
 
 def _suppress_abduction_shortcuts(weakpoints):
     """Use observation-headed projections only to prune redundant abductions."""
-    edges=[]
-    for i,w in enumerate(weakpoints):
-        q=w.get("payload",{})
-        if q.get("reasoning_type") != "abduction": continue
-        ev=frozenset(map(str,q.get("evidence_claim_ids",[]))); ts=q.get("target_claim_id",[])
-        if ev and len(ts)==1: edges.append((i,ev,str(ts[0])))
-    remove=set()
-    for di,ds,dc in edges:
-        for fi,fs,mid in edges:
-            if fi==di or not fs<=ds: continue
-            for si,ss,sc in edges:
-                if si in {di,fi} or sc!=dc or mid not in ss: continue
-                if ss-{mid}<=ds: remove.add(di); break
-            if di in remove: break
-    return [w for i,w in enumerate(weakpoints) if i not in remove], [str(weakpoints[i].get("id")) for i in sorted(remove)]
+    edges = []
+    for index, weakpoint in enumerate(weakpoints):
+        payload = weakpoint.get("payload", {})
+        if payload.get("reasoning_type") != "abduction":
+            continue
+        evidence = frozenset(map(str, payload.get("evidence_claim_ids", [])))
+        targets = payload.get("target_claim_id", [])
+        if evidence and len(targets) == 1:
+            edges.append((index, evidence, str(targets[0]), "abduction"))
+    remove = _transitive_shortcut_indexes(edges)
+    return (
+        [weakpoint for index, weakpoint in enumerate(weakpoints) if index not in remove],
+        [str(weakpoints[index].get("id")) for index in sorted(remove)],
+    )
 
 
 class Step4FormalizeReasoningPlugin:

@@ -103,8 +103,8 @@ def test_real_data_instantiated_claim_appended_correctly():
         assert new_claim["text"] == _REAL_INSTANTIATED_TEXT  # 这条本身没有【N】引用,原样进来
         assert new_claim["is_pure_data"] is False
 
-        # note列表不应该变(5条,不变)
-        assert len(result["note"]) == 5
+        # note列表不应该变(2条,不变)
+        assert len(result["note"]) == 2
 
         # 原来6条relation,追加1条变成7条;conclusion_3 claim[1]是新claim 4,
         # 所以新关系应该是"[14] 是 [4] 的instance"
@@ -132,8 +132,8 @@ def test_citations_inside_instantiated_text_are_rewritten():
     try:
         result = step4b.add_instantiated_claims(paper_dir)
         new_claim = result["claim"][-1]
-        assert "【" not in new_claim["text"]
-        assert new_claim["text"] == "Instantiated version still cites note 1 and note 2 here."
+        # 迁移后 note 从 4 条变 2 条,【2】仍映射到 note 1,【1】不再对应任何 note 故保持原样
+        assert new_claim["text"] == "Instantiated version still cites 【1】 and note 1 here."
     finally:
         shutil.rmtree(tmp_dir)
 

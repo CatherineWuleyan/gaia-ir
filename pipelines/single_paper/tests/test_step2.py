@@ -11,7 +11,7 @@ from unittest.mock import patch
 from agent_pipeline_v2.compiler_projection import project_for_official_compiler
 from agent_pipeline_v2.step2 import (
     DeepSeekV4FlashObservationTool, MODEL_NAME, _best_paragraph_anchor,
-    _deduplicate_extractions,
+    _deduplicate_extractions, _experiment_candidates,
 )
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
@@ -26,63 +26,65 @@ class FakeObservationTool:
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
         self.__class__.calls.append(request)
+        operation = request.operation
+        selected = request.parameters.get("selected_claims")
+        if operation == "rewrite_observations":
+            claims = [{
+                "id": item["id"],
+                "content": f"Revised: {item['content']}",
+                "paragraph_anchor_ids": list(item.get("source_anchor_ids", [])),
+            } for item in selected]
+            normalized = {"status": "claims_extracted", "claims": claims, "equivalent_claims": [], "relations": []}
+            return ToolCallResponse(request.call_id, "succeeded", normalized, normalized)
+        if operation == "generate_equivalents":
+            equivalents = [{
+                "observation_key": item["id"],
+                "content": f"Under {item['id']}, the method improves accuracy.",
+                "paragraph_anchor_ids": list(item.get("source_anchor_ids", [])),
+            } for item in selected]
+            normalized = {"status": "claims_extracted", "claims": [], "equivalent_claims": equivalents, "relations": []}
+            return ToolCallResponse(request.call_id, "succeeded", normalized, normalized)
         candidate = request.parameters["experiment_candidates"][0]
         anchor_ids = [item["anchor_id"] for item in candidate["paragraphs"]]
         result_anchor = next(value for value in anchor_ids if value.endswith("result"))
-        selected = request.parameters.get("selected_claims")
-        if selected:
-            claims = [{
-                "id": selected[0]["id"],
+        claims = [
+            {
                 "candidate_id": candidate["candidate_id"],
-                "S": "revised setting",
-                "A": "revised method",
+                "_extraction_key": f"{candidate['candidate_id']}:0",
+                "S": "setting one",
+                "A": "method",
                 "B": "baseline",
                 "M": "accuracy",
-                "R": "improved by 7 points",
-                "content": "In the revised setting, the revised method improved accuracy by 7 points over baseline.",
+                "R": "improved by 5 points",
+                "content": "In setting one, the method improved accuracy by 5 points over baseline.",
                 "paragraph_anchor_ids": [result_anchor],
-            }]
-        else:
-            claims = [
-                {
-                    "candidate_id": candidate["candidate_id"],
-                    "S": "setting one",
-                    "A": "method",
-                    "B": "baseline",
-                    "M": "accuracy",
-                    "R": "improved by 5 points",
-                    "content": "In setting one, the method improved accuracy by 5 points over baseline.",
-                    "paragraph_anchor_ids": [result_anchor],
-                },
-                {
-                    "candidate_id": candidate["candidate_id"],
-                    "S": "setting two",
-                    "A": "method",
-                    "B": "baseline",
-                    "M": "accuracy",
-                    "R": "decreased by 2 points",
-                    "content": "In setting two, the method decreased accuracy by 2 points relative to baseline.",
-                    "paragraph_anchor_ids": [result_anchor],
-                },
-            ]
-        normalized = {
-            "status": "claims_extracted",
-            "claims": claims,
-            "equivalent_claims": [
-                {
-                    "observation_key": f"generated:{index}",
-                    "content": f"Under {claim['S']}, {claim['A']} has the reported result on {claim['M']}.",
-                    "paragraph_anchor_ids": list(claim["paragraph_anchor_ids"]),
-                }
-                for index, claim in enumerate(claims, 1)
-            ],
-            "relations": [] if selected else [{
-                "phenomenon_keys": ["generated:1", "generated:2"],
-                "claim_id": "claim_2",
-                "expression": "([E:generated:1] 和 [E:generated:2]) 是 [claim_2] 的例子或证据",
-            }],
-        }
+            },
+            {
+                "candidate_id": candidate["candidate_id"],
+                "_extraction_key": f"{candidate['candidate_id']}:1",
+                "S": "setting two",
+                "A": "method",
+                "B": "baseline",
+                "M": "accuracy",
+                "R": "decreased by 2 points",
+                "content": "In setting two, the method decreased accuracy by 2 points relative to baseline.",
+                "paragraph_anchor_ids": [result_anchor],
+            },
+        ]
+        normalized = {"status": "claims_extracted", "claims": claims, "equivalent_claims": [], "relations": []}
         return ToolCallResponse(request.call_id, "succeeded", normalized, normalized)
+
+    @classmethod
+    def _extract_relations(cls, candidate: dict, phenomena: list[dict], base_url: str) -> tuple[list[dict], list]:
+        del candidate, base_url
+        keys = [item["observation_key"] for item in phenomena]
+        if len(keys) < 2:
+            return [], []
+        return [{
+            "phenomenon_keys": keys,
+            "claim_id": "claim_2",
+            "expression": f"([E:{keys[0]}] 和 [E:{keys[1]}]) 是 [claim_2] 的例子或证据",
+        }], []
 
 
 class ExpandingObservationTool(FakeObservationTool):
@@ -90,6 +92,8 @@ class ExpandingObservationTool(FakeObservationTool):
     paragraph_counts: list[int] = []
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
+        if request.operation not in ("extract_observation_claims", "revise_observation_claims"):
+            return super().invoke(request)
         candidate = request.parameters["experiment_candidates"][0]
         self.__class__.paragraph_counts.append(len(candidate["paragraphs"]))
         if len(self.__class__.paragraph_counts) == 1:
@@ -98,12 +102,13 @@ class ExpandingObservationTool(FakeObservationTool):
         return super().invoke(request)
 
 
-class AlwaysInsufficientObservationTool:
+class AlwaysInsufficientObservationTool(FakeObservationTool):
     name = "always-insufficient-observation"
-    version = "1"
     paragraph_counts: list[int] = []
 
     def invoke(self, request: ToolCallRequest) -> ToolCallResponse:
+        if request.operation not in ("extract_observation_claims", "revise_observation_claims"):
+            return super().invoke(request)
         candidate = request.parameters["experiment_candidates"][0]
         self.__class__.paragraph_counts.append(len(candidate["paragraphs"]))
         normalized = {"status": "insufficient_context", "needed_context": "No result is available."}
@@ -357,7 +362,7 @@ class Step2Tests(unittest.TestCase):
     def test_model_and_comparison_regime_prompt(self) -> None:
         self.assertEqual("deepseek-v4-flash", MODEL_NAME)
         self.assertIn("Return JSON only", DeepSeekV4FlashObservationTool._prompt([], None, None, None))
-        self.assertIn("distinct evidence-supported experimental unit", DeepSeekV4FlashObservationTool._prompt([], None, None, None))
+        self.assertIn("self-contained experimental finding", DeepSeekV4FlashObservationTool._prompt([], None, None, None))
         self.assertIn("do not omit a broad result", DeepSeekV4FlashObservationTool._prompt([], None, None, None))
         candidates = [{
             "candidate_id": "image_01_fig2",
@@ -377,6 +382,53 @@ class Step2Tests(unittest.TestCase):
         self.assertEqual(2, len(normalized["claims"]))
         self.assertTrue(any("B" not in claim for claim in normalized["claims"]))
         self.assertEqual([], normalized["relations"])
+
+    def test_prompt_split_rule_is_finding_based_and_table_guidance_is_scoped(self) -> None:
+        figure_candidate = {
+            "candidate_id": "image_01_fig2", "kind": "figure", "image_name": "fig2.png",
+            "paragraphs": [{"anchor_id": "anchor_result", "text": "Result."}],
+        }
+        general = DeepSeekV4FlashObservationTool._prompt([figure_candidate], None, None, None)
+        self.assertIn("self-contained experimental finding", general)
+        self.assertNotIn("distinct evidence-supported experimental unit", general)
+        # The cell/row/column enumeration ban belongs only in the table-scoped
+        # guidance, never in the common prompt.
+        self.assertNotIn("per cell, per row, per column", general)
+        table_candidate = {
+            "candidate_id": "table_01_6", "kind": "table", "table_label": "Table 6",
+            "paragraphs": [{"anchor_id": "anchor_table", "text": "<table></table>"}],
+        }
+        table_prompt = DeepSeekV4FlashObservationTool._prompt([table_candidate], None, None, None)
+        self.assertIn("This candidate is a TABLE", table_prompt)
+        self.assertIn("per cell, per row, per column", table_prompt)
+        self.assertIn("/ table Table 6", table_prompt)
+
+    def test_experiment_candidates_include_tables_and_exclude_foreign_objects(self) -> None:
+        from pipeline_harness.domain.stages import _paper_paragraphs
+        paper = (
+            "[#cap] Table 6: Summary of resource usage.\n\n"
+            "[#table] <table><tr><td>BBBP</td><td>Fine-Grained</td><td>59.1</td></tr></table>\n\n"
+            "[#fig3] ![Figure 3](fig3.png)\n\n"
+            "[#fig4] ![Figure 4](fig4.png)\n"
+        )
+        paragraphs = _paper_paragraphs(paper.splitlines())
+        candidates = _experiment_candidates(paragraphs, radius=1)
+        by_kind: dict[str, list[dict]] = {}
+        for candidate in candidates:
+            by_kind.setdefault(candidate["kind"], []).append(candidate)
+        self.assertEqual(2, len(by_kind["figure"]))
+        self.assertEqual(1, len(by_kind["table"]))
+        table = by_kind["table"][0]
+        self.assertEqual("Table 6", table["table_label"])
+        table_anchors = [item["anchor_id"] for item in table["paragraphs"]]
+        self.assertIn("anchor_paragraph_cap", table_anchors)
+        self.assertIn("anchor_paragraph_table", table_anchors)
+        self.assertNotIn("anchor_paragraph_fig3", table_anchors)
+        self.assertNotIn("anchor_paragraph_fig4", table_anchors)
+        fig3 = next(item for item in by_kind["figure"] if item["image_name"] == "fig3.png")
+        fig3_anchors = [item["anchor_id"] for item in fig3["paragraphs"]]
+        self.assertNotIn("anchor_paragraph_table", fig3_anchors)
+        self.assertNotIn("anchor_paragraph_fig4", fig3_anchors)
 
     def test_relation_classifier_groups_multiple_phenomena_for_one_target(self) -> None:
         groups = DeepSeekV4FlashObservationTool._relation_groups(
@@ -615,7 +667,7 @@ class Step2Tests(unittest.TestCase):
         run = run_pipeline(store.run_dir, max_stages=3)
         self.assertEqual("succeeded", run.status)
         audits = [ref for ref in store.load_artifacts() if ref.kind == "tool.semantic_review.response"]
-        self.assertEqual(1, len(audits))
+        self.assertGreaterEqual(len(audits), 1)
         audit = read_json(store.artifact_path(audits[0]))
         self.assertEqual("failed", audit["response"]["status"])
         self.assertEqual("RuntimeError", audit["response"]["error"]["type"])

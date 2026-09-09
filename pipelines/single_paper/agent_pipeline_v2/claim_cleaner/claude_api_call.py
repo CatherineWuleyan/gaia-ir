@@ -119,6 +119,7 @@ from urllib.request import Request, urlopen
 
 _client = None
 _DEFAULT_TIMEOUT_SECONDS = 600.0  # 10分钟,等同SDK自己的默认值,详见上面文档说明
+_DEEPSEEK_TIMEOUT_SECONDS = 300.0  # DeepSeek urlopen 收紧到 5 分钟，超时显式抛错
 
 
 def _get_client():
@@ -307,12 +308,16 @@ def call_claude(
         try:
             # Cleaner prompts can contain an entire claim batch.  A 180s
             # socket deadline caused Step 4 to fail while the upstream model
-            # was still generating; use the same ten-minute budget as the
-            # former Anthropic client.
-            with urlopen(request, timeout=_DEFAULT_TIMEOUT_SECONDS) as response:
+            # was still generating; five minutes is a middle ground, and a
+            # socket timeout now surfaces as an explicit RuntimeError instead
+            # of an uncaught TimeoutError (which would otherwise crash the
+            # step subprocess with a confusing traceback).
+            with urlopen(request, timeout=_DEEPSEEK_TIMEOUT_SECONDS) as response:
                 raw = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             raise RuntimeError(f"DeepSeek cleaning request failed with HTTP {exc.code}") from exc
+        except TimeoutError as exc:
+            raise RuntimeError(f"DeepSeek cleaning request timed out after {_DEEPSEEK_TIMEOUT_SECONDS}s") from exc
         except URLError as exc:
             raise RuntimeError(f"DeepSeek cleaning connection failed: {exc.reason}") from exc
         choice = raw["choices"][0]

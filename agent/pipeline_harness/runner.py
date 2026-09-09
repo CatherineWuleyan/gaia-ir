@@ -3,7 +3,7 @@ from __future__ import annotations
 import traceback
 import uuid
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .models import ArtifactRef, Finding, RunRecord
 from .plugins import StageContext, StagePlugin, StageResult, instantiate

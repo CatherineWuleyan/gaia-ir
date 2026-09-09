@@ -72,24 +72,21 @@ def test_idempotent_second_run_changes_nothing():
 
 
 def test_real_data_867757662605934651():
-    """真实数据:867757662605934651的claims_final.json里已经有一条
-    "[14] 是 [4] 的instance"(step4b真实产出的)。"""
+    """迁移后:867757662605934651的claims_final.json里已经没有"的instance"
+    关系(此前已由step4d改写为"的例子或证据"),本步骤对其应是幂等no-op。"""
     real_path = step4d.DATA_DIR / "867757662605934651" / "claims_final.json"
     claims_final = json.loads(real_path.read_text(encoding="utf-8"))
 
     instance_relations_before = [
         r for r in claims_final["relation"] if r["expression"].endswith("的instance")
     ]
-    assert len(instance_relations_before) >= 1  # 确认真实数据里确实有这种关系
+    assert instance_relations_before == []  # 迁移后不再有 instance 关系
 
     n_changed = step4d.normalize_instance_relations(claims_final)
-    assert n_changed == len(instance_relations_before)
+    assert n_changed == 0
 
-    # 改完之后不应该再有任何"的instance"结尾的关系
+    # 跑完之后依然没有任何"的instance"结尾的关系
     assert not any(r["expression"].endswith("的instance") for r in claims_final["relation"])
-
-    rel14 = next(r for r in claims_final["relation"] if r["connects"][0] == 14)
-    assert rel14["expression"] == "[14] 是 [4] 的例子或证据"
 
 
 def test_cli_end_to_end_with_temp_copy():

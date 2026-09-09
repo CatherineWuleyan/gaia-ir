@@ -7,7 +7,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from pipeline_harness.domain.stages import _ast_claim_ids, _expression_tokens, _parse_expression
+from pipeline_harness.domain.stages import _expression_tokens, _parse_expression
 from pipeline_harness.domain.tools import DomainTool, ToolCallRequest, ToolCallResponse, validate_tool_response
 from pipeline_harness.models import Finding, JSONDict
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult, instantiate
@@ -244,52 +244,6 @@ def _paper_anchor_ids(document: JSONDict, knowledge_ids: set[str]) -> set[str]:
     }
 
 
-def _canonicalize_near_duplicate_claims(document: JSONDict) -> dict[str, str]:
-    """Merge same-type claims that express the same fact at high lexical overlap."""
-    token_sets = {
-        key: set(re.findall(r"[a-z0-9]+", str(value.get("content", {}).get("canonical", "")).casefold()))
-        for key, value in document["knowledges"].items()
-        if value.get("type") in {"claim", "observation_claim"} and value.get("content") is not None
-    }
-    aliases: dict[str, str] = {}
-    keys = sorted(token_sets)
-    for index, left in enumerate(keys):
-        if left in aliases or not token_sets[left]:
-            continue
-        for right in keys[index + 1:]:
-            if right in aliases or document["knowledges"][left]["type"] != document["knowledges"][right]["type"]:
-                continue
-            shared = token_sets[left] & token_sets[right]
-            union = token_sets[left] | token_sets[right]
-            overlap = len(shared) / max(1, len(union))
-            # Avoid collapsing short generic labels (e.g. "observation"):
-            # near-duplicate merging requires several shared lexical anchors.
-            if len(shared) >= 3 and overlap >= 0.8:
-                aliases[right] = left
-                merged = document["knowledges"][left].setdefault("source_anchor_ids", [])
-                merged.extend(a for a in document["knowledges"][right].get("source_anchor_ids", []) if a not in merged)
-    if not aliases:
-        return aliases
-    for link in document["workflow"].get("non_reasoning_links", []):
-        link["sources"] = [aliases.get(item, item) for item in link.get("sources", [])]
-        link["target"] = aliases.get(link.get("target"), link.get("target"))
-        relation = link.get("metadata", {}).get("relation")
-        if isinstance(relation, dict) and isinstance(relation.get("expression"), str):
-            relation["expression"] = re.sub(
-                r"\[([^\]]+)\]",
-                lambda match: f"[{aliases.get(match.group(1), match.group(1))}]",
-                relation["expression"],
-            )
-    for operator in document["graph"].get("operators", []):
-        operator["variables"] = [aliases.get(item, item) for item in operator.get("variables", [])]
-        if "conclusion" in operator:
-            operator["conclusion"] = aliases.get(operator["conclusion"], operator["conclusion"])
-    document["graph"]["nodes"] = [item for item in document["graph"].get("nodes", []) if item not in aliases]
-    for duplicate in aliases:
-        document["knowledges"].pop(duplicate, None)
-    return aliases
-
-
 def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
     """Drop only redundant relation candidates while preserving Step1 imports."""
     kept: list[JSONDict] = []
@@ -321,21 +275,50 @@ def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> t
     return kept, removed
 
 
+def _transitive_shortcut_indexes(edges: list[tuple[int, set[str], str, str]]) -> set[int]:
+    """Return the indexes of same-kind edges made redundant by a two-hop chain.
+
+    ``edges`` holds one ``(index, source_set, target, kind)`` per candidate.  A
+    direct edge is a shortcut when a same-kind ``first -> midpoint`` edge and a
+    same-kind ``second -> direct_target`` edge (with ``midpoint`` among
+    ``second``'s sources) are both already covered by the direct edge's
+    sources; the two-hop path then replaces the direct edge.
+    """
+    remove: set[int] = set()
+    for direct_index, direct_sources, direct_target, kind in edges:
+        for first_index, first_sources, midpoint, first_kind in edges:
+            if first_index == direct_index or first_kind != kind or not first_sources <= direct_sources:
+                continue
+            for second_index, second_sources, second_target, second_kind in edges:
+                if (
+                    second_index in {direct_index, first_index}
+                    or second_kind != kind
+                    or second_target != direct_target
+                    or midpoint not in second_sources
+                ):
+                    continue
+                if (second_sources - {midpoint}) <= direct_sources:
+                    remove.add(direct_index)
+                    break
+            if direct_index in remove:
+                break
+    return remove
+
+
 def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
     """Remove same-type transitive shortcuts over evidence hyperedges."""
-    edges=[]
-    for i,item in enumerate(weakpoints):
-        p=item.get("payload",{}); ev=frozenset(map(str,p.get("evidence_claim_ids",[]))); ts=p.get("target_claim_id",[])
-        if ev and len(ts)==1: edges.append((i,ev,str(ts[0]),str(p.get("reasoning_type",""))))
-    remove=set()
-    for di,ds,dc,kind in edges:
-        for fi,fs,mid,fk in edges:
-            if fi==di or fk!=kind or not fs<=ds: continue
-            for si,ss,sc,sk in edges:
-                if si in {di,fi} or sk!=kind or sc!=dc or mid not in ss: continue
-                if (ss-{mid})<=ds: remove.add(di); break
-            if di in remove: break
-    return ([x for i,x in enumerate(weakpoints) if i not in remove],[str(weakpoints[i].get("id")) for i in sorted(remove)])
+    edges: list[tuple[int, set[str], str, str]] = []
+    for index, item in enumerate(weakpoints):
+        payload = item.get("payload", {})
+        evidence = frozenset(map(str, payload.get("evidence_claim_ids", [])))
+        targets = payload.get("target_claim_id", [])
+        if evidence and len(targets) == 1:
+            edges.append((index, evidence, str(targets[0]), str(payload.get("reasoning_type", ""))))
+    remove = _transitive_shortcut_indexes(edges)
+    return (
+        [item for index, item in enumerate(weakpoints) if index not in remove],
+        [str(weakpoints[index].get("id")) for index in sorted(remove)],
+    )
 
 
 def _flatten_redundant_premises(weakpoints: list[JSONDict]) -> list[str]:

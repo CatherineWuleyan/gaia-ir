@@ -11,7 +11,7 @@ class RecoveryPolicyTests(unittest.TestCase):
         parameters = {
             "weakpoint": {"payload": {
                 "reasoning_type": "abduction",
-                "evidence_claim_ids": ["claim_1", "claim_2"],
+                "evidence_claim_ids": ["claim_1"],
                 "target_claim_id": ["claim_3"],
             }},
             "knowledges": {
@@ -54,7 +54,11 @@ class RecoveryPolicyTests(unittest.TestCase):
         prompt = WeakpointExpansionTool.prompt({
             "repair_feedback": "missing conclusion",
             "rebuild_group": True,
-            "weakpoint": {}, "knowledges": {}, "source_excerpts": [],
+            "weakpoint": {"payload": {
+                "reasoning_type": "deduction",
+                "evidence_claim_ids": ["claim_1"],
+                "target_claim_id": ["claim_3"],
+            }}, "knowledges": {}, "source_excerpts": [],
         })
         self.assertIn("missing conclusion", prompt)
         self.assertIn("post-cleaning Group rebuild", prompt)

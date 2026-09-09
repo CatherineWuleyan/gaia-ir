@@ -317,7 +317,7 @@ class AutomatedWorkflowTests(unittest.TestCase):
         self.assertIn("M (Measure) is the measured metric", prompt)
         self.assertIn("R (Result) is only the observed numerical or directional outcome", prompt)
         self.assertIn("U (Uncertainty) is explicitly reported uncertainty information", prompt)
-        self.assertIn("A change in pruning fraction or pruning range is a change in S", prompt)
+        self.assertIn("A change in pruning fraction or range is a change in setting", prompt)
         self.assertIn("for grammar and fluency", prompt)
         self.assertIn("do not concatenate fields into a fixed template", prompt)
         self.assertIn("must not add, remove, generalize, narrow, reverse, combine", prompt)

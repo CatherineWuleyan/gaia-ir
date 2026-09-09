@@ -55,6 +55,9 @@ def _urlopen_with_retry(request: Request, *, timeout: int = 180):
 _IMAGE_PATTERN = re.compile(r"!\[[^]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
 _FIGURE_REFERENCE_PATTERN = re.compile(r"\b(?:fig(?:ure)?\.?)\s*([0-9]+[a-z]?)\b", re.IGNORECASE)
 _PARAGRAPH_ANCHOR_PATTERN = re.compile(r"^anchor_paragraph_p(\d+)$")
+_TABLE_BLOCK_PATTERN = re.compile(r"<table[\s>]", re.IGNORECASE)
+_TABLE_REFERENCE_PATTERN = re.compile(r"\btable\.?\s*([0-9]+[a-z]?)\b", re.IGNORECASE)
+_TABLE_CAPTION_PATTERN = re.compile(r"^\s*table\s*([0-9]+[a-z]?)\s*[.:]", re.IGNORECASE | re.MULTILINE)
 
 
 def _best_paragraph_anchor(content: str, paragraphs: list[JSONDict]) -> JSONDict | None:
@@ -285,6 +288,8 @@ class DeepSeekV4FlashObservationTool:
             return self._normalize_weakpoint_clusters(request)
         if request.operation == "classify_weakpoints":
             return self._classify_weakpoints(request)
+        if request.operation == "rewrite_observations":
+            return self._rewrite_observations(request)
         _load_deepseek_env()
         candidates = request.parameters.get("experiment_candidates")
         if not isinstance(candidates, list):
@@ -439,6 +444,10 @@ class DeepSeekV4FlashObservationTool:
                     metadata={"candidate_count": len(candidates), "request_count": len(raw_responses), "model": self.model},
                 )
             claims.extend(normalized["claims"])
+            if request.parameters.get("observations_only"):
+                # Extraction-only pass: E and relations are produced in later
+                # passes once the observation set has been deduplicated.
+                continue
             phenomenon_request = Request(
                 f"{base_url}/chat/completions",
                 data=json.dumps({
@@ -493,6 +502,95 @@ class DeepSeekV4FlashObservationTool:
             {"responses": raw_responses},
             normalized,
             metadata={"candidate_count": len(candidates), "request_count": len(raw_responses), "model": self.model},
+        )
+
+    @staticmethod
+    def _rewrite_observation_prompt(selected: list[JSONDict]) -> str:
+        return (
+            "Return JSON only. Rewrite each supplied experimental observation into one fluent, complete English sentence "
+            "using the S/A/B/M/R structure: S=setting/scope, A=treatment/method/object, M=measure, R=result, with optional "
+            "B=baseline and U=uncertainty. Preserve the meaning, scope, comparison direction, conditions, result, and any "
+            "reported uncertainty. Do not add, omit, generalize, narrow, reinterpret, or move facts between fields. "
+            "A and M must be present; omit B or U when the source does not state them (never write absence placeholders). "
+            "Do not mechanically concatenate a fixed template. Retain each supplied id verbatim. Use the supplied source "
+            "excerpts only to recover a setting or action that the observation itself omits. Return exactly one rewritten "
+            "claim per id and no other ids. "
+            "Return {\"claims\":[{\"id\":\"...\",\"content\":\"...\",\"paragraph_anchor_ids\":[\"...\"]}]}.\n\n"
+            + json.dumps(selected, ensure_ascii=False)
+        )
+
+    @staticmethod
+    def _normalize_rewritten_observations(content: str, selected: list[JSONDict]) -> list[JSONDict]:
+        try:
+            payload = json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise ValueError("DeepSeek rewrite response is not valid JSON") from exc
+        if not isinstance(payload, dict) or set(payload) != {"claims"}:
+            raise ValueError("DeepSeek rewrite response must contain only claims")
+        items = payload["claims"]
+        expected_ids = {item["id"] for item in selected if isinstance(item, dict) and isinstance(item.get("id"), str)}
+        if not isinstance(items, list) or len(items) != len(expected_ids):
+            raise ValueError("DeepSeek must return exactly one rewritten claim per selected id")
+        normalized: list[JSONDict] = []
+        seen: set[str] = set()
+        for item in items:
+            if not isinstance(item, dict) or set(item) != {"id", "content", "paragraph_anchor_ids"}:
+                raise ValueError("rewritten claims must contain only id, content, paragraph_anchor_ids")
+            claim_id = item["id"]
+            if not isinstance(claim_id, str) or claim_id not in expected_ids or claim_id in seen:
+                raise ValueError("rewritten claim has an unknown or duplicate id")
+            rewritten_content = item["content"]
+            anchors = item["paragraph_anchor_ids"]
+            if not isinstance(rewritten_content, str) or not rewritten_content.strip():
+                raise ValueError("rewritten claim content must be non-empty")
+            if not isinstance(anchors, list) or not anchors or not all(isinstance(anchor, str) for anchor in anchors):
+                raise ValueError("rewritten claim requires paragraph anchors")
+            seen.add(claim_id)
+            normalized.append({"id": claim_id, "content": rewritten_content.strip(), "paragraph_anchor_ids": list(anchors)})
+        if seen != expected_ids:
+            raise ValueError("DeepSeek omitted a selected id")
+        return normalized
+
+    def _rewrite_observations(self, request: ToolCallRequest) -> ToolCallResponse:
+        """Rewrite imported observation claims into S/A/B/M/R format, retaining ids, without generating E."""
+        _load_deepseek_env()
+        selected = request.parameters.get("selected_claims")
+        if not isinstance(selected, list) or not selected:
+            raise ValueError("selected_claims must be a non-empty list")
+        for item in selected:
+            if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+                raise ValueError("selected claims require string ids")
+            content = item.get("content")
+            if isinstance(content, dict):
+                content = content.get("canonical")
+            if not isinstance(content, str) or not content.strip():
+                raise ValueError("selected claims require non-empty content")
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+        base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+        body = json.dumps({
+            "model": self.model,
+            "messages": [{"role": "user", "content": self._rewrite_observation_prompt(selected)}],
+            "temperature": 0,
+            "response_format": {"type": "json_object"},
+        }, ensure_ascii=False).encode("utf-8")
+        http_request = Request(
+            f"{base_url}/chat/completions", data=body,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
+        )
+        try:
+            with _urlopen_with_retry(http_request) as response:
+                raw = json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            raise RuntimeError(f"DeepSeek rewrite request failed with HTTP {exc.code}") from exc
+        except URLError as exc:
+            raise RuntimeError(f"DeepSeek rewrite request failed: {exc.reason}") from exc
+        claims = self._normalize_rewritten_observations(_response_content(raw), selected)
+        return ToolCallResponse(
+            request.call_id, "succeeded", {"responses": [raw]},
+            {"status": "claims_extracted", "claims": claims, "equivalent_claims": [], "relations": []},
+            metadata={"candidate_count": 0, "request_count": 1, "model": self.model},
         )
 
     def _classify_weakpoints(self, request: ToolCallRequest) -> ToolCallResponse:
@@ -948,8 +1046,10 @@ class DeepSeekV4FlashObservationTool:
                 for item in candidate.get("paragraphs", [])
                 if isinstance(item, dict)
             )
+            kind = candidate.get("kind", "figure")
+            label = candidate.get("table_label") if kind == "table" else candidate.get("image_name")
             evidence.append(
-                f"Candidate {candidate.get('candidate_id')} / image {candidate.get('image_name')}. "
+                f"Candidate {candidate.get('candidate_id')} / {kind} {label}. "
                 f"Allowed paragraph_anchor_ids: {json.dumps(allowed_anchor_ids)}. "
                 f"Focus paragraph_anchor_ids: {json.dumps(focus_anchor_ids)}.\n{paragraphs}"
             )
@@ -963,6 +1063,20 @@ class DeepSeekV4FlashObservationTool:
                 f"Selected claims: {json.dumps(selected_claims, ensure_ascii=False)}\n"
                 f"Frozen claims: {json.dumps(frozen_claims or [], ensure_ascii=False)}\n"
                 f"Human advice: {review_advice}\n"
+            )
+        table_guidance = ""
+        if any(candidate.get("kind") == "table" for candidate in candidates):
+            labels = ", ".join(
+                str(candidate.get("table_label") or candidate.get("candidate_id"))
+                for candidate in candidates
+                if candidate.get("kind") == "table"
+            )
+            table_guidance = (
+                f"\nThis candidate is a TABLE ({labels}). Read the entire table together with its caption and the "
+                "surrounding text, and extract the significant experimental findings the paper draws from it. Do not "
+                "emit one claim per cell, per row, per column, or per (dataset × method × metric) combination as a "
+                "separate claim. If it is a large results matrix whose caption or text draws only a few aggregate "
+                "conclusions, emit only those; for cells the paper draws no specific finding from, emit nothing. "
             )
         return (
             "Return JSON only. Use only the supplied paper paragraphs. Do not use outside knowledge or infer missing facts. "
@@ -981,12 +1095,15 @@ class DeepSeekV4FlashObservationTool:
             "but must preserve the meaning, scope, comparison direction, conditions, result, and any reported uncertainty of "
             "S/A/B/M/R and optional U. Do not mechanically concatenate a fixed template. Do not add, omit, merge, generalize, "
             "narrow, reinterpret, or move information between fields. "
-            "For one image, produce one claim per distinct evidence-supported experimental unit, not a Cartesian "
-            "expansion of treatments and conditions. Group items only when the paper reports them as one inseparable "
-            "unit; otherwise represent separately reported treatments, conditions, or comparisons as separate claims, "
-            "even if some fields coincide. Split whenever combining items would obscure a reported distinction. Do not "
-            "invent distinctions unsupported by the evidence. "
-            "Return every distinct, explicitly supported experimental result; do not omit a broad result merely "
+            "For one figure or table, emit one claim per self-contained experimental finding this paper reports, not per "
+            "measurement. Group every number that belongs to a single reported finding into one claim. Produce a separate "
+            "claim only when the paper states a genuinely distinct finding: a materially different comparison, direction, "
+            "or conclusion, whose meaning would be lost by merging. Never generate a Cartesian product of treatments, "
+            "conditions, datasets, or metrics. A difference in a number, label, dataset, condition, or metric alone is not "
+            "a distinct finding unless the paper reports a distinct result or conclusion for it. Do not invent distinctions "
+            "unsupported by the evidence. "
+            + table_guidance
+            + "Return every distinct, explicitly supported experimental result; do not omit a broad result merely "
             "because more specific conditional results are also returned. "
             "Each claim must cite one or more paragraph_anchor_ids from its own candidate and include its "
             "candidate_id. Cite only IDs in that candidate's Allowed paragraph_anchor_ids list; never invent "
@@ -1151,26 +1268,83 @@ def _paper_text(context: StageContext) -> str:
     return paper
 
 
+def _is_table_block(text: str) -> bool:
+    """Return whether a paragraph is a raw table block rather than prose."""
+    return bool(_TABLE_BLOCK_PATTERN.search(text))
+
+
+def _paragraph_image_names(text: str) -> set[str]:
+    """Return the casefolded file names of every image a paragraph embeds."""
+    names: set[str] = set()
+    for match in _IMAGE_PATTERN.finditer(text):
+        raw_name = match.group(1).strip("<>")
+        path_name = PurePosixPath(raw_name.split("?", 1)[0].split("#", 1)[0]).name
+        image_name = path_name or raw_name
+        if image_name:
+            names.add(image_name.casefold())
+    return names
+
+
+def _table_number(paragraphs: list[JSONDict], index: int, window: int = 2) -> str | None:
+    """Resolve a table block's caption number from nearby paragraphs."""
+    low = max(0, index - window)
+    high = min(len(paragraphs), index + window + 1)
+    for candidate_index in range(low, high):
+        match = _TABLE_CAPTION_PATTERN.search(paragraphs[candidate_index]["text"])
+        if match:
+            return match.group(1).lower()
+    for candidate_index in range(low, high):
+        match = _TABLE_REFERENCE_PATTERN.search(paragraphs[candidate_index]["text"])
+        if match:
+            return match.group(1).lower()
+    return None
+
+
 def _experiment_candidates(paragraphs: list[JSONDict], radius: int = 1) -> list[JSONDict]:
-    images: list[tuple[str, str]] = []
+    images: list[str] = []
     seen_names: set[str] = set()
     for paragraph in paragraphs:
-        for match in _IMAGE_PATTERN.finditer(paragraph["text"]):
-            raw_name = match.group(1).strip("<>")
-            path_name = PurePosixPath(raw_name.split("?", 1)[0].split("#", 1)[0]).name
-            image_name = path_name or raw_name
-            key = image_name.casefold()
-            if key not in seen_names:
-                seen_names.add(key)
-                images.append((image_name, PurePosixPath(image_name).stem))
+        for name in _paragraph_image_names(paragraph["text"]):
+            if name not in seen_names:
+                seen_names.add(name)
+                images.append(name)
+    table_indexes = [index for index, paragraph in enumerate(paragraphs) if _is_table_block(paragraph["text"])]
+    image_names_by_index = {
+        index: _paragraph_image_names(paragraph["text"])
+        for index, paragraph in enumerate(paragraphs)
+    }
+    image_placeholder_indexes = {index for index, names in image_names_by_index.items() if names}
+
+    def window(indexes: set[int], foreign: set[int]) -> list[int]:
+        return sorted({
+            neighbor
+            for index in indexes
+            for neighbor in range(max(0, index - radius), min(len(paragraphs), index + radius + 1))
+            if neighbor not in foreign
+        })
+
+    def paragraph_items(indexes: list[int]) -> list[JSONDict]:
+        return [
+            {
+                "anchor_id": paragraphs[index]["anchor_id"],
+                "tag": paragraphs[index]["tag"],
+                "text": paragraphs[index]["text"],
+            }
+            for index in indexes
+        ]
+
     candidates: list[JSONDict] = []
-    for sequence, (image_name, stem) in enumerate(images, 1):
+    # Figure candidates: a figure owns only its own image placeholder; every other
+    # embedded figure and every table block is a foreign object and must be excluded.
+    for sequence, image_name in enumerate(images, 1):
+        stem = PurePosixPath(image_name).stem
         aliases = _figure_aliases(stem) | _figure_aliases(image_name)
-        matches = [
+        own_image_key = image_name.casefold()
+        matches = {
             index
             for index, paragraph in enumerate(paragraphs)
             if any(alias in re.sub(r"[^a-z0-9]", "", paragraph["text"].lower()) for alias in aliases)
-        ]
+        }
         # Keep the local mechanical window, but also retrieve every paragraph
         # in the source that explicitly cites the same Figure/Fig. number.
         # This is deterministic and lets the LLM see result/discussion text
@@ -1181,7 +1355,7 @@ def _experiment_candidates(paragraphs: list[JSONDict], radius: int = 1) -> list[
             for match in _FIGURE_REFERENCE_PATTERN.finditer(paragraphs[index]["text"])
         }
         if referenced_numbers:
-            matches.extend(
+            matches.update(
                 index
                 for index, paragraph in enumerate(paragraphs)
                 if any(
@@ -1189,25 +1363,43 @@ def _experiment_candidates(paragraphs: list[JSONDict], radius: int = 1) -> list[
                     for match in _FIGURE_REFERENCE_PATTERN.finditer(paragraph["text"])
                 )
             )
-        indexes = sorted(
-            {
-                neighbor
-                for index in matches
-                for neighbor in range(max(0, index - radius), min(len(paragraphs), index + radius + 1))
-            }
-        )
+        foreign = {
+            index
+            for index in image_placeholder_indexes
+            if own_image_key not in image_names_by_index.get(index, set())
+        } | set(table_indexes)
         candidates.append(
             {
                 "candidate_id": f"image_{sequence:02d}_{re.sub(r'[^a-z0-9]+', '_', stem.lower()).strip('_') or 'unnamed'}",
+                "kind": "figure",
                 "image_name": image_name,
-                "paragraphs": [
-                    {
-                        "anchor_id": paragraphs[index]["anchor_id"],
-                        "tag": paragraphs[index]["tag"],
-                        "text": paragraphs[index]["text"],
-                    }
-                    for index in indexes
-                ],
+                "paragraphs": paragraph_items(window(matches, foreign)),
+            }
+        )
+
+    # Table candidates: a table owns its caption and its own table block; every other
+    # table block and every image placeholder is foreign and must be excluded.
+    for sequence, table_index in enumerate(table_indexes, 1):
+        number = _table_number(paragraphs, table_index)
+        label = f"Table {number}" if number else f"Table {sequence}"
+        slug = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_") or "unnamed"
+        matches = {table_index}
+        if number:
+            matches.update(
+                index
+                for index, paragraph in enumerate(paragraphs)
+                if any(
+                    match.group(1).lower() == number
+                    for match in _TABLE_REFERENCE_PATTERN.finditer(paragraph["text"])
+                )
+            )
+        foreign = (set(table_indexes) - {table_index}) | image_placeholder_indexes
+        candidates.append(
+            {
+                "candidate_id": f"table_{sequence:02d}_{slug}",
+                "kind": "table",
+                "table_label": label,
+                "paragraphs": paragraph_items(window(matches, foreign)),
             }
         )
     return candidates
@@ -1221,6 +1413,8 @@ def _tool_call(
     selected_claims: list[JSONDict] | None = None,
     review_advice: str | None = None,
     frozen_claims: list[JSONDict] | None = None,
+    observations_only: bool = False,
+    operation: str | None = None,
 ) -> tuple[JSONDict, ArtifactDraft]:
     spec = context.options.get("tool_plugin")
     if not isinstance(spec, str):
@@ -1232,7 +1426,7 @@ def _tool_call(
         call_id=f"semantic_step_2_{context.run_id}_{context.attempt}_{call_number}",
         tool_name=tool.name,
         tool_version=tool.version,
-        operation="extract_observation_claims" if selected_claims is None else "revise_observation_claims",
+        operation=operation or ("extract_observation_claims" if selected_claims is None else "revise_observation_claims"),
         inputs=[
             {"artifact_id": ref.artifact_id, "kind": ref.kind, "sha256": ref.sha256}
             for ref in context.inputs
@@ -1242,6 +1436,7 @@ def _tool_call(
             **({"selected_claims": selected_claims} if selected_claims is not None else {}),
             **({"review_advice": review_advice} if review_advice is not None else {}),
             **({"frozen_claims": frozen_claims} if frozen_claims is not None else {}),
+            **({"observations_only": True} if observations_only else {}),
         },
     )
     response: ToolCallResponse | None = None
@@ -1411,6 +1606,7 @@ def _extract_with_expansion(
     review_advice: str | None = None,
     frozen_claims: list[JSONDict] | None = None,
     first_call_number: int = 1,
+    observations_only: bool = False,
 ) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict], list[ArtifactDraft]]:
     drafts: list[ArtifactDraft] = []
     initial_candidates = _experiment_candidates(paragraphs)
@@ -1472,6 +1668,7 @@ def _extract_with_expansion(
                     selected_claims=selected_claims,
                     review_advice=review_advice,
                     frozen_claims=frozen_claims,
+                    observations_only=observations_only,
                 )
             except Exception:
                 break
@@ -1493,7 +1690,7 @@ def _extract_with_expansion(
             candidate_relations.extend({**item, "relation_context_id": candidate_id} for item in extracted_relations)
             extracted_from_text = True
             break
-        if not extracted_from_text:
+        if not extracted_from_text and initial_candidate.get("kind", "figure") != "table":
             # Text-only v4-flash has exhausted the deterministic context
             # expansion. Fall back to the supplied local figure, if any.
             vision_candidate = _vision_candidate(initial_candidate, context)
@@ -1574,7 +1771,7 @@ def _extract_with_expansion(
     claims, equivalent_claims, relations = _deduplicate_extractions(
         claims, equivalent_claims, relations,
     )
-    return claims, equivalent_claims, relations, _tool_audit_drafts(context)
+    return claims, equivalent_claims, relations, []
 
 
 def _observation_items(claims: list[JSONDict], existing: dict[str, JSONDict] | None = None) -> tuple[dict[str, JSONDict], dict[str, str]]:
@@ -1583,29 +1780,212 @@ def _observation_items(claims: list[JSONDict], existing: dict[str, JSONDict] | N
         key: value for key, value in existing.items() if value.get("type") == "observation_claim"
     }
     used_existing: set[str] = set()
-    def stable_id(claim: JSONDict, index: int) -> str:
-        if isinstance(claim.get("id"), str):
-            return str(claim["id"])
-        anchors = set(claim.get("paragraph_anchor_ids", []))
-        match = next((key for key, value in existing_observations.items()
-                      if key not in used_existing and anchors & set(value.get("source_anchor_ids", []))), None)
-        if match:
-            used_existing.add(match)
-            return match
-        return f"claim_O{index:02d}"
-    ids = {
-        str(claim.get("_extraction_key", f"generated:{index}")): (
-            stable_id(claim, index)
-        ) for index, claim in enumerate(claims, 1)
-    }
+    new_counter = 0
+
+    def match_existing(claim: JSONDict) -> str | None:
+        tokens = _tokens(str(claim.get("content", "")))
+        if not tokens:
+            return None
+        best_key: str | None = None
+        best_score = 0.0
+        for key, value in existing_observations.items():
+            if key in used_existing:
+                continue
+            canonical = str(value.get("content", {}).get("canonical", ""))
+            score = _cosine(tokens, _tokens(canonical))
+            if score > best_score:
+                best_score = score
+                best_key = key
+        if best_key is not None and best_score >= 0.85:
+            used_existing.add(best_key)
+            return best_key
+        return None
+
+    ids: dict[str, str] = {}
+    observations: dict[str, JSONDict] = {}
+    for index, claim in enumerate(claims, 1):
+        claim_id = claim.get("id") if isinstance(claim.get("id"), str) else None
+        extraction_key = str(claim.get("_extraction_key", claim_id or f"generated:{index}"))
+        if claim_id:
+            stable = claim_id
+        else:
+            matched = match_existing(claim)
+            stable = matched if matched is not None else f"claim_O{new_counter + 1:02d}"
+            if matched is None:
+                new_counter += 1
+        ids[extraction_key] = stable
+        if stable not in observations:
+            content = {"canonical": claim["content"]}
+            for field in _OBSERVATION_COMPONENT_FIELDS:
+                value = claim.get(field)
+                if isinstance(value, str) and value.strip():
+                    content[field] = value.strip()
+            observations[stable] = {
+                "type": "observation_claim",
+                "content": content,
+                "source_anchor_ids": list(claim.get("paragraph_anchor_ids", [])),
+            }
+    return observations, ids
+
+
+_OBSERVATION_COMPONENT_FIELDS = ("S", "A", "B", "M", "R", "U")
+_NUMBER_TOKEN_PATTERN = re.compile(r"\d+(?:\.\d+)?")
+
+_JUDGE_DUPLICATES_PROMPT = (
+    "You are comparing pairs of experimental observation claims extracted from the same paper. "
+    "Each claim has free text plus optional structured components: "
+    "S=setting/scope, A=treatment/method/object, B=baseline, M=measure, R=result, U=uncertainty. "
+    "For every supplied pair, decide whether the two claims describe the SAME experimental observation "
+    "(same object/dataset + same measure + same numerical or directional result), even when wording differs. "
+    "Rules: "
+    "1) same object (A) + same measure (M) + same result values (R) => duplicate; "
+    "2) different object/dataset/model, OR different measure, OR different result values => NOT duplicate, "
+    "even when the sentence template is highly similar; "
+    "3) extra detail such as a possible cause or a qualifier does NOT make a claim different when A, M, and R match; "
+    "4) never merge claims about different datasets (e.g. Cora-Link vs Cora-Node vs Proteins). "
+    "Return JSON only: {\"merge\": [[\"keep_id\", \"drop_id\"], ...]}. "
+    "Use only the supplied ids; omit non-duplicate pairs. If none are duplicates, return {\"merge\": []}.\n"
+)
+
+
+def _observation_fingerprint(node: JSONDict) -> dict[str, Any]:
+    content = node.get("content") or {}
+    canonical = re.sub(r"\s+", " ", str(content.get("canonical", ""))).strip().casefold()
     return {
-        ids[str(claim.get("_extraction_key", f"generated:{index}"))]: {
-            "type": "observation_claim",
-            "content": {"canonical": claim["content"]},
-            "source_anchor_ids": list(claim["paragraph_anchor_ids"]),
-        }
-        for index, claim in enumerate(claims, 1)
-    }, ids
+        "anchors": frozenset(node.get("source_anchor_ids", [])),
+        "numbers": frozenset(_NUMBER_TOKEN_PATTERN.findall(canonical)),
+        "tokens": _tokens(canonical),
+    }
+
+
+def _judge_duplicate_observations(
+    context: StageContext,
+    observations: dict[str, JSONDict],
+    candidate_pairs: list[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    """Ask the model to confirm which candidate pairs are the same observation."""
+    _load_deepseek_env()
+    key = os.environ.get("DEEPSEEK_API_KEY")
+    if not key:
+        return []
+    base = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+    payload_pairs = []
+    for left, right in candidate_pairs:
+        left_node = observations[left]
+        right_node = observations[right]
+        left_content = left_node.get("content") or {}
+        right_content = right_node.get("content") or {}
+        payload_pairs.append({
+            "a": {
+                "id": left,
+                "text": left_content.get("canonical", ""),
+                "components": {field: left_content[field] for field in _OBSERVATION_COMPONENT_FIELDS if left_content.get(field)},
+                "anchors": left_node.get("source_anchor_ids", []),
+            },
+            "b": {
+                "id": right,
+                "text": right_content.get("canonical", ""),
+                "components": {field: right_content[field] for field in _OBSERVATION_COMPONENT_FIELDS if right_content.get(field)},
+                "anchors": right_node.get("source_anchor_ids", []),
+            },
+        })
+    prompt = _JUDGE_DUPLICATES_PROMPT + json.dumps({"pairs": payload_pairs}, ensure_ascii=False)
+    http_request = Request(
+        f"{base}/chat/completions",
+        data=json.dumps({
+            "model": MODEL_NAME,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0,
+            "response_format": {"type": "json_object"},
+        }, ensure_ascii=False).encode("utf-8"),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with _urlopen_with_retry(http_request, timeout=180) as response:
+            raw = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, OSError, json.JSONDecodeError):
+        return []
+    try:
+        result = json.loads(_response_content(raw))
+    except (json.JSONDecodeError, ValueError):
+        return []
+    merge = result.get("merge")
+    if not isinstance(merge, list):
+        return []
+    validated: list[tuple[str, str]] = []
+    for pair in merge:
+        if (
+            isinstance(pair, list) and len(pair) == 2
+            and all(isinstance(item, str) and item in observations for item in pair)
+            and pair[0] != pair[1]
+        ):
+            validated.append((pair[0], pair[1]))
+    atomic_write_json(
+        context.work_dir / "semantic_step_2_dedup_judge_response.json",
+        {"candidate_pairs": candidate_pairs, "response": result, "merge": validated},
+    )
+    return validated
+
+
+def _deduplicate_observations_judge(
+    context: StageContext,
+    observations: dict[str, JSONDict],
+    extraction_to_observation: dict[str, str],
+) -> tuple[dict[str, JSONDict], dict[str, str]]:
+    """Merge same-observation duplicates via an LLM judge (semantic, not lexical)."""
+    if len(observations) < 2:
+        return observations, extraction_to_observation
+    fingerprints = {key: _observation_fingerprint(node) for key, node in observations.items()}
+    keys = sorted(observations)
+    candidate_pairs: list[tuple[str, str]] = []
+    for index, left in enumerate(keys):
+        left_fp = fingerprints[left]
+        if not left_fp["anchors"]:
+            continue
+        for right in keys[index + 1:]:
+            right_fp = fingerprints[right]
+            if not (left_fp["anchors"] & right_fp["anchors"]):
+                continue
+            share_number = bool(left_fp["numbers"] & right_fp["numbers"])
+            lexically_close = _cosine(left_fp["tokens"], right_fp["tokens"]) >= 0.6
+            if share_number or lexically_close:
+                candidate_pairs.append((left, right))
+    if not candidate_pairs:
+        return observations, extraction_to_observation
+    merge = _judge_duplicate_observations(context, observations, candidate_pairs)
+    if not merge:
+        return observations, extraction_to_observation
+    remap: dict[str, str] = {}
+    for keep, drop in merge:
+        if keep in observations and drop in observations and drop not in remap:
+            remap[drop] = keep
+    # Resolve transitive remaps (B->A, C->B  =>  C->A) before deleting nodes;
+    # drop any cycle the model may have emitted so merging stays acyclic.
+    resolved: dict[str, str] = {}
+    for drop, keep in remap.items():
+        root = keep
+        seen = {drop}
+        while root in remap and root not in seen:
+            seen.add(root)
+            root = remap[root]
+        if root in seen or root == drop:
+            continue
+        resolved[drop] = root
+    remap = resolved
+    if not remap:
+        return observations, extraction_to_observation
+    merged = dict(observations)
+    for drop, keep in remap.items():
+        if drop not in merged:
+            continue
+        merged[keep]["source_anchor_ids"] = list(dict.fromkeys(
+            [*merged[keep].get("source_anchor_ids", []),
+             *merged[drop].get("source_anchor_ids", [])]
+        ))
+        del merged[drop]
+    remapped_ids = {key: remap.get(value, value) for key, value in extraction_to_observation.items()}
+    return merged, remapped_ids
 
 
 def _equivalent_items(
@@ -1737,6 +2117,126 @@ def _relation_items(
     return links, rejected
 
 
+def _rewrite_imported_observations(
+    context: StageContext,
+    imported: list[JSONDict],
+    paragraphs: list[JSONDict],
+) -> tuple[list[JSONDict], list[ArtifactDraft]]:
+    """Rewrite imported observation claims into S/A/B/M/R form, retaining ids, without E."""
+    if not imported:
+        return [], []
+    anchor_text = {
+        item["anchor_id"]: item["text"]
+        for item in paragraphs
+        if isinstance(item, dict) and isinstance(item.get("anchor_id"), str)
+    }
+    selected = []
+    for item in imported:
+        excerpts = [
+            f"[{anchor_id}] {anchor_text[anchor_id]}"
+            for anchor_id in item.get("source_anchor_ids", [])
+            if isinstance(anchor_id, str) and anchor_id in anchor_text
+        ]
+        selected.append({
+            "id": item["id"],
+            "content": item["content"],
+            "source_anchor_ids": list(item.get("source_anchor_ids", [])),
+            "source_excerpts": excerpts,
+        })
+    candidates = _experiment_candidates(paragraphs)
+    try:
+        normalized, draft = _tool_call(
+            context,
+            candidates,
+            call_number=1,
+            selected_claims=selected,
+            operation="rewrite_observations",
+        )
+    except Exception:
+        return [], []
+    claims = normalized.get("claims", [])
+    if not isinstance(claims, list) or not all(isinstance(item, dict) for item in claims):
+        raise ValueError("rewrite_observations returned invalid claims")
+    return list(claims), [draft]
+
+
+def _generate_equivalents(
+    context: StageContext,
+    surviving: list[JSONDict],
+    *,
+    call_number: int,
+) -> tuple[list[JSONDict], list[ArtifactDraft]]:
+    """Generate one equivalent phenomenon claim E for each surviving observation."""
+    if not surviving:
+        return [], []
+    try:
+        normalized, draft = _tool_call(
+            context,
+            [],
+            call_number=call_number,
+            selected_claims=surviving,
+            operation="generate_equivalents",
+        )
+    except Exception:
+        return [], []
+    equivalents = normalized.get("equivalent_claims", [])
+    if not isinstance(equivalents, list) or not all(isinstance(item, dict) for item in equivalents):
+        raise ValueError("generate_equivalents returned invalid equivalent_claims")
+    return list(equivalents), [draft]
+
+
+def _extract_relations_pass(
+    context: StageContext,
+    paragraphs: list[JSONDict],
+    document: JSONDict,
+    equivalents: list[JSONDict],
+    observation_ids: dict[str, str],
+    *,
+    call_number: int,
+) -> tuple[list[JSONDict], list[ArtifactDraft]]:
+    """Extract target-centered relations for surviving E, per figure window."""
+    if not equivalents:
+        return [], []
+    by_stable = {
+        item["observation_key"]: item
+        for item in equivalents
+        if isinstance(item, dict) and isinstance(item.get("observation_key"), str)
+    }
+    candidate_to_stable: dict[str, list[str]] = {}
+    for extraction_key, stable in observation_ids.items():
+        if ":" not in extraction_key:
+            continue
+        candidate_id = extraction_key.rsplit(":", 1)[0]
+        candidate_to_stable.setdefault(candidate_id, []).append(stable)
+    tool = instantiate(context.options["tool_plugin"])
+    _load_deepseek_env()
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        raise RuntimeError("DEEPSEEK_API_KEY is not configured")
+    base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+    relations: list[JSONDict] = []
+    drafts: list[ArtifactDraft] = []
+    for index, candidate in enumerate(_experiment_candidates(paragraphs)):
+        candidate = _attach_related_claims(candidate, document)
+        stable_ids = candidate_to_stable.get(candidate["candidate_id"], [])
+        phenomena = [by_stable[stable] for stable in stable_ids if stable in by_stable]
+        if not phenomena:
+            continue
+        try:
+            candidate_relations, raw_responses = tool._extract_relations(candidate, phenomena, base_url)
+        except Exception:
+            continue
+        relations.extend({**item, "relation_context_id": candidate["candidate_id"]} for item in candidate_relations)
+        if raw_responses:
+            response_path = context.work_dir / f"semantic_step_2_relation_response_{call_number + index}.json"
+            atomic_write_json(response_path, {"responses": raw_responses})
+            drafts.append(ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
+                "schema_version": "1.0.0", "step": 2, "tool_call_id": "relations",
+                "tool_name": tool.name, "tool_version": tool.version, "status": "succeeded",
+            }))
+    return relations, drafts
+
+
 def _revision(
     document: JSONDict,
     context: StageContext,
@@ -1777,6 +2277,8 @@ class Step2ExtractObservationsPlugin:
             paper = _paper_text(context)
             paragraphs = _paper_paragraphs(paper.splitlines())
             modified: list[str] = []
+
+            # 1. Mechanically anchor all knowledge nodes (including imported observations).
             for knowledge_id, knowledge in document["knowledges"].items():
                 best = _best_paragraph_anchor(knowledge["content"]["canonical"], paragraphs)
                 if best is None:
@@ -1785,75 +2287,116 @@ class Step2ExtractObservationsPlugin:
                 if best["anchor_id"] not in source_ids:
                     source_ids.append(best["anchor_id"])
                     modified.append(knowledge_id)
-            observation_claims = [
+
+            imported_observation_claims = [
                 {"id": key, "content": value["content"]["canonical"],
                  "source_anchor_ids": list(value.get("source_anchor_ids", []))}
                 for key, value in document["knowledges"].items()
                 if value.get("type") == "observation_claim"
             ]
-            imported_claims: list[JSONDict] = []
-            imported_equivalents: list[JSONDict] = []
-            imported_drafts: list[ArtifactDraft] = []
-            direct_equivalent_mode = (
-                bool(observation_claims)
-                and context.options.get("tool_plugin") == f"{__name__}:DeepSeekV4FlashObservationTool"
-            )
-            if direct_equivalent_mode:
-                # Imported experimental propositions already contain the
-                # measured result.  Generate their phenomenon E claims from
-                # the proposition itself; figure/paragraph context is neither
-                # required nor allowed to gate this normalization.
-                normalized, imported_draft = _tool_call(
-                    context,
-                    [],
-                    call_number=1,
-                    selected_claims=observation_claims,
+            drafts: list[ArtifactDraft] = []
+
+            # 2. Rewrite imported observation claims into S/A/B/M/R form in place.
+            if imported_observation_claims:
+                rewritten, rewrite_drafts = _rewrite_imported_observations(
+                    context, imported_observation_claims, paragraphs,
                 )
-                imported_claims = list(normalized.get("claims", []))
-                imported_equivalents = list(normalized.get("equivalent_claims", []))
-                imported_drafts.append(imported_draft)
-            claims, equivalent_claims, relations, drafts = _extract_with_expansion(
+                drafts.extend(rewrite_drafts)
+                rewritten_by_id = {
+                    item["id"]: item
+                    for item in rewritten
+                    if isinstance(item, dict) and isinstance(item.get("id"), str)
+                }
+                for knowledge_id, item in rewritten_by_id.items():
+                    if knowledge_id not in document["knowledges"]:
+                        continue
+                    knowledge = document["knowledges"][knowledge_id]
+                    knowledge["content"] = {"canonical": item["content"]}
+                    merged_anchors = list(knowledge.get("source_anchor_ids", []))
+                    for anchor_id in item.get("paragraph_anchor_ids", []):
+                        if anchor_id not in merged_anchors:
+                            merged_anchors.append(anchor_id)
+                    knowledge["source_anchor_ids"] = merged_anchors
+                    modified.append(knowledge_id)
+
+            # 3. Retrieve the full text for observation claims missed by Step 1 (no E/relations yet).
+            new_claims, _, _, extract_drafts = _extract_with_expansion(
                 context, paragraphs, document,
-                selected_claims=(observation_claims or None) if not direct_equivalent_mode else None,
-                first_call_number=2 if direct_equivalent_mode else 1,
+                selected_claims=None,
+                observations_only=True,
+                first_call_number=2 if imported_observation_claims else 1,
             )
-            claims = [*imported_claims, *claims]
-            equivalent_claims = [*imported_equivalents, *equivalent_claims]
-            drafts = [*imported_drafts, *drafts]
-            observations, observation_ids = _observation_items(claims, document["knowledges"])
+            drafts.extend(extract_drafts)
+
+            # 4. Deduplicate new observations against imported ones (content-based, imported priority).
+            observations, extraction_to_observation = _observation_items(new_claims, document["knowledges"])
+            new_observation_ids = [key for key in observations if key not in document["knowledges"]]
+
+            # 4.5 Judge-merge same-observation duplicates among the newly extracted set.
+            observations, extraction_to_observation = _deduplicate_observations_judge(
+                context, observations, extraction_to_observation,
+            )
+            new_observation_ids = [key for key in observations if key not in document["knowledges"]]
+
+            # 5. Generate E for every surviving observation (imported + non-duplicate new) in one pass.
+            surviving = [
+                {"id": knowledge_id, "content": document["knowledges"][knowledge_id]["content"]["canonical"],
+                 "source_anchor_ids": list(document["knowledges"][knowledge_id].get("source_anchor_ids", []))}
+                for knowledge_id in [item["id"] for item in imported_observation_claims]
+            ]
+            surviving.extend(
+                {"id": knowledge_id, "content": observations[knowledge_id]["content"]["canonical"],
+                 "source_anchor_ids": list(observations[knowledge_id].get("source_anchor_ids", []))}
+                for knowledge_id in new_observation_ids
+            )
+            equivalent_claims, equiv_drafts = _generate_equivalents(
+                context, surviving,
+                call_number=3 if imported_observation_claims else 2,
+            )
+            drafts.extend(equiv_drafts)
+
+            # 6. Build E phenomena and E ≡ O operators.
+            identity_observation_ids = {item["id"]: item["id"] for item in surviving}
             phenomena, phenomenon_ids, equivalence_operators = _equivalent_items(
-                equivalent_claims, observation_ids, document["knowledges"],
+                equivalent_claims, identity_observation_ids, document["knowledges"],
             )
-            for knowledge_id, value in observations.items():
-                if knowledge_id in document["knowledges"]:
-                    document["knowledges"][knowledge_id].update(value)
-            observations = {key: value for key, value in observations.items() if key not in document["knowledges"]}
+
+            # 7. Extract target-centered relations for the surviving E.
+            relations, relation_drafts = _extract_relations_pass(
+                context, paragraphs, document, equivalent_claims, extraction_to_observation,
+                call_number=4 if imported_observation_claims else 3,
+            )
+            drafts.extend(relation_drafts)
+
+            # 8. Persist observations, phenomena, operators, and relations.
+            new_observations = {key: value for key, value in observations.items() if key in new_observation_ids}
             existing_operator_ids = {item.get("id") for item in document["graph"]["operators"]}
             duplicate_operator_ids = existing_operator_ids & {item["id"] for item in equivalence_operators}
             if duplicate_operator_ids:
                 raise ValueError(f"Step 2 operator ids already exist: {sorted(duplicate_operator_ids)}")
-            document["knowledges"].update(observations)
+            document["knowledges"].update(new_observations)
             document["knowledges"].update(phenomena)
             document["graph"]["nodes"].extend(
                 knowledge_id
-                for knowledge_id in [*observations, *phenomena]
+                for knowledge_id in [*new_observations, *phenomena]
                 if knowledge_id not in document["graph"]["nodes"]
             )
             document["graph"]["operators"].extend(equivalence_operators)
             document["workflow"]["non_reasoning_links"], rejected_relations = _relation_items(
-                relations, phenomenon_ids, observation_ids, document,
+                relations, phenomenon_ids, identity_observation_ids, document,
             )
             findings = [Finding("STEP2_REJECTED_EQUIVALENT", "warning", f"No valid equivalent claim for observation {key}")
-                        for key in sorted(set(observation_ids) - set(phenomenon_ids))]
+                        for key in sorted(set(identity_observation_ids) - set(phenomenon_ids))]
             findings.extend(Finding("STEP2_REJECTED_RELATION", "warning", message) for message in rejected_relations)
             _revision(
                 document,
                 context,
                 revision_id=f"revision_{context.run_id}_step_2",
                 review_status="automated",
-                modified=[*modified, *observations, *phenomena, *(item["id"] for item in equivalence_operators)],
+                modified=[*modified, *new_observations, *phenomena, *(item["id"] for item in equivalence_operators)],
             )
             emitted = emit_formalization(context, document, step=2, step_name=STEP_NAME)
+            drafts.extend(_tool_audit_drafts(context))
             return StageResult(emitted.status, [*emitted.artifacts, *drafts], [*findings, *emitted.findings], emitted.metadata)
         except Exception as exc:
             return StageResult(

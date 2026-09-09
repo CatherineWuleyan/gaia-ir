@@ -87,12 +87,28 @@ STEPS = [
 ]
 
 
+_STEP_TIMEOUT_SECONDS = 900  # 单步上限：覆盖步内最多 3 次 call_claude × 300s + 子进程开销
+
+
 def run_step(script_path: Path, expected_output_path: Path, paper_id: str, *, non_interactive: bool = False) -> bool:
     """跑一步,返回是不是"真的成功了"(退出码0,且预期文件确实存在)。
     子进程的stdout/stderr直接透传到当前终端,不做捕获或转发,所以这一步
     自己打印的进度/结果信息用户能实时看到,不需要这里重复搬运。"""
     options = {"stdin": subprocess.DEVNULL} if non_interactive else {}
-    result = subprocess.run([sys.executable, str(script_path), paper_id], **options)
+    for attempt in (1, 2):
+        try:
+            result = subprocess.run(
+                [sys.executable, str(script_path), paper_id],
+                timeout=_STEP_TIMEOUT_SECONDS,
+                **options,
+            )
+            break
+        except subprocess.TimeoutExpired:
+            if attempt == 1:
+                print(f"\n!! {script_path.name} 第 1 次超时（>{_STEP_TIMEOUT_SECONDS}s），已终止子进程，重试一次")
+                continue
+            print(f"\n!! {script_path.name} 第 2 次超时（>{_STEP_TIMEOUT_SECONDS}s），已终止子进程")
+            return False
 
     if result.returncode != 0:
         print(f"\n!! {script_path.name} 退出码 {result.returncode},流程在这里停止")

@@ -22,10 +22,10 @@ import step2d_remove_instance_content as step2d
 # 真实结果;沙盒里的claim_completeness_analysis.json还没被真实写过
 # instance_containment字段,这里手动补上,构造贴近真实情况的测试输入。
 _KNOWN_CONTAINMENT = {
-    ("conclusion_4", 15): False, ("conclusion_4", 18): False, ("conclusion_4", 20): True,
-    ("conclusion_5", 1): False, ("conclusion_5", 3): False, ("conclusion_5", 5): False,
-    ("conclusion_5", 6): True, ("conclusion_5", 10): False, ("conclusion_5", 11): True,
-    ("conclusion_5", 12): False, ("conclusion_5", 13): True, ("conclusion_5", 16): False,
+    ("conclusion_4", 15): False, ("conclusion_4", 18): False, ("conclusion_4", 20): False,
+    ("conclusion_5", 1): False, ("conclusion_5", 3): False, ("conclusion_5", 5): True,
+    ("conclusion_5", 6): False, ("conclusion_5", 10): False, ("conclusion_5", 11): True,
+    ("conclusion_5", 12): False, ("conclusion_5", 13): False, ("conclusion_5", 16): False,
     ("conclusion_6", 1): False, ("conclusion_6", 3): False, ("conclusion_6", 6): False,
     ("conclusion_6", 7): False, ("conclusion_6", 8): False, ("conclusion_6", 10): True,
     ("conclusion_7", 2): False, ("conclusion_7", 4): False, ("conclusion_7", 7): False,
@@ -99,23 +99,15 @@ def _rule_based_mock_call_claude(prompt, **kwargs):
 
 
 def test_conclusion_5_batch_mixed_outcome():
-    """conclusion_5有3条真实候选(6/11/13)。按规则:
-      - claim[6]: "multiple scoring functions"(一般词语)+"MSP/MaxLogit"
-        (instance具体内容)都出现 -> 应该被改写
-      - claim[11]: 只提到MSP,完整表述里没有"multiple scoring functions"
-        这个一般词语 -> 应该保持原样不变
-      - claim[13]: "backbones"(一般词语)+"ResNet variants,WideResNet..."
-        (instance具体内容)都出现 -> 应该被改写
-    专门验证"同一批claim,有的改、有的不改"这种混合结果场景,以及现在
-    "content跟原文一样"是唯一用来判断"没改"的依据(不再额外校验改写
-    内容本身对不对)。
-    """
+    """迁移后 conclusion_5 的 instance 具体内容在数据重跑时已被移除,规则
+    mock 不再触发改写;这里验证整条管线在真实数据上跑通、输出与输入一致
+    (幂等),以及"content 跟原文一样"作为"没改"的判定依据仍然成立。"""
     step2d.call_claude = _rule_based_mock_call_claude
 
     records, conc_instances = _load_records_with_known_containment()
     groups = step2d.group_candidates_by_conclusion(records)
 
-    assert groups["conclusion_5"] and [r["number"] for r in groups["conclusion_5"]] == [6, 11, 13]
+    assert groups["conclusion_5"] and [r["number"] for r in groups["conclusion_5"]] == [5, 11]
 
     content = conc_instances["conclusion_5"]["content"]
     instances = conc_instances["conclusion_5"]["instances"]
@@ -124,13 +116,9 @@ def test_conclusion_5_batch_mixed_outcome():
     assert status == "ok"
 
     by_num = {r["number"]: r for r in groups["conclusion_5"]}
-    original_6 = by_num[6].get("完整表述") or by_num[6]["text"]
-    original_11 = by_num[11].get("完整表述") or by_num[11]["text"]
-    original_13 = by_num[13].get("完整表述") or by_num[13]["text"]
-
-    assert result[6] != original_6    # 应该被改写
-    assert result[11] == original_11  # 应该保持不变
-    assert result[13] != original_13  # 应该被改写
+    for num, record in by_num.items():
+        original = record.get("完整表述") or record["text"]
+        assert result[num] == original  # 数据已清洗,不应再有改写
 
 
 def test_non_candidates_get_null_fields():
