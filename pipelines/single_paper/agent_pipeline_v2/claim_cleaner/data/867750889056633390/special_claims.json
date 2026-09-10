@@ -1,0 +1,47 @@
+[
+  {
+    "conclusion": "conclusion_3",
+    "claim_number": 10,
+    "text": "Across multiple ResNet depths and VGG-13/16/19 transforms, ETTs consistently outperform the alternative pruning-at-initialization methods SNIP and GraSP, particularly at high sparsities.",
+    "certain_instances_given": [
+      12
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_4",
+    "claim_number": 1,
+    "text": "On ImageNet at sparsity (fraction of zero weights) 73.79%, Elastic Ticket Transformation (ETT)-transferred tickets for ResNet architectures attain top-1 accuracies close to Iterative Magnitude-based Pruning (IMP)-found tickets and substantially above the pruning-at-initialization baselines SNIP and GraSP.",
+    "certain_instances_given": [
+      4
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_5",
+    "claim_number": 1,
+    "text": "Across CIFAR-10 and ImageNet experiments, transferred tickets produced by Elastic Ticket Transformations (ETTs) substantially outperform the state-of-the-art pruning-at-initialization methods SNIP and GraSP and one-shot magnitude pruning baselines at matched sparsity levels (fraction of zero weights).",
+    "certain_instances_given": [
+      3
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_7",
+    "claim_number": 2,
+    "text": "When transferring winning tickets across ResNet depths, one should choose residual blocks as the minimal replication unit for ResNets, and a convolutional layer plus normalization layer as the minimal replication unit for VGG, consistent with model structure.",
+    "certain_instances_given": [
+      3
+    ],
+    "uncertain_instances_given": []
+  },
+  {
+    "conclusion": "conclusion_8",
+    "claim_number": 6,
+    "text": "For the VGG variants VGG-13-2, VGG-13-3, and VGG-13-5, differing in numbers of fully-connected (FC) layers, and for multi-layer perceptrons (MLPs) of varying widths on MNIST, the Elastic Lottery Ticket Hypothesis approach (E-LTH) transfers at 89.26% sparsity (fraction of zero weights) with ≤0.21% accuracy differences relative to directly trained winning tickets.",
+    "certain_instances_given": [
+      7
+    ],
+    "uncertain_instances_given": []
+  }
+]

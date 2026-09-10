@@ -1,0 +1,11 @@
+{
+  "run_id": "run_20260909T132457Z_5aa9d1f9",
+  "formalization_artifact_id": "artifact_7f7787bd71a542c581582b4f09814291",
+  "gaia_ir_artifact_id": "artifact_709af40521ce41f6b43061f1910d7286",
+  "knowledge_index_artifact_id": "artifact_3dbc718619f74a97bcb49313aa2d2ac6",
+  "source_sha256s": {
+    "formalization": "294fbcedb8207b2fb09246b3a27fbe2fd6b68fb0776fc311360ee1867fe4b983",
+    "gaia.ir": "8e7501400a41a16454fafd9717abf0560b779413ca80c573aaa2732efe6a8a2f",
+    "knowledge.index": "9fdc9c4484929667dcb935d0271cc613ba3e81e20424e7e48bb1f918fa882f3d"
+  }
+}
