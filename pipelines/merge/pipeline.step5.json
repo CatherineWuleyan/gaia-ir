@@ -1,7 +1,7 @@
 {
   "pipeline_id": "pipeline-merge-step5",
   "version": "0.6.0",
-  "view_adapter": "agent_pipeline_v2.view:V2FormalizationViewAdapter",
+  "view_adapter": "pipeline_merge.view:MergeViewAdapter",
   "stages": [
     {
       "name": "step0_select_scope",
@@ -12,7 +12,7 @@
           "domain": "lottery-ticket-hypothesis",
           "selection": [
             "papers:paper_24bac745",
-            "papers:paper_24f05bae"
+            "papers:paper_f519c93b"
           ]
         }
       }

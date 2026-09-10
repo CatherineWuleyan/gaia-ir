@@ -4,12 +4,15 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
+import threading
+import time
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from itertools import combinations
 from typing import Any, Mapping
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-import time
 
 from pipeline_harness.models import Finding, JSONDict
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult
@@ -28,6 +31,17 @@ _NON_RELATION_MARKERS = (
     "does not support", "do not support", "unrelated", "no logical connection",
     "no inferential relation", "relation is invalid", "not inferential",
     "inference is weak", "weak because", "not universally",
+)
+GATE_BATCH_SIZE = 20
+_RESOURCE_SPAM = re.compile(
+    r"\b(CPU|energy|memory|latency|runtime|power|inference time)\b", re.IGNORECASE
+)
+# Compiler-generated helper / interface names.  Some Paper Packages ship them
+# without the `helper_visibility` marker, so match the name as well.
+_HELPER_ID_RE = re.compile(
+    r"(^|::)__|helper[_-]?relation|operator[_-]?result|disjunction[_-]?result|"
+    r"alternative[_-]?explanation|step4_weakpoint_",
+    re.I,
 )
 
 
@@ -65,7 +79,8 @@ def _load_records(context: StageContext) -> dict[str, JSONDict]:
             if (metadata.get("helper_visibility") == "formal_internal"
                     or metadata.get("visibility") == "strategy_interface"
                     or metadata.get("generated_kind") == "interface_claim"
-                    or "step4_weakpoint_relation" in source_knowledge_id):
+                    or "step4_weakpoint_relation" in source_knowledge_id
+                    or _HELPER_ID_RE.search(qid)):
                 continue
             records[qid] = {"qid": qid, "package": package, "content": content,
                             "type": item.get("type", "claim"), "metadata": dict(metadata),
@@ -85,13 +100,90 @@ def _group_candidates(group: Mapping[str, Any], records: Mapping[str, JSONDict])
     return result
 
 
+def _is_resource_observation(record: Mapping[str, Any]) -> bool:
+    """Skip numeric resource-measurement spam (CPU/energy/memory/...)."""
+    content = str(record.get("content") or "")
+    return len(content) < 320 and bool(_RESOURCE_SPAM.search(content))
+
+
+def _retrieval_prompt(anchor: JSONDict, candidates: list[JSONDict]) -> str:
+    payload = [{"qid": claim["qid"], "content": claim["content"]} for claim in candidates]
+    return (
+        "You are a cross-paper relation finder. Given ONE anchor claim (from one paper) and a list of candidate "
+        "claims (from other papers), return the IDs of candidate claims that have a specific, defensible relation "
+        "to the anchor: a shared object with a real inferential link, not mere topic overlap. For each, give the "
+        "direction (anchor_supports_candidate, candidate_supports_anchor, or tension) and a one-line reason. "
+        'Return JSON only: {"related":[{"qid":"...","direction":"...","reason":"..."}]}\n'
+        f"ANCHOR={json.dumps({'qid': anchor['qid'], 'content': anchor['content']}, ensure_ascii=False)}\n"
+        f"CANDIDATES={json.dumps(payload, ensure_ascii=False)}"
+    )
+
+
+def _retrieve_related(records: Mapping[str, JSONDict], max_workers: int = 4) -> list[JSONDict]:
+    """Retrieve plausible cross-Package claim pairs with the LLM.
+
+    Asking the model to classify every pair of a large all-pairs batch makes it
+    default to "no relation"; asking it to *find* each anchor's related claims is
+    far more reliable and yields a small, judgeable candidate set.  Every
+    cross-Package relation has an endpoint in some Package, so anchoring each
+    Public claim against all other Packages' claims covers the pair space.
+    """
+    by_package: dict[str, list[str]] = defaultdict(list)
+    for qid, record in records.items():
+        if record.get("type") == "note" or _is_resource_observation(record):
+            continue
+        by_package[str(record["package"])].append(qid)
+    packages = sorted(by_package)
+    if len(packages) < 2:
+        return []
+
+    collected: list[JSONDict] = []
+    seen: set[tuple[str, str]] = set()
+    lock = threading.Lock()
+
+    def retrieve(anchor_qid: str, candidate_qids: list[str]) -> None:
+        response = _post_json(_retrieval_prompt(records[anchor_qid], [records[q] for q in candidate_qids]))
+        if not isinstance(response, dict):
+            return
+        found: list[JSONDict] = []
+        for item in response.get("related") or []:
+            if not isinstance(item, Mapping):
+                continue
+            cid = item.get("qid")
+            if not isinstance(cid, str) or cid not in records or cid == anchor_qid:
+                continue
+            key = tuple(sorted((anchor_qid, cid)))
+            with lock:
+                if key in seen:
+                    continue
+                seen.add(key)
+            found.append({
+                "candidate_id": _stable_id("candidate", [anchor_qid, cid]),
+                "source_qids": [anchor_qid, cid],
+                "propositions": [records[anchor_qid], records[cid]],
+                "hint": {"direction": str(item.get("direction") or ""), "reason": str(item.get("reason") or "")},
+            })
+        with lock:
+            collected.extend(found)
+
+    jobs = [
+        (anchor_qid, [q for other in packages if other != package for q in by_package[other]])
+        for package in packages
+        for anchor_qid in by_package[package]
+    ]
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        list(pool.map(lambda job: retrieve(*job), jobs))
+    collected.sort(key=lambda item: item["candidate_id"])
+    return collected
+
+
 def _post_json(prompt: str) -> Any:
     _load_deepseek_env()
     key = os.environ.get("DEEPSEEK_API_KEY")
     if not key:
         raise RuntimeError("DEEPSEEK_API_KEY is not configured")
     base = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
-    model = os.environ.get("DEEPSEEK_MODEL", DEFAULT_MODEL_NAME)
+    model = os.environ.get("DEEPSEEK_MERGE_MODEL", DEFAULT_MODEL_NAME)
     body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}],
                        "temperature": 0, "response_format": {"type": "json_object"}}, ensure_ascii=False).encode("utf-8")
     request = Request(f"{base}/chat/completions", data=body,
@@ -125,7 +217,9 @@ def _decode(prompt: str, key: str) -> list[JSONDict]:
 def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
     if kind == "operator_gate":
         instruction = ("Decide for every candidate whether a directly valid deterministic logical operator exists. "
-                       "Return operator_candidate, not_operator, or insufficient_evidence.")
+                       "Return operator_candidate if yes; not_operator only if a non-deterministic reasoning relation "
+                       "(deduction/abduction/analogy/infer) is supported by the supplied content; otherwise "
+                       "insufficient_evidence. Superficial topical similarity alone is insufficient_evidence.")
         shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
     elif kind == "operator_type":
         instruction = ("Classify only deterministic operator candidates. Allowed types: equivalence, contradiction, negation, "
@@ -133,14 +227,15 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
                        "and uncertainty. Contradiction requires compatible conditions and assertions that cannot both be true.")
         shape = '{"decisions":[{"candidate_id":"...","type":"...","variables":["qid"],"expression":"..."}]}'
     else:
-        instruction = ("Classify non-operator relations as deduction, abduction, analogy, or infer. Use only supplied IDs/content. "
-                       "Deduction needs every premise; analogy needs a supplied bridge claim; abduction must identify observation "
-                       "and hypothesis. Abduction may use several observation premises, but at most one explicit alternative "
-                       "explanation; multiple alternatives must already be represented by one supplied disjunction claim. "
-                       "Make the expression show which IDs are observations and which is the alternative. If insufficient, omit it. "
-                       "A new domain conclusion may use candidate_target=true and a "
-                       "stable target_id, but never invent its content.")
-        shape = '{"weakpoints":[{"candidate_id":"...","evidence_claim_ids":["..."],"target_claim_id":["..."],"reasoning_type":"...","evidence_anchor_ids":[],"expression":"...","candidate_target":false}]}'
+        instruction = ("Classify non-operator relations between the supplied candidates as deduction, abduction, analogy, or infer. "
+                       "Use only supplied IDs/content. Deduction needs every premise; analogy needs a supplied bridge claim; "
+                       "abduction must identify observation and hypothesis. Abduction may use several observation premises, but at "
+                       "most one explicit alternative explanation; multiple alternatives must already be represented by one supplied "
+                       "disjunction claim. Make the expression show which IDs are observations and which is the alternative. "
+                       "Emit a relation only when it is specific and defensible from the supplied content; being about the same topic "
+                       "or sharing vocabulary is NOT a relation — omit it. Use infer only when the direction is clear but no stronger "
+                       "family fits; do not default to infer. Never propose a new conclusion here.")
+        shape = '{"weakpoints":[{"candidate_id":"...","evidence_claim_ids":["..."],"target_claim_id":["..."],"reasoning_type":"...","evidence_anchor_ids":[],"expression":"..."}]}'
     return ("You are a constrained scientific relation judge. Use ONLY this frozen Step 2 group; do not retrieve, read paper "
             "text, use outside knowledge, invent facts or IDs, or treat similarity as proof. Return JSON only. " + instruction +
             f" Output shape: {shape}\nGROUP={group_id}\nCANDIDATES={json.dumps(candidates, ensure_ascii=False, sort_keys=True)}")
@@ -164,64 +259,98 @@ def _validate_operator(item: Mapping[str, Any], records: Mapping[str, JSONDict],
             "conclusion": None, "metadata": {"source": "step2_group"}}
 
 
-def _expected_scope_fallback(records: Mapping[str, JSONDict]) -> list[JSONDict]:
-    """Add three bounded, evidence-backed links when retrieval misses them."""
-    by_package: dict[str, list[JSONDict]] = {}
-    for record in records.values():
-        by_package.setdefault(str(record["package"]), []).append(record)
-    packages = sorted(by_package)
-    if len(packages) != 2:
-        return []
-    left, right = (by_package[packages[0]], by_package[packages[1]])
-    def pick(items: list[JSONDict], *terms: str) -> JSONDict | None:
-        return next((item for item in items if all(term in item["content"].lower() for term in terms)), None)
-    a_ticket = pick(left, "subnetwork", "baseline") or pick(right, "subnetwork", "baseline")
-    b_accuracy = pick(right if a_ticket in left else left, "accuracy", "fine-tun") if a_ticket else None
-    a_parameter = pick(left if a_ticket in left else right, "parameter") if a_ticket else None
-    b_storage = pick(right if a_ticket in left else left, "on-disk", "model size") if a_ticket else None
-    b_lth = pick(right if a_ticket in left else left, "lottery ticket", "not supported") if a_ticket else None
-    pairs = [("accuracy_retention", a_ticket, b_accuracy,
-              "The small-subnetwork baseline result and the pruning accuracy-retention result are related conditionally on task, method, and fine-tuning."),
-             ("parameter_storage", a_parameter, b_storage,
-              "Parameter compression and sparse-state storage compression are related, but parameter reduction alone does not establish end-to-end memory or inference reduction."),
-             ("lth_scope", a_ticket, b_lth,
-              "The winning-ticket-style result and the negative LTH result create a scope-limited tension across methods and tasks, not a direct contradiction.")]
-    result: list[JSONDict] = []
-    for label, source, target, expression in pairs:
-        if source is None or target is None or source["package"] == target["package"]:
-            continue
-        result.append({"id": _stable_id("weakpoint_fallback", [label, source["qid"], target["qid"]]),
-                       "payload": {"evidence_claim_ids": [source["qid"]], "target_claim_id": [target["qid"]],
-                                   "reasoning_type": "infer", "evidence_anchor_ids": [], "expression": expression}})
-    return result
+def _synthesis_prompt(claims: list[JSONDict]) -> str:
+    payload = [
+        {"qid": claim["qid"], "package": claim["package"], "content": claim["content"]}
+        for claim in claims
+    ]
+    return (
+        "You are a domain-integration synthesizer. Below are claims from multiple paper packages that were "
+        "judged cross-paper related. Write ONE domain conclusion stating the shared regularity they jointly "
+        "support.\n"
+        "Rules:\n"
+        "1. Abstract, never list. Do NOT restate, quote or concatenate the input claims; a conclusion whose "
+        "clauses are joined by 'and' / 'while' is a copy, not a synthesis.\n"
+        "2. It must be a single coherent proposition about the common pattern the inputs share (what holds "
+        "across the methods, tasks and conditions they cover).\n"
+        "3. Keep it conditional on the tested scope and invent nothing beyond the supplied claims.\n"
+        "4. If the claims share no common regularity, return an empty supporting_qids list.\n"
+        'BAD (a copy): "A holds, and B holds, while C holds."\n'
+        'GOOD (a synthesis): "Across the evaluated <methods/tasks>, <common regularity>, conditional on <scope>."\n'
+        'Return JSON only: {"summary":"...", "supporting_qids":["qid", ...]}'
+        f"\nCLAIMS={json.dumps(payload, ensure_ascii=False, sort_keys=True)}"
+    )
+
+
+def _synthesize_domain_conclusion(
+    weakpoints: list[JSONDict], records: Mapping[str, JSONDict],
+) -> tuple[list[JSONDict], list[JSONDict]]:
+    """Synthesize one bounded domain conclusion (candidate K) from the cross-paper relations.
+
+    Pairwise judgment stays conservative (a mere topical overlap must not become a relation), but
+    the merge still needs a summary proposition: gather the claims the cross-paper relations touch
+    and let the LLM decide whether they jointly support one domain conclusion.
+    """
+    involved: dict[str, JSONDict] = {}
+    for weakpoint in weakpoints:
+        payload = weakpoint.get("payload") or {}
+        for qid in [*payload.get("evidence_claim_ids", []), *payload.get("target_claim_id", [])]:
+            if isinstance(qid, str) and qid in records:
+                involved[qid] = records[qid]
+    if len(involved) < 2:
+        return [], []
+    claims = [involved[qid] for qid in sorted(involved)]
+    response = _post_json(_synthesis_prompt(claims))
+    if not isinstance(response, dict):
+        return [], []
+    supporting = [qid for qid in response.get("supporting_qids") or [] if isinstance(qid, str) and qid in records]
+    supporting = list(dict.fromkeys(supporting))
+    summary = str(response.get("summary") or "").strip()
+    if len(supporting) < 2 or not summary:
+        return [], []
+    target = _stable_id("candidate_K", supporting)
+    # The synthesis prompt is the authoritative domain-conclusion writer, so its
+    # abstracted summary is carried through as the candidate's content; Step 4
+    # must not re-write it with the coarser per-pair candidate prompt.
+    candidate = {"id": target, "kind": "candidate_claim", "content": summary,
+                 "status": "materialized", "provenance_qids": supporting}
+    # The domain conclusion is the general proposition; it infers the finer
+    # Paper claims it was abstracted from (K -> finer), rather than being a sink
+    # that merely aggregates them.
+    weakpoint = {"id": _stable_id("weakpoint", ["synthesis", target]),
+                 "payload": {"evidence_claim_ids": [target], "target_claim_id": supporting,
+                             "reasoning_type": "infer", "evidence_anchor_ids": [],
+                             "expression": f"[{target}] 推出 " + " 与 ".join(f"[{qid}]" for qid in supporting)}}
+    return [candidate], [weakpoint]
 
 
 class Step3IdentifyStructuresPlugin:
     stage_name = "step3_identify_structures"
 
     @staticmethod
-    def _process_group(group: Mapping[str, Any], records: Mapping[str, JSONDict]):
-        """Run the existing gate/type/weakpoint sequence for one group."""
-        if not isinstance(group, Mapping) or not isinstance(group.get("group_id"), str):
-            raise ValueError("invalid Step 2 group")
-        candidates = _group_candidates(group, records)
+    def _judge_candidates(
+        candidates: list[JSONDict], group_id: str, records: Mapping[str, JSONDict],
+    ) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict]]:
+        """Run the gate/type/weakpoint sequence over one candidate batch."""
         if not candidates:
             return [], [], []
         operators: list[JSONDict] = []
         weakpoints: list[JSONDict] = []
         candidate_knowledges: list[JSONDict] = []
-        gate = _decode(_prompt("operator_gate", group["group_id"], candidates), "decisions")
-        operator_ids = {str(x.get("candidate_id")) for x in gate if x.get("decision") == "operator_candidate"}
+        gate = _decode(_prompt("operator_gate", group_id, candidates), "decisions")
+        decisions = {str(x.get("candidate_id")): x.get("decision") for x in gate}
+        operator_ids = {cid for cid, decision in decisions.items() if decision == "operator_candidate"}
+        weakpoint_ids = {cid for cid, decision in decisions.items() if decision == "not_operator"}
         operator_candidates = [x for x in candidates if x["candidate_id"] in operator_ids]
         if operator_candidates:
-            typed = _decode(_prompt("operator_type", group["group_id"], operator_candidates), "decisions")
+            typed = _decode(_prompt("operator_type", group_id, operator_candidates), "decisions")
             for item in typed:
                 op = _validate_operator(item, records, {x["candidate_id"] for x in operator_candidates})
                 if op is not None:
                     operators.append(op)
-        non_operator = [x for x in candidates if x["candidate_id"] not in operator_ids]
+        non_operator = [x for x in candidates if x["candidate_id"] in weakpoint_ids]
         if non_operator:
-            judged = _decode(_prompt("weakpoint", group["group_id"], non_operator), "weakpoints")
+            judged = _decode(_prompt("weakpoint", group_id, non_operator), "weakpoints")
             allowed = {x["candidate_id"] for x in non_operator}
             for item in judged:
                 if item.get("candidate_id") not in allowed or item.get("reasoning_type") not in WEAKPOINT_TYPES:
@@ -241,19 +370,27 @@ class Step3IdentifyStructuresPlugin:
                 package_ids.update(records[qid]["package"] for qid in targets if qid in records)
                 if len(package_ids) < 2:
                     continue
-                if item.get("candidate_target"):
-                    target = _stable_id("candidate_K", [group["group_id"], *evidence])
-                    targets = [target]
-                    candidate_knowledges.append({"id": target, "kind": "candidate_claim", "content": None,
-                                                 "status": "placeholder", "provenance_qids": evidence})
+                # Pairwise judgment only emits direct relations.  Domain
+                # conclusions (K) are synthesized once, from all the cross-paper
+                # relations together, so the merge does not mint a redundant K
+                # per candidate pair.
                 if set(evidence) & set(targets) or not expression:
                     continue
-                weakpoints.append({"id": _stable_id("weakpoint", [group["group_id"], str(item["candidate_id"])]),
+                weakpoints.append({"id": _stable_id("weakpoint", [group_id, str(item["candidate_id"])]),
                                    "payload": {"evidence_claim_ids": evidence, "target_claim_id": targets,
                                                "reasoning_type": item["reasoning_type"],
                                                "evidence_anchor_ids": list(item.get("evidence_anchor_ids") or []),
                                                "expression": expression}})
         return operators, weakpoints, candidate_knowledges
+
+    @staticmethod
+    def _process_group(group: Mapping[str, Any], records: Mapping[str, JSONDict]):
+        """Judge the cross-Package candidate pairs inside one Step 2 group."""
+        if not isinstance(group, Mapping) or not isinstance(group.get("group_id"), str):
+            raise ValueError("invalid Step 2 group")
+        return Step3IdentifyStructuresPlugin._judge_candidates(
+            _group_candidates(group, records), str(group["group_id"]), records,
+        )
 
     def run(self, context: StageContext) -> StageResult:
         try:
@@ -269,20 +406,30 @@ class Step3IdentifyStructuresPlugin:
             operators: list[JSONDict] = []
             weakpoints: list[JSONDict] = []
             candidate_knowledges: list[JSONDict] = []
-            # Groups are independent API jobs.  Keep the worker bounded and
-            # collect results in input order so artifact bytes remain stable.
-            with ThreadPoolExecutor(max_workers=min(4, max(1, len(groups)))) as pool:
-                group_results = list(pool.map(lambda group: self._process_group(group, records), groups))
-            for group_result in group_results:
-                group_operators, group_weakpoints, group_candidates = group_result
+            # Bootstrap judges the whole batch jointly: the candidate set is every
+            # cross-Package public claim pair (semantic pairing via the LLM),
+            # because Step 2's lexical cosine misses semantically related pairs.
+            # Incremental/reconcile keep the bounded Step 2 groups.
+            if local.get("mode") == "bootstrap":
+                all_candidates = _retrieve_related(records)
+                batches = [all_candidates[i:i + GATE_BATCH_SIZE]
+                           for i in range(0, len(all_candidates), GATE_BATCH_SIZE)]
+                jobs = [(batch, "bootstrap") for batch in batches]
+            else:
+                jobs = [(_group_candidates(group, records), str(group["group_id"])) for group in groups]
+            with ThreadPoolExecutor(max_workers=min(4, max(1, len(jobs)))) as pool:
+                results = list(pool.map(lambda job: self._judge_candidates(job[0], job[1], records), jobs))
+            for group_operators, group_weakpoints, group_candidates in results:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
                 candidate_knowledges.extend(group_candidates)
-            # For this bounded two-paper mini scope, only the explicit
-            # evidence-backed links defined by the scope fallback are safe to
-            # materialize.  Generic LLM weakpoint guesses are intentionally
-            # excluded from the final merge graph.
-            weakpoints = _expected_scope_fallback(records)
+            # Synthesize a bounded domain conclusion (K) from the cross-paper
+            # relations so the merge yields a summary proposition even though
+            # pairwise judgment stays conservative.
+            if weakpoints:
+                synth_candidates, synth_weakpoints = _synthesize_domain_conclusion(weakpoints, records)
+                candidate_knowledges.extend(synth_candidates)
+                weakpoints.extend(synth_weakpoints)
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())

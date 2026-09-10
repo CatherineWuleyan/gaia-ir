@@ -9,6 +9,7 @@ from gaia.engine.ir.formalize import formalize_named_strategy
 
 from pipeline_harness.models import ArtifactRef, JSONDict
 from pipeline_harness.store import RunStore
+from pipeline_harness.view.connectivity import prune_orphan_nodes
 from pipeline_harness.view.model import ViewDocument
 
 from .authoring import validate, weakpoint_target_ids
@@ -342,7 +343,6 @@ class V2FormalizationViewAdapter:
                             },
                         })
                     formal_operators = lowered.strategy.formal_expr.operators
-                    relation_search_refs: list[str] = []
                     for index, operator in enumerate(formal_operators, 1):
                         operator_id = f"{strategy_id}:operator:{index}"
                         operator_type = operator.operator.value
@@ -353,19 +353,12 @@ class V2FormalizationViewAdapter:
                             "metadata": {"strategy_id": strategy_id, "background": list(strategy["background"]),
                                          "formalization_template": strategy["type"], "derived_for_view": True},
                         }
-                        if operator_type in _INLINE_RELATIONS:
-                            left, right = operator.variables
-                            edges.append({
-                                "id": f"formal-relation:{step}:{operator_id}",
-                                "entity_id": operator_id, "semantic_id": operator_id,
-                                "source": f"step:{step}:knowledge:{left}",
-                                "target": f"step:{step}:knowledge:{right}", "label": operator_type,
-                                "layer": "operators", "edge_class": "reasoning", "semantic_type": operator_type,
-                                "step": step, "visible_at": ["standard"], "min_granularity": "standard",
-                                "fold_group": strategy_id, "details": details,
-                            })
-                            relation_search_refs.append(f"step:{step}:knowledge:{left}")
-                            continue
+                        # Every clause of a lowered strategy is projected as a
+                        # real operator node.  Rendering an equivalence or
+                        # implication clause as a bare operand-to-operand edge
+                        # would drop the clause's helper conclusion, whose
+                        # producing operator is still present in the compiled IR
+                        # — a "断头" operator that points at no rendered node.
                         nodes.append({
                             "id": operator_node_id, "entity_id": operator_id, "label": operator_type,
                             "display_label": operator_type, "display_meta": "operator", "kind": "operator",
@@ -388,11 +381,7 @@ class V2FormalizationViewAdapter:
                             "step": step, "visible_at": ["standard"], "min_granularity": "standard",
                             "fold_group": strategy_id, "details": details,
                         })
-                    search_ref = (
-                        relation_search_refs[0]
-                        if relation_search_refs
-                        else f"step:{step}:operator:{strategy_id}:operator:1"
-                    )
+                    search_ref = f"step:{step}:operator:{strategy_id}:operator:1"
                 search_documents.append({
                     "id": f"search:{step}:{strategy_id}", "title": strategy_id,
                     "text": " ".join([strategy["type"], *strategy["premises"], strategy["conclusion"],
@@ -513,7 +502,10 @@ class V2FormalizationViewAdapter:
                 node["summary"] = "Unknown alternative explanation (content=null)"
         assert latest_document is not None
         latest_step = max(latest_by_step)
-        return ViewDocument(
+        # Terminal formalizer helpers (for example the unused
+        # __equivalence_result_<digest> of an abduction clause) and operators
+        # that lost every operand must not leak isolated nodes into the graph.
+        view, _connectivity = prune_orphan_nodes(ViewDocument(
             f"Agent Pipeline V2 · Step {latest_step}",
             [ref.artifact_id for _, ref in sorted(latest_by_step.items())],
             nodes,
@@ -533,4 +525,5 @@ class V2FormalizationViewAdapter:
             },
             stages,
             source_targets,
-        )
+        ))
+        return view

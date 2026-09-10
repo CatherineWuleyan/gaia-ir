@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -444,4 +445,74 @@ def check_run(run_dir: Path | str) -> list[Finding]:
         except Exception as exc:
             findings.append(_finding("VIEW_MANIFEST_INVALID", f"view manifest is invalid: {exc}"))
 
+    findings.extend(_formalization_connectivity_findings(store, artifacts))
+
+    return findings
+
+
+def _formalization_connectivity_findings(
+    store: RunStore, artifacts: Mapping[str, ArtifactRef]
+) -> list[Finding]:
+    """Report reasoning-graph fragmentation the official IR validation cannot see."""
+
+    from .domain.graph import audit_formalization_connectivity
+
+    candidates: list[tuple[int, ArtifactRef]] = []
+    for artifact in artifacts.values():
+        if artifact.kind != "formalization":
+            continue
+        step = artifact.metadata.get("step")
+        candidates.append((step if isinstance(step, int) else 0, artifact))
+    if not candidates:
+        return []
+    step, artifact = max(candidates, key=lambda item: item[0])
+    try:
+        document = read_json(store.artifact_path(artifact))
+    except Exception as exc:
+        return [
+            _finding(
+                "FORMALIZATION_UNREADABLE",
+                f"formalization artifact {artifact.artifact_id} cannot be read: {exc}",
+                artifact_id=artifact.artifact_id,
+            )
+        ]
+
+    report = audit_formalization_connectivity(document)
+    findings: list[Finding] = []
+    if report["floating_node_count"]:
+        findings.append(
+            Finding(
+                code="GRAPH_FLOATING_CLAIMS",
+                severity="warning",
+                message=(
+                    f"step {step} reasoning graph has {report['floating_node_count']} Knowledge "
+                    "node(s) in no operator or strategy"
+                ),
+                artifact_id=artifact.artifact_id,
+                details={
+                    "step": step,
+                    "floating_node_ids": report["floating_node_ids"],
+                    "component_count": report["component_count"],
+                    "largest_component_ratio": report["largest_component_ratio"],
+                },
+            )
+        )
+    if report["component_count"] > 1:
+        findings.append(
+            Finding(
+                code="GRAPH_DISCONNECTED",
+                severity="warning",
+                message=(
+                    f"step {step} reasoning graph has {report['component_count']} independent "
+                    f"components; the largest holds {report['largest_component_ratio']:.0%} of nodes"
+                ),
+                artifact_id=artifact.artifact_id,
+                details={
+                    "step": step,
+                    "component_sizes": report["component_sizes"],
+                    "largest_component_size": report["largest_component_size"],
+                    "node_count": report["node_count"],
+                },
+            )
+        )
     return findings

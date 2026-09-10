@@ -11,7 +11,6 @@ from __future__ import annotations
 from dataclasses import replace
 
 from pipeline_harness.domain.compiler import Step5CompileGaiaIRPlugin
-from pipeline_harness.models import ArtifactRef
 from pipeline_harness.plugins import StageContext, StageResult
 
 

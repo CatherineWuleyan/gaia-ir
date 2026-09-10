@@ -25,6 +25,7 @@ from agent_pipeline_v2.step4 import (
     WeakpointExpansionTool,
     _clean_additions,
     _clean_proposition,
+    _shorten_addition_ids,
     _validate_expansion,
 )
 from pipeline_harness.domain.stages import _best_paragraph_anchor, _paper_paragraphs
@@ -188,6 +189,67 @@ class AnchorPaperPlugin:
             "content_hash": "",
         }
         return emit_formalization(context, document, step=2, step_name="anchor_paper")
+
+
+class AdditionIdShorteningTests(unittest.TestCase):
+    def test_strips_only_the_pipeline_bookkeeping_prefix(self) -> None:
+        parameters = {"knowledges": {"claim_1": {"type": "claim"}}}
+        result = {
+            "knowledges": {
+                "claim_step4_weakpoint_relation_step2_11_claim_summary_evidence_for_7_cleaned_1": {
+                    "type": "claim", "content": {"canonical": "text"}, "source_anchor_ids": ["anchor_paragraph_p1"],
+                },
+                "claim_step2_11_alternative": {
+                    "type": "claim", "content": {"canonical": "alt"}, "source_anchor_ids": ["anchor_paragraph_p2"],
+                },
+            },
+            "strategies": [{
+                "scope": "local", "type": "deduction",
+                "premises": ["claim_step4_weakpoint_relation_step2_11_claim_summary_evidence_for_7_cleaned_1"],
+                "conclusion": "claim_step2_11_alternative",
+                "background": [],
+            }],
+        }
+        renames = _shorten_addition_ids(parameters, result)
+        self.assertEqual(
+            {
+                "claim_step4_weakpoint_relation_step2_11_claim_summary_evidence_for_7_cleaned_1":
+                    "step2_11_claim_summary_evidence_for_7_cleaned_1",
+            },
+            renames,
+        )
+        self.assertEqual(
+            {"step2_11_claim_summary_evidence_for_7_cleaned_1", "claim_step2_11_alternative"},
+            set(result["knowledges"]),
+        )
+        strategy = result["strategies"][0]
+        self.assertEqual(["step2_11_claim_summary_evidence_for_7_cleaned_1"], strategy["premises"])
+        self.assertEqual("claim_step2_11_alternative", strategy["conclusion"])
+
+    def test_never_rewrites_existing_or_unnamed_claim_ids(self) -> None:
+        parameters = {"knowledges": {"claim_21": {"type": "claim"}, "claim_E03": {"type": "observation_claim"}}}
+        result = {
+            "knowledges": {
+                "claim_21": {"type": "claim", "content": {"canonical": "x"}, "source_anchor_ids": ["a"]},
+                "hypothesis_bridge": {"type": "claim", "content": {"canonical": "y"}, "source_anchor_ids": ["b"]},
+            },
+            "strategies": [],
+        }
+        self.assertEqual({}, _shorten_addition_ids(parameters, result))
+        self.assertEqual({"claim_21", "hypothesis_bridge"}, set(result["knowledges"]))
+
+    def test_collision_with_existing_knowledge_is_disambiguated(self) -> None:
+        original = "claim_step4_weakpoint_relation_step2_11_rule"
+        parameters = {"knowledges": {"step2_11_rule": {"type": "claim"}}}
+        result = {
+            "knowledges": {original: {"type": "claim", "content": {"canonical": "z"}, "source_anchor_ids": ["a"]}},
+            "strategies": [],
+        }
+        renames = _shorten_addition_ids(parameters, result)
+        short = renames[original]
+        self.assertNotEqual("step2_11_rule", short)
+        self.assertTrue(short.startswith("step2_11_rule_"))
+        self.assertEqual({short}, set(result["knowledges"]))
 
 
 class Step4Tests(unittest.TestCase):
@@ -1024,11 +1086,24 @@ class Step4Tests(unittest.TestCase):
         for mode in ("standard",):
             nodes = projected[mode]["nodes"]
             self.assertEqual(0, len([item for item in nodes if item["kind"] == "weakpoint"]))
-            self.assertEqual({"conjunction", "disjunction"},
-                             {item["details"]["type"] for item in nodes if item["kind"] == "operator"})
+            # Every lowered clause is projected as an operator node.  Rendering
+            # an equivalence/implication clause as a bare operand-to-operand
+            # edge used to drop its helper conclusion, leaving the compiled IR's
+            # operator pointing at a node the graph never contains.
+            operator_types = {item["details"]["type"] for item in nodes if item["kind"] == "operator"}
+            self.assertTrue({"conjunction", "disjunction"} <= operator_types)
             self.assertFalse(any(item["kind"] == "note" for item in nodes))
             ids = {item["id"] for item in nodes}
             self.assertTrue(all(edge["source"] in ids and edge["target"] in ids for edge in projected[mode]["edges"]))
+            touched = {endpoint for edge in projected[mode]["edges"] for endpoint in (edge["source"], edge["target"])}
+            orphan_operators = [
+                item["id"] for item in nodes if item["kind"] == "operator" and item["id"] not in touched
+            ]
+            self.assertEqual([], orphan_operators)
+            orphan_helpers = [
+                item["id"] for item in nodes if item.get("layer") == "helpers" and item["id"] not in touched
+            ]
+            self.assertEqual([], orphan_helpers)
         standard_nodes = projected["standard"]["nodes"]
         standard_by_id = {item["id"]: item for item in standard_nodes}
         self.assertTrue({"claim_1", "claim_2", "claim_3"} <= {item["entity_id"] for item in standard_nodes})
@@ -1046,10 +1121,6 @@ class Step4Tests(unittest.TestCase):
             edge for edge in projected["standard"]["edges"]
             if edge["semantic_type"] == "equivalence"
         ]
-        self.assertFalse(any(
-            item["kind"] == "operator" and item["details"]["type"] == "equivalence"
-            for item in standard_nodes
-        ))
         for edge in equivalences:
             self.assertIn(edge["source"], standard_by_id)
             self.assertIn(edge["target"], standard_by_id)

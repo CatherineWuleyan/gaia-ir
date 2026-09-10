@@ -5,9 +5,11 @@ import unittest
 from pathlib import Path
 
 from pipeline_harness.checks import check_run
+from pipeline_harness.domain.graph import audit_formalization_connectivity
 from pipeline_harness.runner import run_pipeline
 from pipeline_harness.store import RunStore, read_json
 from pipeline_harness.synthetic import SYNTHETIC_PIPELINE
+from pipeline_harness.view.connectivity import audit_view_connectivity, prune_orphan_nodes
 from pipeline_harness.view.model import ViewDocument, search_view
 from pipeline_harness.view.projector import project_run
 
@@ -75,6 +77,111 @@ class ViewTests(unittest.TestCase):
         view_path.write_text(__import__("json").dumps(payload), encoding="utf-8")
         codes = {finding.code for finding in check_run(self.store.run_dir)}
         self.assertIn("VIEW_HASH_MISMATCH", codes)
+
+    def test_prune_orphan_nodes_drops_terminal_helpers_and_their_dead_edges(self) -> None:
+        document = ViewDocument(
+            title="connectivity",
+            source_artifacts=["artifact_1"],
+            nodes=[
+                {"id": "k:a", "label": "a", "layer": "claims", "step": 4, "min_granularity": "overview"},
+                {"id": "k:b", "label": "b", "layer": "claims", "step": 4, "min_granularity": "overview"},
+                {"id": "op:caret", "label": "^", "layer": "operators", "step": 4, "kind": "operator", "min_granularity": "standard"},
+                # Terminal formalizer helper: the compiler emits it as a
+                # Knowledge node but no operator or strategy consumes it.
+                {"id": "k:__equivalence_result_deadbeef", "label": "helper", "layer": "helpers", "step": 4, "min_granularity": "standard"},
+            ],
+            edges=[
+                {
+                    "id": "edge:a:op", "source": "k:a", "target": "op:caret",
+                    "label": "input", "layer": "operators", "min_granularity": "standard",
+                },
+            ],
+            search_documents=[
+                {"id": "search:a", "title": "a", "text": "a", "tags": [], "refs": ["k:a"]},
+                {"id": "search:helper", "title": "h", "text": "h", "tags": [], "refs": ["k:__equivalence_result_deadbeef"]},
+            ],
+            layers=[{"id": "claims", "label": "Claims"}, {"id": "operators", "label": "Operators"}],
+        )
+        repaired, report = prune_orphan_nodes(document)
+        surviving = {node["id"] for node in repaired.nodes}
+        self.assertEqual(1, report["removed_helper_nodes"])
+        self.assertNotIn("k:__equivalence_result_deadbeef", surviving)
+        self.assertEqual(["edge:a:op"], [edge["id"] for edge in repaired.edges])
+        self.assertEqual(["search:a"], [entry["id"] for entry in repaired.search_documents])
+        # A public claim with no reasoning edge is kept and flagged, never hidden.
+        self.assertIn("k:b", surviving)
+        self.assertIn("k:b", report["standalone_claim_ids"])
+        self.assertTrue(next(node for node in repaired.nodes if node["id"] == "k:b")["standalone_claim"])
+        ids = {node["id"] for node in repaired.nodes}
+        self.assertTrue(all(edge["source"] in ids and edge["target"] in ids for edge in repaired.edges))
+
+    def test_prune_orphan_nodes_drops_edges_whose_endpoint_disappeared(self) -> None:
+        document = ViewDocument(
+            title="cascade",
+            source_artifacts=["artifact_1"],
+            nodes=[
+                {"id": "k:a", "label": "a", "layer": "claims", "step": 4, "min_granularity": "overview"},
+                {"id": "k:__disjunction_result_cafe", "label": "helper", "layer": "helpers", "step": 4, "min_granularity": "standard"},
+            ],
+            edges=[
+                {
+                    "id": "edge:murky", "source": "k:a", "target": "k:__disjunction_result_cafe",
+                    "label": "input", "layer": "operators", "min_granularity": "standard",
+                },
+            ],
+            search_documents=[],
+            layers=[{"id": "claims", "label": "Claims"}],
+        )
+        # A helper with one edge is not an orphan, so nothing is removed.
+        _, report = prune_orphan_nodes(document)
+        self.assertEqual(0, report["removed_helper_nodes"])
+        # But an edge to a node that the projection omitted must be dropped.
+        document.nodes.append({"id": "k:ghost-target", "label": "g", "layer": "claims", "step": 4, "min_granularity": "overview"})
+        document.edges.append({"id": "edge:ghost", "source": "k:ghost-target", "target": "k:does-not-exist", "label": "input", "layer": "operators", "min_granularity": "standard"})
+        repaired, report = prune_orphan_nodes(document)
+        self.assertEqual(1, report["removed_edges"])
+        self.assertEqual(["edge:murky"], [edge["id"] for edge in repaired.edges])
+
+    def test_audit_view_connectivity_reports_components_and_floating_nodes(self) -> None:
+        document = ViewDocument(
+            title="audit",
+            source_artifacts=["artifact_1"],
+            nodes=[
+                {"id": "k:a", "label": "a", "layer": "claims", "step": 4, "min_granularity": "overview"},
+                {"id": "k:orphan", "label": "orphan", "layer": "claims", "step": 4, "min_granularity": "overview"},
+                {"id": "op:1", "label": "^", "layer": "operators", "step": 4, "kind": "operator", "min_granularity": "standard"},
+            ],
+            edges=[
+                {
+                    "id": "edge:a:op", "source": "k:a", "target": "op:1",
+                    "label": "input", "layer": "operators", "min_granularity": "standard",
+                },
+            ],
+            search_documents=[],
+            layers=[{"id": "claims", "label": "Claims"}],
+        )
+        report = audit_view_connectivity(document, step=4)
+        self.assertEqual(1, report["standalone_claim_count"])
+        self.assertEqual(["k:orphan"], report["standalone_claim_ids"])
+        self.assertEqual(0, report["dangling_operator_count"])
+        self.assertEqual(1, report["component_count"])
+        self.assertEqual(2, report["largest_component_size"])
+
+    def test_formalization_connectivity_flags_floating_claims(self) -> None:
+        document = {
+            "graph": {
+                "nodes": ["claim_1", "claim_2", "claim_3"],
+                "operators": [
+                    {"id": "op_1", "type": "equivalence", "variables": ["claim_1", "claim_2"], "conclusion": "h_1"}
+                ],
+                "strategies": [],
+            }
+        }
+        report = audit_formalization_connectivity(document)
+        self.assertEqual(["claim_3"], report["floating_node_ids"])
+        self.assertEqual(2, report["component_count"])
+        self.assertFalse(report["connected"])
+        self.assertFalse(report["healthy"])
 
 
 if __name__ == "__main__":

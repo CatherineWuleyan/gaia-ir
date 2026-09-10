@@ -11,6 +11,7 @@ from ..plugins import ArtifactDraft, StageContext, StageResult, instantiate
 from ..store import RunStore, atomic_write_json
 from .authoring import validate_formalization
 from .contracts import SCHEMA_VERSION, canonical_hash
+from .graph import audit_formalization_connectivity
 from .indexing import validate_knowledge_index
 from .runtime import emit_snapshot, inherit_snapshot, read_json_ref
 from .tools import DomainTool, ToolCallRequest, ToolCallResponse, validate_tool_response
@@ -509,6 +510,34 @@ class Step5CompileGaiaIRPlugin:
             "tool_call_id": request.call_id, "contract_status": "official",
             "validation_status": "passed",
         })
+        connectivity = audit_formalization_connectivity(formalization) if is_v2 else None
+        connectivity_findings: list[Finding] = []
+        if connectivity is not None and connectivity["floating_node_count"]:
+            connectivity_findings.append(Finding(
+                code="GRAPH_FLOATING_CLAIMS", severity="warning",
+                message=(
+                    f"{connectivity['floating_node_count']} Knowledge node(s) carry no reasoning edge; "
+                    "the compiled IR contains them as isolated graph nodes"
+                ),
+                details={
+                    "floating_node_ids": connectivity["floating_node_ids"],
+                    "component_count": connectivity["component_count"],
+                    "largest_component_ratio": connectivity["largest_component_ratio"],
+                },
+            ))
+        if connectivity is not None and connectivity["component_count"] > 1:
+            connectivity_findings.append(Finding(
+                code="GRAPH_DISCONNECTED", severity="warning",
+                message=(
+                    f"reasoning graph has {connectivity['component_count']} independent components; "
+                    f"the largest holds {connectivity['largest_component_ratio']:.0%} of its nodes"
+                ),
+                details={
+                    "component_sizes": connectivity["component_sizes"],
+                    "node_count": connectivity["node_count"],
+                },
+            ))
+        connectivity_metadata = connectivity or {}
         if is_v2:
             try:
                 index = _build_v2_knowledge_index(
@@ -522,8 +551,9 @@ class Step5CompileGaiaIRPlugin:
                     findings=[Finding(
                         code="KNOWLEDGE_INDEX_INVALID", severity="warning", message=str(exc),
                         details={"step": 5, "formalization_revision_id": formalization["revision"]["revision_id"]},
-                    )] + ([salvage_finding] if salvage_finding else []),
-                    metadata={"step": 5, "tool_call_id": request.call_id, "index_status": "not_written"},
+                    )] + ([salvage_finding] if salvage_finding else []) + connectivity_findings,
+                    metadata={"step": 5, "tool_call_id": request.call_id, "index_status": "not_written",
+                              "connectivity": connectivity_metadata},
                 )
             index_path = context.work_dir / "knowledge_index.json"
             atomic_write_json(index_path, index)
@@ -538,11 +568,12 @@ class Step5CompileGaiaIRPlugin:
                     }),
                     response_draft,
                 ],
-                findings=([salvage_finding] if salvage_finding else []),
+                findings=([salvage_finding] if salvage_finding else []) + connectivity_findings,
                 metadata={
                     "step": 5, "tool_call_id": request.call_id,
                     "formalization_revision_id": formalization["revision"]["revision_id"],
                     "validation_status": "passed",
+                    "connectivity": connectivity_metadata,
                 },
             )
         assert snapshot is not None

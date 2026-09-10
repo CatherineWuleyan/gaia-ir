@@ -351,7 +351,11 @@
       const ids=new Set(operators.map(node => node.id));
       // Never hide domain claims merely because their reasoning expansion is
       // unresolved; observation_claims remain visible in standard mode.
-      view.nodes.filter(node => String(node.step) === step && node.layer === 'claims').forEach(node => ids.add(node.id));
+      // Knowledge nodes may also live in the 'weakpoints' layer (the merge
+      // viewer routes its delta nodes there); include those too so they can be
+      // isolated with the layer toggles.  Step-style weakpoint nodes stay
+      // excluded here because they are handled separately below.
+      view.nodes.filter(node => String(node.step) === step && (node.layer === 'claims' || (node.layer === 'weakpoints' && node.kind !== 'weakpoint'))).forEach(node => ids.add(node.id));
       const inferEdges=[];
       view.nodes.filter(node => String(node.step) === step && node.kind === 'strategy' && String(node.details?.type || node.label).toLowerCase() === 'infer').forEach(node => {
         const details=node.details || {}, premises=details.premises || [], conclusion=details.conclusion;

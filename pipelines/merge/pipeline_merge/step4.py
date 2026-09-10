@@ -72,47 +72,6 @@ def _load_records(context: StageContext) -> tuple[dict[str, JSONDict], dict[str,
     return records, anchors
 
 
-def _load_source_graph(context: StageContext, records: Mapping[str, JSONDict]) -> tuple[list[str], list[JSONDict], list[JSONDict]]:
-    """Keep each paper's frozen graph; integration relations are added on top."""
-    nodes: list[str] = []
-    operators: list[JSONDict] = []
-    strategies: list[JSONDict] = []
-    for ref in context.find_all("formalization"):
-        payload = _read_json(context, ref)
-        knowledge_map = payload.get("knowledges") if isinstance(payload.get("knowledges"), Mapping) else {}
-        for item in payload.get("graph", {}).get("nodes", []):
-            if isinstance(item, str) and item in knowledge_map:
-                nodes.append(item)
-                knowledge = knowledge_map[item]
-                content = knowledge.get("content", {}) if isinstance(knowledge, Mapping) else {}
-                canonical = content.get("canonical") if isinstance(content, Mapping) else None
-                if item not in records and isinstance(canonical, str) and canonical.strip():
-                    records[item] = {"qid": item, "package": "papers:source", "content": canonical,
-                                      "type": knowledge.get("type", "claim"), "metadata": {},
-                                      "category": None, "source_anchor_ids": []}
-        for item in payload.get("graph", {}).get("operators", []) or []:
-            if not isinstance(item, Mapping):
-                continue
-            variables = [str(value) for value in item.get("variables") or []]
-            conclusion = item.get("conclusion")
-            endpoints = [*variables, str(conclusion)] if conclusion is not None else variables
-            if endpoints and all(endpoint in records for endpoint in endpoints):
-                operators.append({"id": str(item.get("operator_id") or item.get("id") or f"source_operator_{len(operators)}"),
-                                  "type": str(item.get("operator") or item.get("type") or "infer"),
-                                  "variables": variables, "conclusion": str(conclusion) if conclusion is not None else None,
-                                  "metadata": {"source": "paper_internal", **dict(item.get("metadata") or {})}})
-        for item in payload.get("graph", {}).get("strategies", []) or []:
-            if not isinstance(item, Mapping):
-                continue
-            premises = [str(value) for value in item.get("premises") or []]
-            conclusion = item.get("conclusion")
-            if isinstance(conclusion, str) and premises and all(key in records for key in [*premises, conclusion]):
-                strategies.append({"scope": "local", "type": str(item.get("type") or "infer"),
-                                   "premises": premises, "conclusion": conclusion,
-                                   "background": [str(value) for value in item.get("background") or [] if str(value) in records]})
-    return list(dict.fromkeys(nodes)), operators, strategies
-
-
 def _equivalence_aliases(
     operators: list[JSONDict], records: Mapping[str, JSONDict],
 ) -> tuple[dict[str, str], list[JSONDict]]:
@@ -213,7 +172,16 @@ def _materialize_candidates(
     result: dict[str, str] = {}
     for candidate in candidates:
         candidate_id = candidate.get("id")
-        if not isinstance(candidate_id, str) or candidate_id not in by_target:
+        if not isinstance(candidate_id, str):
+            continue
+        # Step 3's synthesis already wrote an abstracted domain conclusion; it is
+        # authoritative even when the candidate is the source (K -> finer) rather
+        # than a weakpoint target.
+        declared = candidate.get("content")
+        if isinstance(declared, str) and declared.strip():
+            result[candidate_id] = declared.strip()
+            continue
+        if candidate_id not in by_target:
             continue
         response = _post_json(_candidate_prompt(candidate, by_target[candidate_id], records))
         if not isinstance(response, dict) or response.get("candidate_id") != candidate_id:
@@ -303,12 +271,14 @@ def _build_document(
     context: StageContext, proposals: Mapping[str, Any], records: Mapping[str, JSONDict],
     anchors: Mapping[str, JSONDict], aliases: Mapping[str, str], merges: list[JSONDict],
     operators: list[JSONDict], weakpoints: list[JSONDict], candidate_contents: Mapping[str, str],
-    source_nodes: list[str], source_operators: list[JSONDict], source_strategies: list[JSONDict],
 ) -> tuple[JSONDict, list[Finding]]:
     findings: list[Finding] = []
+    def _resolved(qid: str) -> bool:
+        return not str(qid).startswith("candidate_K_") or qid in candidate_contents
+
     active_weakpoints = [weakpoint for weakpoint in weakpoints
-                         if all(not target.startswith("candidate_K_") or target in candidate_contents
-                                for target in weakpoint["payload"]["target_claim_id"])]
+                         if all(_resolved(target) for target in weakpoint["payload"]["target_claim_id"])
+                         and all(_resolved(source) for source in weakpoint["payload"]["evidence_claim_ids"])]
     skipped = {weakpoint["id"] for weakpoint in weakpoints} - {weakpoint["id"] for weakpoint in active_weakpoints}
     for weakpoint_id in sorted(skipped):
         findings.append(Finding("STEP4_CANDIDATE_K_UNRESOLVED", "warning", f"Skipped {weakpoint_id}: candidate K was not materialized"))
@@ -328,21 +298,31 @@ def _build_document(
         try:
             _validate_acyclic([*acyclic_strategies, strategy])
         except ValueError as exc:
+            descriptor = strategy.get("strategy_id")
+            if descriptor is None:
+                premises = ",".join(map(str, strategy.get("premises", [])))
+                descriptor = f"{strategy.get('type', 'infer')}({premises} → {strategy.get('conclusion')})"
             findings.append(Finding(
                 "STEP4_CYCLIC_STRATEGY_SKIPPED", "warning",
-                f"Skipped cyclic integration strategy {strategy.get('strategy_id', '<unbound>')}: {exc}",
+                f"Skipped cyclic integration strategy {descriptor}: {exc}",
             ))
             continue
         acyclic_strategies.append(strategy)
     raw_strategies = acyclic_strategies
-    supported_candidates = {str(strategy["conclusion"]) for strategy in raw_strategies} & set(candidate_contents)
-    for candidate_id in sorted(set(candidate_contents) - supported_candidates):
+    # The domain conclusion K may be a weakpoint's source (K -> finer) or its
+    # target, so count it as expanded when it appears on either side.
+    expanded_candidates = {
+        qid for strategy in raw_strategies
+        for qid in [*strategy["premises"], strategy["conclusion"], *strategy["background"]]
+    } & set(candidate_contents)
+    for candidate_id in sorted(set(candidate_contents) - expanded_candidates):
         findings.append(Finding("STEP4_CANDIDATE_K_UNSUPPORTED", "warning",
-                                f"Discarded {candidate_id}: no weakpoint expanded into a supporting Strategy"))
+                                f"Discarded {candidate_id}: no weakpoint expanded into a Strategy"))
 
-    used = set(source_nodes)
-    used.update(qid for operator in source_operators for qid in [*operator["variables"], operator.get("conclusion")] if isinstance(qid, str))
-    used.update(qid for strategy in source_strategies for qid in [*strategy["premises"], strategy["conclusion"], *strategy["background"]])
+    # The integration package owns only the cross-paper relations it adds plus
+    # candidate K.  Paper knowledge stays in its own Package and is referenced
+    # here by external QID, so the compiled graph is a delta, not a full copy.
+    used: set[str] = set()
     used.update(qid for operator in operators for qid in [*operator["variables"], operator.get("conclusion")] if isinstance(qid, str))
     used.update(qid for strategy in raw_strategies
                 for qid in [*strategy["premises"], strategy["conclusion"], *strategy["background"]])
@@ -352,7 +332,7 @@ def _build_document(
     source_anchor_ids: set[str] = set()
     merge_by_representative = {merge["representative_qid"]: merge for merge in merges}
     for qid in sorted(used):
-        if qid in supported_candidates:
+        if qid in candidate_contents:
             knowledges[qid] = {"type": "claim", "content": {"canonical": candidate_contents[qid]}, "source_anchor_ids": []}
             nodes.append(qid)
             continue
@@ -372,7 +352,7 @@ def _build_document(
 
     strategies: list[JSONDict] = []
     seen_strategy_ids: set[str] = set()
-    for strategy in [*source_strategies, *raw_strategies]:
+    for strategy in raw_strategies:
         bound = canonical_strategy(strategy)
         if bound["strategy_id"] not in seen_strategy_ids:
             seen_strategy_ids.add(bound["strategy_id"])
@@ -386,33 +366,13 @@ def _build_document(
                      "parent_hash": proposals["source_context_artifact"]["sha256"], "content_hash": ""},
         "package": {"paper_id": f"integration:{options['scope']['domain']}", "namespace": "integration",
                     "name": domain_name, "version": "1"},
-        "graph": {"nodes": sorted(set(nodes)), "operators": [*source_operators, *operators], "strategies": strategies, "composes": []},
+        "graph": {"nodes": sorted(set(nodes)), "operators": operators, "strategies": strategies, "composes": []},
         "knowledges": knowledges,
         "workflow": {"source_records": [], "source_anchors": [copy.deepcopy(anchors[key]) for key in sorted(source_anchor_ids)],
                      "weakpoints": [], "gaps": [], "non_reasoning_links": [], "revisions": []},
     }
     document["revision"]["content_hash"] = content_hash(document)
     return document, findings
-
-
-def _integration_delta(document: JSONDict, source_nodes: list[str], source_strategies: list[JSONDict]) -> JSONDict:
-    """Derive a review-only subgraph: integration relations and their endpoints."""
-    source_ids = set(source_nodes)
-    source_keys = {(tuple(item.get("premises", [])), item.get("conclusion"), item.get("type")) for item in source_strategies}
-    strategies = [item for item in document["graph"]["strategies"]
-                  if (tuple(item.get("premises", [])), item.get("conclusion"), item.get("type")) not in source_keys]
-    delta_ids = {qid for item in strategies for qid in [*item.get("premises", []), item.get("conclusion")] if isinstance(qid, str)}
-    knowledges = {qid: document["knowledges"][qid] for qid in delta_ids if qid in document["knowledges"]}
-    anchors = {anchor["anchor_id"]: anchor for anchor in document["workflow"]["source_anchors"]}
-    used_anchors = {anchor for knowledge in knowledges.values() for anchor in knowledge.get("source_anchor_ids", [])}
-    delta = copy.deepcopy(document)
-    delta["package"] = {**document["package"], "name": f"{document['package']['name']}_integration_delta"}
-    delta["graph"] = {"nodes": sorted(delta_ids), "operators": [], "strategies": strategies, "composes": []}
-    delta["knowledges"] = knowledges
-    delta["workflow"] = {**document["workflow"], "source_anchors": [anchors[key] for key in sorted(used_anchors)]}
-    delta["revision"] = {**document["revision"], "revision_id": f"{document['revision']['revision_id']}_integration_delta", "content_hash": ""}
-    delta["revision"]["content_hash"] = content_hash(delta)
-    return delta
 
 
 class Step4FormalizeIntegrationPlugin:
@@ -426,7 +386,6 @@ class Step4FormalizeIntegrationPlugin:
             if proposals.get("schema_name") != PROPOSAL_SCHEMA or proposals.get("schema_version") != SCHEMA_VERSION:
                 raise ValueError("Step 4 requires the supported Step 3 proposal schema")
             records, anchors = _load_records(context)
-            source_nodes, source_operators, source_strategies = _load_source_graph(context, records)
             raw_operators = [copy.deepcopy(item) for item in proposals.get("operators") or [] if isinstance(item, dict)]
             aliases, merges = _equivalence_aliases(raw_operators, records)
             operators = [rewritten for item in raw_operators if (rewritten := _rewrite_operator(item, aliases)) is not None]
@@ -437,16 +396,9 @@ class Step4FormalizeIntegrationPlugin:
             candidate_contents = _materialize_candidates(candidates, weakpoints, records)
             document, findings = _build_document(
                 context, proposals, records, anchors, aliases, merges, operators, weakpoints, candidate_contents,
-                source_nodes, source_operators, source_strategies,
             )
             emitted = emit_formalization(context, document, step=4, step_name=STEP_NAME)
-            delta_path = context.work_dir / "integration_delta_formalization.json"
-            atomic_write_json(delta_path, _integration_delta(document, source_nodes, source_strategies))
-            artifacts = [*emitted.artifacts, ArtifactDraft(delta_path, "formalization.integration_delta", "application/json", {
-                "schema_name": "gaia.formalization.v2", "schema_version": "1.1.0", "step": 4,
-                "step_name": STEP_NAME, "view_variant": "integration_delta", "validation_status": "passed",
-            })]
-            return StageResult(emitted.status, artifacts, [*findings, *emitted.findings], {
+            return StageResult(emitted.status, emitted.artifacts, [*findings, *emitted.findings], {
                 **emitted.metadata, "equivalence_merge_count": len(merges),
                 "materialized_candidate_count": len(candidate_contents),
             })

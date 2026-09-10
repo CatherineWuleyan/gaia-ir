@@ -28,6 +28,11 @@ from .authoring import (
 )
 from .step1 import PAPER_TEXT_KIND
 from .step2 import MODEL_NAME, _load_deepseek_env, _response_content
+
+# Prefix Step 4 itself forces onto fresh weakpoint-expansion Knowledge IDs.
+# Deliberately not optional: ``claim_21`` and ``claim_E03`` are ordinary claim
+# IDs and must never be rewritten.
+_WEAKPOINT_ID_PREFIX = re.compile(r"^(?:claim_)?step4_weakpoint_relation_")
 from .step3 import _anchor_excerpt, _transitive_shortcut_indexes
 
 
@@ -181,6 +186,54 @@ def _scope_compatible_support(target: str, support: set[str], knowledges: dict[s
         "not combined with fine tuning", "no fine-tuning", "no fine tuning",
     ))
     return no_tuning and "global" in support_text and "fine-grained" in support_text
+
+
+def _shorten_addition_ids(parameters: JSONDict, result: JSONDict) -> dict[str, str]:
+    """Collapse the bookkeeping prefix Step 4 injects into fresh Knowledge IDs.
+
+    The expansion model names a new proposition after the weakpoint it expands,
+    so a deduction chain inherits IDs such as
+    ``claim_step4_weakpoint_relation_step2_11_claim_summary_evidence_for_7`` and
+    the cleaner appends ``_cleaned_1``.  Those names then travel into the
+    formalization, the compiled Gaia IR and the viewer label.  Strip only the
+    prefix this pipeline itself contributes and keep the model's own suffix, so
+    the identity stays traceable but readable.  A collision (or an id that does
+    not carry the prefix) is left or disambiguated deterministically.
+    """
+
+    additions = result.get("knowledges")
+    if not isinstance(additions, dict) or not additions:
+        return {}
+    taken = set(parameters["knowledges"]) | set(additions.keys())
+    removed = set(additions.keys())
+    renames: dict[str, str] = {}
+    for original in list(additions):
+        short = _WEAKPOINT_ID_PREFIX.sub("", original)
+        if short == original or not short:
+            continue
+        if short in taken and short not in removed:
+            short = f"{short}_{hashlib.sha256(original.encode('utf-8')).hexdigest()[:6]}"
+        if short in taken and short not in removed:
+            continue
+        renames[original] = short
+        removed.discard(original)
+        taken.add(short)
+    if not renames:
+        return {}
+    result["knowledges"] = {
+        renames.get(key, key): value for key, value in additions.items()
+    }
+    for strategy in result.get("strategies") or []:
+        if not isinstance(strategy, dict):
+            continue
+        for field in ("premises", "background"):
+            values = strategy.get(field)
+            if isinstance(values, list):
+                strategy[field] = [renames.get(value, value) for value in values]
+        conclusion = strategy.get("conclusion")
+        if isinstance(conclusion, str):
+            strategy["conclusion"] = renames.get(conclusion, conclusion)
+    return renames
 
 
 def _validate_expansion(parameters: JSONDict, result: Any) -> None:
@@ -374,6 +427,7 @@ def _clean_proposition(text: str) -> tuple[JSONDict, JSONDict]:
 def _clean_additions(parameters: JSONDict, result: JSONDict, audit: list[JSONDict]) -> JSONDict:
     """Adopt cleaner text; the caller may rebuild the group against these claims."""
     result = copy.deepcopy(result)
+    _shorten_addition_ids(parameters, result)
     known = dict(parameters["knowledges"])
     aliases: dict[str, str] = {}
     cleaned: JSONDict = {}
@@ -594,7 +648,7 @@ class WeakpointExpansionTool:
             "With bridge and conditions given, the consequence must be strict; keep uncertain bridge M as a claim premise.\n"
             "Output JSON only with exactly {\"knowledges\":{\"new_id\":{\"type\":\"claim|note\",\"content\":{\"canonical\":\"text\"}|null,\"source_anchor_ids\":[\"...\"]}},"
             "\"strategies\":[{\"scope\":\"local\",\"type\":\"deduction|abduction|analogy\",\"premises\":[\"claim_id\"],\"conclusion\":\"claim_id\",\"background\":[\"note_id\"]}]}. "
-            "Use fresh identifier names for new Knowledge. Strategy IDs are assigned by official Gaia after reference binding; do not emit IDs. "
+            "Use fresh identifier names for new Knowledge. Keep every new identifier short and readable: an ASCII snake_case name of at most 40 characters, derived from the proposition itself, never by repeating the weakpoint id or the words 'weakpoint', 'step4', 'relation', 'claim_summary' or 'cleaned'. Strategy IDs are assigned by official Gaia after reference binding; do not emit IDs. "
             "Do not emit operators, formal_expr, probabilities or extra fields. Premises and conclusion must be distinct. "
             "Do not create unused knowledge, unrelated strategies or circular proofs. Any evidence claim used by an emitted strategy must be one of the supplied claims. "
             "If the source cannot justify the required reasoning structure, output {\"knowledges\":{},\"strategies\":[]} and retain the weakpoint.\n"
