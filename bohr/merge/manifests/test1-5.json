@@ -1,0 +1,95 @@
+{
+  "schema_version": "1",
+  "artifacts": [
+    {
+      "path": "../data/minibatch/test1/gaia.ir.json",
+      "kind": "gaia.ir",
+      "media_type": "application/json",
+      "required": true
+    },
+    {
+      "path": "../data/minibatch/test1/formalization.json",
+      "kind": "formalization",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test1/knowledge.index.json",
+      "kind": "knowledge.index",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test2/gaia.ir.json",
+      "kind": "gaia.ir",
+      "media_type": "application/json",
+      "required": true
+    },
+    {
+      "path": "../data/minibatch/test2/formalization.json",
+      "kind": "formalization",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test2/knowledge.index.json",
+      "kind": "knowledge.index",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test3/gaia.ir.json",
+      "kind": "gaia.ir",
+      "media_type": "application/json",
+      "required": true
+    },
+    {
+      "path": "../data/minibatch/test3/formalization.json",
+      "kind": "formalization",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test3/knowledge.index.json",
+      "kind": "knowledge.index",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test4/gaia.ir.json",
+      "kind": "gaia.ir",
+      "media_type": "application/json",
+      "required": true
+    },
+    {
+      "path": "../data/minibatch/test4/formalization.json",
+      "kind": "formalization",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test4/knowledge.index.json",
+      "kind": "knowledge.index",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test5/gaia.ir.json",
+      "kind": "gaia.ir",
+      "media_type": "application/json",
+      "required": true
+    },
+    {
+      "path": "../data/minibatch/test5/formalization.json",
+      "kind": "formalization",
+      "media_type": "application/json",
+      "required": false
+    },
+    {
+      "path": "../data/minibatch/test5/knowledge.index.json",
+      "kind": "knowledge.index",
+      "media_type": "application/json",
+      "required": false
+    }
+  ]
+}

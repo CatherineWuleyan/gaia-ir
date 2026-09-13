@@ -197,23 +197,40 @@ class MergeViewAdapter:
                 for premise in premises:
                     relation_edge(premise, conclusion, strategy_type, _PAPER_EDGE_LAYER)
 
-        # 4. Integration delta: candidate K nodes + new cross-paper edges.
+        # 4. Integration delta: candidate nodes + new cross-paper edges.
         if integration_doc is not None:
             for ref in artifacts:
                 if ref.kind == "formalization" and ref.producer_stage == _INTEGRATION_STAGE:
                     source_artifacts.append(ref.artifact_id)
             k_counter = 0
+            a_counter = 0
             for knowledge_id in k_ids:
                 knowledge = (integration_doc.get("knowledges") or {}).get(knowledge_id) or {}
                 content = (knowledge.get("content") or {}).get("canonical", "") if isinstance(knowledge.get("content"), Mapping) else ""
-                k_counter += 1
-                add_node(f"knowledge:{knowledge_id}", f"K:{k_counter}", content,
+                # `candidate_A_*` is the summarized observation premise of an
+                # abduction star and `candidate_K_*` the domain conclusion; they
+                # must not both render as "K:".
+                if knowledge_id.startswith("candidate_A_"):
+                    a_counter += 1
+                    label = f"A:{a_counter}"
+                else:
+                    k_counter += 1
+                    level = (knowledge.get("metadata") or {}).get("conclusion_level") if isinstance(knowledge.get("metadata"), Mapping) else None
+                    # Level-tagged domain conclusions make the summary tree legible.
+                    label = f"K:{k_counter}" + (f"·L{level}" if level else "")
+                add_node(f"knowledge:{knowledge_id}", label, content,
                          knowledge.get("type", "claim"), _DELTA_LAYER, knowledge_id)
             for operator in integration_doc.get("graph", {}).get("operators", []):
                 variables = [str(v) for v in operator.get("variables") or []]
                 op_type = str(operator.get("type") or "")
-                if op_type in {"equivalence", "implication"} and len(variables) >= 2:
-                    relation_edge(variables[0], variables[1], op_type, _DELTA_LAYER)
+                if len(variables) < 2 or not op_type:
+                    continue  # negation has a single operand: no pairwise edge
+                # Every operator type is projected (a bare equivalence/implication
+                # filter left conjunction/contradiction operands with no edge at
+                # all, so they looked floating).  A k-ary operator is drawn as a
+                # star from its first operand, the only shape this viewer has.
+                for operand in variables[1:]:
+                    relation_edge(variables[0], operand, op_type, _DELTA_LAYER)
             for strategy in integration_doc.get("graph", {}).get("strategies", []):
                 conclusion = strategy.get("conclusion")
                 premises = [str(p) for p in strategy.get("premises") or []]

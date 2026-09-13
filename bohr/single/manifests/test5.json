@@ -1,0 +1,78 @@
+{
+  "schema_version": "1",
+  "artifacts": [
+    {
+      "path": "../data/minibatch/test5/ocr.md",
+      "kind": "source.paper_text",
+      "media_type": "text/markdown"
+    },
+    {
+      "path": "../data/minibatch/test5/claims_final.json",
+      "kind": "source.claims_final",
+      "media_type": "application/json"
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_1.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_1.jpg",
+        "figure": "1111267684223287324_1.jpg"
+      }
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_2.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_2.jpg",
+        "figure": "1111267684223287324_2.jpg"
+      }
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_3.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_3.jpg",
+        "figure": "1111267684223287324_3.jpg"
+      }
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_4.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_4.jpg",
+        "figure": "1111267684223287324_4.jpg"
+      }
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_5.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_5.jpg",
+        "figure": "1111267684223287324_5.jpg"
+      }
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_6.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_6.jpg",
+        "figure": "1111267684223287324_6.jpg"
+      }
+    },
+    {
+      "path": "../data/minibatch/test5/1111267684223287324_7.jpg",
+      "kind": "source.original_figure",
+      "media_type": "image/jpeg",
+      "metadata": {
+        "source_filename": "1111267684223287324_7.jpg",
+        "figure": "1111267684223287324_7.jpg"
+      }
+    }
+  ]
+}

@@ -274,7 +274,10 @@ def _build_document(
 ) -> tuple[JSONDict, list[Finding]]:
     findings: list[Finding] = []
     def _resolved(qid: str) -> bool:
-        return not str(qid).startswith("candidate_K_") or qid in candidate_contents
+        # candidate_K_* is the domain conclusion; candidate_A_* is the summarized
+        # observation premise of an abduction star.  Both are integration-owned
+        # placeholders that only count once they carry materialized content.
+        return not str(qid).startswith(("candidate_K_", "candidate_A_")) or qid in candidate_contents
 
     active_weakpoints = [weakpoint for weakpoint in weakpoints
                          if all(_resolved(target) for target in weakpoint["payload"]["target_claim_id"])
@@ -331,9 +334,18 @@ def _build_document(
     nodes: list[str] = []
     source_anchor_ids: set[str] = set()
     merge_by_representative = {merge["representative_qid"]: merge for merge in merges}
+    level_by_id = {
+        str(candidate.get("id")): candidate.get("level")
+        for candidate in proposals.get("candidate_knowledges") or []
+        if isinstance(candidate, Mapping) and candidate.get("level")
+    }
     for qid in sorted(used):
         if qid in candidate_contents:
-            knowledges[qid] = {"type": "claim", "content": {"canonical": candidate_contents[qid]}, "source_anchor_ids": []}
+            entry: JSONDict = {"type": "claim", "content": {"canonical": candidate_contents[qid]},
+                               "source_anchor_ids": []}
+            if qid in level_by_id:
+                entry["metadata"] = {"conclusion_level": level_by_id[qid]}
+            knowledges[qid] = entry
             nodes.append(qid)
             continue
         representative = aliases.get(qid, qid)
