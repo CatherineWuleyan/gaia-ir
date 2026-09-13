@@ -18,20 +18,62 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 
-# version -> (label, view_model.json, note)
-RUNS: dict[str, tuple[str, str, str]] = {
-    "v1": ("v1 · 只锚最小包", "outputs/bohr_runs/merge_test1-5/result/unpacked/results/view_model.json",
-           "跨论文对覆盖 12.2%"),
-    "v2": ("v2 · 平等池", "outputs/bohr_runs/merge_test1-5_v2/view_model.json", "覆盖 100%，abduction 泛滥"),
-    "v3": ("v3 · 形状校验+relation", "outputs/bohr_runs/merge_test1-5_v3/result/unpacked/results/runs/*/views/view_model.json",
-           "step5 编译失败（多前提 abduction）"),
-    "v6": ("v6 · A 概括前提", "outputs/bohr_runs/merge_test1-5_v6/view_model.json", "形状干净，但 56 个 conjunction"),
-    "v7": ("v7 · 趋同汇入 K", "outputs/merge_local_v7/view_model.json", "本地成功；K 星形 151 条"),
-    "v8": ("v8 · 多层结论树", "outputs/bohr_runs/merge_test1-5_v8_tree/view_model.json", "premises→Ki，cap 8"),
+# version -> view model, what that version changed, and its outcome note
+RUNS: dict[str, dict[str, str]] = {
+    "v1": {
+        "label": "v1 · 只锚最小包",
+        "view": "outputs/bohr_runs/merge_test1-5/result/unpacked/results/view_model.json",
+        "change": "基线：Step 3 检索只把**最小包**当锚点",
+        "note": "跨论文对只覆盖 12.2%，delta 稀薄",
+    },
+    "v2": {
+        "label": "v2 · 平等池",
+        "view": "outputs/bohr_runs/merge_test1-5_v2/view_model.json",
+        "change": "每个 Package 都当锚点进同一个 claim 池",
+        "note": "覆盖 100%，但 137 条 abduction 里 76% 形状不合法",
+    },
+    "v3": {
+        "label": "v3 · 形状校验 + relation",
+        "view": "outputs/bohr_runs/merge_test1-5_v3/result/unpacked/results/runs/*/views/view_model.json",
+        "change": "abduction 形状硬校验（观察→假设、单前提）；引入 relation 标签",
+        "note": "step5 编译失败：多前提 abduction 不被官方 compiler 接受",
+    },
+    "v6": {
+        "label": "v6 · A 概括观察前提",
+        "view": "outputs/bohr_runs/merge_test1-5_v6/view_model.json",
+        "change": "N 条观察先概括成一个前提 A，再 A→H；加机械拼接闸",
+        "note": "形状干净，但 56 条 conjunction 是把趋同误当合取",
+    },
+    "v7": {
+        "label": "v7 · 趋同汇入 K",
+        "view": "outputs/merge_local_v7/view_model.json",
+        "change": "删 conjunction 映射，趋同证据改由领域结论 K 承载",
+        "note": "K 星形涨到 151 条 infer 边（本地跑成功）",
+    },
+    "v8": {
+        "label": "v8 · 多层结论树",
+        "view": "outputs/bohr_runs/merge_test1-5_v8_tree/view_model.json",
+        "change": "结论改为多层有界总结树，方向回到文档的 `premises→Ki`，cap=8",
+        "note": "delta 221→77；但 6/11 个 K1 只有单前提，且根只覆盖 3/11",
+    },
+    "v9": {
+        "label": "v9 · 结论树封口（最终）",
+        "view": "outputs/bohr_runs/merge_test1-5_v9_final/view_model.json",
+        "change": "跳过单前提组；合成失败的组**上提**而非丢弃，保证根覆盖存活节点",
+        "note": "最终版",
+    },
 }
 
 LAYER_ORDER = ["claims", "operators", "weakpoints"]
 DELTA_LAYER = "weakpoints"
+
+
+def _md(text: str) -> str:
+    """Escape HTML, then honour the `**bold**` spans used in the notes."""
+    import html
+    import re as _re
+    escaped = html.escape(str(text))
+    return _re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped)
 
 
 def _load_view(pattern: str) -> dict | None:
@@ -131,37 +173,57 @@ def main() -> int:
 
     stats: dict[str, dict] = {}
     available: list[str] = []
-    for version, (label, pattern, note) in RUNS.items():
-        payload = _load_view(pattern)
+    for version, spec in RUNS.items():
+        payload = _load_view(spec["view"])
         if payload is None:
-            print(f"{version}: no view model yet ({pattern})")
+            print(f"{version}: no view model yet ({spec['view']})")
             continue
         available.append(version)
         (out / f"delta_{version}.html").write_bytes(_render_delta_only(payload))
-        stats[version] = {"label": label, "note": note, **_stats(payload)}
+        stats[version] = {"label": spec["label"], "change": spec["change"], "note": spec["note"],
+                          **_stats(payload)}
         print(f"{version}: delta edges {stats[version]['delta_total']} "
               f"({stats[version]['delta']}), delta nodes {stats[version]['delta_nodes']}")
 
     (out / "delta_stats.json").write_text(json.dumps(stats, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (out / "delta_chart.svg").write_text(_chart(stats, available), encoding="utf-8")
 
+    final_version = available[-1] if available else None
+    final_viewer = ""
+    if final_version:
+        source = REPO / RUNS[final_version]["view"].replace("view_model.json", "domain_graph.html")
+        import glob as _glob
+        matches = sorted(_glob.glob(str(source)))
+        if matches:
+            (out / "viewer_final.html").write_bytes(Path(matches[-1]).read_bytes())
+            final_viewer = (f'<p style="font-size:16px">▶ <a href="viewer_final.html"><b>最终版领域图 '
+                            f'({stats[final_version]["label"]})</b></a> — 完整三层视图</p>')
+
     rows = "\n".join(
         f'<tr><td><a href="delta_{v}.html">{stats[v]["label"]}</a></td>'
+        f'<td>{_md(stats[v]["change"])}</td>'
         f'<td>{stats[v]["delta_total"]}</td><td>{stats[v]["delta_nodes"]}</td>'
         f'<td>{stats[v]["delta_isolated"]}</td>'
         f'<td><code>{", ".join(f"{k} {n}" for k, n in sorted(stats[v]["delta"].items()))}</code></td>'
-        f'<td>{stats[v]["note"]}</td></tr>'
+        f'<td>{_md(stats[v]["note"])}</td></tr>'
         for v in available)
     (out / "index.html").write_text(
-        "<!doctype html><meta charset=utf-8><title>merge delta 迭代对比</title>"
-        "<style>body{font-family:-apple-system,Helvetica,Arial,sans-serif;margin:32px;max-width:1100px}"
-        "table{border-collapse:collapse;margin-top:20px}td,th{border:1px solid #ddd;padding:6px 10px;font-size:13px}"
-        "th{background:#f5f5f5}</style>"
-        "<h1>pipeline_merge 领域图 delta 迭代对比</h1>"
-        '<p>每行链接打开该版本的 <b>只看集成 delta</b> 的 viewer（论文层已关闭）。</p>'
-        f'<img src="delta_chart.svg" alt="delta chart">'
-        "<table><tr><th>版本</th><th>delta 边</th><th>delta 节点</th><th>delta 层孤立节点</th>"
-        "<th>边构成</th><th>说明</th></tr>" + rows + "</table>", encoding="utf-8")
+        "<!doctype html><meta charset=utf-8><title>pipeline_merge 领域图迭代对比</title>"
+        "<style>body{font-family:-apple-system,Helvetica,Arial,sans-serif;margin:32px;max-width:1200px;line-height:1.5}"
+        "table{border-collapse:collapse;margin-top:20px}td,th{border:1px solid #ddd;padding:7px 10px;font-size:13px;vertical-align:top}"
+        "th{background:#f5f5f5;text-align:left}code{font-size:12px}</style>"
+        "<h1>pipeline_merge 领域图 · v1→v9 迭代对比</h1>"
+        "<p>输入：<code>test1</code>–<code>test5</code> 五篇论文包，Bohr 上以 bootstrap 模式跑 Step 0–5。"
+        "每一行可点开该版本的 <b>只看集成 delta</b> viewer（论文层已关闭）。</p>"
+        + final_viewer +
+        '<img src="delta_chart.svg" alt="delta chart" style="max-width:100%">'
+        "<table><tr><th>版本</th><th>本版改动</th><th>delta 边</th><th>delta 节点</th>"
+        "<th>孤立节点</th><th>边构成</th><th>结果</th></tr>" + rows + "</table>"
+        "<h2>怎么读 delta</h2>"
+        "<ul><li><b>abduction</b>：观察 → 假设（“这个现象可由该假设解释”）</li>"
+        "<li><b>deduction</b>：前提 → 领域结论（有界总结，v8 起为多层树的边）</li>"
+        "<li><b>conjunction / contradiction</b>：确定性逻辑 operator</li></ul>",
+        encoding="utf-8")
     print(f"wrote {out}")
     return 0
 

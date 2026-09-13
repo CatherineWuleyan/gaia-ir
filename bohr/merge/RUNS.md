@@ -252,3 +252,30 @@ words and names no dataset, model or metric.
    8 前提那组合成返回 null，于是 `parents` 只剩 1 个，循环退出——另外 8 个 L1 结论
    悬挂无父节点，树不完整。修法：某组合成失败时把其成员提升到上一层（而不是丢弃），
    保证根覆盖全部存活节点；或在组过大失败时递归二分。
+
+## v9（最终）
+
+修复 v8 暴露的两个结论树缺陷后重跑，BOHR_ID `20732204`（结果目录
+`/personal/bohr_merge_test1-5_v9_final`，2450 s / ¥0.43）。
+
+| 检查项 | v8 | v9 |
+| --- | --- | --- |
+| 单前提 K（退化的"总结"） | 6/11 | **0** ✅ |
+| L1 premises 范围 | 1–8 | **2–8** ✅ |
+| 根节点覆盖的 L1 结论 | 3/11 | **8/11** |
+| delta 边 | 77 | **74**（contradiction 2、deduction 62、abduction 10） |
+| 结论树 | L1 11 + L2 1 | L1 11 + L2 1（根 8 前提） |
+| `check` | ok + `GRAPH_DISCONNECTED` | ok + `GRAPH_DISCONNECTED` |
+
+最终版领域图：318 节点 / 257 边，`domain_graph.html` 在
+`outputs/bohr_runs/merge_test1-5_v9_final/`。
+
+### 仍然存在：树是"森林"
+
+根节点覆盖 8/11 个 L1 结论；剩下 3 个 L1 在上一层尝试与根合并时被判"无共同规律"，
+按"无进展即停"的规则保留为独立结论。所以最终形态是**一棵 8 成员的树 + 3 个独立
+L1 结论**，不是单一连通树。这符合文档（K 只要求是有界总结），但需要在汇报中说明，
+不能宣称是单根树。
+
+产物汇总：`merge_domain_graph/`（仓库根目录）= `index.html` 迭代对比 +
+`viewer_final.html` 最终领域图 + `delta_v*.html` 各版 delta + `delta_chart.svg`。
