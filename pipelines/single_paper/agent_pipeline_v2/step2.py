@@ -151,9 +151,8 @@ def _attach_related_claims(candidate: JSONDict, document: JSONDict) -> JSONDict:
 
 def _deduplicate_extractions(
     claims: list[JSONDict],
-    equivalent_claims: list[JSONDict],
     relations: list[JSONDict],
-) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict]]:
+) -> tuple[list[JSONDict], list[JSONDict]]:
     """Globally deduplicate observations and preserve all downstream references."""
     def key(text: Any) -> str:
         return re.sub(r"\s+", " ", str(text or "")).strip().casefold()
@@ -171,38 +170,26 @@ def _deduplicate_extractions(
         aliases[extraction_key] = extraction_key
         unique_claims.append(claim)
 
-    unique_equivalents: list[JSONDict] = []
-    seen_observations: set[str] = set()
-    for item in equivalent_claims:
-        old = str(item.get("observation_key", ""))
-        mapped = aliases.get(old, old)
-        if mapped in seen_observations:
-            continue
-        copied = dict(item)
-        copied["observation_key"] = mapped
-        seen_observations.add(mapped)
-        unique_equivalents.append(copied)
-
     unique_relations: list[JSONDict] = []
     # Relation identity is the endpoint pair, not the model's wording.  A
     # single source/target pair must have one canonical relation even when
     # overlapping figure windows produce different expressions.
     seen_relations: set[tuple[tuple[str, ...], str]] = set()
     for relation in relations:
-        sources = tuple(sorted(aliases.get(str(value), str(value)) for value in relation.get("phenomenon_keys", [])))
+        sources = tuple(sorted(aliases.get(str(value), str(value)) for value in relation.get("observation_keys", [])))
         signature = (sources, str(relation.get("claim_id", "")))
         if signature in seen_relations:
             continue
         seen_relations.add(signature)
         copied = dict(relation)
-        copied["phenomenon_keys"] = list(sources)
+        copied["observation_keys"] = list(sources)
         expression = str(copied.get("expression", ""))
         for old, mapped in aliases.items():
             if old != mapped:
-                expression = expression.replace(f"[E:{old}]", f"[E:{mapped}]")
+                expression = expression.replace(f"[O:{old}]", f"[O:{mapped}]")
         copied["expression"] = expression
         unique_relations.append(copied)
-    return unique_claims, unique_equivalents, unique_relations
+    return unique_claims, unique_relations
 
 
 def _load_deepseek_env() -> None:
@@ -247,12 +234,12 @@ class DeepSeekV4FlashObservationTool:
 
     @classmethod
     def _extract_relations(
-        cls, candidate: JSONDict, phenomena: list[JSONDict], base_url: str,
+        cls, candidate: JSONDict, observations: list[JSONDict], base_url: str,
     ) -> tuple[list[JSONDict], list[Any]]:
         """Run relation review for an already extracted observation batch."""
         relations: list[JSONDict] = []
         raw_responses: list[Any] = []
-        groups = cls._relation_groups(phenomena, candidate)
+        groups = cls._relation_groups(observations, candidate)
         for component in cls._relation_group_components(groups):
             relation_request = Request(
                 f"{base_url}/chat/completions",
@@ -294,69 +281,14 @@ class DeepSeekV4FlashObservationTool:
         candidates = request.parameters.get("experiment_candidates")
         if not isinstance(candidates, list):
             raise ValueError("experiment_candidates must be a list")
-        if not candidates and isinstance(request.parameters.get("selected_claims"), list):
-            selected = request.parameters["selected_claims"]
-            observations = []
-            for item in selected:
-                if not isinstance(item, dict) or not isinstance(item.get("id"), str):
-                    raise ValueError("selected claims require string ids")
-                content = item.get("content")
-                if isinstance(content, dict):
-                    content = content.get("canonical")
-                if not isinstance(content, str) or not content.strip():
-                    raise ValueError("selected claims require non-empty content")
-                anchors = item.get("source_anchor_ids", [])
-                if not isinstance(anchors, list) or not anchors:
-                    raise ValueError("selected claims require source anchors")
-                observations.append({
-                    "_extraction_key": item["id"],
-                    "observation_key": item["id"],
-                    "content": content.strip(),
-                    "paragraph_anchor_ids": list(anchors),
-                })
-            if not observations:
-                raise ValueError("selected claims must be non-empty")
-            _load_deepseek_env()
-            api_key = os.environ.get("DEEPSEEK_API_KEY")
-            if not api_key:
-                raise RuntimeError("DEEPSEEK_API_KEY is not configured")
-            base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
-            request_body = json.dumps({
-                "model": self.model,
-                "messages": [{"role": "user", "content": self._equivalent_claim_prompt(observations, {"paragraphs": []})}],
-                "temperature": 0,
-                "response_format": {"type": "json_object"},
-            }, ensure_ascii=False).encode("utf-8")
-            http_request = Request(
-                f"{base_url}/chat/completions", data=request_body,
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                method="POST",
-            )
-            try:
-                with _urlopen_with_retry(http_request) as response:
-                    raw = json.loads(response.read().decode("utf-8"))
-            except HTTPError as exc:
-                raise RuntimeError(f"DeepSeek equivalent-claim request failed with HTTP {exc.code}") from exc
-            except URLError as exc:
-                raise RuntimeError(f"DeepSeek equivalent-claim request failed: {exc.reason}") from exc
-            equivalents = self._normalize_equivalent_claims(_response_content(raw), observations)
-            claims = [{
-                "id": item["_extraction_key"],
-                "content": item["content"],
-                "paragraph_anchor_ids": list(item["paragraph_anchor_ids"]),
-                "_extraction_key": item["_extraction_key"],
-            } for item in observations]
-            return ToolCallResponse(
-                request.call_id, "succeeded", {"responses": [raw]},
-                {"status": "claims_extracted", "claims": claims, "equivalent_claims": equivalents, "relations": []},
-                metadata={"candidate_count": 0, "request_count": 1, "model": self.model},
-            )
         if not candidates:
+            # No figure/table window exists: Step 1 already imported every
+            # observation claim, so there is nothing left to extract here.
             return ToolCallResponse(
                 request.call_id,
                 "succeeded",
-                {"skipped": "no_image_references"},
-                {"status": "claims_extracted", "claims": [], "equivalent_claims": [], "relations": []},
+                {"skipped": "no_experiment_candidates"},
+                {"status": "claims_extracted", "claims": [], "relations": []},
                 metadata={"candidate_count": 0, "model": self.model},
             )
         api_key = os.environ.get("DEEPSEEK_API_KEY")
@@ -379,8 +311,6 @@ class DeepSeekV4FlashObservationTool:
                 raise ValueError("selected claims do not map to any experiment candidate")
         raw_responses: list[Any] = []
         claims: list[JSONDict] = []
-        equivalent_claims: list[JSONDict] = []
-        relations: list[JSONDict] = []
 
         def normalization_failure(exc: Exception) -> ToolCallResponse:
             return ToolCallResponse(
@@ -444,47 +374,6 @@ class DeepSeekV4FlashObservationTool:
                     metadata={"candidate_count": len(candidates), "request_count": len(raw_responses), "model": self.model},
                 )
             claims.extend(normalized["claims"])
-            if request.parameters.get("observations_only"):
-                # Extraction-only pass: E and relations are produced in later
-                # passes once the observation set has been deduplicated.
-                continue
-            phenomenon_request = Request(
-                f"{base_url}/chat/completions",
-                data=json.dumps({
-                    "model": self.model,
-                    "messages": [{"role": "user", "content": self._equivalent_claim_prompt(
-                        normalized["claims"], candidate, request.parameters.get("repair_feedback"),
-                    )}],
-                    "temperature": 0,
-                    "response_format": {"type": "json_object"},
-                }, ensure_ascii=False).encode("utf-8"),
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                method="POST",
-            )
-            try:
-                with _urlopen_with_retry(phenomenon_request) as response:  # noqa: S310
-                    phenomenon_raw: Any = json.loads(response.read().decode("utf-8"))
-            except HTTPError as exc:
-                raise RuntimeError(f"DeepSeek equivalent-claim request failed with HTTP {exc.code}") from exc
-            except URLError as exc:
-                raise RuntimeError(f"DeepSeek equivalent-claim request failed: {exc.reason}") from exc
-            raw_responses.append(phenomenon_raw)
-            try:
-                candidate_equivalents = self._normalize_equivalent_claims(
-                    _response_content(phenomenon_raw), normalized["claims"]
-                )
-            except Exception as exc:
-                return normalization_failure(exc)
-            equivalent_claims.extend(candidate_equivalents)
-            try:
-                extracted_relations, relation_responses = self._extract_relations(
-                    candidate, candidate_equivalents, base_url,
-                )
-                raw_responses.extend(relation_responses)
-                relations.extend(extracted_relations)
-            except Exception as exc:
-                raw_responses.extend(getattr(exc, "raw_responses", []))
-                return normalization_failure(exc)
         if isinstance(selected_claims, list):
             expected_ids = {item["id"] for item in selected_claims if isinstance(item, dict) and isinstance(item.get("id"), str)}
             actual_ids = [item.get("id") for item in claims]
@@ -493,8 +382,7 @@ class DeepSeekV4FlashObservationTool:
         normalized = {
             "status": "claims_extracted",
             "claims": claims,
-            "equivalent_claims": equivalent_claims,
-            "relations": relations,
+            "relations": [],
         }
         return ToolCallResponse(
             request.call_id,
@@ -514,8 +402,9 @@ class DeepSeekV4FlashObservationTool:
             "A and M must be present; omit B or U when the source does not state them (never write absence placeholders). "
             "Do not mechanically concatenate a fixed template. Retain each supplied id verbatim. Use the supplied source "
             "excerpts only to recover a setting or action that the observation itself omits. Return exactly one rewritten "
-            "claim per id and no other ids. "
-            "Return {\"claims\":[{\"id\":\"...\",\"content\":\"...\",\"paragraph_anchor_ids\":[\"...\"]}]}.\n\n"
+            "claim per id and no other ids. Return the refined S/A/B/M/R fields together with the complete sentence. "
+            "Return {\"claims\":[{\"id\":\"...\",\"S\":\"...\",\"A\":\"...\",\"M\":\"...\",\"content\":\"...\","
+            "\"paragraph_anchor_ids\":[\"...\"]}]}.\n\n"
             + json.dumps(selected, ensure_ascii=False)
         )
 
@@ -533,9 +422,12 @@ class DeepSeekV4FlashObservationTool:
             raise ValueError("DeepSeek must return exactly one rewritten claim per selected id")
         normalized: list[JSONDict] = []
         seen: set[str] = set()
+        allowed_fields = {"id", "content", "paragraph_anchor_ids", *_OBSERVATION_COMPONENT_FIELDS}
         for item in items:
-            if not isinstance(item, dict) or set(item) != {"id", "content", "paragraph_anchor_ids"}:
-                raise ValueError("rewritten claims must contain only id, content, paragraph_anchor_ids")
+            if not isinstance(item, dict) or not set(item) <= allowed_fields:
+                raise ValueError("rewritten claims contain unexpected fields")
+            if not {"id", "content", "paragraph_anchor_ids"} <= set(item):
+                raise ValueError("rewritten claims require id, content, paragraph_anchor_ids")
             claim_id = item["id"]
             if not isinstance(claim_id, str) or claim_id not in expected_ids or claim_id in seen:
                 raise ValueError("rewritten claim has an unknown or duplicate id")
@@ -546,7 +438,12 @@ class DeepSeekV4FlashObservationTool:
             if not isinstance(anchors, list) or not anchors or not all(isinstance(anchor, str) for anchor in anchors):
                 raise ValueError("rewritten claim requires paragraph anchors")
             seen.add(claim_id)
-            normalized.append({"id": claim_id, "content": rewritten_content.strip(), "paragraph_anchor_ids": list(anchors)})
+            refined = {"id": claim_id, "content": rewritten_content.strip(), "paragraph_anchor_ids": list(anchors)}
+            for field in _OBSERVATION_COMPONENT_FIELDS:
+                value = item.get(field)
+                if isinstance(value, str) and value.strip():
+                    refined[field] = value.strip()
+            normalized.append(refined)
         if seen != expected_ids:
             raise ValueError("DeepSeek omitted a selected id")
         return normalized
@@ -589,7 +486,7 @@ class DeepSeekV4FlashObservationTool:
         claims = self._normalize_rewritten_observations(_response_content(raw), selected)
         return ToolCallResponse(
             request.call_id, "succeeded", {"responses": [raw]},
-            {"status": "claims_extracted", "claims": claims, "equivalent_claims": [], "relations": []},
+            {"status": "claims_extracted", "claims": claims, "relations": []},
             metadata={"candidate_count": 0, "request_count": 1, "model": self.model},
         )
 
@@ -701,11 +598,11 @@ class DeepSeekV4FlashObservationTool:
             "Fixed equivalence/contradiction relations are outside this task. relation_context_id only bounds review context and never proves that relations should merge.\n\n"
             "Prefer a minimal adjacent hierarchy. Do not retain A-to-C when the cluster supports A-to-B and B-to-C, unless an independent supplied relation explicitly asserts A-to-C. "
             "A multi-target weakpoint is allowed only when the same premises, scope, and reasoning family directly support every target. "
-            "When a non-experimental claim B is a self-contained composite phenomenon that strictly entails several atomic phenomenon claims E, represent B -> [E1,E2] as one deduction weakpoint. "
-            "If those E claims were separately extracted as evidence for the same explanatory hypothesis A, prefer the non-duplicative adjacent structure B -> A when B faithfully contains the relevant phenomena; do not also emit redundant E1 -> A and E2 -> A weakpoints. "
-            "Experimental observations or E claims supporting a general hypothesis are abduction, never deduction.\n\n"
-            "Labels: deduction means supplied premises plus source-stated rules/conditions, possibly through a source-grounded intermediate proposition, can strictly entail every target; abduction means a phenomenon supports an explanatory hypothesis, mechanism, or generalization while alternatives remain; analogy requires a source-domain law and identifiable cross-domain mapping; null means none can be established even with a bounded Step 4 expansion. "
-            "For deduction, do not hide unsupported rules or empirical assertions, but do mark a relation when the missing rule/intermediate claim is recoverable from the supplied excerpts. For abduction, premises are phenomena and targets may be broader non-experimental explanations or empirical generalizations when the evidence is explicitly supportive.\n\n"
+            "When a non-experimental claim B is a self-contained composite statement that strictly entails several atomic observation claims O, represent B -> [O1,O2] as one deduction weakpoint. "
+            "If those observation claims were separately extracted as evidence for the same explanatory hypothesis A, prefer the non-duplicative adjacent structure B -> A when B faithfully contains the relevant observations; do not also emit redundant O1 -> A and O2 -> A weakpoints. "
+            "Experimental observations supporting a general hypothesis are abduction, never deduction.\n\n"
+            "Labels: deduction means supplied premises plus source-stated rules/conditions, possibly through a source-grounded intermediate proposition, can strictly entail every target; abduction means an observation supports an explanatory hypothesis, mechanism, or generalization while alternatives remain; analogy requires a source-domain law and identifiable cross-domain mapping; null means none can be established even with a bounded Step 4 expansion. "
+            "For deduction, do not hide unsupported rules or empirical assertions, but do mark a relation when the missing rule/intermediate claim is recoverable from the supplied excerpts. For abduction, premises are observations and targets may be broader non-experimental explanations or empirical generalizations when the evidence is explicitly supportive.\n\n"
             "Before assigning a non-null label, screen the relation: endpoints must be valid and distinct, at least one endpoint must have a supplied paper-text excerpt, and the link must be more than topical co-occurrence, an unsupported causal/quantitative leap, or a duplicate/equivalence. If only a source-grounded intermediate layer or alternative explanation is missing, retain the candidate for Step 4 expansion; if the evidence cannot support even that bounded expansion, use null.\n\n"
             "Return JSON only with exactly this schema: {\"clusters\":[{\"cluster_id\":\"...\",\"weakpoints\":[{\"member_relation_ids\":[\"...\"],\"evidence_claim_ids\":[\"...\"],\"target_claim_id\":[\"...\"],\"reasoning_type\":null,\"expression\":\"...\"}],\"rejected_relation_ids\":[\"...\"]}]}. "
             "Return every cluster exactly once. Every candidate relation ID must occur exactly once, either in one weakpoint's member_relation_ids or in rejected_relation_ids. "
@@ -806,70 +703,8 @@ class DeepSeekV4FlashObservationTool:
         )
 
     @staticmethod
-    def _equivalent_claim_prompt(
-        observations: list[JSONDict], candidate: JSONDict, repair_feedback: Any = None,
-    ) -> str:
-        paragraphs = "\n\n".join(
-            f"[{item['anchor_id']}] {item['text']}"
-            for item in candidate.get("paragraphs", [])
-            if isinstance(item, dict)
-        )
-        return (
-            "Return JSON only. For every supplied experimental observation O, write exactly one English phenomenon "
-            "claim E with the same truth conditions. E must be usable as a consequence of a hypothesis: state the "
-            "observable result under the same setting, treatment or object, optional baseline, measure, comparison "
-            "direction, result, conditions, and uncertainty, but remove report-event wording such as 'the experiment "
-            "showed', 'we observed', or 'the paper reports'. Do not turn a measured result into a latent, population, "
-            "causal, or more general claim. Do not add, omit, merge, split, explain, or reinterpret facts. Use only the "
-            "the supplied observations. Even when O already omits report-event wording, express E with "
-            "different surface wording while preserving exactly the same truth conditions; never copy O's content "
-            "verbatim. If a proposed E would be identical to O after trivial whitespace/case normalization, rewrite "
-            "it again before returning. Return every observation_key exactly once and no other fields. "
-            "Return {\"equivalent_claims\":[{\"observation_key\":\"...\",\"content\":\"...\"}]}.\n\n"
-            + ("\n\nRepair feedback from the previous validation attempt. Correct only the reported issue and return the complete corrected JSON:\n" + str(repair_feedback) if repair_feedback else "")
-            + f"\n\nObservations:\n{json.dumps(observations, ensure_ascii=False)}"
-        )
-
-    @staticmethod
-    def _normalize_equivalent_claims(content: str, observations: list[JSONDict]) -> list[JSONDict]:
-        try:
-            payload = json.loads(content)
-        except json.JSONDecodeError as exc:
-            raise ValueError("DeepSeek equivalent-claim response is not valid JSON") from exc
-        if not isinstance(payload, dict) or set(payload) != {"equivalent_claims"}:
-            raise ValueError("DeepSeek equivalent-claim response must contain only equivalent_claims")
-        items = payload["equivalent_claims"]
-        expected = {
-            item["_extraction_key"]: item
-            for item in observations
-            if isinstance(item, dict) and isinstance(item.get("_extraction_key"), str)
-        }
-        if not isinstance(items, list) or len(items) != len(expected):
-            raise ValueError("DeepSeek must return exactly one equivalent claim per observation")
-        normalized: dict[str, JSONDict] = {}
-        for item in items:
-            if not isinstance(item, dict) or set(item) != {"observation_key", "content"}:
-                raise ValueError("equivalent claims must contain only observation_key and content")
-            key, equivalent_content = item["observation_key"], item["content"]
-            if not isinstance(key, str) or key not in expected or key in normalized:
-                raise ValueError("equivalent claim has an unknown or duplicate observation_key")
-            if not isinstance(equivalent_content, str) or not equivalent_content.strip():
-                raise ValueError("equivalent claim content must be non-empty")
-            observation = expected[key]
-            if equivalent_content.strip() == str(observation["content"]).strip():
-                raise ValueError("equivalent claim must not copy the experimental observation verbatim")
-            normalized[key] = {
-                "observation_key": key,
-                "content": equivalent_content.strip(),
-                "paragraph_anchor_ids": list(observation["paragraph_anchor_ids"]),
-            }
-        if set(normalized) != set(expected):
-            raise ValueError("DeepSeek omitted an equivalent claim")
-        return [normalized[item["_extraction_key"]] for item in observations]
-
-    @staticmethod
-    def _relation_groups(phenomena: list[JSONDict], candidate: JSONDict) -> list[JSONDict]:
-        """Offer each local target one set of eligible phenomenon claims."""
+    def _relation_groups(observations: list[JSONDict], candidate: JSONDict) -> list[JSONDict]:
+        """Offer each local target one set of eligible observation claims."""
         groups: list[JSONDict] = []
         for item in candidate.get("related_claims", []):
             if (not isinstance(item, dict) or item.get("type") != "claim"
@@ -877,10 +712,10 @@ class DeepSeekV4FlashObservationTool:
                 continue
             evidence_candidates = [
                 {
-                    "phenomenon_key": phenomenon["observation_key"],
-                    "phenomenon": phenomenon["content"],
+                    "observation_key": observation["observation_key"],
+                    "observation": observation["content"],
                 }
-                for phenomenon in phenomena
+                for observation in observations
             ]
             if evidence_candidates:
                 groups.append({
@@ -898,7 +733,7 @@ class DeepSeekV4FlashObservationTool:
             return [[group] for group in groups]
         claim_sets = [
             {str(group["target_claim_id"]), *{
-                str(item["phenomenon_key"])
+                str(item["observation_key"])
                 for item in group.get("evidence_candidates", [])
             }}
             for group in groups
@@ -937,19 +772,19 @@ class DeepSeekV4FlashObservationTool:
     def _relation_prompt(groups: list[JSONDict]) -> str:
         return (
             "Return JSON only. Classify every supplied target-centered candidate group exactly once; do not add or omit groups. "
-            "Each group contains one target claim and the non-experimental phenomenon claims E that share a source anchor or local experiment context with it. "
+            "Each group contains one target claim and the observation claims O that share a source anchor or local experiment context with it. "
             "Use only the supplied text and IDs; do not invent premises, mechanisms, relations, or IDs. "
             "relation_type must be exactly one of evidence, conjunction, disjunction, negation, implication, equivalence, contradiction, none. "
             "Use fixed logical expressions only: 且 / 和 / 与 for conjunction, 或 for disjunction, 非 for negation, "
             "推出 for implication direction, 等价 for equivalence, and 矛盾 or 不可同时成立 for contradiction. "
-            "When phenomenon claims support a general claim, default to evidence, never implication: do not write '[E:...] 推出 [target]'. "
-            "For each group, return relations as an array. A relation may select one or more eligible phenomenon keys. "
-            "Select multiple phenomena only when they jointly support the target and removing one changes the relation's meaning; otherwise use a single phenomenon. "
-            "For evidence, write '[E:key] 是 [target] 的例子或证据' or '([E:key1] 和 [E:key2]) 是 [target] 的例子或证据'. "
-            "Every non-none expression must cite every selected [E:key] and the group's exact [target_claim_id]. "
+            "When observation claims support a general claim, default to evidence, never implication: do not write '[O:...] 推出 [target]'. "
+            "For each group, return relations as an array. A relation may select one or more eligible observation keys. "
+            "Select multiple observations only when they jointly support the target and removing one changes the relation's meaning; otherwise use a single observation. "
+            "For evidence, write '[O:key] 是 [target] 的例子或证据' or '([O:key1] 和 [O:key2]) 是 [target] 的例子或证据'. "
+            "Every non-none expression must cite every selected [O:key] and the group's exact [target_claim_id]. "
             "Use an empty relations array if no relation is supported. "
-            "Return {\"classifications\":[{\"group_id\":\"group_1\",\"relations\":[{\"source_phenomenon_keys\":[\"e_1\",\"e_2\"],"
-            "\"relation_type\":\"evidence\",\"expression\":\"([E:e_1] 和 [E:e_2]) 是 [claim_7] 的例子或证据\"}]}]}.\nGroups:\n"
+            "Return {\"classifications\":[{\"group_id\":\"group_1\",\"relations\":[{\"source_observation_keys\":[\"o_1\",\"o_2\"],"
+            "\"relation_type\":\"evidence\",\"expression\":\"([O:o_1] 和 [O:o_2]) 是 [claim_7] 的例子或证据\"}]}]}.\nGroups:\n"
             + json.dumps(groups, ensure_ascii=False)
         )
 
@@ -974,29 +809,29 @@ class DeepSeekV4FlashObservationTool:
             if not isinstance(group_relations, list):
                 raise ValueError("DeepSeek group relations must be an array")
             group = by_id[item["group_id"]]
-            eligible = {candidate["phenomenon_key"] for candidate in group["evidence_candidates"]}
+            eligible = {candidate["observation_key"] for candidate in group["evidence_candidates"]}
             relation_sets: set[tuple[str, ...]] = set()
             for relation in group_relations:
-                if not isinstance(relation, dict) or set(relation) != {"source_phenomenon_keys", "relation_type", "expression"}:
+                if not isinstance(relation, dict) or set(relation) != {"source_observation_keys", "relation_type", "expression"}:
                     raise ValueError("DeepSeek group relation has an invalid shape")
-                source_keys = relation["source_phenomenon_keys"]
+                source_keys = relation["source_observation_keys"]
                 relation_type = relation["relation_type"]
                 expression = relation["expression"]
                 if not isinstance(source_keys, list) or not source_keys or not all(isinstance(key, str) for key in source_keys):
-                    raise ValueError("DeepSeek group relation requires source phenomenon keys")
+                    raise ValueError("DeepSeek group relation requires source observation keys")
                 if len(source_keys) != len(set(source_keys)) or not set(source_keys) <= eligible:
-                    raise ValueError("DeepSeek group relation references an ineligible phenomenon")
+                    raise ValueError("DeepSeek group relation references an ineligible observation")
                 if relation_type not in allowed - {"none"}:
                     raise ValueError("DeepSeek relation response has an unsupported relation_type")
                 if not isinstance(expression, str) or f"[{group['target_claim_id']}]" not in expression:
                     raise ValueError("DeepSeek relation expression must cite its target claim")
-                if any(f"[E:{key}]" not in expression for key in source_keys):
-                    raise ValueError("DeepSeek relation expression must cite every selected phenomenon")
+                if any(f"[O:{key}]" not in expression for key in source_keys):
+                    raise ValueError("DeepSeek relation expression must cite every selected observation")
                 source_signature = tuple(sorted(source_keys))
                 if source_signature in relation_sets:
                     raise ValueError("DeepSeek group relation duplicates an evidence set")
                 relation_sets.add(source_signature)
-                relations.append({"phenomenon_keys": source_keys, "claim_id": group["target_claim_id"], "expression": expression})
+                relations.append({"observation_keys": source_keys, "claim_id": group["target_claim_id"], "expression": expression})
         if seen != set(by_id):
             raise ValueError("DeepSeek relation response omitted a candidate group")
         return relations
@@ -1607,11 +1442,11 @@ def _extract_with_expansion(
     frozen_claims: list[JSONDict] | None = None,
     first_call_number: int = 1,
     observations_only: bool = False,
-) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict], list[ArtifactDraft]]:
+) -> tuple[list[JSONDict], list[JSONDict], list[ArtifactDraft]]:
     drafts: list[ArtifactDraft] = []
     initial_candidates = _experiment_candidates(paragraphs)
     if not initial_candidates:
-        return [], [], [], drafts
+        return [], [], drafts
     if selected_claims is not None:
         selected_anchor_ids = {
             anchor_id
@@ -1636,10 +1471,9 @@ def _extract_with_expansion(
             initial_candidates = _experiment_candidates(paragraphs)
     def process_candidate(
         candidate_index: int, initial_candidate: JSONDict,
-    ) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict], list[ArtifactDraft]]:
+    ) -> tuple[list[JSONDict], list[JSONDict], list[ArtifactDraft]]:
         """Process one candidate without sharing mutable result state."""
         candidate_claims: list[JSONDict] = []
-        candidate_equivalents: list[JSONDict] = []
         candidate_relations: list[JSONDict] = []
         candidate_drafts: list[ArtifactDraft] = []
         candidate_id = initial_candidate["candidate_id"]
@@ -1677,16 +1511,12 @@ def _extract_with_expansion(
             if normalized.get("status") != "claims_extracted":
                 break
             extracted = normalized.get("claims")
-            equivalents = normalized.get("equivalent_claims")
             extracted_relations = normalized.get("relations", [])
             if not isinstance(extracted, list) or not all(isinstance(item, dict) for item in extracted):
-                break
-            if not isinstance(equivalents, list) or not all(isinstance(item, dict) for item in equivalents):
                 break
             if not isinstance(extracted_relations, list) or not all(isinstance(item, dict) for item in extracted_relations):
                 break
             candidate_claims.extend(extracted)
-            candidate_equivalents.extend(equivalents)
             candidate_relations.extend({**item, "relation_context_id": candidate_id} for item in extracted_relations)
             extracted_from_text = True
             break
@@ -1702,17 +1532,9 @@ def _extract_with_expansion(
                     candidate_drafts.append(visual_draft)
                     if visual_claims:
                         candidate_claims.extend(visual_claims)
-                        # Keep the existing E/O pipeline intact. The visual
-                        # result is evidence-grounded; its equivalent claim is
-                        # generated by the normal downstream equivalence pass.
-                        candidate_equivalents.extend({
-                            "observation_key": item["_extraction_key"],
-                            "content": item["content"],
-                            "paragraph_anchor_ids": list(item["paragraph_anchor_ids"]),
-                        } for item in visual_claims)
                         # Vision extraction must use the same relation pass as
-                        # text extraction; otherwise every new visual claim
-                        # can only receive its E/O equivalence edge.
+                        # text extraction so every visual observation reaches
+                        # the observation-to-claim relation stage.
                         expanded_candidates = _experiment_candidates(paragraphs, radius=3)
                         relation_base = next(
                             (item for item in expanded_candidates if item["candidate_id"] == candidate_id),
@@ -1745,10 +1567,10 @@ def _extract_with_expansion(
                 except Exception:
                     # Do not silently discard relation failures.  The runner
                     # must mark the stage failed so the audit identifies an
-                    # API/normalization problem instead of emitting only O/E
-                    # equivalence edges.
+                    # API/normalization problem instead of emitting observation
+                    # claims without their relation pass.
                     raise
-        return candidate_claims, candidate_equivalents, candidate_relations, candidate_drafts
+        return candidate_claims, candidate_relations, candidate_drafts
 
     # Candidate contexts are independent.  Keep a small fixed pool because
     # the configured provider may rate-limit large bursts of requests.
@@ -1758,20 +1580,16 @@ def _extract_with_expansion(
             enumerate(initial_candidates),
         ))
     claims: list[JSONDict] = []
-    equivalent_claims: list[JSONDict] = []
     relations: list[JSONDict] = []
     drafts: list[ArtifactDraft] = []
-    for candidate_claims, candidate_equivalents, candidate_relations, candidate_drafts in results:
+    for candidate_claims, candidate_relations, candidate_drafts in results:
         claims.extend(candidate_claims)
-        equivalent_claims.extend(candidate_equivalents)
         relations.extend(candidate_relations)
         drafts.extend(candidate_drafts)
     # Reconstruct the audit list from disk so failed calls are retained even
     # though _tool_call raised before returning its draft.
-    claims, equivalent_claims, relations = _deduplicate_extractions(
-        claims, equivalent_claims, relations,
-    )
-    return claims, equivalent_claims, relations, []
+    claims, relations = _deduplicate_extractions(claims, relations)
+    return claims, relations, []
 
 
 def _observation_items(claims: list[JSONDict], existing: dict[str, JSONDict] | None = None) -> tuple[dict[str, JSONDict], dict[str, str]]:
@@ -1988,88 +1806,65 @@ def _deduplicate_observations_judge(
     return merged, remapped_ids
 
 
-def _equivalent_items(
-    equivalent_claims: list[JSONDict],
+def _observation_binding(
+    refined_observations: list[JSONDict],
     observation_ids: dict[str, str],
     existing: dict[str, JSONDict] | None = None,
-) -> tuple[dict[str, JSONDict], dict[str, str], list[JSONDict]]:
+) -> tuple[dict[str, JSONDict], dict[str, str]]:
+    """Bind refined S/A/B/M/R onto the single experiment node for each observation.
+
+    Stage 1 deleted the phenomenon claim E: an observation claim O *is* the
+    observation proposition.  Binding therefore writes the refined content and
+    S/A/B/M/R back onto the node selected by document priority (reuse the
+    original imported claim ID, otherwise claim_Ox) and merges the observation
+    anchors.  It never creates a parallel phenomenon node or an equivalence
+    operator.
+    """
     existing = existing or {}
     by_key: dict[str, JSONDict] = {}
-    for item in equivalent_claims:
+    for item in refined_observations:
         key = item.get("observation_key")
         if (not isinstance(key, str) or key not in observation_ids or key in by_key
                 or not isinstance(item.get("content"), str) or not item["content"].strip()
                 or not isinstance(item.get("paragraph_anchor_ids"), list)
                 or not item["paragraph_anchor_ids"]
                 or len(item["paragraph_anchor_ids"]) != len(set(item["paragraph_anchor_ids"]))):
-            # Keep valid observations even when one equivalent proposal is bad.
+            # Keep every valid observation even when one refinement is bad.
             continue
         by_key[key] = item
-    phenomenon_ids: dict[str, str] = {}
-    phenomena: dict[str, JSONDict] = {}
-    operators: list[JSONDict] = []
-    existing_phenomena = {
-        key: value for key, value in existing.items()
-        if key.startswith("claim_E") and value.get("type") == "claim"
-        and isinstance(value.get("content"), dict)
-        and isinstance(value["content"].get("canonical"), str)
-    }
-    used_existing_phenomena: set[str] = set()
+    bound_nodes: dict[str, JSONDict] = {}
+    bound_ids: dict[str, str] = {}
     for key, observation_id in observation_ids.items():
-        # An observation without a validated equivalent must remain
-        # unresolved; never synthesize E by copying O.
         if key not in by_key:
             continue
-        suffix = observation_id.removeprefix("claim_O")
-        proposed = by_key[key]["content"]
-        observation_anchors = set(by_key[key]["paragraph_anchor_ids"])
-        matched = next((candidate_id for candidate_id, candidate in existing_phenomena.items()
-                        if candidate_id not in used_existing_phenomena
-                        if _anchors_share_local_context(
-                            list(observation_anchors), list(candidate.get("source_anchor_ids", []))
-                        ) and _cosine(
-                            _tokens(proposed),
-                            _tokens(candidate["content"]["canonical"]),
-                        ) >= 0.72), None)
-        if matched is not None:
-            used_existing_phenomena.add(matched)
-        phenomenon_id = matched or (
-            f"claim_E{suffix}" if observation_id.startswith("claim_O")
-            else f"claim_E_imported_{observation_id.removeprefix('claim_')}"
-        )
-        phenomenon_ids[key] = phenomenon_id
-        if phenomenon_id not in existing:
-            phenomena[phenomenon_id] = {
-                "type": "claim",
-                "content": {"canonical": proposed},
-                "source_anchor_ids": list(by_key[key]["paragraph_anchor_ids"]),
-            }
-        operators.append({
-            "id": f"operator_equivalence_E{suffix}_O{suffix}",
-            "type": "equivalence",
-            "variables": [phenomenon_id, observation_id],
-        })
-    return phenomena, phenomenon_ids, operators
+        item = by_key[key]
+        node = existing.get(observation_id)
+        node = node if isinstance(node, dict) else {}
+        content = dict(node.get("content") or {})
+        content["canonical"] = item["content"]
+        for field in _OBSERVATION_COMPONENT_FIELDS:
+            value = item.get(field)
+            if isinstance(value, str) and value.strip():
+                content[field] = value.strip()
+        merged_anchors = list(dict.fromkeys([
+            *node.get("source_anchor_ids", []),
+            *item["paragraph_anchor_ids"],
+        ]))
+        bound_nodes[observation_id] = {
+            **node,
+            "type": "observation_claim",
+            "content": content,
+            "source_anchor_ids": merged_anchors,
+        }
+        bound_ids[key] = observation_id
+    return bound_nodes, bound_ids
 
 
 def _relation_items(
-    relations: list[JSONDict], phenomenon_ids: dict[str, str],
-    observation_ids: dict[str, str], document: JSONDict,
+    relations: list[JSONDict], document: JSONDict,
 ) -> tuple[list[JSONDict], list[str]]:
+    """Turn observation-to-target relation proposals into non-reasoning links."""
     links = list(document["workflow"]["non_reasoning_links"])
-    observation_to_phenomenon = {
-        observation_ids[key]: phenomenon_ids[key]
-        for key in observation_ids
-        if key in phenomenon_ids
-    }
-    if observation_to_phenomenon:
-        for link in links:
-            link["sources"] = [observation_to_phenomenon.get(source, source) for source in link.get("sources", [])]
-            expression = str(link.get("metadata", {}).get("relation", {}).get("expression", ""))
-            for observation_id, phenomenon_id in observation_to_phenomenon.items():
-                expression = expression.replace(f"[{observation_id}]", f"[{phenomenon_id}]")
-            if isinstance(link.get("metadata"), dict) and isinstance(link["metadata"].get("relation"), dict):
-                link["metadata"]["relation"]["expression"] = expression
     existing = {link["id"] for link in links}
     endpoint_keys: set[tuple[tuple[str, ...], str]] = {
         (tuple(sorted(str(item) for item in link.get("sources", []))), str(link.get("target", "")))
@@ -2077,14 +1872,16 @@ def _relation_items(
     }
     rejected: list[str] = []
     for index, relation in enumerate(relations, 1):
-        phenomenon_keys = relation.get("phenomenon_keys")
+        observation_keys = relation.get("observation_keys")
         claim_id = relation.get("claim_id")
-        if not isinstance(phenomenon_keys, list) or not phenomenon_keys or not isinstance(claim_id, str):
+        if not isinstance(observation_keys, list) or not observation_keys or not isinstance(claim_id, str):
             rejected.append(f"relation_step2_{index}: invalid endpoints")
             continue
-        phenomenon_id_by_key = {key: phenomenon_ids.get(key) for key in phenomenon_keys}
-        if any(not isinstance(key, str) or phenomenon_id is None for key, phenomenon_id in phenomenon_id_by_key.items()):
-            rejected.append(f"relation_step2_{index}: unknown phenomenon or claim")
+        if any(
+            not isinstance(key, str) or not key or key not in document["knowledges"]
+            for key in observation_keys
+        ) or claim_id not in document["knowledges"]:
+            rejected.append(f"relation_step2_{index}: unknown observation or claim")
             continue
         link_id = f"relation_step2_{index}"
         if link_id in existing:
@@ -2095,19 +1892,19 @@ def _relation_items(
         if not isinstance(relation_context_id, str) or not relation_context_id:
             rejected.append(f"{link_id}: missing relation_context_id")
             continue
-        for key, phenomenon_id in phenomenon_id_by_key.items():
-            expression = expression.replace(f"[E:{key}]", f"[{phenomenon_id}]")
-        if "[E:" in expression:
-            rejected.append(f"{link_id}: unknown phenomenon in expression")
+        for key in observation_keys:
+            expression = expression.replace(f"[O:{key}]", f"[{key}]")
+        if "[O:" in expression:
+            rejected.append(f"{link_id}: unknown observation in expression")
             continue
-        endpoint_key = (tuple(sorted(phenomenon_id_by_key.values())), claim_id)
+        endpoint_key = (tuple(sorted(observation_keys)), claim_id)
         if endpoint_key in endpoint_keys:
             # Overlapping windows may yield different wording for the same
             # endpoints. Keep the first deterministic relation and discard
             # only the duplicate, never a distinct endpoint pair.
             continue
         links.append({
-            "id": link_id, "link_type": "imported_relation", "sources": list(phenomenon_id_by_key.values()), "target": claim_id,
+            "id": link_id, "link_type": "imported_relation", "sources": list(observation_keys), "target": claim_id,
             "reasoning": False, "metadata": {"relation": {
                 "expression": expression, "relation_context_id": relation_context_id,
             }},
@@ -2160,46 +1957,21 @@ def _rewrite_imported_observations(
     return list(claims), [draft]
 
 
-def _generate_equivalents(
-    context: StageContext,
-    surviving: list[JSONDict],
-    *,
-    call_number: int,
-) -> tuple[list[JSONDict], list[ArtifactDraft]]:
-    """Generate one equivalent phenomenon claim E for each surviving observation."""
-    if not surviving:
-        return [], []
-    try:
-        normalized, draft = _tool_call(
-            context,
-            [],
-            call_number=call_number,
-            selected_claims=surviving,
-            operation="generate_equivalents",
-        )
-    except Exception:
-        return [], []
-    equivalents = normalized.get("equivalent_claims", [])
-    if not isinstance(equivalents, list) or not all(isinstance(item, dict) for item in equivalents):
-        raise ValueError("generate_equivalents returned invalid equivalent_claims")
-    return list(equivalents), [draft]
-
-
 def _extract_relations_pass(
     context: StageContext,
     paragraphs: list[JSONDict],
     document: JSONDict,
-    equivalents: list[JSONDict],
+    observations: list[JSONDict],
     observation_ids: dict[str, str],
     *,
     call_number: int,
 ) -> tuple[list[JSONDict], list[ArtifactDraft]]:
-    """Extract target-centered relations for surviving E, per figure window."""
-    if not equivalents:
+    """Extract target-centered relations for surviving observation nodes, per figure window."""
+    if not observations:
         return [], []
     by_stable = {
         item["observation_key"]: item
-        for item in equivalents
+        for item in observations
         if isinstance(item, dict) and isinstance(item.get("observation_key"), str)
     }
     candidate_to_stable: dict[str, list[str]] = {}
@@ -2219,11 +1991,11 @@ def _extract_relations_pass(
     for index, candidate in enumerate(_experiment_candidates(paragraphs)):
         candidate = _attach_related_claims(candidate, document)
         stable_ids = candidate_to_stable.get(candidate["candidate_id"], [])
-        phenomena = [by_stable[stable] for stable in stable_ids if stable in by_stable]
-        if not phenomena:
+        candidate_observations = [by_stable[stable] for stable in stable_ids if stable in by_stable]
+        if not candidate_observations:
             continue
         try:
-            candidate_relations, raw_responses = tool._extract_relations(candidate, phenomena, base_url)
+            candidate_relations, raw_responses = tool._extract_relations(candidate, candidate_observations, base_url)
         except Exception:
             continue
         relations.extend({**item, "relation_context_id": candidate["candidate_id"]} for item in candidate_relations)
@@ -2296,31 +2068,21 @@ class Step2ExtractObservationsPlugin:
             ]
             drafts: list[ArtifactDraft] = []
 
-            # 2. Rewrite imported observation claims into S/A/B/M/R form in place.
+            # 2. Rewrite imported observation claims into S/A/B/M/R form (in memory).
+            rewritten_imported: list[JSONDict] = []
             if imported_observation_claims:
                 rewritten, rewrite_drafts = _rewrite_imported_observations(
                     context, imported_observation_claims, paragraphs,
                 )
                 drafts.extend(rewrite_drafts)
-                rewritten_by_id = {
-                    item["id"]: item
-                    for item in rewritten
+                rewritten_imported = [
+                    item for item in rewritten
                     if isinstance(item, dict) and isinstance(item.get("id"), str)
-                }
-                for knowledge_id, item in rewritten_by_id.items():
-                    if knowledge_id not in document["knowledges"]:
-                        continue
-                    knowledge = document["knowledges"][knowledge_id]
-                    knowledge["content"] = {"canonical": item["content"]}
-                    merged_anchors = list(knowledge.get("source_anchor_ids", []))
-                    for anchor_id in item.get("paragraph_anchor_ids", []):
-                        if anchor_id not in merged_anchors:
-                            merged_anchors.append(anchor_id)
-                    knowledge["source_anchor_ids"] = merged_anchors
-                    modified.append(knowledge_id)
+                    and item["id"] in document["knowledges"]
+                ]
 
-            # 3. Retrieve the full text for observation claims missed by Step 1 (no E/relations yet).
-            new_claims, _, _, extract_drafts = _extract_with_expansion(
+            # 3. Retrieve the full text for observation claims missed by Step 1.
+            new_claims, _, extract_drafts = _extract_with_expansion(
                 context, paragraphs, document,
                 selected_claims=None,
                 observations_only=True,
@@ -2330,70 +2092,77 @@ class Step2ExtractObservationsPlugin:
 
             # 4. Deduplicate new observations against imported ones (content-based, imported priority).
             observations, extraction_to_observation = _observation_items(new_claims, document["knowledges"])
-            new_observation_ids = [key for key in observations if key not in document["knowledges"]]
 
             # 4.5 Judge-merge same-observation duplicates among the newly extracted set.
             observations, extraction_to_observation = _deduplicate_observations_judge(
                 context, observations, extraction_to_observation,
             )
-            new_observation_ids = [key for key in observations if key not in document["knowledges"]]
 
-            # 5. Generate E for every surviving observation (imported + non-duplicate new) in one pass.
-            surviving = [
-                {"id": knowledge_id, "content": document["knowledges"][knowledge_id]["content"]["canonical"],
-                 "source_anchor_ids": list(document["knowledges"][knowledge_id].get("source_anchor_ids", []))}
-                for knowledge_id in [item["id"] for item in imported_observation_claims]
+            # 5. Bind the refined observation proposition onto its one experiment
+            #    node: reuse the original imported claim ID when it exists,
+            #    otherwise keep the newly discovered claim_Ox ID.  No phenomenon
+            #    claim E and no equivalence operator is created.
+            refined = [
+                {
+                    "observation_key": item["id"],
+                    "content": item["content"],
+                    "paragraph_anchor_ids": list(item.get("paragraph_anchor_ids", [])),
+                    **{
+                        field: item[field]
+                        for field in _OBSERVATION_COMPONENT_FIELDS
+                        if isinstance(item.get(field), str) and item[field].strip()
+                    },
+                }
+                for item in rewritten_imported
             ]
-            surviving.extend(
-                {"id": knowledge_id, "content": observations[knowledge_id]["content"]["canonical"],
-                 "source_anchor_ids": list(observations[knowledge_id].get("source_anchor_ids", []))}
-                for knowledge_id in new_observation_ids
+            refined.extend(
+                {
+                    "observation_key": knowledge_id,
+                    "content": observations[knowledge_id]["content"]["canonical"],
+                    "paragraph_anchor_ids": list(observations[knowledge_id].get("source_anchor_ids", [])),
+                    **{
+                        field: observations[knowledge_id]["content"][field]
+                        for field in _OBSERVATION_COMPONENT_FIELDS
+                        if isinstance(observations[knowledge_id]["content"].get(field), str)
+                    },
+                }
+                for knowledge_id in observations
             )
-            equivalent_claims, equiv_drafts = _generate_equivalents(
-                context, surviving,
-                call_number=3 if imported_observation_claims else 2,
+            bound_nodes, _binding_ids = _observation_binding(
+                refined,
+                {item["observation_key"]: item["observation_key"] for item in refined},
+                document["knowledges"],
             )
-            drafts.extend(equiv_drafts)
+            for knowledge_id, node in bound_nodes.items():
+                document["knowledges"][knowledge_id] = node
+                if knowledge_id not in document["graph"]["nodes"]:
+                    document["graph"]["nodes"].append(knowledge_id)
+                modified.append(knowledge_id)
 
-            # 6. Build E phenomena and E ≡ O operators.
-            identity_observation_ids = {item["id"]: item["id"] for item in surviving}
-            phenomena, phenomenon_ids, equivalence_operators = _equivalent_items(
-                equivalent_claims, identity_observation_ids, document["knowledges"],
-            )
-
-            # 7. Extract target-centered relations for the surviving E.
+            # 6. Extract target-centered relations for the surviving observations.
+            observation_items = [
+                {
+                    "observation_key": knowledge_id,
+                    "content": node["content"]["canonical"],
+                    "paragraph_anchor_ids": list(node.get("source_anchor_ids", [])),
+                }
+                for knowledge_id, node in bound_nodes.items()
+            ]
             relations, relation_drafts = _extract_relations_pass(
-                context, paragraphs, document, equivalent_claims, extraction_to_observation,
-                call_number=4 if imported_observation_claims else 3,
+                context, paragraphs, document, observation_items, extraction_to_observation,
+                call_number=3 if imported_observation_claims else 2,
             )
             drafts.extend(relation_drafts)
 
-            # 8. Persist observations, phenomena, operators, and relations.
-            new_observations = {key: value for key, value in observations.items() if key in new_observation_ids}
-            existing_operator_ids = {item.get("id") for item in document["graph"]["operators"]}
-            duplicate_operator_ids = existing_operator_ids & {item["id"] for item in equivalence_operators}
-            if duplicate_operator_ids:
-                raise ValueError(f"Step 2 operator ids already exist: {sorted(duplicate_operator_ids)}")
-            document["knowledges"].update(new_observations)
-            document["knowledges"].update(phenomena)
-            document["graph"]["nodes"].extend(
-                knowledge_id
-                for knowledge_id in [*new_observations, *phenomena]
-                if knowledge_id not in document["graph"]["nodes"]
-            )
-            document["graph"]["operators"].extend(equivalence_operators)
-            document["workflow"]["non_reasoning_links"], rejected_relations = _relation_items(
-                relations, phenomenon_ids, identity_observation_ids, document,
-            )
-            findings = [Finding("STEP2_REJECTED_EQUIVALENT", "warning", f"No valid equivalent claim for observation {key}")
-                        for key in sorted(set(identity_observation_ids) - set(phenomenon_ids))]
-            findings.extend(Finding("STEP2_REJECTED_RELATION", "warning", message) for message in rejected_relations)
+            # 7. Persist the observation-to-target relations.
+            document["workflow"]["non_reasoning_links"], rejected_relations = _relation_items(relations, document)
+            findings = [Finding("STEP2_REJECTED_RELATION", "warning", message) for message in rejected_relations]
             _revision(
                 document,
                 context,
                 revision_id=f"revision_{context.run_id}_step_2",
                 review_status="automated",
-                modified=[*modified, *new_observations, *phenomena, *(item["id"] for item in equivalence_operators)],
+                modified=list(dict.fromkeys(modified)),
             )
             emitted = emit_formalization(context, document, step=2, step_name=STEP_NAME)
             drafts.extend(_tool_audit_drafts(context))

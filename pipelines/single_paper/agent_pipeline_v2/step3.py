@@ -48,6 +48,59 @@ def _is_weakpoint_expression(expression: str) -> bool:
     return any(token in expression for token in ("例子或证据", "举例", "证据", "推出"))
 
 
+def _is_claims_final_link(link: JSONDict) -> bool:
+    """Identify the high-confidence relations declared directly in claims_final."""
+    metadata = link.get("metadata")
+    return isinstance(metadata, dict) and metadata.get("source") == "claims_final"
+
+
+_NUMBER_REFERENCE_PATTERN = re.compile(r"\[(\d+)\]")
+
+
+def _imported_weakpoint_expression(document: JSONDict, expression: str) -> str:
+    """Rewrite claims_final numeric references such as [3] to the graph claim id."""
+
+    def replace(match: re.Match[str]) -> str:
+        knowledge_id = f"claim_{match.group(1)}"
+        return f"[{knowledge_id}]" if knowledge_id in document["knowledges"] else match.group(0)
+
+    return _NUMBER_REFERENCE_PATTERN.sub(replace, expression)
+
+
+def _adopt_imported_weakpoint(document: JSONDict, link: JSONDict) -> JSONDict | None:
+    """Adopt one claims_final relation verbatim as a protected unresolved weakpoint.
+
+    Stage 2 treats claims_final relations as high confidence: they are carried
+    into the reasoning graph in document order without an LLM "does it hold"
+    judgment, and no later screening, flattening, or shortcut suppression may
+    delete them.
+    """
+    relation = link.get("metadata", {}).get("relation", {})
+    expression = str(relation.get("expression", "")).strip()
+    sources = list(link.get("sources", []))
+    target = str(link.get("target", ""))
+    if not expression or not sources or not target:
+        return None
+    if any(source not in document["knowledges"] for source in sources) or target not in document["knowledges"]:
+        return None
+    expression = _imported_weakpoint_expression(document, expression)
+    anchor_ids = list(dict.fromkeys(
+        anchor_id
+        for source in sources
+        for anchor_id in document["knowledges"][source].get("source_anchor_ids", [])
+    ))
+    return {
+        "id": f"weakpoint_{link['id']}",
+        "payload": {
+            "evidence_claim_ids": sources,
+            "target_claim_id": [target],
+            "reasoning_type": None,
+            "evidence_anchor_ids": anchor_ids,
+            "expression": expression,
+        },
+    }
+
+
 def _operator_type(expression: str) -> str | None:
     if _is_weakpoint_expression(expression):
         return None
@@ -245,10 +298,17 @@ def _paper_anchor_ids(document: JSONDict, knowledge_ids: set[str]) -> set[str]:
 
 
 def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
-    """Drop only redundant relation candidates while preserving Step1 imports."""
+    """Drop only redundant relation candidates while preserving Step1 imports.
+
+    High-confidence claims_final relations are never removed and never act as
+    the redundancy witness that removes another candidate.
+    """
     kept: list[JSONDict] = []
     removed: list[str] = []
     for link in links:
+        if _is_claims_final_link(link):
+            kept.append(link)
+            continue
         relation = link.get("metadata", {}).get("relation", {})
         conclusion = str(relation.get("conclusion", ""))
         target = str(link.get("target", ""))
@@ -256,6 +316,9 @@ def _deduplicate_weakpoint_links(document: JSONDict, links: list[JSONDict]) -> t
         redundant = False
         survivors: list[JSONDict] = []
         for prior in kept:
+            if _is_claims_final_link(prior):
+                survivors.append(prior)
+                continue
             prior_relation = prior.get("metadata", {}).get("relation", {})
             if (str(prior_relation.get("conclusion", "")) == conclusion
                     and str(prior.get("target", "")) == target):
@@ -279,10 +342,12 @@ def _transitive_shortcut_indexes(edges: list[tuple[int, set[str], str, str]]) ->
     """Return the indexes of same-kind edges made redundant by a two-hop chain.
 
     ``edges`` holds one ``(index, source_set, target, kind)`` per candidate.  A
-    direct edge is a shortcut when a same-kind ``first -> midpoint`` edge and a
-    same-kind ``second -> direct_target`` edge (with ``midpoint`` among
-    ``second``'s sources) are both already covered by the direct edge's
-    sources; the two-hop path then replaces the direct edge.
+    direct edge is a shortcut only when a same-kind ``first -> midpoint`` edge
+    and a same-kind ``second -> direct_target`` edge (with ``midpoint`` among
+    ``second``'s sources) together cover **every** source of the direct edge;
+    the two-hop path then replaces the direct edge without orphaning a source.
+    A chain that only covers a strict subset must never remove the direct edge,
+    because its remaining sources would lose their only connection.
     """
     remove: set[int] = set()
     for direct_index, direct_sources, direct_target, kind in edges:
@@ -297,7 +362,9 @@ def _transitive_shortcut_indexes(edges: list[tuple[int, set[str], str, str]]) ->
                     or midpoint not in second_sources
                 ):
                     continue
-                if (second_sources - {midpoint}) <= direct_sources:
+                second_leaves = second_sources - {midpoint}
+                covered = first_sources | second_leaves
+                if second_leaves <= direct_sources and direct_sources <= covered:
                     remove.add(direct_index)
                     break
             if direct_index in remove:
@@ -305,7 +372,9 @@ def _transitive_shortcut_indexes(edges: list[tuple[int, set[str], str, str]]) ->
     return remove
 
 
-def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSONDict], list[str]]:
+def _remove_transitive_shortcuts(
+    weakpoints: list[JSONDict], protected: frozenset[str] = frozenset(),
+) -> tuple[list[JSONDict], list[str]]:
     """Remove same-type transitive shortcuts over evidence hyperedges."""
     edges: list[tuple[int, set[str], str, str]] = []
     for index, item in enumerate(weakpoints):
@@ -314,21 +383,29 @@ def _remove_transitive_shortcuts(weakpoints: list[JSONDict]) -> tuple[list[JSOND
         targets = payload.get("target_claim_id", [])
         if evidence and len(targets) == 1:
             edges.append((index, evidence, str(targets[0]), str(payload.get("reasoning_type", ""))))
-    remove = _transitive_shortcut_indexes(edges)
+    remove = {
+        index for index in _transitive_shortcut_indexes(edges)
+        if str(weakpoints[index].get("id")) not in protected
+    }
     return (
         [item for index, item in enumerate(weakpoints) if index not in remove],
         [str(weakpoints[index].get("id")) for index in sorted(remove)],
     )
 
 
-def _flatten_redundant_premises(weakpoints: list[JSONDict]) -> list[str]:
+def _flatten_redundant_premises(
+    weakpoints: list[JSONDict], protected: frozenset[str] = frozenset(),
+) -> list[str]:
     """Substitute derived premises with their direct evidence when redundant.
 
     This handles multi-premise triangles such as ``A→B`` and
-    ``(A+B+X)→C`` without rejecting legitimate multi-hop reasoning.
+    ``(A+B+X)→C`` without rejecting legitimate multi-hop reasoning.  Protected
+    claims_final weakpoints are carried verbatim and never rewritten here.
     """
     changed: list[str] = []
     for item in weakpoints:
+        if str(item.get("id")) in protected:
+            continue
         payload = item.get("payload", {})
         evidence = list(payload.get("evidence_claim_ids", []))
         targets = list(payload.get("target_claim_id", []))
@@ -357,10 +434,17 @@ def _flatten_redundant_premises(weakpoints: list[JSONDict]) -> list[str]:
 
 
 def _relation_clusters(context: StageContext, document: JSONDict, links: list[JSONDict]) -> list[JSONDict]:
-    """Build experiment-bounded clusters plus one adjacent coarse-relation layer."""
-    candidates = [item for item in links if _is_weakpoint_expression(
-        str(item.get("metadata", {}).get("relation", {}).get("expression", ""))
-    )]
+    """Build experiment-bounded clusters plus one adjacent coarse-relation layer.
+
+    High-confidence claims_final relations are adopted directly and are never
+    sent to the cluster/LLM normalization path.
+    """
+    candidates = [
+        item for item in links
+        if not _is_claims_final_link(item) and _is_weakpoint_expression(
+            str(item.get("metadata", {}).get("relation", {}).get("expression", ""))
+        )
+    ]
     seeded: dict[str, list[JSONDict]] = {}
     loose: list[JSONDict] = []
     for link in candidates:
@@ -639,6 +723,9 @@ class Step3AnalyzeReasoningPlugin:
             existing_weakpoints: list[JSONDict] = list(workflow["weakpoints"])
             operators: list[JSONDict] = list(graph["operators"])
             added: list[str] = []
+            adopted_weakpoints: list[JSONDict] = []
+            protected_ids: set[str] = set()
+            known_weakpoint_ids = {str(item.get("id")) for item in existing_weakpoints}
             for link in links:
                 relation_id = str(link["id"])
                 expression = str(link.get("metadata", {}).get("relation", {}).get("expression", "")).strip()
@@ -647,6 +734,39 @@ class Step3AnalyzeReasoningPlugin:
                     continue
                 sources = list(link["sources"])
                 target = str(link["target"])
+                if _is_claims_final_link(link):
+                    # Stage 2: claims_final relations are high confidence.  Keep
+                    # their mechanical fixed-operator lowering (if any) and adopt
+                    # the reasoning relation verbatim and in document order,
+                    # without an LLM "does it hold" judgment.  These weakpoints
+                    # are protected from every later deletion pass.
+                    destination = ""
+                    if not _is_weakpoint_expression(expression) or "推出" in expression:
+                        try:
+                            ast = _fixed_expression_ast(document, expression)
+                            fixed_operators, fixed_added = _materialize_fixed_expression(
+                                document, relation_id, expression, ast,
+                            )
+                            operators.extend(fixed_operators)
+                            added.extend(fixed_added)
+                            if fixed_added:
+                                destination = "operator"
+                        except Exception as exc:
+                            findings.append(Finding("STEP3_REJECTED_RELATION", "warning", f"Retained unresolved relation {relation_id}: {exc}"))
+                    if _is_weakpoint_expression(expression):
+                        adopted_weakpoint = _adopt_imported_weakpoint(document, link)
+                        if adopted_weakpoint is not None and str(adopted_weakpoint["id"]) not in known_weakpoint_ids:
+                            adopted_weakpoints.append(adopted_weakpoint)
+                            protected_ids.add(str(adopted_weakpoint["id"]))
+                            known_weakpoint_ids.add(str(adopted_weakpoint["id"]))
+                            destination = destination or "weakpoint"
+                    # Reconciliation: every imported relation must land somewhere.
+                    if not destination:
+                        findings.append(Finding(
+                            "STEP3_UNRESOLVED_IMPORTED_RELATION", "warning",
+                            f"Imported claims_final relation {relation_id} produced no reasoning destination",
+                        ))
+                    continue
                 try:
                     if not _is_weakpoint_expression(expression):
                         ast = _fixed_expression_ast(document, expression)
@@ -668,7 +788,7 @@ class Step3AnalyzeReasoningPlugin:
                     for source_id in sources:
                         anchor_ids.extend(document["knowledges"].get(source_id, {}).get("source_anchor_ids", []))
                     fallback_id = f"weakpoint_{relation_id}"
-                    if anchor_ids and not any(item.get("id") == fallback_id for item in existing_weakpoints):
+                    if anchor_ids and fallback_id not in known_weakpoint_ids:
                         existing_weakpoints.append({
                             "id": fallback_id,
                             "payload": {
@@ -679,6 +799,7 @@ class Step3AnalyzeReasoningPlugin:
                                 "expression": expression or f"{sources} 推出 {target}",
                             },
                         })
+                        known_weakpoint_ids.add(fallback_id)
             drafts: list[ArtifactDraft] = []
             clusters = _relation_clusters(context, frozen_step2, frozen_step2["workflow"]["non_reasoning_links"])
             normalized_weakpoints: list[JSONDict] = []
@@ -710,12 +831,16 @@ class Step3AnalyzeReasoningPlugin:
                                     },
                                 })
                 added.extend(item["id"] for item in normalized_weakpoints)
-            weakpoints = [*existing_weakpoints, *normalized_weakpoints]
+            # High-confidence claims_final weakpoints are kept first, in their
+            # original document order, ahead of the LLM-normalized candidates.
+            weakpoints = [*existing_weakpoints, *adopted_weakpoints, *normalized_weakpoints]
             # Cluster normalization only groups/orients endpoints.  Treat its
             # newly created weakpoints exactly like direct input weakpoints and
             # send them through the canonical classifier as well.  If that
             # second call fails, retain any non-null cluster label as a safe
             # fallback and leave only genuinely unresolved items as null.
+            # Adopted claims_final weakpoints are deliberately excluded: they
+            # are already high-confidence and take no "does it hold" judgment.
             unclassified_existing = [
                 item for item in existing_weakpoints if item["payload"]["reasoning_type"] is None
             ]
@@ -735,6 +860,7 @@ class Step3AnalyzeReasoningPlugin:
                         "Retained weakpoints whose reasoning classification could not be completed"))
                 else:
                     classifications, rejected_ids = _screen_classifications(document, classification_targets, classifications)
+                    rejected_ids -= protected_ids
                     if rejected_ids:
                         weakpoints = [item for item in weakpoints if str(item["id"]) not in rejected_ids]
                         findings.extend(
@@ -744,8 +870,8 @@ class Step3AnalyzeReasoningPlugin:
                     for weakpoint in classification_targets:
                         if str(weakpoint["id"]) not in rejected_ids:
                             weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
-            flattened_ids = _flatten_redundant_premises(weakpoints)
-            weakpoints, transitive_ids = _remove_transitive_shortcuts(weakpoints)
+            flattened_ids = _flatten_redundant_premises(weakpoints, frozenset(protected_ids))
+            weakpoints, transitive_ids = _remove_transitive_shortcuts(weakpoints, frozenset(protected_ids))
             if flattened_ids:
                 findings.append(Finding(
                     "STEP3_DERIVED_PREMISE_FLATTENED", "warning",

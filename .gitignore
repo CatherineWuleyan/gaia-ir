@@ -33,3 +33,14 @@ node_modules/
 *.swp
 *.tmp
 *~
+
+# Generated research runs and local datasets
+/data/
+/outputs/
+/rerun_inputs/
+/converted_viewers/
+/report_assets/
+/merge_domain_graph/
+/bohr/**/runs/
+**/claim_cleaner/data/
+*.ndjson

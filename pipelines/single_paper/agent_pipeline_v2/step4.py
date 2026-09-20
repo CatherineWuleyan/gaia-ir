@@ -30,7 +30,7 @@ from .step1 import PAPER_TEXT_KIND
 from .step2 import MODEL_NAME, _load_deepseek_env, _response_content
 
 # Prefix Step 4 itself forces onto fresh weakpoint-expansion Knowledge IDs.
-# Deliberately not optional: ``claim_21`` and ``claim_E03`` are ordinary claim
+# Deliberately not optional: ``claim_21`` and ``claim_O03`` are ordinary claim
 # IDs and must never be rewritten.
 _WEAKPOINT_ID_PREFIX = re.compile(r"^(?:claim_)?step4_weakpoint_relation_")
 from .step3 import _anchor_excerpt, _transitive_shortcut_indexes
@@ -297,23 +297,6 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
         if not set(source_ids) <= allowed_anchors:
             raise ValueError(f"new Knowledge {key} must cite supplied original-paper anchors")
     knowledges = {**existing, **additions}
-    # Observation-layer O claims may only be connected to their normalized
-    # phenomenon E claims by Step 2 equivalence operators.  They must never
-    # enter a named reasoning strategy directly, since that creates a
-    # cross-layer edge (O -> hypothesis/claim).  Reject the expansion so the
-    # caller retains the weakpoint without committing the invalid strategy.
-    for strategy in strategies:
-        references = [*strategy.get("premises", []), strategy.get("conclusion")]
-        if any(
-            isinstance(key, str)
-            and key in knowledges
-            and knowledges[key].get("type") == "observation_claim"
-            for key in references
-        ):
-            raise ValueError(
-                "cross-layer reasoning edge: observation claims may only connect "
-                "to phenomenon claims through equivalence operators"
-            )
     producers: dict[str, JSONDict] = {}
     referenced: set[str] = set()
     for strategy in strategies:
@@ -352,10 +335,10 @@ def _validate_expansion(parameters: JSONDict, result: Any) -> None:
             support = set().union(*(ancestry(key) for key in terminal["premises"]))
             if not evidence <= support or target in support:
                 raise ValueError("deduction/analogy must retain every given premise for every target without circular support")
-            if (any(knowledges[key]["type"] == "observation_claim" or key.startswith("claim_E") for key in support)
-                    and knowledges[target]["type"] == "claim" and not target.startswith("claim_E")):
+            if (any(knowledges[key]["type"] == "observation_claim" for key in support)
+                    and knowledges[target]["type"] == "claim"):
                 raise _InsufficientEvidence(
-                    "observational or phenomenon support for a general claim cannot become strict implication"
+                    "observational support for a general claim cannot become strict implication"
                 )
             if kind == "analogy":
                 leaves = support - set(producers)
@@ -632,13 +615,12 @@ class WeakpointExpansionTool:
             "Never translate experimental support for a general conclusion into strict implication.\n"
             "Do not put the target's additional empirical assertions or relative-performance qualifiers into background merely to make deduction succeed. "
             "If these do not follow from the supplied premises and a source-grounded rule, return empty output.\n"
-            "abduction: a supplied phenomenon claim B may support a non-experimental hypothesis A; represent only the B-to-A explanatory links justified by the supplied Group. B may be a non-E claim. "
-            "When B is a Step 2 phenomenon E, the actual observation O is already connected by Step 2 equivalence; do not use O directly here. "
+            "abduction: a supplied observation claim B may support a non-experimental hypothesis A; represent only the B-to-A explanatory links justified by the supplied Group. "
             "An abduction has exactly one observation premise, plus at most one grounded alternative explanation. If several supplied evidence claims jointly support the hypothesis, first create one source-grounded summary claim A and a deduction strategy premises=[B1,B2,...], conclusion=A; then use premises=[A], conclusion=H for abduction. Never put multiple evidence claims directly in an abduction, and do not split a multi-evidence relation into independent singleton strategies. If a grounded alternative exists, append it after A as [A,AltExp_B]. Never invent an alternative or emit an empty placeholder Knowledge. "
             "When an alternative is present, its premise order is the Gaia named-strategy interface; official formalization lowers it to disjunction variables=[A,AltExp_B], then equivalence with the single observation A. The summary A must be a complete source-grounded claim with supplied anchors. "
-            "This is non-deductive explanatory inference, NOT strict B -> A. The formal direction is (A OR AltExp_B) equivalent to B; when B is E, the existing Step 2 equivalence gives E equivalent to O. "
-            "A self-contained phenomenon claim already contains its stated conditions, result, and uncertainty, so use background=[] and do not duplicate those conditions as a note. "
-            "Only add a background note when the source states a separate applicability rule that is absent from the self-contained phenomenon claim. "
+            "This is non-deductive explanatory inference, NOT strict B -> A. The formal direction is (A OR AltExp_B) equivalent to B. "
+            "A self-contained observation claim already contains its stated conditions, result, and uncertainty, so use background=[] and do not duplicate those conditions as a note. "
+            "Only add a background note when the source states a separate applicability rule that is absent from the self-contained observation claim. "
             "Do not return empty output solely because the source does not name an alternative: emit the evidence-only abduction. "
             "Never use deduction from observation to hypothesis, or B-prime -> A; repeated abduction instances for one target share that A.\n"
             "analogy: (G_src AND M AND S_target) -> V_target. G_src is an established source law/mechanism/constraint; "
@@ -764,6 +746,96 @@ def _suppress_abduction_shortcuts(weakpoints):
     )
 
 
+def _lower_weakpoint_to_infer(
+    document: JSONDict,
+    weakpoint: JSONDict,
+    add_strategy,
+    removed: list[str],
+    findings: list[Finding],
+) -> bool:
+    """Mechanically lower one evidence-backed weakpoint to a soft ``infer`` edge.
+
+    ``infer`` is intentionally weaker than deduction/abduction: it records that
+    the supplied evidence supports the target while the stronger reasoning
+    family is unknown or unavailable.  Lowering adds only a named Strategy and
+    never creates helper Knowledge, so no helper appears in ``graph.nodes`` or
+    in the viewer projection.
+    """
+    payload = weakpoint["payload"]
+    premises = list(dict.fromkeys(payload.get("evidence_claim_ids", [])))
+    targets = weakpoint_target_ids(payload)
+    graph_nodes = set(document["graph"]["nodes"])
+    valid = (
+        bool(premises) and all(item in graph_nodes for item in premises)
+        and all(item in graph_nodes and item not in premises for item in targets)
+    )
+    if not valid:
+        findings.append(Finding(
+            "STEP4_UNRESOLVED_WEAKPOINT", "warning",
+            f"Retained {weakpoint['id']}: invalid evidence/target IDs for infer lowering"))
+        return False
+    # A scope mismatch means the evidence omits an explicit target qualifier.
+    # That forbids strict entailment but not soft support, so it degrades to
+    # infer instead of dropping the link.
+    premises.sort(key=lambda item: document["graph"]["nodes"].index(item))
+    lowered = False
+    for target in targets:
+        try:
+            add_strategy({
+                "scope": "local", "type": "infer",
+                "premises": premises, "conclusion": target,
+                "background": [],
+            })
+            lowered = True
+        except Exception as exc:
+            findings.append(Finding(
+                "STEP4_INFER_LOWERING_FAILED", "warning",
+                f"Retained {weakpoint['id']}: {exc}"))
+            break
+    if lowered:
+        removed.append(weakpoint["id"])
+    return lowered
+
+
+def _prune_orphan_observations(document: JSONDict) -> list[str]:
+    """Drop observation claims that no reasoning structure references.
+
+    After Step 4 every weakpoint has been lowered to a Strategy or retained for
+    review.  An observation that appears in no Strategy, Operator, or retained
+    weakpoint cannot reach the main reasoning graph, so it is noise in both the
+    authoring source and the compiled IR.  Only ``observation_claim`` nodes are
+    pruned: plain claims and notes (the paper's own propositions and conditions)
+    are always preserved.
+    """
+    graph = document["graph"]
+    referenced: set[str] = set()
+    for strategy in graph.get("strategies", []):
+        referenced.update(strategy.get("premises", []))
+        referenced.update(strategy.get("background", []))
+        if isinstance(strategy.get("conclusion"), str):
+            referenced.add(strategy["conclusion"])
+    for operator in graph["operators"]:
+        referenced.update(operator.get("variables", []))
+        if isinstance(operator.get("conclusion"), str):
+            referenced.add(operator["conclusion"])
+    for weakpoint in document["workflow"]["weakpoints"]:
+        payload = weakpoint.get("payload", {})
+        referenced.update(payload.get("evidence_claim_ids", []))
+        referenced.update(weakpoint_target_ids(payload))
+    orphans = sorted(
+        knowledge_id
+        for knowledge_id in graph["nodes"]
+        if document["knowledges"][knowledge_id].get("type") == "observation_claim"
+        and knowledge_id not in referenced
+    )
+    if orphans:
+        orphan_set = set(orphans)
+        for knowledge_id in orphans:
+            document["knowledges"].pop(knowledge_id, None)
+        graph["nodes"] = [key for key in graph["nodes"] if key not in orphan_set]
+    return orphans
+
+
 class Step4FormalizeReasoningPlugin:
     """Expand one frozen Step 3 snapshot and commit one deterministic revision."""
 
@@ -779,7 +851,6 @@ class Step4FormalizeReasoningPlugin:
             document = copy.deepcopy(document)
             frozen_step3 = copy.deepcopy(document)
             document["graph"].setdefault("strategies", [])
-            graph_nodes = set(document["graph"].get("nodes", []))
             source_excerpts: list[JSONDict] = []
             pending = [item for item in document["workflow"]["weakpoints"] if item["payload"]["reasoning_type"] is not None]
             pending, suppressed_abduction_ids = _suppress_abduction_shortcuts(pending)
@@ -824,46 +895,8 @@ class Step4FormalizeReasoningPlugin:
             # relation is non-cyclic.  This keeps evidence-backed links visible
             # without inventing rules, probabilities, or new Knowledge.
             for weakpoint in document["workflow"]["weakpoints"]:
-                payload = weakpoint["payload"]
-                if payload["reasoning_type"] is None:
-                    premises = list(dict.fromkeys(payload.get("evidence_claim_ids", [])))
-                    targets = weakpoint_target_ids(payload)
-                    valid = (
-                        bool(premises) and all(item in graph_nodes for item in premises)
-                        and all(item in graph_nodes and item not in premises for item in targets)
-                    )
-                    if valid:
-                        if any(
-                            not _scope_compatible_support(
-                                target, set(premises), document["knowledges"]
-                            )
-                            for target in targets
-                        ):
-                            findings.append(Finding(
-                                "STEP4_SCOPE_MISMATCH", "warning",
-                                f"Retained {weakpoint['id']}: evidence omits an explicit target scope qualifier"))
-                            continue
-                        # Infer has no ordered logical rule; stable graph order
-                        # prevents equivalent links from receiving different
-                        # official IDs across retries.
-                        premises.sort(key=lambda item: document["graph"]["nodes"].index(item))
-                        for target in targets:
-                            try:
-                                add_strategy({
-                                    "scope": "local", "type": "infer",
-                                    "premises": premises, "conclusion": target,
-                                    "background": [],
-                                })
-                                removed.append(weakpoint["id"])
-                            except Exception as exc:
-                                findings.append(Finding(
-                                    "STEP4_INFER_LOWERING_FAILED", "warning",
-                                    f"Retained {weakpoint['id']}: {exc}"))
-                                break
-                    else:
-                        findings.append(Finding(
-                            "STEP4_UNRESOLVED_WEAKPOINT", "warning",
-                            f"Retained {weakpoint['id']}: invalid evidence/target IDs for infer lowering"))
+                if weakpoint["payload"]["reasoning_type"] is None:
+                    _lower_weakpoint_to_infer(document, weakpoint, add_strategy, removed, findings)
             frozen_knowledges = {
                 key: copy.deepcopy(value)
                 for key, value in frozen_step3["knowledges"].items()
@@ -991,6 +1024,10 @@ class Step4FormalizeReasoningPlugin:
                 assert isinstance(result, dict)
                 if not result["strategies"]:
                     findings.append(Finding("STEP4_INSUFFICIENT_EVIDENCE", "warning", f"Retained {weakpoint['id']}: source does not justify the reasoning structure"))
+                    # A typed weakpoint whose strict family cannot be justified
+                    # still carries supplied evidence.  Keep the link visible as
+                    # a soft infer edge instead of dropping it from the graph.
+                    _lower_weakpoint_to_infer(document, weakpoint, add_strategy, removed, findings)
                     continue
                 # Merge each weakpoint transactionally.  A malformed expansion
                 # or official-ID collision must not roll back unrelated
@@ -1038,6 +1075,16 @@ class Step4FormalizeReasoningPlugin:
             if suppressed:
                 findings.append(Finding("STEP4_TRANSITIVE_SHORTCUT_SUPPRESSED", "warning", f"Suppressed {suppressed} strategy shortcuts"))
             workflow["weakpoints"] = [item for item in workflow["weakpoints"] if item["id"] not in removed]
+            # Extraction-only observations with no reasoning edge are noise in
+            # both the authoring source and the compiled IR once Step 4 has
+            # finished lowering every weakpoint.
+            orphan_observations = _prune_orphan_observations(document)
+            if orphan_observations:
+                findings.append(Finding(
+                    "STEP4_ORPHAN_OBSERVATION_PRUNED", "warning",
+                    f"Pruned {len(orphan_observations)} observation claims with no reasoning edge: "
+                    f"{orphan_observations}",
+                ))
             prior = document["revision"]
             revision_id = f"revision_{context.run_id}_step_4"
             document["revision"] = {"revision_id": revision_id, "supersedes": prior["revision_id"], "parent_hash": prior["content_hash"], "content_hash": ""}

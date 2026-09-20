@@ -11,7 +11,7 @@ from unittest.mock import patch
 from agent_pipeline_v2.compiler_projection import project_for_official_compiler
 from agent_pipeline_v2.step2 import (
     DeepSeekV4FlashObservationTool, MODEL_NAME, _best_paragraph_anchor,
-    _deduplicate_extractions, _experiment_candidates,
+    _deduplicate_extractions, _experiment_candidates, _observation_binding,
 )
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
@@ -34,15 +34,7 @@ class FakeObservationTool:
                 "content": f"Revised: {item['content']}",
                 "paragraph_anchor_ids": list(item.get("source_anchor_ids", [])),
             } for item in selected]
-            normalized = {"status": "claims_extracted", "claims": claims, "equivalent_claims": [], "relations": []}
-            return ToolCallResponse(request.call_id, "succeeded", normalized, normalized)
-        if operation == "generate_equivalents":
-            equivalents = [{
-                "observation_key": item["id"],
-                "content": f"Under {item['id']}, the method improves accuracy.",
-                "paragraph_anchor_ids": list(item.get("source_anchor_ids", [])),
-            } for item in selected]
-            normalized = {"status": "claims_extracted", "claims": [], "equivalent_claims": equivalents, "relations": []}
+            normalized = {"status": "claims_extracted", "claims": claims, "relations": []}
             return ToolCallResponse(request.call_id, "succeeded", normalized, normalized)
         candidate = request.parameters["experiment_candidates"][0]
         anchor_ids = [item["anchor_id"] for item in candidate["paragraphs"]]
@@ -71,19 +63,19 @@ class FakeObservationTool:
                 "paragraph_anchor_ids": [result_anchor],
             },
         ]
-        normalized = {"status": "claims_extracted", "claims": claims, "equivalent_claims": [], "relations": []}
+        normalized = {"status": "claims_extracted", "claims": claims, "relations": []}
         return ToolCallResponse(request.call_id, "succeeded", normalized, normalized)
 
     @classmethod
-    def _extract_relations(cls, candidate: dict, phenomena: list[dict], base_url: str) -> tuple[list[dict], list]:
+    def _extract_relations(cls, candidate: dict, observations: list[dict], base_url: str) -> tuple[list[dict], list]:
         del candidate, base_url
-        keys = [item["observation_key"] for item in phenomena]
+        keys = [item["observation_key"] for item in observations]
         if len(keys) < 2:
             return [], []
         return [{
-            "phenomenon_keys": keys,
+            "observation_keys": keys,
             "claim_id": "claim_2",
-            "expression": f"([E:{keys[0]}] 和 [E:{keys[1]}]) 是 [claim_2] 的例子或证据",
+            "expression": f"([O:{keys[0]}] 和 [O:{keys[1]}]) 是 [claim_2] 的例子或证据",
         }], []
 
 
@@ -168,19 +160,42 @@ class Step2Tests(unittest.TestCase):
             {"_extraction_key": "o1", "content": "Observation one"},
             {"_extraction_key": "o2", "content": "Observation two"},
         ]
-        equivalents = [
-            {"observation_key": "o1", "content": "Phenomenon one"},
-            {"observation_key": "o2", "content": "Phenomenon two"},
-        ]
         relations = [
-            {"phenomenon_keys": ["o1", "o2"], "claim_id": "claim_2", "expression": "first wording"},
-            {"phenomenon_keys": ["o2", "o1"], "claim_id": "claim_2", "expression": "second wording"},
+            {"observation_keys": ["o1", "o2"], "claim_id": "claim_2", "expression": "first wording"},
+            {"observation_keys": ["o2", "o1"], "claim_id": "claim_2", "expression": "second wording"},
         ]
-        _, _, unique = _deduplicate_extractions(claims, equivalents, relations)
+        _, unique = _deduplicate_extractions(claims, relations)
         self.assertEqual(1, len(unique))
-        self.assertEqual(["o1", "o2"], unique[0]["phenomenon_keys"])
+        self.assertEqual(["o1", "o2"], unique[0]["observation_keys"])
 
-    def test_prompts_exclude_prior_work_and_require_nonverbatim_equivalent(self) -> None:
+    def test_observation_binding_writes_refined_components_and_merges_anchors(self) -> None:
+        existing = {
+            "claim_1": {
+                "type": "observation_claim",
+                "content": {"canonical": "Original sentence.", "S": "old scope"},
+                "source_anchor_ids": ["anchor_claim_1"],
+            },
+        }
+        refined = [{
+            "observation_key": "claim_1",
+            "content": "Refined observation sentence.",
+            "paragraph_anchor_ids": ["anchor_paragraph_result"],
+            "S": "new scope",
+            "A": "method",
+            "M": "accuracy",
+            "R": "improved",
+        }]
+        bound_nodes, bound_ids = _observation_binding(refined, {"claim_1": "claim_1"}, existing)
+        self.assertEqual({"claim_1": "claim_1"}, bound_ids)
+        node = bound_nodes["claim_1"]
+        self.assertEqual("Refined observation sentence.", node["content"]["canonical"])
+        self.assertEqual("new scope", node["content"]["S"])
+        self.assertEqual("improved", node["content"]["R"])
+        self.assertEqual(["anchor_claim_1", "anchor_paragraph_result"], node["source_anchor_ids"])
+        # Binding never creates a parallel phenomenon node or equivalence data.
+        self.assertEqual({"claim_1"}, set(bound_nodes))
+
+    def test_prompts_exclude_prior_work_and_refine_imported_observations(self) -> None:
         candidate = {
             "candidate_id": "image_1",
             "image_name": "figure1.png",
@@ -189,11 +204,11 @@ class Step2Tests(unittest.TestCase):
         }
         extraction_prompt = DeepSeekV4FlashObservationTool._prompt([candidate], None, None, None)
         self.assertIn("Never extract a result attributed to cited studies or prior work", extraction_prompt)
-        equivalent_prompt = DeepSeekV4FlashObservationTool._equivalent_claim_prompt(
-            [{"_extraction_key": "image_1:0", "content": "The method improved accuracy."}],
-            candidate,
+        rewrite_prompt = DeepSeekV4FlashObservationTool._rewrite_observation_prompt(
+            [{"id": "claim_1", "content": "The method improved accuracy."}],
         )
-        self.assertIn("never copy O's content verbatim", equivalent_prompt)
+        self.assertIn("Retain each supplied id verbatim", rewrite_prompt)
+        self.assertIn("\"S\"", rewrite_prompt)
 
     def test_blank_optional_baseline_and_uncertainty_are_normalized_to_omission(self) -> None:
         candidate = {
@@ -268,30 +283,28 @@ class Step2Tests(unittest.TestCase):
         formalization = read_json(store.artifact_path(formalization_ref))
         self.assertEqual([], formalization["workflow"]["revisions"])
         self.assertIn("anchor_paragraph_result", formalization["knowledges"]["claim_1"]["source_anchor_ids"])
+        self.assertEqual("observation_claim", formalization["knowledges"]["claim_1"]["type"])
+        self.assertEqual(
+            "Revised: Figure 2 reports the measured accuracy effects.",
+            formalization["knowledges"]["claim_1"]["content"]["canonical"],
+        )
         self.assertEqual("observation_claim", formalization["knowledges"]["claim_O01"]["type"])
         self.assertEqual(
             "In setting one, the method improved accuracy by 5 points over baseline.",
             formalization["knowledges"]["claim_O01"]["content"]["canonical"],
         )
+        self.assertEqual("setting one", formalization["knowledges"]["claim_O01"]["content"]["S"])
+        self.assertEqual("improved by 5 points", formalization["knowledges"]["claim_O01"]["content"]["R"])
         self.assertIn("claim_O01", formalization["graph"]["nodes"])
-        self.assertEqual("claim", formalization["knowledges"]["claim_E01"]["type"])
-        self.assertEqual(
-            formalization["knowledges"]["claim_O01"]["source_anchor_ids"],
-            formalization["knowledges"]["claim_E01"]["source_anchor_ids"],
-        )
-        self.assertIn("claim_E01", formalization["graph"]["nodes"])
-        self.assertIn(
-            {
-                "id": "operator_equivalence_E01_O01",
-                "type": "equivalence",
-                "variables": ["claim_E01", "claim_O01"],
-            },
-            formalization["graph"]["operators"],
-        )
+        # Stage 1 deleted the phenomenon layer entirely: every experiment is one
+        # observation node and there is no E claim or equivalence operator.
+        self.assertFalse(any(key.startswith("claim_E") for key in formalization["knowledges"]))
+        self.assertFalse(any(key.startswith("claim_E") for key in formalization["graph"]["nodes"]))
+        self.assertFalse(any(operator.get("type") == "equivalence" for operator in formalization["graph"]["operators"]))
         relation = formalization["workflow"]["non_reasoning_links"][-1]
-        self.assertEqual(["claim_E01", "claim_E02"], relation["sources"])
+        self.assertEqual(["claim_O01", "claim_O02"], relation["sources"])
         self.assertEqual("claim_2", relation["target"])
-        self.assertEqual("([claim_E01] 和 [claim_E02]) 是 [claim_2] 的例子或证据", relation["metadata"]["relation"]["expression"])
+        self.assertEqual("([claim_O01] 和 [claim_O02]) 是 [claim_2] 的例子或证据", relation["metadata"]["relation"]["expression"])
         self.assertEqual("image_01_fig2", relation["metadata"]["relation"]["relation_context_id"])
         candidates = FakeObservationTool.calls[0].parameters["experiment_candidates"]
         self.assertEqual(
@@ -299,33 +312,35 @@ class Step2Tests(unittest.TestCase):
             [item["anchor_id"] for item in candidates[0]["paragraphs"]],
         )
         view = project_run(store.run_dir)
-        self.assertFalse(any(node["entity_id"] == "operator_equivalence_E01_O01" for node in view.nodes))
-        equivalence = next(
-            edge for edge in view.edges
-            if edge.get("entity_id") == "operator_equivalence_E01_O01"
-        )
-        self.assertEqual("equivalence", equivalence["semantic_type"])
-        self.assertEqual("step:2:knowledge:claim_E01", equivalence["source"])
-        self.assertEqual("step:2:knowledge:claim_O01", equivalence["target"])
-        self.assertEqual(
-            {
-                "id": "operator_equivalence_E01_O01",
-                "type": "equivalence",
-                "variables": ["claim_E01", "claim_O01"],
-            },
-            equivalence["details"],
-        )
-        with self.assertRaisesRegex(ValueError, "omit Gaia's required conclusion helper"):
-            project_for_official_compiler(formalization)
-        compiler_ready = copy.deepcopy(formalization)
-        compiler_ready["graph"]["operators"] = []
-        compiler_ready["revision"]["content_hash"] = ""
-        from agent_pipeline_v2.authoring import content_hash
-        compiler_ready["revision"]["content_hash"] = content_hash(compiler_ready)
-        projected = project_for_official_compiler(compiler_ready)
+        self.assertFalse(any(str(node["entity_id"]).startswith("claim_E") for node in view.nodes))
+        self.assertFalse(any(str(edge.get("entity_id", "")).startswith("operator_equivalence") for edge in view.edges))
+        observation_node = next(node for node in view.nodes if node["entity_id"] == "claim_O01")
+        self.assertEqual("observation_claim", observation_node["kind"])
+        projected = project_for_official_compiler(formalization)
         observation = next(item for item in projected["graph"]["knowledges"] if item["id"] == "claim_O01")
         self.assertEqual("claim", observation["type"])
         self.assertNotIn("role" + "s", observation)
+
+    def test_imported_relations_survive_relation_merge(self) -> None:
+        claims_final = read_json(self.root / "claims_final.json")
+        claims_final["relation"] = [{"connects": [1, 2], "expression": "[1] 是 [2] 的例子或证据"}]
+        atomic_write_json(self.root / "claims_final.json", claims_final)
+        FakeObservationTool.calls = []
+        store = RunStore.create(self.root / "merge-runs", self.pipeline(), input_manifest=self.root / "manifest.json")
+        self.assertEqual("succeeded", run_pipeline(store.run_dir, max_stages=3).status)
+        formalization_ref = max(
+            (ref for ref in store.load_artifacts() if ref.kind == "formalization"),
+            key=lambda ref: int(ref.metadata["step"]),
+        )
+        formalization = read_json(store.artifact_path(formalization_ref))
+        links = formalization["workflow"]["non_reasoning_links"]
+        imported = next(link for link in links if link["id"] == "relation_1")
+        self.assertEqual(["claim_1"], imported["sources"])
+        self.assertEqual("claim_2", imported["target"])
+        self.assertEqual("claims_final", imported["metadata"]["source"])
+        # Step 2 appends its own discovered relation without replacing imports.
+        self.assertTrue(any(link["id"].startswith("relation_step2_") for link in links))
+        self.assertEqual(2, len(links))
 
     def test_insufficient_context_allows_two_mechanical_expansions(self) -> None:
         (self.root / "paper_text.md").write_text(
@@ -430,7 +445,7 @@ class Step2Tests(unittest.TestCase):
         self.assertNotIn("anchor_paragraph_table", fig3_anchors)
         self.assertNotIn("anchor_paragraph_fig4", fig3_anchors)
 
-    def test_relation_classifier_groups_multiple_phenomena_for_one_target(self) -> None:
+    def test_relation_classifier_groups_multiple_observations_for_one_target(self) -> None:
         groups = DeepSeekV4FlashObservationTool._relation_groups(
             [
                 {"observation_key": "o1", "content": "e1", "paragraph_anchor_ids": ["anchor_1"]},
@@ -442,15 +457,15 @@ class Step2Tests(unittest.TestCase):
             ]},
         )
         self.assertEqual(1, len(groups))
-        self.assertEqual(["o1", "o2"], [item["phenomenon_key"] for item in groups[0]["evidence_candidates"]])
+        self.assertEqual(["o1", "o2"], [item["observation_key"] for item in groups[0]["evidence_candidates"]])
         payload = {"classifications": [
             {"group_id": "group_1", "relations": [{
-                "source_phenomenon_keys": ["o1", "o2"], "relation_type": "evidence",
-                "expression": "([E:o1] 和 [E:o2]) 是 [claim_1] 的例子或证据",
+                "source_observation_keys": ["o1", "o2"], "relation_type": "evidence",
+                "expression": "([O:o1] 和 [O:o2]) 是 [claim_1] 的例子或证据",
             }]},
         ]}
         relations = DeepSeekV4FlashObservationTool._normalize_group_relations(json.dumps(payload), groups)
-        self.assertEqual([{"phenomenon_keys": ["o1", "o2"], "claim_id": "claim_1", "expression": "([E:o1] 和 [E:o2]) 是 [claim_1] 的例子或证据"}], relations)
+        self.assertEqual([{"observation_keys": ["o1", "o2"], "claim_id": "claim_1", "expression": "([O:o1] 和 [O:o2]) 是 [claim_1] 的例子或证据"}], relations)
 
     def test_relation_normalization_failure_retains_the_received_raw_response(self) -> None:
         candidate = {
@@ -465,66 +480,40 @@ class Step2Tests(unittest.TestCase):
                 "source_anchor_ids": ["anchor_one"],
             }],
         }
-        extraction = {"choices": [{"message": {"content": json.dumps({
-            "status": "claims_extracted",
-            "claims": [{
-                "candidate_id": "image_one",
-                "S": "the stated setting",
-                "A": "the method",
-                "M": "accuracy",
-                "R": "improved",
-                "content": "In the stated setting, the method improved accuracy.",
-                "paragraph_anchor_ids": ["anchor_one"],
-            }],
-        })}}]}
-        equivalent = {"choices": [{"message": {"content": json.dumps({
-            "equivalent_claims": [{
-                "observation_key": "image_one:0",
-                "content": "Under the stated setting, the method improved accuracy; uncertainty is not reported.",
-            }],
-        })}}]}
         invalid_relation = {"choices": [{"message": {"content": json.dumps({
             "classifications": [{"group_id": "unknown_group", "relations": []}],
         })}}]}
-        request = ToolCallRequest(
-            "raw-retention",
-            DeepSeekV4FlashObservationTool.name,
-            DeepSeekV4FlashObservationTool.version,
-            "extract_observation_claims",
-            [],
-            {"experiment_candidates": [candidate]},
-        )
-        responses = [
-            io.BytesIO(json.dumps(item).encode("utf-8"))
-            for item in (extraction, equivalent, invalid_relation)
-        ]
-        with patch.dict("os.environ", {"DEEPSEEK_API_KEY": "test-key"}), patch(
-            "agent_pipeline_v2.step2.urlopen", side_effect=responses
+        with patch("agent_pipeline_v2.step2._load_deepseek_env"), patch.dict(
+            "os.environ", {"DEEPSEEK_API_KEY": "test-key"}
+        ), patch(
+            "agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(json.dumps(invalid_relation).encode("utf-8"))
         ):
-            response = DeepSeekV4FlashObservationTool().invoke(request)
-        self.assertEqual("failed", response.status)
-        self.assertEqual(invalid_relation, response.raw["responses"][-1])
-        self.assertEqual(3, response.metadata["request_count"])
-        self.assertIn("group_id", response.error["message"])
+            with self.assertRaisesRegex(ValueError, "group_id") as raised:
+                DeepSeekV4FlashObservationTool._extract_relations(
+                    candidate,
+                    [{"observation_key": "image_one:0", "content": "Observed one."}],
+                    "https://api.deepseek.com/v1",
+                )
+        self.assertEqual([invalid_relation], raised.exception.raw_responses)
 
     def test_cluster_normalizer_requires_complete_relation_coverage(self) -> None:
         cluster = {
             "cluster_id": "cluster_001", "relation_context_id": "experiment_1",
             "claims": [
-                {"claim_id": "claim_1", "content": "Composite phenomenon."},
-                {"claim_id": "claim_E01", "content": "Atomic phenomenon."},
+                {"claim_id": "claim_1", "content": "Composite statement."},
+                {"claim_id": "claim_O01", "content": "Atomic observation."},
             ],
             "candidate_relations": [{
-                "relation_id": "relation_1", "sources": ["claim_E01"], "target": "claim_1",
-                "expression": "[claim_E01] 是 [claim_1] 的证据",
+                "relation_id": "relation_1", "sources": ["claim_O01"], "target": "claim_1",
+                "expression": "[claim_O01] 是 [claim_1] 的证据",
             }],
             "source_excerpts": [{"anchor_id": "anchor_1", "text": "Source."}],
         }
         payload = {"clusters": [{
             "cluster_id": "cluster_001", "weakpoints": [{
                 "member_relation_ids": ["relation_1"], "evidence_claim_ids": ["claim_1"],
-                "target_claim_id": ["claim_E01"], "reasoning_type": "deduction",
-                "expression": "[claim_1] 推出 [claim_E01]",
+                "target_claim_id": ["claim_O01"], "reasoning_type": "deduction",
+                "expression": "[claim_1] 推出 [claim_O01]",
             }], "rejected_relation_ids": [],
         }]}
         raw = {"choices": [{"message": {"content": json.dumps(payload)}}]}
@@ -537,29 +526,35 @@ class Step2Tests(unittest.TestCase):
                 patch("agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(json.dumps(raw).encode())):
             response = DeepSeekV4FlashObservationTool().invoke(request)
         self.assertEqual("succeeded", response.status)
-        self.assertEqual(["claim_E01"], response.normalized["clusters"][0]["weakpoints"][0]["target_claim_id"])
+        self.assertEqual(["claim_O01"], response.normalized["clusters"][0]["weakpoints"][0]["target_claim_id"])
 
-    def test_equivalent_claims_are_one_to_one_and_copy_anchors(self) -> None:
-        observations = [
-            {"_extraction_key": "o1", "content": "Observed one.", "paragraph_anchor_ids": ["anchor_1"]},
-            {"_extraction_key": "o2", "content": "Observed two.", "paragraph_anchor_ids": ["anchor_2"]},
-        ]
-        payload = {"equivalent_claims": [
-            {"observation_key": "o1", "content": "Phenomenon one."},
-            {"observation_key": "o2", "content": "Phenomenon two."},
-        ]}
-        normalized = DeepSeekV4FlashObservationTool._normalize_equivalent_claims(json.dumps(payload), observations)
+    def test_rewritten_observations_normalize_refined_components(self) -> None:
+        selected = [{"id": "claim_1", "content": "Observed one."}]
+        payload = {"claims": [{
+            "id": "claim_1",
+            "S": "the stated setting",
+            "A": "the method",
+            "M": "accuracy",
+            "R": "improved",
+            "content": "In the stated setting, the method improved accuracy.",
+            "paragraph_anchor_ids": ["anchor_1"],
+        }]}
+        normalized = DeepSeekV4FlashObservationTool._normalize_rewritten_observations(
+            json.dumps(payload), selected,
+        )
+        self.assertEqual("the stated setting", normalized[0]["S"])
+        self.assertEqual("improved", normalized[0]["R"])
         self.assertEqual(["anchor_1"], normalized[0]["paragraph_anchor_ids"])
-        self.assertEqual(["anchor_2"], normalized[1]["paragraph_anchor_ids"])
-        payload["equivalent_claims"].pop()
-        with self.assertRaisesRegex(ValueError, "exactly one equivalent claim per observation"):
-            DeepSeekV4FlashObservationTool._normalize_equivalent_claims(json.dumps(payload), observations)
-        duplicate = {"equivalent_claims": [
-            {"observation_key": "o1", "content": "Observed one."},
-            {"observation_key": "o2", "content": "Phenomenon two."},
-        ]}
-        with self.assertRaisesRegex(ValueError, "must not copy"):
-            DeepSeekV4FlashObservationTool._normalize_equivalent_claims(json.dumps(duplicate), observations)
+        payload["claims"].append(dict(payload["claims"][0]))
+        with self.assertRaisesRegex(ValueError, "exactly one rewritten claim per selected id"):
+            DeepSeekV4FlashObservationTool._normalize_rewritten_observations(
+                json.dumps(payload), selected,
+            )
+        payload["claims"] = [{"id": "claim_other", "content": "x", "paragraph_anchor_ids": ["anchor_1"]}]
+        with self.assertRaisesRegex(ValueError, "unknown or duplicate id"):
+            DeepSeekV4FlashObservationTool._normalize_rewritten_observations(
+                json.dumps(payload), selected,
+            )
 
     def test_expanded_context_claim_must_cite_a_focus_anchor(self) -> None:
         candidates = [{
@@ -615,13 +610,6 @@ class Step2Tests(unittest.TestCase):
             prompt = json.loads(http_request.data.decode("utf-8"))["messages"][0]["content"]
             prompts.append(prompt)
             candidate_id = "image_one" if "Candidate image_one" in prompt else "image_two"
-            if "For every supplied experimental observation O" in prompt:
-                candidate_id = "image_one" if '"candidate_id": "image_one"' in prompt else "image_two"
-                result = {"equivalent_claims": [{
-                    "observation_key": f"{candidate_id}:0",
-                    "content": "Under setting, the method improves accuracy; uncertainty is not reported.",
-                }]}
-                return FakeHTTPResponse({"choices": [{"message": {"content": json.dumps(result)}}]})
             anchor_id = "anchor_one" if candidate_id == "image_one" else "anchor_two"
             result = {
                 "status": "claims_extracted",
@@ -650,16 +638,14 @@ class Step2Tests(unittest.TestCase):
             "agent_pipeline_v2.step2.urlopen", side_effect=fake_urlopen
         ):
             response = tool.invoke(request)
-        self.assertEqual(4, len(prompts))
+        self.assertEqual(2, len(prompts))
         self.assertIn("Candidate image_one", prompts[0])
         self.assertNotIn("Candidate image_two", prompts[0])
         self.assertIn('Allowed paragraph_anchor_ids: ["anchor_one"]', prompts[0])
-        self.assertIn("For every supplied experimental observation O", prompts[1])
-        self.assertIn("Candidate image_two", prompts[2])
-        self.assertNotIn("Candidate image_one", prompts[2])
-        self.assertIn("For every supplied experimental observation O", prompts[3])
+        self.assertIn("Candidate image_two", prompts[1])
+        self.assertNotIn("Candidate image_one", prompts[1])
         self.assertEqual(2, len(response.normalized["claims"]))
-        self.assertEqual(2, len(response.normalized["equivalent_claims"]))
+        self.assertNotIn("equivalent_claims", response.normalized)
 
     def test_tool_failure_is_preserved_as_existing_audit_artifact(self) -> None:
         tool = f"{__name__}:FailingObservationTool"

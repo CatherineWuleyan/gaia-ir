@@ -32,6 +32,60 @@ def _is_internal_helper(knowledge_id: str, knowledge: Mapping[str, Any]) -> bool
     )
 
 
+# Authoring and the compiler both name helper claims by their canonical
+# expression, e.g. ``conjunction(claim_O03,claim_O04)`` (Step 4) or
+# ``all_true(...)`` / ``not_both_true(...)`` (compiler).  Operand Knowledge IDs
+# are recoverable from that string, which is the only place a synthesized
+# helper records what it is made of.
+_HELPER_EXPRESSION = re.compile(
+    r"^\s*(all_true|any_true|not_both_true|same_truth|opposite_truth|implies|"
+    r"conjunction|disjunction|negation|equivalence|complement|implication)"
+    r"\s*\((.+)\)\s*$",
+    re.I,
+)
+
+
+def _helper_operands(content: Any, known_ids: set[str]) -> tuple[str, list[str]]:
+    """Recover (operator_kind, operand Knowledge IDs) from a helper expression."""
+    if not isinstance(content, str):
+        return "", []
+    match = _HELPER_EXPRESSION.match(content)
+    if match is None:
+        return "", []
+    kind = match.group(1).lower()
+    operands = [part.strip() for part in match.group(2).split(",")]
+    return kind, [operand for operand in operands if operand in known_ids]
+
+
+def _flatten_helper_operands(
+    helper_expressions: Mapping[str, Any], known_ids: set[str]
+) -> dict[str, tuple[str, list[str]]]:
+    """Resolve synthesized helper claims to (kind, non-helper operand Knowledge IDs).
+
+    Step 4 records a synthesized operand only as an expression string, e.g.
+    ``conjunction(claim_O03,claim_O04)`` for the first operand of a
+    contradiction, and folds long conjunctions into nested helpers
+    (``conjunction(helper_relation_1_1,claim_16)``).  Returning non-helper
+    operands keeps the viewer's helper contraction (``compactFormalGraph``,
+    which rewires incoming x outgoing) independent of the order in which it
+    happens to visit hidden nodes.
+    """
+    def resolve(entity: str, seen: frozenset[str]) -> tuple[str, list[str]]:
+        if entity in seen:
+            return "", []
+        kind, operands = _helper_operands(helper_expressions.get(entity), known_ids)
+        resolved: list[str] = []
+        for operand in operands:
+            if operand in helper_expressions:
+                _, nested = resolve(operand, seen | {entity})
+                resolved.extend(nested)
+            else:
+                resolved.append(operand)
+        return kind, resolved
+
+    return {entity: resolve(entity, frozenset()) for entity in helper_expressions}
+
+
 def _display_claim_label(knowledge_id: str, article: str | None = None) -> str:
     """Keep stable IDs internally while making paper claim labels readable."""
     if "::" in knowledge_id:
@@ -87,7 +141,15 @@ class V2FormalizationViewAdapter:
                 content = knowledge["content"]
                 summary = content["canonical"] if content is not None else "Missing Knowledge content"
                 node_id = f"step:{step}:knowledge:{knowledge_id}"
-                is_internal_helper = knowledge_id in internal_helper_ids or _is_internal_helper(knowledge_id, knowledge)
+                # A name-based helper pattern must never hide an explicit graph
+                # member: real Step 4 summary claims are named
+                # ``claim_step4_weakpoint_*`` and hiding them silently drops the
+                # abduction target edge.  Only derived-AST operator conclusions
+                # stay internal among graph members.
+                is_internal_helper = (
+                    knowledge_id in internal_helper_ids
+                    or (knowledge_id not in graph_nodes and _is_internal_helper(knowledge_id, knowledge))
+                )
                 nodes.append({
                     "id": node_id,
                     "entity_id": knowledge_id,
@@ -342,7 +404,24 @@ class V2FormalizationViewAdapter:
                                 "visibility": "public" if is_alternative else "formal_internal",
                             },
                         })
-                    formal_operators = lowered.strategy.formal_expr.operators
+                    formal_operators = list(lowered.strategy.formal_expr.operators)
+                    # A clause whose helper conclusion is consumed by another
+                    # operator must keep a real node so that operator is not
+                    # left "headless".  A terminal clause (its helper conclusion
+                    # feeds nothing) can be projected as a single double-headed
+                    # arrow edge instead of an equivalence/implication node, so
+                    # the viewer shows a plain bidirectional arrow rather than
+                    # an equivalence symbol.
+                    consumed_conclusions = {
+                        str(operator.conclusion)
+                        for operator in formal_operators
+                        if operator.conclusion is not None
+                    } & {
+                        str(variable)
+                        for operator in formal_operators
+                        for variable in operator.variables
+                    }
+                    strategy_refs: list[str] = []
                     for index, operator in enumerate(formal_operators, 1):
                         operator_id = f"{strategy_id}:operator:{index}"
                         operator_type = operator.operator.value
@@ -353,12 +432,21 @@ class V2FormalizationViewAdapter:
                             "metadata": {"strategy_id": strategy_id, "background": list(strategy["background"]),
                                          "formalization_template": strategy["type"], "derived_for_view": True},
                         }
-                        # Every clause of a lowered strategy is projected as a
-                        # real operator node.  Rendering an equivalence or
-                        # implication clause as a bare operand-to-operand edge
-                        # would drop the clause's helper conclusion, whose
-                        # producing operator is still present in the compiled IR
-                        # — a "断头" operator that points at no rendered node.
+                        if (operator_type in _INLINE_RELATIONS and len(operator.variables) == 2
+                                and (operator.conclusion is None
+                                     or str(operator.conclusion) not in consumed_conclusions)):
+                            left, right = (str(variable) for variable in operator.variables)
+                            edges.append({
+                                "id": f"formal:{step}:{operator_id}", "entity_id": operator_id,
+                                "semantic_id": strategy_id,
+                                "source": f"step:{step}:knowledge:{left}",
+                                "target": f"step:{step}:knowledge:{right}",
+                                "label": operator_type, "layer": "operators", "edge_class": "reasoning",
+                                "semantic_type": operator_type, "step": step,
+                                "visible_at": ["standard"], "min_granularity": "standard",
+                                "fold_group": strategy_id, "details": details,
+                            })
+                            continue
                         nodes.append({
                             "id": operator_node_id, "entity_id": operator_id, "label": operator_type,
                             "display_label": operator_type, "display_meta": "operator", "kind": "operator",
@@ -366,6 +454,7 @@ class V2FormalizationViewAdapter:
                             "min_granularity": "standard", "summary": operator_type, "source_anchor_ids": [],
                             "fold_group": strategy_id, "details": details,
                         })
+                        strategy_refs.append(operator_node_id)
                         for source in operator.variables:
                             edges.append({
                                 "id": f"formal:{step}:{operator_id}:{source}:input", "semantic_id": strategy_id,
@@ -381,7 +470,10 @@ class V2FormalizationViewAdapter:
                             "step": step, "visible_at": ["standard"], "min_granularity": "standard",
                             "fold_group": strategy_id, "details": details,
                         })
-                    search_ref = f"step:{step}:operator:{strategy_id}:operator:1"
+                    search_ref = (
+                        strategy_refs[0] if strategy_refs
+                        else f"step:{step}:knowledge:{strategy['conclusion']}"
+                    )
                 search_documents.append({
                     "id": f"search:{step}:{strategy_id}", "title": strategy_id,
                     "text": " ".join([strategy["type"], *strategy["premises"], strategy["conclusion"],
@@ -410,6 +502,57 @@ class V2FormalizationViewAdapter:
                 "validation_errors": validation_ref.metadata.get("error_count", 0) if validation_ref else 0,
                 "validation_warnings": validation_ref.metadata.get("warning_count", 0) if validation_ref else 0,
             })
+            # A synthesized helper Knowledge node that no edge derives records
+            # its operands only in its content expression.  Step 4 uses one as
+            # the first operand of a contradiction -- ``([claim_O03] 和
+            # [claim_O04]) 与 [claim_6] 不可同时成立`` becomes the operand
+            # ``helper_relation_step2_2_1`` with content
+            # ``conjunction(claim_O03,claim_O04)`` and no incoming edge.
+            # The viewer hides helper nodes and rewires incoming x outgoing
+            # (compactFormalGraph in viewer.html), so a helper with no incoming
+            # edge loses its only outgoing edge with nothing replacing it and
+            # the contradiction renders with a missing operand.  Recover the
+            # operands as input edges so the contraction bridges them through.
+            #
+            # Authoring folds long conjunctions into nested helpers
+            # (``conjunction(helper_relation_1_1,claim_16)``), so resolve the
+            # chain down to non-helper Knowledge IDs.  Leaving helper-to-helper
+            # edges would make the viewer's contraction depend on the order it
+            # happens to visit hidden nodes in.
+            derived_targets = {edge["target"] for edge in edges}
+            step_knowledge_ids = {
+                node["entity_id"]
+                for node in nodes
+                if node.get("step") == step and f"step:{step}:knowledge:" in node["id"]
+            }
+            helper_expressions: dict[str, str] = {}
+            for node in nodes:
+                if node.get("step") != step or node.get("layer") != "helpers":
+                    continue
+                content = (node.get("details") or {}).get("content")
+                helper_expressions[node["entity_id"]] = (
+                    content.get("canonical") if isinstance(content, dict) else content
+                )
+            flattened = _flatten_helper_operands(helper_expressions, step_knowledge_ids)
+
+            for node in nodes:
+                if node.get("step") != step or node.get("layer") != "helpers":
+                    continue
+                if node["id"] in derived_targets:
+                    continue
+                details = node.get("details") or {}
+                operator_kind, operands = flattened.get(node["entity_id"], ("", []))
+                for operand in operands:
+                    edges.append({
+                        "id": f"helper:{step}:{node['entity_id']}:{operand}:input",
+                        "semantic_id": node["entity_id"],
+                        "source": f"step:{step}:knowledge:{operand}",
+                        "target": node["id"], "label": "input",
+                        "layer": "operators", "edge_class": "reasoning",
+                        "semantic_type": operator_kind or "conjunction",
+                        "step": step, "visible_at": ["standard"], "min_granularity": "standard",
+                        "details": details,
+                    })
         # Reconnect each Step 3 weakpoint to the Step 4 operator group(s) that
         # formalize the same public interface. This is derived Viewer
         # provenance only; it is never written back to formalization.json.

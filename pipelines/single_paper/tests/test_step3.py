@@ -7,11 +7,38 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from agent_pipeline_v2.step3 import _relation_clusters, _screen_classifications, _validate_cluster_result
+from agent_pipeline_v2.authoring import emit_formalization
+from agent_pipeline_v2.step3 import (
+    _relation_clusters, _screen_classifications, _transitive_shortcut_indexes, _validate_cluster_result,
+)
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
 from pipeline_harness.store import RunStore, atomic_write_json
 from pipeline_harness.view.projector import project_run
+
+
+class StripClaimsFinalSourcePlugin:
+    """Downgrade claims_final relations so Step 3 exercises cluster+LLM.
+
+    Production adopts claims_final relations directly; tests that target the
+    LLM normalization path deliberately drop the high-confidence marker.
+    """
+
+    def run(self, context):
+        reference = context.latest("formalization")
+        document = json.loads(context.artifact_path(reference).read_text(encoding="utf-8"))
+        for link in document["workflow"]["non_reasoning_links"]:
+            metadata = link.get("metadata")
+            if isinstance(metadata, dict):
+                metadata.pop("source", None)
+        prior = document["revision"]
+        document["revision"] = {
+            "revision_id": f"revision_{context.run_id}_strip",
+            "supersedes": prior.get("revision_id"),
+            "parent_hash": prior.get("content_hash"),
+            "content_hash": "",
+        }
+        return emit_formalization(context, document, step=2, step_name="strip_claims_final")
 
 
 class FakeWeakpointClassifier:
@@ -82,6 +109,23 @@ class Step3Tests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def test_transitive_shortcut_requires_full_source_coverage(self) -> None:
+        # A chain that only covers a subset of a hyperedge's sources must not
+        # remove the direct edge, or the uncovered observations are orphaned.
+        partial = [
+            (0, {"o1", "o2", "o3"}, "claim_27", "abduction"),
+            (1, {"o1"}, "claim_65", "abduction"),
+            (2, {"claim_65"}, "claim_27", "abduction"),
+        ]
+        self.assertEqual(set(), _transitive_shortcut_indexes(partial))
+        # A chain whose leaves cover every direct source still replaces it.
+        full = [
+            (0, {"o1"}, "claim_27", "abduction"),
+            (1, {"o1"}, "claim_65", "abduction"),
+            (2, {"claim_65"}, "claim_27", "abduction"),
+        ]
+        self.assertEqual({0}, _transitive_shortcut_indexes(full))
+
     def test_screening_keeps_expandable_relation_but_rejects_duplicate_content(self) -> None:
         document = {
             "knowledges": {
@@ -106,6 +150,7 @@ class Step3Tests(unittest.TestCase):
             "stages": [
                 {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
                 {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+                {"name": "strip", "plugin": f"{__name__}:StripClaimsFinalSourcePlugin", "options": {}},
                 {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin", "options": {"tool_plugin": f"{__name__}:FakeWeakpointClassifier"}},
             ],
         }
@@ -138,7 +183,53 @@ class Step3Tests(unittest.TestCase):
         )
         self.assertEqual(2, len([item for item in store.load_artifacts() if item.kind == "tool.semantic_review.response"]))
 
-    def test_argument_cluster_reorients_and_merges_phenomena_without_expanding_two_hops(self) -> None:
+    def test_claims_final_relations_are_adopted_without_llm_and_in_order(self) -> None:
+        claims_final = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))
+        claims_final["relation"].append({"connects": [1, 2], "expression": "[1] 推出 [2]"})
+        atomic_write_json(self.root / "claims_final.json", claims_final)
+        FakeWeakpointClassifier.calls = []
+        pipeline = {
+            "pipeline_id": "step3-claims-final-test", "version": "1",
+            "stages": [
+                {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
+                {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+                {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin", "options": {"tool_plugin": f"{__name__}:FakeWeakpointClassifier"}},
+            ],
+        }
+        store = RunStore.create(self.root / "claims-final-runs", pipeline, input_manifest=self.root / "manifest.json")
+        result = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", result.status)
+        # High-confidence imported relations never reach the LLM judge.
+        self.assertEqual([], FakeWeakpointClassifier.calls)
+        final_ref = next(ref for ref in store.load_artifacts() if ref.kind == "formalization" and ref.metadata["step"] == 3)
+        final = json.loads(store.artifact_path(final_ref).read_text(encoding="utf-8"))
+        weakpoints = final["workflow"]["weakpoints"]
+        self.assertEqual(
+            ["weakpoint_relation_1", "weakpoint_relation_3"],
+            [item["id"] for item in weakpoints],
+        )
+        payload = weakpoints[0]["payload"]
+        self.assertEqual(["claim_1", "claim_2"], payload["evidence_claim_ids"])
+        self.assertEqual(["claim_3"], payload["target_claim_id"])
+        self.assertIsNone(payload["reasoning_type"])
+        self.assertEqual("([claim_1] 和 [claim_2]) 是 [claim_3] 的例子或证据", payload["expression"])
+        implied = weakpoints[1]["payload"]
+        self.assertEqual(["claim_1"], implied["evidence_claim_ids"])
+        self.assertEqual(["claim_2"], implied["target_claim_id"])
+        self.assertEqual("[claim_1] 推出 [claim_2]", implied["expression"])
+        # The fixed contradiction relation is still materialized mechanically.
+        self.assertEqual(
+            {
+                "id": "operator_relation_2",
+                "type": "contradiction",
+                "variables": ["claim_1", "claim_2"],
+                "metadata": {"expression": "[1] 与 [2] 矛盾", "source_relation_id": "relation_2"},
+            },
+            final["graph"]["operators"][0],
+        )
+        self.assertFalse(any(item["code"] == "STEP3_UNRESOLVED_IMPORTED_RELATION" for item in result.findings))
+
+    def test_argument_cluster_reorients_and_merges_observations_without_expanding_two_hops(self) -> None:
         anchors = [
             {"anchor_id": "p1", "source_kind": "source.paper_text"},
             {"anchor_id": "p2", "source_kind": "source.paper_text"},
@@ -146,8 +237,8 @@ class Step3Tests(unittest.TestCase):
         ]
         document = {
             "knowledges": {
-                "claim_E15": {"type": "claim", "content": {"canonical": "Global permutation degraded performance."}, "source_anchor_ids": ["p1"]},
-                "claim_E16": {"type": "claim", "content": {"canonical": "Local permutation moderately degraded performance."}, "source_anchor_ids": ["p1"]},
+                "claim_O15": {"type": "claim", "content": {"canonical": "Global permutation degraded performance."}, "source_anchor_ids": ["p1"]},
+                "claim_O16": {"type": "claim", "content": {"canonical": "Local permutation moderately degraded performance."}, "source_anchor_ids": ["p1"]},
                 "claim_21": {"type": "claim", "content": {"canonical": "Global and local permutation have the stated effects."}, "source_anchor_ids": ["p1"]},
                 "claim_23": {"type": "claim", "content": {"canonical": "Layerwise mask statistics transfer ticket information."}, "source_anchor_ids": ["p1"]},
                 "claim_20": {"type": "claim", "content": {"canonical": "Mask structure contains useful information."}, "source_anchor_ids": ["p2"]},
@@ -163,10 +254,10 @@ class Step3Tests(unittest.TestCase):
             return {"id": key, "sources": sources, "target": target, "metadata": {"relation": relation}}
 
         links = [
-            link("relation_27", ["claim_E15"], "claim_21", "[claim_E15] 是 [claim_21] 的证据", "experiment_mask"),
-            link("relation_28", ["claim_E16"], "claim_21", "[claim_E16] 是 [claim_21] 的证据", "experiment_mask"),
-            link("relation_29", ["claim_E15"], "claim_23", "[claim_E15] 是 [claim_23] 的证据", "experiment_mask"),
-            link("relation_30", ["claim_E16"], "claim_23", "[claim_E16] 是 [claim_23] 的证据", "experiment_mask"),
+            link("relation_27", ["claim_O15"], "claim_21", "[claim_O15] 是 [claim_21] 的证据", "experiment_mask"),
+            link("relation_28", ["claim_O16"], "claim_21", "[claim_O16] 是 [claim_21] 的证据", "experiment_mask"),
+            link("relation_29", ["claim_O15"], "claim_23", "[claim_O15] 是 [claim_23] 的证据", "experiment_mask"),
+            link("relation_30", ["claim_O16"], "claim_23", "[claim_O16] 是 [claim_23] 的证据", "experiment_mask"),
             link("relation_8", ["claim_21"], "claim_20", "[claim_21] 推出 [claim_20]"),
             link("relation_remote", ["claim_20"], "claim_99", "[claim_20] 推出 [claim_99]"),
         ]
@@ -180,8 +271,8 @@ class Step3Tests(unittest.TestCase):
         normalized = {"clusters": [
             {"cluster_id": clusters[0]["cluster_id"], "weakpoints": [
                 {"member_relation_ids": ["relation_27", "relation_28"], "evidence_claim_ids": ["claim_21"],
-                 "target_claim_id": ["claim_E15", "claim_E16"], "reasoning_type": "deduction",
-                 "expression": "[claim_21] 推出 [claim_E15] 和 [claim_E16]"},
+                 "target_claim_id": ["claim_O15", "claim_O16"], "reasoning_type": "deduction",
+                 "expression": "[claim_21] 推出 [claim_O15] 和 [claim_O16]"},
                 {"member_relation_ids": ["relation_29", "relation_30"], "evidence_claim_ids": ["claim_21"],
                  "target_claim_id": ["claim_23"], "reasoning_type": "abduction",
                  "expression": "[claim_21] 溯因支持 [claim_23]"},
@@ -193,7 +284,7 @@ class Step3Tests(unittest.TestCase):
         ]}
         weakpoints = _validate_cluster_result(document, clusters, normalized)
         self.assertEqual(
-            [(["claim_21"], ["claim_E15", "claim_E16"]),
+            [(["claim_21"], ["claim_O15", "claim_O16"]),
              (["claim_21"], ["claim_23"]),
              (["claim_23"], ["claim_20"])],
             [(item["payload"]["evidence_claim_ids"], item["payload"]["target_claim_id"]) for item in weakpoints],
@@ -211,6 +302,7 @@ class Step3Tests(unittest.TestCase):
             "stages": [
                 {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
                 {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+                {"name": "strip", "plugin": f"{__name__}:StripClaimsFinalSourcePlugin", "options": {}},
                 {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin",
                  "options": {"tool_plugin": f"{__name__}:ParallelWeakpointClassifier"}},
             ],

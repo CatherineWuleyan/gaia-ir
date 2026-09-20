@@ -25,6 +25,7 @@ from agent_pipeline_v2.step4 import (
     WeakpointExpansionTool,
     _clean_additions,
     _clean_proposition,
+    _prune_orphan_observations,
     _shorten_addition_ids,
     _validate_expansion,
 )
@@ -163,6 +164,9 @@ class AnchorPaperPlugin:
     The real pipeline gives every Knowledge a ``source.paper_text`` anchor in
     Step 2; the unit fixtures below skip Step 2 to avoid LLM calls, so without
     this stage Step 3's paper-anchor screening rejects every non-null weakpoint.
+    It also drops the ``claims_final`` high-confidence marker so these Step 4
+    tests keep exercising Step 3's typed cluster/LLM classification instead of
+    the direct claims_final adoption path.
     """
 
     def run(self, context):
@@ -181,6 +185,10 @@ class AnchorPaperPlugin:
             source_ids = knowledge.setdefault("source_anchor_ids", [])
             if best["anchor_id"] not in source_ids:
                 source_ids.append(best["anchor_id"])
+        for link in document["workflow"]["non_reasoning_links"]:
+            metadata = link.get("metadata")
+            if isinstance(metadata, dict):
+                metadata.pop("source", None)
         prior = document["revision"]
         document["revision"] = {
             "revision_id": f"revision_{context.run_id}_step_2",
@@ -227,7 +235,7 @@ class AdditionIdShorteningTests(unittest.TestCase):
         self.assertEqual("claim_step2_11_alternative", strategy["conclusion"])
 
     def test_never_rewrites_existing_or_unnamed_claim_ids(self) -> None:
-        parameters = {"knowledges": {"claim_21": {"type": "claim"}, "claim_E03": {"type": "observation_claim"}}}
+        parameters = {"knowledges": {"claim_21": {"type": "claim"}, "claim_O03": {"type": "observation_claim"}}}
         result = {
             "knowledges": {
                 "claim_21": {"type": "claim", "content": {"canonical": "x"}, "source_anchor_ids": ["a"]},
@@ -354,7 +362,7 @@ class Step4Tests(unittest.TestCase):
         self.assertTrue(any(node["kind"] == "operator" and node.get("fold_group")
                             for node in view.nodes if node["step"] == 4))
 
-    def test_cross_layer_observation_edge_is_rejected(self) -> None:
+    def test_observation_edge_is_allowed_once_e_layer_is_removed(self) -> None:
         parameters = {
             "weakpoint": {
                 "payload": {
@@ -373,8 +381,9 @@ class Step4Tests(unittest.TestCase):
             "knowledges": {},
             "strategies": [strategy("abduction", ["claim_O01"], "claim_A")],
         }
-        with self.assertRaisesRegex(ValueError, "cross-layer reasoning edge"):
-            _validate_expansion(parameters, expansion)
+        # O is now the observation proposition itself, so it may connect
+        # directly to a hypothesis through a named strategy.
+        _validate_expansion(parameters, expansion)
 
     def test_all_null_weakpoints_become_infer_without_tools_new_facts_or_probabilities(self) -> None:
         Classifier.kind = None
@@ -458,14 +467,41 @@ class Step4Tests(unittest.TestCase):
         self.assertNotIn(condition_id, final["graph"]["nodes"])
         self.assertIn(condition_id, final["graph"]["strategies"][-1]["background"])
 
-    def test_insufficient_evidence_retains_classified_weakpoint(self) -> None:
+    def test_insufficient_evidence_lowers_classified_weakpoint_to_infer(self) -> None:
         _, prior, final = self.run_expansion({"knowledges": {}, "strategies": []})
         self.assertEqual("succeeded", self.result.status)
-        self.assertEqual([prior["workflow"]["weakpoints"][0]], final["workflow"]["weakpoints"])
-        self.assertEqual(["infer"], [item["type"] for item in final["graph"]["strategies"]])
+        # A typed weakpoint whose strict family cannot be justified is kept as
+        # a soft infer edge instead of disappearing from the graph.
+        self.assertEqual([], final["workflow"]["weakpoints"])
+        self.assertTrue(final["graph"]["strategies"])
+        self.assertTrue(all(item["type"] == "infer" for item in final["graph"]["strategies"]))
         self.assertEqual(prior["graph"]["operators"], final["graph"]["operators"])
         self.assertEqual([], self.cleaning_calls)
         self.assertTrue(any(item["code"] == "STEP4_INSUFFICIENT_EVIDENCE" for item in self.result.findings))
+
+    def test_orphan_observations_are_pruned_after_step4(self) -> None:
+        document = {
+            "knowledges": {
+                "claim_1": {"type": "claim", "content": {"canonical": "linked"}, "source_anchor_ids": []},
+                "claim_O1": {"type": "observation_claim", "content": {"canonical": "linked obs"}, "source_anchor_ids": []},
+                "claim_O2": {"type": "observation_claim", "content": {"canonical": "orphan obs"}, "source_anchor_ids": []},
+                "note_1": {"type": "note", "content": {"canonical": "condition"}, "source_anchor_ids": []},
+            },
+            "graph": {
+                "nodes": ["claim_1", "claim_O1", "claim_O2"],
+                "operators": [],
+                "strategies": [{"scope": "local", "type": "infer", "premises": ["claim_O1"],
+                                "conclusion": "claim_1", "background": ["note_1"]}],
+            },
+            "workflow": {"weakpoints": []},
+        }
+        self.assertEqual(["claim_O2"], _prune_orphan_observations(document))
+        self.assertNotIn("claim_O2", document["knowledges"])
+        self.assertNotIn("claim_O2", document["graph"]["nodes"])
+        self.assertIn("claim_O1", document["graph"]["nodes"])
+        # Plain claims and notes are never pruned.
+        self.assertIn("claim_1", document["graph"]["nodes"])
+        self.assertIn("note_1", document["knowledges"])
 
     def test_cleaning_failure_keeps_audit_and_does_not_publish_revision(self) -> None:
         def fail(text):
@@ -486,7 +522,8 @@ class Step4Tests(unittest.TestCase):
         self.assertIsNotNone(final)
         self.assertEqual(8, len(prior["knowledges"]))
         self.assertEqual(9, len(final["knowledges"]))
-        self.assertEqual([prior["workflow"]["weakpoints"][1]], final["workflow"]["weakpoints"])
+        # The unexpandable second weakpoint is lowered to a soft infer edge.
+        self.assertEqual([], final["workflow"]["weakpoints"])
         audits = [read_json(store.artifact_path(ref)) for ref in store.load_artifacts()
                   if ref.kind == "tool.semantic_review.response" and ref.metadata["step"] == 4]
         self.assertEqual(["succeeded", "succeeded"], [item["response"]["status"] for item in audits])
@@ -539,8 +576,9 @@ class Step4Tests(unittest.TestCase):
         _, prior, final = self.run_expansion(expansion, cleaner=split_note)
         self.assertEqual("succeeded", self.result.status, self.result.findings)
         self.assertEqual(prior["knowledges"], final["knowledges"])
-        self.assertEqual([prior["workflow"]["weakpoints"][0]], final["workflow"]["weakpoints"])
-        self.assertEqual(["infer"], [item["type"] for item in final["graph"]["strategies"]])
+        self.assertEqual([], final["workflow"]["weakpoints"])
+        self.assertTrue(final["graph"]["strategies"])
+        self.assertTrue(all(item["type"] == "infer" for item in final["graph"]["strategies"]))
         self.assertTrue(any(
             item["code"] == "STEP4_INSUFFICIENT_EVIDENCE"
             for item in self.result.findings
@@ -562,7 +600,7 @@ class Step4Tests(unittest.TestCase):
         _, prior, final = self.run_expansion(expansion, cleaner=needs_context)
         self.assertEqual("succeeded", self.result.status, self.result.findings)
         self.assertEqual(prior["knowledges"], final["knowledges"])
-        self.assertEqual([prior["workflow"]["weakpoints"][0]], final["workflow"]["weakpoints"])
+        self.assertEqual([], final["workflow"]["weakpoints"])
         self.assertTrue(any(
             item["code"] == "STEP4_INSUFFICIENT_EVIDENCE"
             for item in self.result.findings
@@ -580,7 +618,7 @@ class Step4Tests(unittest.TestCase):
         _, prior, final = self.run_expansion(deduction(), cleaner=as_note)
         self.assertEqual("succeeded", self.result.status, self.result.findings)
         self.assertEqual(prior["knowledges"], final["knowledges"])
-        self.assertEqual([prior["workflow"]["weakpoints"][0]], final["workflow"]["weakpoints"])
+        self.assertEqual([], final["workflow"]["weakpoints"])
         self.assertTrue(any(
             item["code"] == "STEP4_INSUFFICIENT_EVIDENCE"
             for item in self.result.findings
@@ -607,8 +645,11 @@ class Step4Tests(unittest.TestCase):
             "os.environ", {"DEEPSEEK_API_KEY": "test-key"}
         ):
             response = WeakpointExpansionTool().invoke(request)
-        self.assertEqual("failed", response.status)
-        self.assertIsNone(response.normalized)
+        # Observational support for a general claim cannot become a strict
+        # implication, so the expansion degrades to an explicit empty result
+        # (which the caller then lowers to a soft infer edge).
+        self.assertEqual("succeeded", response.status)
+        self.assertEqual({"knowledges": {}, "strategies": []}, response.normalized)
 
     def test_empty_model_content_retains_the_weakpoint_without_cleaning(self) -> None:
         _, prior, _ = self.run_expansion(deduction())
@@ -661,15 +702,8 @@ class Step4Tests(unittest.TestCase):
             with self.subTest(result=result), self.assertRaises(ValueError):
                 _validate_expansion(parameters, result)
         parameters["knowledges"]["claim_1"]["type"] = "observation_claim"
-        with self.assertRaisesRegex(ValueError, "cross-layer reasoning edge"):
+        with self.assertRaisesRegex(ValueError, "observational support"):
             _validate_expansion(parameters, deduction())
-        parameters["knowledges"]["claim_1"]["type"] = "claim"
-        parameters["knowledges"]["claim_E01"] = parameters["knowledges"].pop("claim_1")
-        parameters["weakpoint"]["payload"]["evidence_claim_ids"][0] = "claim_E01"
-        rewritten = deduction()
-        rewritten["strategies"][0]["premises"][0] = "claim_E01"
-        with self.assertRaisesRegex(ValueError, "observational or phenomenon support"):
-            _validate_expansion(parameters, rewritten)
 
     def test_abduction_rejects_reverse_implication_missing_pairs_or_unknown_alternatives(self) -> None:
         _, prior, _ = self.run_expansion(deduction())
@@ -843,7 +877,8 @@ class Step4Tests(unittest.TestCase):
         _, prior, final = self.run_expansion({"knowledges": {}, "operators": []})
         self.assertEqual("succeeded", self.result.status, self.result.findings)
         self.assertEqual(prior["knowledges"], final["knowledges"])
-        self.assertEqual([prior["workflow"]["weakpoints"][0]], final["workflow"]["weakpoints"])
+        self.assertEqual([], final["workflow"]["weakpoints"])
+        self.assertTrue(all(item["type"] == "infer" for item in final["graph"]["strategies"]))
         self.assertEqual([], self.cleaning_calls)
 
     def test_old_revision_without_strategies_remains_readable_without_mutation(self) -> None:
@@ -1086,12 +1121,15 @@ class Step4Tests(unittest.TestCase):
         for mode in ("standard",):
             nodes = projected[mode]["nodes"]
             self.assertEqual(0, len([item for item in nodes if item["kind"] == "weakpoint"]))
-            # Every lowered clause is projected as an operator node.  Rendering
-            # an equivalence/implication clause as a bare operand-to-operand
-            # edge used to drop its helper conclusion, leaving the compiled IR's
-            # operator pointing at a node the graph never contains.
+            # Every non-relational lowered clause keeps a real operator node,
+            # while equivalence (like implication) is projected as a single
+            # double-headed arrow edge rather than a symbol-bearing operator
+            # node.
             operator_types = {item["details"]["type"] for item in nodes if item["kind"] == "operator"}
             self.assertTrue({"conjunction", "disjunction"} <= operator_types)
+            self.assertNotIn("equivalence", operator_types)
+            self.assertIn("equivalence:'↔'", html)
+            self.assertIn(".edge.equivalence { marker-start:url(#arrow-start); marker-end:url(#arrow); }", html)
             self.assertFalse(any(item["kind"] == "note" for item in nodes))
             ids = {item["id"] for item in nodes}
             self.assertTrue(all(edge["source"] in ids and edge["target"] in ids for edge in projected[mode]["edges"]))
@@ -1100,6 +1138,19 @@ class Step4Tests(unittest.TestCase):
                 item["id"] for item in nodes if item["kind"] == "operator" and item["id"] not in touched
             ]
             self.assertEqual([], orphan_operators)
+            # A Step 4 summary claim is a real graph member even though its ID
+            # contains "step4_weakpoint_"; it must stay public, and every
+            # disjunction clause must keep an outgoing equivalence edge to its
+            # target instead of dangling.
+            summary_claims = [item for item in nodes if "step4_weakpoint_" in str(item["entity_id"])]
+            self.assertTrue(summary_claims)
+            self.assertTrue(all(item["layer"] == "claims" for item in summary_claims))
+            disjunctions = [
+                item for item in nodes if item["kind"] == "operator" and item["details"]["type"] == "disjunction"
+            ]
+            self.assertTrue(disjunctions)
+            outgoing = {edge["source"] for edge in projected[mode]["edges"]}
+            self.assertTrue(all(item["id"] in outgoing for item in disjunctions))
             orphan_helpers = [
                 item["id"] for item in nodes if item.get("layer") == "helpers" and item["id"] not in touched
             ]

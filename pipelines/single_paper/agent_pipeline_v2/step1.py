@@ -351,7 +351,9 @@ class Step1ImportClaimsFinalPlugin:
                     "sources": [claim_ids[number] for number in sources],
                     "target": claim_ids[target_number],
                     "reasoning": False,
-                    "metadata": {"relation_index": relation_index, "relation": relation},
+                    # High-confidence relations declared in claims_final must be
+                    # preserved verbatim and in order by every later stage.
+                    "metadata": {"source": "claims_final", "relation_index": relation_index, "relation": relation},
                 })
 
         return emit_step1(context, document)
