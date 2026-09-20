@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One explicit entry point for the three supported workflows.  This script is
+# One explicit entry point for the two supported workflows.  This script is
 # deliberately an assembler/diagnostic wrapper: it does not add a Harness
 # stage, artifact kind, schema field, or recovery rule.
 
@@ -17,12 +17,10 @@ Usage:
   ./run_pipeline.sh list
   ./run_pipeline.sh single-v2 <manifest.json> [runs-root]
   ./run_pipeline.sh merge <manifest.json> [runs-root]
-  ./run_pipeline.sh legacy <paper_id>
 
 Pipelines:
   single-v2  Pipeline Harness single-paper V2, canonical step1-5 config
   merge      Pipeline Merge step0-5, canonical integration config
-  legacy     Original 14-step paper_graph2ir/claim-cleaner workflow
 
 The step1/step2/step3/step4 JSON files are not top-level workflows here.
 They are partial/developer configurations and must not be initialized as a
@@ -89,12 +87,6 @@ main() {
     merge)
       [[ $# -ge 2 && $# -le 3 ]] || { usage >&2; exit 2; }
       run_harness "merge" "$ROOT/pipelines/merge/pipeline.step5.json" "$2" "${3:-$ROOT/outputs/merge_runs}"
-      ;;
-    legacy)
-      [[ $# -eq 2 ]] || { usage >&2; exit 2; }
-      identity "legacy" "$ROOT/pipelines/single_paper/agent_pipeline_v2/claim_cleaner/run_full_pipeline.py"
-      echo "legacy_script=$ROOT/pipelines/single_paper/agent_pipeline_v2/claim_cleaner/run_full_pipeline.py"
-      exec "$PYTHON_BIN" "$ROOT/pipelines/single_paper/agent_pipeline_v2/claim_cleaner/run_full_pipeline.py" "$2"
       ;;
     *)
       echo "unknown pipeline: $1" >&2

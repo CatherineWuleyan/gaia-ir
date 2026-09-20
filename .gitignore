@@ -52,3 +52,11 @@ node_modules/
 /archive/editor-metadata/
 /archive/runs/
 /archive/working-outputs/
+
+# Historical and generated material excluded from the frozen repository surface
+/archive/
+/bohr/
+/examples/
+/pipelines/clean_claims/
+/docs/pipelines/
+/docs/validation/

@@ -1,7 +1,0 @@
-{
-  "artifacts": [
-    {"path_glob": "graph_single/*/gaia.ir.json", "kind": "gaia.ir", "media_type": "application/json"},
-    {"path_glob": "graph_single/*/formalization.json", "kind": "formalization", "media_type": "application/json"},
-    {"path_glob": "graph_single/*/knowledge.index.json", "kind": "knowledge.index", "media_type": "application/json"}
-  ]
-}
