@@ -1,9 +1,0 @@
-{
-  "schema_version": "1",
-  "artifacts": [
-    {"path": "ocr.md", "kind": "source.paper_text", "media_type": "text/markdown"},
-    {"path": "claims_final.json", "kind": "source.claims_final", "media_type": "application/json"},
-    {"path": "1229689055977930822_1.jpg", "kind": "source.original_figure", "media_type": "image/jpeg"},
-    {"path": "1229689055977930822_2.jpg", "kind": "source.original_figure", "media_type": "image/jpeg"}
-  ]
-}
