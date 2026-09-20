@@ -33,11 +33,11 @@ The runner owns execution, persistence, recovery, and audit state. Domain plugin
 | [`pipelines/single_paper/`](pipelines/single_paper/) | Maintained Pipeline 7.0 single-paper flow, including Step 1–5 configuration and tests. |
 | [`pipelines/merge/`](pipelines/merge/) | Pipeline 8.0 multi-paper integration flow and delta generation. |
 | [`pipelines/clean_claims/`](pipelines/clean_claims/) | Compatibility entry points for the earlier claim-cleaning workflow. |
-| [`docs/`](docs/) | Gaia IR contract, identity, hashing, canonicalization, lowering, and validation notes. |
+| [`docs/`](docs/) | Gaia IR contract, identity, hashing, canonicalization, lowering, validation, and pipeline design notes. |
 | [`merge_domain_graph/`](merge_domain_graph/) | Published v1–v9 comparison pages and the verified v9 Viewer. |
 | [`examples/`](examples/) | Small reviewable Harness examples. |
 | [`bohr/`](bohr/) | External experiment and batch-job helpers; not the default local entry point. |
-| [`archive/`](archive/) | Historical configurations and entry points retained for reference. |
+| [`archive/`](archive/) | Historical configurations and entry points retained for reference; local working notes are ignored. |
 
 `paper2ir` is a separate repository for the earlier standalone paper-to-claim-network workflow and is intentionally kept independent.
 
@@ -104,7 +104,7 @@ The last line is intentional: v9 is a verified forest, not a single-root tree. T
 - [Inspect the projected view model](outputs/bohr_runs/merge_test1-5_v9_final/view_model.json)
 - [Inspect the generated domain graph](outputs/bohr_runs/merge_test1-5_v9_final/domain_graph.html)
 
-The reusable Viewer template is [`agent/pipeline_harness/view/viewer.html`](agent/pipeline_harness/view/viewer.html). The v9 Viewer is a frozen, self-contained presentation of the verified run.
+The reusable Viewer template is [`agent/pipeline_harness/view/viewer.html`](agent/pipeline_harness/view/viewer.html). The v9 Viewer is a frozen, self-contained presentation of the verified run. Pipeline design notes live under [`docs/pipelines/`](docs/pipelines/) and validation comparisons under [`docs/validation/`](docs/validation/).
 
 ## Tests
 

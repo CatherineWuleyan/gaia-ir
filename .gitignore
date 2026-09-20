@@ -44,3 +44,11 @@ node_modules/
 /bohr/**/runs/
 **/claim_cleaner/data/
 *.ndjson
+
+# Local workspace metadata and editorial scratch files
+/.obsidian/
+/archive/working-notes/
+/archive/assets/
+/archive/editor-metadata/
+/archive/runs/
+/archive/working-outputs/
