@@ -1,0 +1,111 @@
+{
+  "v1": {
+    "label": "v1 · 只锚最小包",
+    "change": "基线：Step 3 检索只把**最小包**当锚点",
+    "note": "跨论文对只覆盖 12.2%，delta 稀薄",
+    "nodes": 303,
+    "edges": 209,
+    "delta": {
+      "abduction": 5,
+      "infer": 21
+    },
+    "delta_total": 26,
+    "delta_nodes": 22,
+    "delta_isolated": 0
+  },
+  "v2": {
+    "label": "v2 · 平等池",
+    "change": "每个 Package 都当锚点进同一个 claim 池",
+    "note": "覆盖 100%，但 137 条 abduction 里 76% 形状不合法",
+    "nodes": 303,
+    "edges": 382,
+    "delta": {
+      "abduction": 137,
+      "deduction": 1,
+      "infer": 61
+    },
+    "delta_total": 199,
+    "delta_nodes": 97,
+    "delta_isolated": 0
+  },
+  "v3": {
+    "label": "v3 · 形状校验 + relation",
+    "change": "abduction 形状硬校验（观察→假设、单前提）；引入 relation 标签",
+    "note": "step5 编译失败：多前提 abduction 不被官方 compiler 接受",
+    "nodes": 303,
+    "edges": 324,
+    "delta": {
+      "conjunction": 47,
+      "contradiction": 1,
+      "abduction": 50,
+      "infer": 43
+    },
+    "delta_total": 141,
+    "delta_nodes": 73,
+    "delta_isolated": 0
+  },
+  "v6": {
+    "label": "v6 · A 概括观察前提",
+    "change": "N 条观察先概括成一个前提 A，再 A→H；加机械拼接闸",
+    "note": "形状干净，但 56 条 conjunction 是把趋同误当合取",
+    "nodes": 313,
+    "edges": 349,
+    "delta": {
+      "conjunction": 56,
+      "contradiction": 8,
+      "abduction": 24,
+      "deduction": 29,
+      "infer": 49
+    },
+    "delta_total": 166,
+    "delta_nodes": 94,
+    "delta_isolated": 0
+  },
+  "v7": {
+    "label": "v7 · 趋同汇入 K",
+    "change": "删 conjunction 映射，趋同证据改由领域结论 K 承载",
+    "note": "K 星形涨到 151 条 infer 边（本地跑成功）",
+    "nodes": 311,
+    "edges": 404,
+    "delta": {
+      "contradiction": 3,
+      "abduction": 22,
+      "deduction": 45,
+      "infer": 151
+    },
+    "delta_total": 221,
+    "delta_nodes": 161,
+    "delta_isolated": 0
+  },
+  "v8": {
+    "label": "v8 · 多层结论树",
+    "change": "结论改为多层有界总结树，方向回到文档的 `premises→Ki`，cap=8",
+    "note": "delta 221→77；但 6/11 个 K1 只有单前提，且根只覆盖 3/11",
+    "nodes": 321,
+    "edges": 260,
+    "delta": {
+      "conjunction": 1,
+      "contradiction": 5,
+      "deduction": 52,
+      "abduction": 19
+    },
+    "delta_total": 77,
+    "delta_nodes": 67,
+    "delta_isolated": 0
+  },
+  "v9": {
+    "label": "v9 · 结论树封口（最终）",
+    "change": "跳过单前提组；合成失败的组**上提**而非丢弃，保证根覆盖存活节点",
+    "note": "最终版",
+    "nodes": 318,
+    "edges": 257,
+    "delta": {
+      "contradiction": 2,
+      "deduction": 62,
+      "abduction": 10
+    },
+    "delta_total": 74,
+    "delta_nodes": 59,
+    "delta_isolated": 0
+  }
+}

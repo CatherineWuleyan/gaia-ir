@@ -68,6 +68,17 @@ The runner owns execution, persistence, checkpointing, and audit state. Domain p
 
 The Viewer is a projection of stored artifacts. It is never the authoring source of truth.
 
+## v9 merge artifact
+
+The verified five-paper merge is the `pipeline_merge_v9` result. The checked run produced 318 nodes, 257 edges, and 74 integration-delta edges, with status `succeeded`. The final graph remains a forest: one 8-member conclusion tree plus 3 independent L1 conclusions.
+
+- `merge_domain_graph/viewer_final.html` — self-contained v9 viewer.
+- `merge_domain_graph/index.html` — v1–v9 delta comparison.
+- `outputs/bohr_runs/merge_test1-5_v9_final/view_model.json` — v9 projected view model.
+- `outputs/bohr_runs/merge_test1-5_v9_final/domain_graph.html` — v9 generated graph page.
+
+The reusable viewer template is `agent/pipeline_harness/view/viewer.html`; the generated v9 page is a frozen presentation artifact for the verified run.
+
 ## Status
 
 This repository is the active Gaia IR implementation. `paper2ir` remains a separate repository for the earlier standalone paper-to-claim-network workflow.
