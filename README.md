@@ -10,8 +10,8 @@ Gaia IR turns paper evidence into a typed, traceable domain graph. The repositor
 | [`pipelines/single_paper/`](pipelines/single_paper/) | Maintained single-paper pipeline, latest checked Step 1–5 configuration. |
 | [`pipelines/merge/`](pipelines/merge/) | Stepwise merge configuration and the checked five-paper v9 configuration. |
 | [`docs/gaia-ir/`](docs/gaia-ir/) | Contracts and architecture notes needed to interpret Gaia IR artifacts. |
-| [`merge_domain_graph/viewer_final.html`](merge_domain_graph/viewer_final.html) | Self-contained Viewer for the frozen v9 graph. |
-| [`outputs/bohr_runs/merge_test1-5_v9_final/`](outputs/bohr_runs/merge_test1-5_v9_final/) | Frozen v9 `view_model.json` and `domain_graph.html`. |
+| [`example/viewer.html`](example/viewer.html) | Self-contained Viewer for the frozen v9 graph. |
+| [`example/`](example/) | Frozen v9 `view_model.json` and `domain_graph.html`. |
 | [`run_pipeline.sh`](run_pipeline.sh) | Repository entry point. |
 
 `paper2ir` is a separate repository and is intentionally untouched.
@@ -28,9 +28,9 @@ The launcher reports the selected configuration, Git revision, worktree state, a
 
 The published v9 artifacts are already available for inspection:
 
-- [Open the v9 Viewer](merge_domain_graph/viewer_final.html)
-- [Inspect the projected view model](outputs/bohr_runs/merge_test1-5_v9_final/view_model.json)
-- [Inspect the generated domain graph](outputs/bohr_runs/merge_test1-5_v9_final/domain_graph.html)
+- [Open the v9 Viewer](example/viewer.html)
+- [Inspect the projected view model](example/view_model.json)
+- [Inspect the generated domain graph](example/domain_graph.html)
 
 The generic Viewer template is [`agent/pipeline_harness/view/viewer.html`](agent/pipeline_harness/view/viewer.html). The Viewer only projects stored artifacts; it is not a second source of truth.
 

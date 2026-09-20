@@ -1,11 +1,11 @@
 # Maintained pipelines
 
-The repository keeps two current workflows: the latest single-paper pipeline and the verified five-paper `pipeline_merge_v9` merge pipeline.
+This directory contains the two maintained Gaia IR workflows: a single-paper pipeline and a multi-paper merge pipeline. Both use the shared Harness and produce traceable, validated artifacts.
 
 | Workflow | Configuration |
 |---|---|
 | `single-v2` | `single_paper/pipeline.step1-5.json` |
-| `merge` | `merge/pipeline.test1-5.json` (v9) |
+| `merge` | `merge/pipeline.test1-5.json` |
 
 Run from the repository root:
 
@@ -15,4 +15,4 @@ Run from the repository root:
 ./run_pipeline.sh merge /absolute/path/to/pipelines/merge/pipeline.test1-5.json
 ```
 
-The published v9 result is stored under `outputs/bohr_runs/merge_test1-5_v9_final/`; its self-contained Viewer is `merge_domain_graph/viewer_final.html`.
+The checked merge example is in [`example/`](../example/), with a self-contained Viewer, projected view model, and generated domain graph.
