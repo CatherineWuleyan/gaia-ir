@@ -208,5 +208,92 @@ class Step3bPipelineTests(unittest.TestCase):
         self.assertEqual(spine["unlinked_conclusion_ids"], [self.PREMISE])
 
 
+class Step3bChainTests(unittest.TestCase):
+    """Step 3b sits between two stages, so what it publishes must keep both fed.
+
+    A checkpoint carries only the artifacts the stage itself produced.  A Step 3b
+    that published just its audit spine therefore left Step 4 with no Step 3
+    proposal at all — which is what the first three-cluster run hit.
+    """
+
+    DOMAIN_A = "integration:i::candidate_K_aa"
+    DOMAIN_B = "integration:i::candidate_K_bb"
+    PREMISE = "integration:i::candidate_A_cc"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    @staticmethod
+    def _stages():
+        return [
+            {"name": "step0_select_scope", "plugin": "pipeline_merge.step0:Step0SelectScopePlugin",
+             "options": {"mode": "reconcile", "scope": {"domain": "test",
+                                                        "selection": ["papers:new"]}}},
+            {"name": "step1_freeze_inputs",
+             "plugin": "pipeline_merge.step1:Step1FreezeInputsPlugin", "options": {}},
+            {"name": "step2_retrieve_domain_local",
+             "plugin": "pipeline_merge.step2:Step2RetrieveDomainLocalPlugin", "options": {}},
+            {"name": "step3_identify_structures",
+             "plugin": "pipeline_merge.step3:Step3IdentifyStructuresPlugin", "options": {}},
+            {"name": "step3b_align_domain_spine",
+             "plugin": "pipeline_merge.step3b:Step3bAlignDomainSpinePlugin", "options": {}},
+            {"name": "step4_formalize_integration",
+             "plugin": "pipeline_merge.step4:Step4FormalizeIntegrationPlugin", "options": {}},
+        ]
+
+    def _write_inputs(self) -> None:
+        atomic_write_json(self.root/"new.json", _ir("new", "claim_1", "sparse networks transfer"))
+        atomic_write_json(self.root/"old.json", _ir("old", "claim_2", "sparse networks transfer"))
+        atomic_write_json(self.root/"manifest.json", {"artifacts": [
+            {"path": "new.json", "kind": "gaia.ir"},
+            {"path": "old.json", "kind": "gaia.ir"}]})
+
+    @staticmethod
+    def _fake(prompt):
+        candidates = json.loads(prompt.split("CANDIDATES=", 1)[1])
+        if "SAME proposition worded differently" in prompt:
+            return {"groups": [{"ids": [Step3bChainTests.DOMAIN_A, Step3bChainTests.DOMAIN_B]}]}
+        if "DOMAIN_CONCLUSIONS=" in prompt:
+            return {"links": [{"id": Step3bChainTests.PREMISE,
+                               "domain_id": Step3bChainTests.DOMAIN_A,
+                               "relation": "supports", "confidence": 0.9,
+                               "reason": "same effect"}]}
+        if "operator_candidate|not_operator" in prompt:
+            return {"decisions": [{"candidate_id": item["candidate_id"],
+                                   "decision": "not_operator"} for item in candidates]}
+        if "deterministic operator" in prompt:
+            return {"decisions": []}
+        return {"weakpoints": []}
+
+    def test_the_republished_proposal_survives_into_step4(self):
+        self._write_inputs()
+        config = {"pipeline_id": "pipeline-merge-step3b-chain-test", "version": "0.1.0",
+                  "stages": self._stages()}
+        store = RunStore.create(self.root/"runs", config, input_manifest=self.root/"manifest.json")
+        with patch("pipeline_merge.step1._validate_with_official_gaia",
+                   side_effect=lambda payload: (payload, "test")), \
+             patch("pipeline_merge.step3._post_json", side_effect=self._fake), \
+             patch("pipeline_merge.step3b._post_json", side_effect=self._fake), \
+             patch("pipeline_merge.step4._post_json", side_effect=self._fake):
+            run = run_pipeline(store.run_dir)
+
+        self.assertNotEqual(run.status, "failed")
+        published = [ref for ref in store.load_artifacts()
+                     if ref.kind == "integration.step3_proposals"
+                     and ref.producer_stage == "step3b_align_domain_spine"]
+        self.assertEqual(len(published), 1, "Step 3b must republish the repaired proposal")
+        aligned = read_json(store.artifact_path(published[0]))
+        self.assertIn("spine_alignment", aligned)
+        self.assertTrue(aligned["spine_alignment"]["spine_artifact_id"].startswith("sha256:"))
+        formalization = next((ref for ref in store.load_artifacts()
+                              if ref.kind == "formalization"
+                              and ref.producer_stage == "step4_formalize_integration"), None)
+        self.assertIsNotNone(formalization, "Step 4 must still receive the proposal")
+
+
 if __name__ == "__main__":
     unittest.main()

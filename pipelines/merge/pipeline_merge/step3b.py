@@ -47,10 +47,14 @@ from pipeline_harness.store import atomic_write_json
 
 from .step1 import Step1InputError, _read_json, validate_step1_inputs
 from .step3 import SCHEMA_VERSION as PROPOSAL_VERSION
-from .step3 import PROPOSAL_SCHEMA, _post_json, _worker_count
+from .step3 import PROPOSAL_SCHEMA, _Progress, _post_json, _worker_count
 
 SPINE_SCHEMA = "gaia.integration.domain_spine"
 SPINE_VERSION = "1.0.0"
+# The artifact kind Step 3 writes and Step 4 reads.  Step 3b republishes its
+# repaired proposal under the same kind, which is what makes Step 4 pick the
+# aligned version up without knowing this stage exists.
+PROPOSAL_KIND = "integration.step3_proposals"
 STEP = "3b"
 # Relations a Package conclusion may bear to a domain conclusion.  Only these
 # four are offered, so the model cannot invent a relation family Step 4 does not
@@ -158,12 +162,20 @@ def _equivalence_classes(
             parent[alias] = representative
 
     batches = _batch(candidates, GROUP_BATCH)
+    proposed = 0
     if batches:
         workers = max_workers if max_workers is not None else _worker_count("GAIA_MERGE_JUDGE_WORKERS", 8)
+        progress = _Progress("step3b dedup batches", len(batches), every=4)
+        progress.note(f"{len(candidates)} domain conclusions in {len(batches)} batches")
+
+        def group_batch(batch):
+            response = _decode_list(_dedup_prompt(batch), "groups")
+            progress.tick()
+            return response
+
         with ThreadPoolExecutor(max_workers=max(1, min(workers, len(batches)))) as pool:
-            responses = list(pool.map(lambda batch: _decode_list(_dedup_prompt(batch), "groups"), batches))
+            responses = list(pool.map(group_batch, batches))
         known = set(parent)
-        proposed = 0
         for response in responses:
             for group in response:
                 ids = [str(value) for value in group.get("ids") or [] if str(value) in known]
@@ -277,8 +289,16 @@ def _link_retry(
     items = [{"id": qid, "content": contents.get(qid, "")} for qid in sorted(unlinked)]
     batches = _batch(items, LINK_BATCH)
     workers = max_workers if max_workers is not None else _worker_count("GAIA_MERGE_JUDGE_WORKERS", 8)
+    progress = _Progress("step3b link retries", len(batches), every=4)
+    progress.note(f"{len(items)} unlinked conclusions against {len(domain)} domain conclusions")
+
+    def link_batch(batch):
+        response = _decode_list(_link_prompt(domain, batch), "links")
+        progress.tick()
+        return response
+
     with ThreadPoolExecutor(max_workers=max(1, min(workers, len(batches)))) as pool:
-        responses = list(pool.map(lambda batch: _decode_list(_link_prompt(domain, batch), "links"), batches))
+        responses = list(pool.map(link_batch, batches))
 
     known = set(domain_ids)
     allowed = {item["id"] for item in items}
@@ -398,7 +418,27 @@ class Step3bAlignDomainSpinePlugin:
             }
             output = context.work_dir / "integration_domain_spine.json"
             atomic_write_json(output, artifact)
-
+            # A checkpoint carries only the artifacts its own stage produced, so
+            # the repaired proposal has to be republished as a Step 3-shaped
+            # artifact for Step 4 — otherwise Step 4's checkpoint no longer holds
+            # the Step 3 proposal at all.  Step 4 takes the latest artifact of
+            # this kind, which is therefore this one.
+            aligned = {
+                **{key: value for key, value in proposals.items()
+                   if key not in {"operators", "weakpoints", "candidate_knowledges"}},
+                "operators": operators,
+                "weakpoints": weakpoints,
+                "candidate_knowledges": merged_candidates,
+                "spine_alignment": {
+                    "domain_conclusion_count": len(domain_ids),
+                    "domain_merge_count": len(merges),
+                    "cluster_link_count": len(links),
+                    "unlinked_conclusion_count": len(unlinked),
+                    "unlinked_conclusion_ids": unlinked,
+                    "spine_artifact_id": None,  # filled in below, from the spine bytes
+                },
+            }
+            aligned_output = context.work_dir / "integration_step3_proposals_aligned.json"
             findings: list[Finding] = []
             for merge in merges:
                 findings.append(Finding(
@@ -414,15 +454,31 @@ class Step3bAlignDomainSpinePlugin:
                     "STEP3B_PACKAGE_CONCLUSION_UNLINKED", "warning",
                     f"{qid} supports no domain conclusion after the retry and stays unlinked"))
 
+            # Publish the spine first so the aligned proposal can name its exact
+            # byte-for-byte hash; the audit trail then survives a checkpoint.
+            spine_digest = hashlib.sha256(output.read_bytes()).hexdigest()
+            aligned["spine_alignment"]["spine_artifact_id"] = f"sha256:{spine_digest}"
+            atomic_write_json(aligned_output, aligned)
+
             return StageResult(
                 "succeeded",
-                artifacts=[ArtifactDraft(output, SPINE_SCHEMA, "application/json", {
-                    "schema_name": SPINE_SCHEMA, "schema_version": SPINE_VERSION, "step": STEP,
-                    "domain_conclusion_count": len(domain_ids),
-                    "domain_merge_count": len(merges),
-                    "cluster_link_count": len(links),
-                    "unlinked_conclusion_count": len(unlinked),
-                })],
+                artifacts=[
+                    ArtifactDraft(output, SPINE_SCHEMA, "application/json", {
+                        "schema_name": SPINE_SCHEMA, "schema_version": SPINE_VERSION, "step": STEP,
+                        "domain_conclusion_count": len(domain_ids),
+                        "domain_merge_count": len(merges),
+                        "cluster_link_count": len(links),
+                        "unlinked_conclusion_count": len(unlinked),
+                    }),
+                    ArtifactDraft(aligned_output, PROPOSAL_KIND, "application/json", {
+                        "schema_name": PROPOSAL_SCHEMA, "schema_version": PROPOSAL_VERSION,
+                        "step": 3, "spine_aligned": True,
+                        "domain_conclusion_count": len(domain_ids),
+                        "domain_merge_count": len(merges),
+                        "cluster_link_count": len(links),
+                        "unlinked_conclusion_count": len(unlinked),
+                    }),
+                ],
                 findings=findings,
                 metadata={
                     "step": STEP,

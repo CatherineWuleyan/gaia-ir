@@ -88,6 +88,38 @@ def _worker_count(env_name: str, default: int) -> int:
     return value if value > 0 else default
 
 
+class _Progress:
+    """Opt-in progress lines so a long merge is observable while it runs.
+
+    A reconcile over many Packages spends most of its wall clock inside Step 3's
+    two gates, and neither the stage result nor the artifact index changes until
+    the stage finishes.  With `GAIA_MERGE_PROGRESS=1` every completed Nth unit
+    prints one line; the default stays silent, so nothing about a normal run's
+    output changes.
+    """
+
+    def __init__(self, label: str, total: int, every: int = 20) -> None:
+        self.label = label
+        self.total = total
+        self.every = max(1, every)
+        self.done = 0
+        self.enabled = os.environ.get("GAIA_MERGE_PROGRESS", "") not in {"", "0", "false", "False"}
+        self.lock = threading.Lock()
+
+    def tick(self) -> None:
+        if not self.enabled:
+            return
+        with self.lock:
+            self.done += 1
+            if self.done % self.every == 0 or self.done == self.total:
+                print(f"[merge] {self.label}: {self.done}/{self.total}", flush=True)
+
+    def note(self, message: str) -> None:
+        if self.enabled:
+            with self.lock:
+                print(f"[merge] {self.label}: {message}", flush=True)
+
+
 def _category(item: Mapping[str, Any]) -> str | None:
     metadata = item.get("metadata")
     if isinstance(metadata, Mapping):
@@ -222,8 +254,9 @@ def _retrieve_related(records: Mapping[str, JSONDict], max_workers: int | None =
     for anchor_package in packages:
         candidate_qids = [q for other in packages if other != anchor_package for q in by_package[other]]
         jobs.extend((anchor_qid, candidate_qids) for anchor_qid in by_package[anchor_package])
+    progress = _Progress("bootstrap retrieval anchors", len(jobs), every=50)
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        list(pool.map(lambda job: retrieve(*job), jobs))
+        list(pool.map(lambda job: (retrieve(*job), progress.tick()), jobs))
     collected.sort(key=lambda item: item["candidate_id"])
     return collected
 
@@ -719,6 +752,19 @@ class Step3IdentifyStructuresPlugin:
             _group_candidates(group, records), str(group["group_id"]), records,
         )
 
+    @staticmethod
+    def _judge_jobs(jobs, records, progress, gate_kind="operator_gate"):
+        """Judge every job in parallel, reporting progress as each one lands."""
+        def run(job):
+            result = Step3IdentifyStructuresPlugin._judge_candidates(
+                job[0], job[1], records, gate_kind=gate_kind)
+            progress.tick()
+            return result
+        with ThreadPoolExecutor(
+            max_workers=min(_worker_count("GAIA_MERGE_JUDGE_WORKERS", 8), max(1, len(jobs)))
+        ) as pool:
+            return list(pool.map(run, jobs))
+
     def run(self, context: StageContext) -> StageResult:
         try:
             validate_step1_inputs(context)
@@ -744,10 +790,9 @@ class Step3IdentifyStructuresPlugin:
                 jobs = [(batch, "bootstrap") for batch in batches]
             else:
                 jobs = [(_group_candidates(group, records), str(group["group_id"])) for group in groups]
-            with ThreadPoolExecutor(
-                max_workers=min(_worker_count("GAIA_MERGE_JUDGE_WORKERS", 8), max(1, len(jobs)))
-            ) as pool:
-                results = list(pool.map(lambda job: self._judge_candidates(job[0], job[1], records), jobs))
+            round_one = _Progress("step3 round-1 groups", len(jobs), every=25)
+            round_one.note(f"{len(jobs)} groups, {sum(len(job[0]) for job in jobs)} candidate pairs")
+            results = self._judge_jobs(jobs, records, round_one)
             for group_operators, group_weakpoints, group_candidates in results:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
@@ -767,14 +812,10 @@ class Step3IdentifyStructuresPlugin:
                         retry_jobs.append(job)
             retried_relations = 0
             if retry_jobs:
-                with ThreadPoolExecutor(
-                    max_workers=min(_worker_count("GAIA_MERGE_JUDGE_WORKERS", 8), len(retry_jobs))
-                ) as pool:
-                    retried = list(pool.map(
-                        lambda job: self._judge_candidates(job[0], job[1], records, gate_kind="link_gate"),
-                        retry_jobs,
-                    ))
-                for group_operators, group_weakpoints, _ in retried:
+                round_two = _Progress("step3 round-2 retries", len(retry_jobs), every=25)
+                round_two.note(f"{len(retry_jobs)} of {len(jobs)} groups produced no relation in round 1")
+                for group_operators, group_weakpoints, _ in self._judge_jobs(
+                        retry_jobs, records, round_two, gate_kind="link_gate"):
                     retried_relations += len(group_operators) + len(group_weakpoints)
                     operators.extend(group_operators)
                     weakpoints.extend(group_weakpoints)
