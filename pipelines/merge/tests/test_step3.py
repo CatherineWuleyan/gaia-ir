@@ -147,6 +147,43 @@ class LinkRetryTests(unittest.TestCase):
         self.assertEqual(len(proposal["operators"]), 1)
 
 
+class JudgeResilienceTests(unittest.TestCase):
+    """One unreachable group must cost that group, not the whole stage.
+
+    Step 3 is minutes of retrieval plus hundreds of network calls; a dropped
+    connection or a momentary quota error used to discard all of it.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_a_group_whose_calls_never_succeed_is_dropped_and_reported(self):
+        content = "sparse networks transfer across dataset settings"
+        atomic_write_json(self.root/"new.json", _ir("new", "claim_1", content))
+        atomic_write_json(self.root/"old.json", _ir("old", "claim_1", content))
+        atomic_write_json(self.root/"manifest.json", {"artifacts": [
+            {"path": "new.json", "kind": "gaia.ir"}, {"path": "old.json", "kind": "gaia.ir"}]})
+        store = RunStore.create(self.root/"runs", _config(), input_manifest=self.root/"manifest.json")
+
+        with patch("pipeline_merge.step1._validate_with_official_gaia",
+                   side_effect=lambda payload: (payload, "test")), \
+             patch("pipeline_merge.step3._post_json",
+                   side_effect=RuntimeError("DeepSeek request failed after 5 attempts: 402")):
+            run = run_pipeline(store.run_dir)
+
+        self.assertNotEqual(run.status, "failed", "a failed group must not fail the stage")
+        codes = [finding["code"] for finding in run.findings]
+        self.assertIn("STEP3_GROUP_UNJUDGED", codes)
+        ref = next(r for r in store.load_artifacts() if r.kind == "integration.step3_proposals")
+        proposal = read_json(store.artifact_path(ref))
+        self.assertEqual(proposal["operators"], [])
+        self.assertEqual(proposal["weakpoints"], [])
+
+
 def _record(qid, package):
     return {"qid": qid, "package": package, "content": f"content of {qid}", "type": "claim",
             "metadata": {}, "source_anchor_ids": [], "category": None}

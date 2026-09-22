@@ -754,16 +754,31 @@ class Step3IdentifyStructuresPlugin:
 
     @staticmethod
     def _judge_jobs(jobs, records, progress, gate_kind="operator_gate"):
-        """Judge every job in parallel, reporting progress as each one lands."""
+        """Judge every job in parallel, reporting progress as each one lands.
+
+        A group whose calls never succeed is dropped rather than raised: Step 3
+        is minutes of retrieval plus hundreds of network calls, and one
+        unreachable group (a dropped connection, a momentary quota 402) must cost
+        that group's candidates, not the whole stage.  The count comes back in
+        `_unjudged` so the run reports the loss instead of hiding it.
+        """
+        unjudged: list[str] = []
+
         def run(job):
-            result = Step3IdentifyStructuresPlugin._judge_candidates(
-                job[0], job[1], records, gate_kind=gate_kind)
+            try:
+                result = Step3IdentifyStructuresPlugin._judge_candidates(
+                    job[0], job[1], records, gate_kind=gate_kind)
+            except RuntimeError as exc:
+                unjudged.append(f"{job[1]}: {exc}")
+                result = ([], [], [])
             progress.tick()
             return result
+
         with ThreadPoolExecutor(
             max_workers=min(_worker_count("GAIA_MERGE_JUDGE_WORKERS", 8), max(1, len(jobs)))
         ) as pool:
-            return list(pool.map(run, jobs))
+            results = list(pool.map(run, jobs))
+        return results, unjudged
 
     def run(self, context: StageContext) -> StageResult:
         try:
@@ -792,7 +807,7 @@ class Step3IdentifyStructuresPlugin:
                 jobs = [(_group_candidates(group, records), str(group["group_id"])) for group in groups]
             round_one = _Progress("step3 round-1 groups", len(jobs), every=25)
             round_one.note(f"{len(jobs)} groups, {sum(len(job[0]) for job in jobs)} candidate pairs")
-            results = self._judge_jobs(jobs, records, round_one)
+            results, unjudged = self._judge_jobs(jobs, records, round_one)
             for group_operators, group_weakpoints, group_candidates in results:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
@@ -814,8 +829,10 @@ class Step3IdentifyStructuresPlugin:
             if retry_jobs:
                 round_two = _Progress("step3 round-2 retries", len(retry_jobs), every=25)
                 round_two.note(f"{len(retry_jobs)} of {len(jobs)} groups produced no relation in round 1")
-                for group_operators, group_weakpoints, _ in self._judge_jobs(
-                        retry_jobs, records, round_two, gate_kind="link_gate"):
+                retried, unjudged_two = self._judge_jobs(
+                    retry_jobs, records, round_two, gate_kind="link_gate")
+                unjudged.extend(unjudged_two)
+                for group_operators, group_weakpoints, _ in retried:
                     retried_relations += len(group_operators) + len(group_weakpoints)
                     operators.extend(group_operators)
                     weakpoints.extend(group_weakpoints)
@@ -842,13 +859,19 @@ class Step3IdentifyStructuresPlugin:
                         "package_set": sorted(set(local.get("package_set") or []))}
             output = context.work_dir / "integration_step3_proposals.json"
             atomic_write_json(output, artifact)
+            findings = [Finding("STEP3_GROUP_UNJUDGED", "warning",
+                                f"group {entry} was dropped after repeated call failures")
+                        for entry in unjudged]
             return StageResult("succeeded", artifacts=[ArtifactDraft(output, "integration.step3_proposals", "application/json", {
                 "schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                 "operator_count": len(operators), "weakpoint_count": len(weakpoints), "candidate_knowledge_count": len(candidate_knowledges),
-            })], metadata={"step": 3, "operator_count": len(operators), "weakpoint_count": len(weakpoints),
-                           "candidate_knowledge_count": len(candidate_knowledges),
-                           "link_retry_group_count": len(retry_jobs), "link_retry_relation_count": retried_relations,
-                           **summary_stats, **tree_stats})
+                "unjudged_group_count": len(unjudged),
+            })], findings=findings,
+                metadata={"step": 3, "operator_count": len(operators), "weakpoint_count": len(weakpoints),
+                          "candidate_knowledge_count": len(candidate_knowledges),
+                          "link_retry_group_count": len(retry_jobs), "link_retry_relation_count": retried_relations,
+                          "unjudged_group_count": len(unjudged), "unjudged_groups": unjudged[:20],
+                          **summary_stats, **tree_stats})
         except (Step1InputError, ValueError, KeyError, RuntimeError, OSError, json.JSONDecodeError) as exc:
             return StageResult("failed", findings=[Finding("STEP3_FAILED", "error", str(exc))])
 
