@@ -163,6 +163,23 @@ class EquivalenceMergeTests(unittest.TestCase):
         self.assertEqual(merges, [])
         self.assertEqual(aliases, {})
 
+    def test_unordered_operators_deduplicate_across_variable_order(self):
+        """Rewriting can name the same operands in two orders; that is one operator.
+
+        The compiler rejects a graph whose operators repeat an id, and an
+        unordered operator's id is built from a sorted endpoint list.
+        """
+        operators = [{"id": "op1", "type": "conjunction", "variables": ["b", "a"],
+                      "conclusion": None, "metadata": {"source": "one"}},
+                     {"id": "op2", "type": "conjunction", "variables": ["a", "b"],
+                      "conclusion": None, "metadata": {"source": "two"}}]
+        kept, _, _, _ = merge_equivalent_nodes(
+            [self._equiv("c", "b"), *operators], [], {"a", "b", "c"})
+        self.assertEqual(len(kept), 1, "the two spellings are one operator")
+        # `b` is the class representative (smallest id), and the endpoint order
+        # the merge writes is sorted.
+        self.assertEqual(kept[0]["variables"], ["a", "b"])
+
     def test_no_equivalence_leaves_everything_untouched(self):
         operators = [{"id": "op1", "type": "contradiction", "variables": ["a", "b"],
                       "conclusion": None, "metadata": {}}]

@@ -146,12 +146,23 @@ def merge_equivalent_nodes(
             continue
         if kind in {"conjunction", "disjunction"} and len(variables) < 2:
             continue
+        # An unordered operator's id is computed from a *sorted* endpoint list, so
+        # two occurrences naming the same operands in a different order are the
+        # same operator.  Rewriting can produce exactly that, and keeping both
+        # makes the compiler reject the graph for duplicate operator ids.
+        if kind in {"conjunction", "disjunction"}:
+            variables = sorted(variables)
         # Two operators that differed only by which member of a class they named
         # are now the same operator, so the id is recomputed from the endpoints.
         rewritten = {**operator, "variables": variables,
                      "id": _stable_id(f"operator_{kind}", variables) if variables else operator.get("id")}
         kept_operators.append(rewritten)
-    kept_operators = list({json.dumps(item, sort_keys=True): item for item in kept_operators}.values())
+    # Deduplicate by identity, not by JSON: the point of the merge is that two
+    # spellings of one operator collapse, and their metadata may differ.
+    by_id: dict[str, JSONDict] = {}
+    for item in kept_operators:
+        by_id.setdefault(str(item["id"]), item)
+    kept_operators = list(by_id.values())
 
     kept_weakpoints: list[JSONDict] = []
     for weakpoint in weakpoints:
