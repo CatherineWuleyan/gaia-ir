@@ -23,6 +23,10 @@ from .step3 import PROPOSAL_SCHEMA, SCHEMA_VERSION, _category, _post_json
 
 
 STEP_NAME = "step4_formalize_integration"
+# Step 3b reconciles the domain spine; Step 4 prefers its output when present so
+# paraphrased conclusions are merged and unlinked Package conclusions are
+# re-attached before the integration is formalized.
+SPINE_SCHEMA = "gaia.integration.domain_spine"
 _BRACKET_ID = re.compile(r"\[([^\]]+)\]")
 
 
@@ -397,6 +401,18 @@ class Step4FormalizeIntegrationPlugin:
             proposals = _read_json(context, proposal_ref)
             if proposals.get("schema_name") != PROPOSAL_SCHEMA or proposals.get("schema_version") != SCHEMA_VERSION:
                 raise ValueError("Step 4 requires the supported Step 3 proposal schema")
+            # Step 3b is optional: without it Step 4 formalizes the raw Step 3
+            # proposal unchanged.  With it, the already-deduplicated domain spine
+            # and the re-linked Package conclusions replace the raw lists.
+            spine_ref = context.latest(SPINE_SCHEMA)
+            spine = _read_json(context, spine_ref) if spine_ref is not None else None
+            if spine is not None and spine.get("schema_name") != SPINE_SCHEMA:
+                raise ValueError("Step 4 requires the supported Step 3b spine schema")
+            if spine is not None:
+                proposals = {**proposals,
+                             "operators": spine.get("operators") or [],
+                             "weakpoints": spine.get("weakpoints") or [],
+                             "candidate_knowledges": spine.get("candidate_knowledges") or []}
             records, anchors = _load_records(context)
             raw_operators = [copy.deepcopy(item) for item in proposals.get("operators") or [] if isinstance(item, dict)]
             aliases, merges = _equivalence_aliases(raw_operators, records)
@@ -410,9 +426,19 @@ class Step4FormalizeIntegrationPlugin:
                 context, proposals, records, anchors, aliases, merges, operators, weakpoints, candidate_contents,
             )
             emitted = emit_formalization(context, document, step=4, step_name=STEP_NAME)
+            spine_metadata = {} if spine is None else {
+                "spine_domain_conclusion_count": spine.get("domain_conclusion_count"),
+                "spine_domain_merge_count": len(spine.get("dedup_classes") or []),
+                "spine_cluster_link_count": len(spine.get("cluster_links") or []),
+                "spine_unlinked_conclusion_count": len(spine.get("unlinked_conclusion_ids") or []),
+            }
+            for unlinked in (spine or {}).get("unlinked_conclusion_ids") or []:
+                findings.append(Finding(
+                    "STEP4_CONCLUSION_UNLINKED", "warning",
+                    f"{unlinked} supports no domain conclusion and is not part of the published spine"))
             return StageResult(emitted.status, emitted.artifacts, [*findings, *emitted.findings], {
                 **emitted.metadata, "equivalence_merge_count": len(merges),
-                "materialized_candidate_count": len(candidate_contents),
+                "materialized_candidate_count": len(candidate_contents), **spine_metadata,
             })
         except (Step1InputError, ValueError, KeyError, RuntimeError, OSError, json.JSONDecodeError) as exc:
             return StageResult("failed", findings=[Finding("STEP4_FORMALIZATION_FAILED", "error", str(exc))])

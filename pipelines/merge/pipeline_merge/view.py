@@ -16,7 +16,21 @@ layer reuses ``weakpoints``.)
 
 Compiler-internal helper / interface nodes (``__*``, ``*_result``, AltExp,
 ``step4_weakpoint_*``, ``helper_relation_*``) are plumbing and never rendered.
-Node labels are shortened to ``{paper-letter}:{local-label}`` / ``K:{n}``.
+
+Labels follow the frozen concise scheme, so the projection is readable without a
+post-processing pass.  The legend is emitted as ``metadata.label_scheme``:
+
+===========  ==========================================================
+``K<n>·L<m>``  domain conclusion of the summary tree at level ``m``
+``C<n>``       conclusion owned by an input Package (cluster context)
+``A<n>``       summarized observation premise / assertion
+``O<n>``       observation claim imported from a paper
+``P<n>``       paper claim
+===========  ==========================================================
+
+The counters are stable for a fixed artifact set because nodes are emitted in a
+deterministic order.  Nothing is lost by shortening: every node keeps its full
+``qid`` and its pre-shortening label in ``details``.
 """
 from __future__ import annotations
 
@@ -38,17 +52,59 @@ _HELPER_RE = re.compile(
     r"alternative[_-]?explanation|step4_weakpoint_",
     re.I,
 )
+# The compiled IR carries no category metadata, so the local-id convention is the
+# observation signal: `claim_O*` are Step 2-discovered observations and `claim_E*`
+# imported experimental claims (the single-paper pipeline treats experimental
+# claims as first-class observations).
+_OBSERVATION_ID_RE = re.compile(r"^claim_(?:O|E)(?=$|\d|_)")
+# The concise scheme: one letter per node kind, numbered per kind.
+LABEL_LETTERS: dict[str, str] = {
+    "domain_conclusion": "K",
+    "package_conclusion": "C",
+    "premise": "A",
+    "observation": "O",
+    "paper_claim": "P",
+}
+LABEL_LEGEND: dict[str, str] = {
+    "K": "domain conclusion of the summary tree (·L<m> is its summary level)",
+    "C": "conclusion owned by an input Package (cluster context)",
+    "A": "summarized observation premise / assertion",
+    "O": "observation claim imported from a paper",
+    "P": "paper claim",
+}
 
 
 def _is_helper(knowledge_id: str) -> bool:
     return bool(_HELPER_RE.search(str(knowledge_id)))
 
 
-def _short_label(knowledge_id: str, letter: str) -> str:
-    local = knowledge_id.split("::", 1)[1] if "::" in knowledge_id else knowledge_id
-    if local.startswith("claim_"):
-        local = local[len("claim_"):]
-    return f"{letter}:{local}"
+def _is_observation_qid(knowledge_id: str) -> bool:
+    local = str(knowledge_id).split("::")[-1]
+    return bool(_OBSERVATION_ID_RE.match(local))
+
+
+def _node_kind_for_paper_claim(knowledge_id: str, provenance: list[str]) -> str:
+    """Classify a referenced paper claim as `O` (observation) or `P` (claim).
+
+    The compiled IR carries no category metadata, so the local-id convention
+    (`claim_O*` / `claim_E*`) is the primary signal.  A claim the integration
+    re-exports keeps a ``package_provenance`` naming *its own* Package: when that
+    Package is an integration namespace, the record is an integration-owned
+    conclusion or observation premise, so it stays an observation even if the
+    local id lost the `O`.
+    """
+    if _is_observation_qid(knowledge_id):
+        return "observation"
+    if provenance and all(str(item).startswith("integration:") for item in provenance):
+        return "observation"
+    return "paper_claim"
+
+
+def _is_k_conclusion(node: JSONDict) -> bool:
+    """A domain conclusion node: `candidate_K_*` backing a `K<n>` label."""
+    details = node.get("details") if isinstance(node.get("details"), Mapping) else {}
+    qid = str(details.get("qid") or node.get("id") or "")
+    return "candidate_K" in qid
 
 
 def _read_json(store: RunStore, ref: ArtifactRef) -> JSONDict:
@@ -56,8 +112,36 @@ def _read_json(store: RunStore, ref: ArtifactRef) -> JSONDict:
         return json.load(handle)
 
 
+class _LabelScheme:
+    """Per-kind running counters that turn a node kind into `K3·L2` / `P17`.
+
+    The `K` counter is reserved for the top-level domain conclusions of the
+    summary tree; a conclusion owned by an input Package is `C`, so the central
+    graph shows a handful of `K` bubbles instead of one per cluster.
+    """
+
+    def __init__(self) -> None:
+        self._counters: dict[str, int] = {}
+        self.by_kind: dict[str, int] = {}
+
+    def label(self, kind: str) -> str:
+        """Reserve the next number for a kind without emitting a node."""
+        letter = LABEL_LETTERS.get(kind, "P")
+        self._counters[letter] = self._counters.get(letter, 0) + 1
+        self.by_kind[letter] = self.by_kind.get(letter, 0) + 1
+        return f"{letter}{self._counters[letter]}"
+
+    def next(self, kind: str, *, level: Any = None) -> str:
+        base = self.label(kind)
+        suffix = f"·L{level}" if base.startswith("K") and isinstance(level, int) and level > 0 else ""
+        return f"{base}{suffix}"
+
+    def legend(self) -> JSONDict:
+        return {**LABEL_LEGEND, "by_kind": dict(sorted(self.by_kind.items()))}
+
+
 class MergeViewAdapter:
-    version = "4"
+    version = "6"  # v6 labels every node with the concise K/C/A/O/P scheme
 
     def project(
         self,
@@ -79,7 +163,9 @@ class MergeViewAdapter:
                 qid, content = knowledge.get("id"), knowledge.get("content")
                 if not isinstance(qid, str) or not qid or _is_helper(qid):
                     continue
-                known[qid] = {"content": content or "", "type": knowledge.get("type", "claim")}
+                known[qid] = {"content": content or "", "type": knowledge.get("type", "claim"),
+                              "provenance": list((knowledge.get("metadata") or {}).get("package_provenance") or [])
+                              if isinstance(knowledge.get("metadata"), Mapping) else []}
 
         # 2. Pre-read the integration delta so its touched claims can be routed
         #    to the delta layer (the viewer filters nodes by layer).
@@ -103,27 +189,23 @@ class MergeViewAdapter:
                 if isinstance(knowledge_id, str) and knowledge_id not in known and not _is_helper(knowledge_id):
                     k_ids.append(knowledge_id)
 
-        packages = sorted({str(payload.get("package_name") or "") for payload in paper_payloads})
-        letters = {name: chr(ord("A") + index) for index, name in enumerate(packages)}
-
         nodes: list[JSONDict] = []
         edges: list[JSONDict] = []
         search_documents: list[JSONDict] = []
         source_artifacts: list[str] = []
         emitted: set[str] = set()
-        labels: dict[str, str] = {}
+        scheme = _LabelScheme()
+        input_packages = {
+            f"{payload.get('namespace')}:{payload.get('package_name')}" for payload in paper_payloads
+        }
 
-        def paper_letter(qid: str) -> str:
-            for name, letter in letters.items():
-                if f":{name}::" in qid:
-                    return letter
-            return "?"
-
-        def add_node(node_id: str, label: str, content: str, kind: str, layer: str, qid: str) -> str:
+        def add_node(node_id: str, node_kind: str, content: str, kind: str, layer: str,
+                     qid: str, *, original: str = "", level: Any = None,
+                     metadata: Mapping[str, Any] | None = None) -> str:
             if node_id in emitted:
                 return node_id
             emitted.add(node_id)
-            labels[qid] = label
+            label = scheme.next(node_kind, level=level)
             nodes.append({
                 "id": node_id,
                 "entity_id": label,
@@ -138,6 +220,8 @@ class MergeViewAdapter:
                 "summary": content,
                 "source_anchor_ids": [],
                 "details": {"id": qid, "qid": qid, "type": kind, "content": content,
+                            "original_label": original or qid,
+                            "metadata": dict(metadata or {}),
                             "integration_owned": layer == _DELTA_LAYER and qid not in known},
             })
             search_documents.append({
@@ -149,10 +233,14 @@ class MergeViewAdapter:
         def knowledge_node(knowledge_id: str, content: str, kind: str) -> str | None:
             if knowledge_id not in known:
                 return None
+            record = known[knowledge_id]
             layer = _DELTA_LAYER if knowledge_id in delta_qids else _CONTEXT_LAYER
-            return add_node(f"knowledge:{knowledge_id}",
-                            _short_label(knowledge_id, paper_letter(knowledge_id)),
-                            content, kind, layer, knowledge_id)
+            provenance = [str(item) for item in record.get("provenance") or []]
+            node_kind = _node_kind_for_paper_claim(knowledge_id, provenance)
+            return add_node(f"knowledge:{knowledge_id}", node_kind,
+                            content, kind, layer, knowledge_id,
+                            original=knowledge_id.split("::")[-1],
+                            metadata={"package_provenance": provenance})
 
         def relation_edge(source: str, target: str, label: str, layer: str) -> None:
             if f"knowledge:{source}" not in emitted or f"knowledge:{target}" not in emitted:
@@ -202,24 +290,26 @@ class MergeViewAdapter:
             for ref in artifacts:
                 if ref.kind == "formalization" and ref.producer_stage == _INTEGRATION_STAGE:
                     source_artifacts.append(ref.artifact_id)
-            k_counter = 0
-            a_counter = 0
             for knowledge_id in k_ids:
                 knowledge = (integration_doc.get("knowledges") or {}).get(knowledge_id) or {}
                 content = (knowledge.get("content") or {}).get("canonical", "") if isinstance(knowledge.get("content"), Mapping) else ""
+                metadata = knowledge.get("metadata") if isinstance(knowledge.get("metadata"), Mapping) else {}
+                level = metadata.get("conclusion_level")
                 # `candidate_A_*` is the summarized observation premise of an
-                # abduction star and `candidate_K_*` the domain conclusion; they
-                # must not both render as "K:".
-                if knowledge_id.startswith("candidate_A_"):
-                    a_counter += 1
-                    label = f"A:{a_counter}"
+                # abduction star, `candidate_K_*` a conclusion.  Only a
+                # conclusion the summary tree tagged with a level is a domain
+                # conclusion (`K<n>·L<m>`); an untagged one is the conclusion an
+                # input Package (for example a cluster run) already owned, so it
+                # stays context (`C<n>`) instead of posing as a domain node.
+                if knowledge_id.split("::")[-1].startswith("candidate_A_"):
+                    node_kind = "premise"
+                elif isinstance(level, int) and level > 0:
+                    node_kind = "domain_conclusion"
                 else:
-                    k_counter += 1
-                    level = (knowledge.get("metadata") or {}).get("conclusion_level") if isinstance(knowledge.get("metadata"), Mapping) else None
-                    # Level-tagged domain conclusions make the summary tree legible.
-                    label = f"K:{k_counter}" + (f"·L{level}" if level else "")
-                add_node(f"knowledge:{knowledge_id}", label, content,
-                         knowledge.get("type", "claim"), _DELTA_LAYER, knowledge_id)
+                    node_kind = "package_conclusion"
+                add_node(f"knowledge:{knowledge_id}", node_kind, content,
+                         knowledge.get("type", "claim"), _DELTA_LAYER, knowledge_id,
+                         original=knowledge_id.split("::")[-1], level=level, metadata=metadata)
             for operator in integration_doc.get("graph", {}).get("operators", []):
                 variables = [str(v) for v in operator.get("variables") or []]
                 op_type = str(operator.get("type") or "")
@@ -240,6 +330,22 @@ class MergeViewAdapter:
                 for premise in premises:
                     relation_edge(premise, conclusion, strategy_type, _DELTA_LAYER)
 
+        # 5. Drop isolated K conclusions.
+        # A `candidate_K_*` conclusion that no edge touches is either context the
+        # integration never used or a conclusion nothing linked to; projecting it
+        # only scatters floating bubbles over the graph.
+        connected = {edge["source"] for edge in edges} | {edge["target"] for edge in edges}
+        dropped = {
+            node["id"] for node in nodes
+            if node["id"] not in connected and _is_k_conclusion(node)
+        }
+        if dropped:
+            nodes = [node for node in nodes if node["id"] not in dropped]
+            search_documents = [
+                doc for doc in search_documents
+                if not any(ref in dropped for ref in doc.get("refs") or [])
+            ]
+
         return ViewDocument(
             title="Domain graph · Papers + Integration",
             source_artifacts=source_artifacts,
@@ -256,6 +362,8 @@ class MergeViewAdapter:
                 "merge": True,
                 "delta_node_count": sum(1 for node in nodes if node["layer"] == _DELTA_LAYER),
                 "integration_edge_count": sum(1 for edge in edges if edge["layer"] == _DELTA_LAYER),
+                "unused_context_conclusions_dropped": len(dropped),
+                "label_scheme": scheme.legend(),
             },
             stages=[{"number": _STEP, "name": "integration", "validation_status": "passed"}],
         )

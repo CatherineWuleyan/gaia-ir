@@ -9,6 +9,7 @@ import threading
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from http.client import IncompleteRead
 from itertools import combinations
 from typing import Any, Mapping
 from urllib.error import HTTPError, URLError
@@ -187,7 +188,13 @@ def _retrieve_related(records: Mapping[str, JSONDict], max_workers: int | None =
     lock = threading.Lock()
 
     def retrieve(anchor_qid: str, candidate_qids: list[str]) -> None:
-        response = _post_json(_retrieval_prompt(records[anchor_qid], [records[q] for q in candidate_qids]))
+        try:
+            response = _post_json(_retrieval_prompt(records[anchor_qid], [records[q] for q in candidate_qids]))
+        except RuntimeError:
+            # One unreachable anchor must not discard the whole retrieval: the
+            # remaining anchors still cover the corpus, and a silently missing
+            # anchor only costs candidates, never correctness.
+            return
         if not isinstance(response, dict):
             return
         found: list[JSONDict] = []
@@ -255,7 +262,11 @@ def _post_json(prompt: str) -> Any:
             except json.JSONDecodeError as exc:
                 raise ValueError(f"DeepSeek returned non-JSON response: {raw[:200]!r}") from exc
             return json.loads(_response_content(envelope))
-        except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+        except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError,
+                IncompleteRead, ConnectionError) as exc:
+            # A dropped connection (IncompleteRead / reset) is a transport fault,
+            # not a model verdict: retry it like a rate limit instead of failing
+            # the whole stage.
             last_error = exc
             if attempt < _POST_ATTEMPTS - 1:
                 time.sleep(_retry_delay(exc, attempt))
@@ -275,6 +286,21 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
                        "Return operator_candidate if yes; not_operator only if a non-deterministic reasoning relation "
                        "(deduction/abduction/analogy/infer) is supported by the supplied content; otherwise "
                        "insufficient_evidence. Superficial topical similarity alone is insufficient_evidence.")
+        shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
+    elif kind == "link_gate":
+        # Second round, used only for groups where round 1 found nothing.  The
+        # first round asks a neutral "is there a relation?" question, which the
+        # model answers conservatively for the terse, abstract sentences a
+        # domain conclusion is made of.  Framing the same frozen pair as "does
+        # one of these support the other?" recovers links that exist but were
+        # not volunteered.
+        instruction = ("This group produced no relation in the first pass. Ask of EVERY candidate: does one of the "
+                       "two propositions support, refine, contradict, or narrow the other under compatible "
+                       "conditions? The first proposition is the retrieval anchor and is usually the more abstract "
+                       "one, so prefer reading the candidate as evidence, a special case, or a qualification of it. "
+                       "Return operator_candidate when a deterministic operator holds, not_operator when a directed "
+                       "reasoning relation is supported, and insufficient_evidence only when the supplied content "
+                       "really does not allow either. Do not invent content and do not accept topic overlap alone.")
         shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
     elif kind == "operator_type":
         instruction = ("Classify only deterministic operator candidates. Allowed types: equivalence, contradiction, negation, "
@@ -481,7 +507,10 @@ def _conclusion_level_prompt(premises: list[JSONDict], level: int) -> str:
         "the methods, tasks and conditions they cover).\n"
         "3. Every part of K must follow from the supplied premises: add no fact, condition, mechanism, metric or "
         "scope they do not already carry. Do not generalise beyond them.\n"
-        "4. If they share no common regularity, return null.\n"
+        "4. K is a compression, not a new claim: if what these premises share can already be stated by one of the "
+        "conclusions a source Package reached, restate that conclusion rather than writing a further paraphrase of "
+        "it. Several levels of the tree must not end up saying the same thing in different words.\n"
+        "5. If they share no common regularity, return null.\n"
         'BAD (a copy): "A holds, and B holds, while C holds."\n'
         'GOOD (a synthesis): "Across the evaluated <methods/tasks>, <common regularity>, conditional on <scope>."\n'
         'Return JSON only: {"summary":"...|null"}\n'
@@ -603,6 +632,7 @@ class Step3IdentifyStructuresPlugin:
     @staticmethod
     def _judge_candidates(
         candidates: list[JSONDict], group_id: str, records: Mapping[str, JSONDict],
+        gate_kind: str = "operator_gate",
     ) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict]]:
         """Run the gate/type/weakpoint sequence over one candidate batch."""
         if not candidates:
@@ -610,7 +640,7 @@ class Step3IdentifyStructuresPlugin:
         operators: list[JSONDict] = []
         weakpoints: list[JSONDict] = []
         candidate_knowledges: list[JSONDict] = []
-        gate = _decode(_prompt("operator_gate", group_id, candidates), "decisions")
+        gate = _decode(_prompt(gate_kind, group_id, candidates), "decisions")
         decisions = {str(x.get("candidate_id")): x.get("decision") for x in gate}
         operator_ids = {cid for cid, decision in decisions.items() if decision == "operator_candidate"}
         weakpoint_ids = {cid for cid, decision in decisions.items() if decision == "not_operator"}
@@ -722,6 +752,32 @@ class Step3IdentifyStructuresPlugin:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
                 candidate_knowledges.extend(group_candidates)
+            # Round 2: a group whose frozen pair produced nothing in round 1 is
+            # asked again with the relation framed as "does one proposition
+            # support / narrow / contradict the other?".  The neutral first
+            # question is answered conservatively for the abstract sentences that
+            # a cross-Package local context is made of, so a real link can be
+            # missed; the retry recovers it without loosening the mechanical
+            # validation, and everything it returns is still checked exactly like
+            # round 1.  Bootstrap batches are already joint and are not retried.
+            retry_jobs: list[tuple[list[JSONDict], str]] = []
+            if local.get("mode") != "bootstrap":
+                for job, (group_operators, group_weakpoints, _) in zip(jobs, results):
+                    if not group_operators and not group_weakpoints and job[0]:
+                        retry_jobs.append(job)
+            retried_relations = 0
+            if retry_jobs:
+                with ThreadPoolExecutor(
+                    max_workers=min(_worker_count("GAIA_MERGE_JUDGE_WORKERS", 8), len(retry_jobs))
+                ) as pool:
+                    retried = list(pool.map(
+                        lambda job: self._judge_candidates(job[0], job[1], records, gate_kind="link_gate"),
+                        retry_jobs,
+                    ))
+                for group_operators, group_weakpoints, _ in retried:
+                    retried_relations += len(group_operators) + len(group_weakpoints)
+                    operators.extend(group_operators)
+                    weakpoints.extend(group_weakpoints)
             # Collapse a hypothesis supported by many observations into one
             # summarized observation premise before the domain conclusion is
             # synthesized from the surviving relations.
@@ -750,6 +806,7 @@ class Step3IdentifyStructuresPlugin:
                 "operator_count": len(operators), "weakpoint_count": len(weakpoints), "candidate_knowledge_count": len(candidate_knowledges),
             })], metadata={"step": 3, "operator_count": len(operators), "weakpoint_count": len(weakpoints),
                            "candidate_knowledge_count": len(candidate_knowledges),
+                           "link_retry_group_count": len(retry_jobs), "link_retry_relation_count": retried_relations,
                            **summary_stats, **tree_stats})
         except (Step1InputError, ValueError, KeyError, RuntimeError, OSError, json.JSONDecodeError) as exc:
             return StageResult("failed", findings=[Finding("STEP3_FAILED", "error", str(exc))])

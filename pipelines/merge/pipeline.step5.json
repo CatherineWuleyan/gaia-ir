@@ -1,6 +1,6 @@
 {
   "pipeline_id": "pipeline-merge-step5",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "view_adapter": "pipeline_merge.view:MergeViewAdapter",
   "stages": [
     {
@@ -17,14 +17,37 @@
         }
       }
     },
-    {"name": "step1_freeze_inputs", "plugin": "pipeline_merge.step1:Step1FreezeInputsPlugin", "options": {}},
-    {"name": "step2_retrieve_domain_local", "plugin": "pipeline_merge.step2:Step2RetrieveDomainLocalPlugin", "options": {}},
-    {"name": "step3_identify_structures", "plugin": "pipeline_merge.step3:Step3IdentifyStructuresPlugin", "options": {}},
-    {"name": "step4_formalize_integration", "plugin": "pipeline_merge.step4:Step4FormalizeIntegrationPlugin", "options": {}},
+    {
+      "name": "step1_freeze_inputs",
+      "plugin": "pipeline_merge.step1:Step1FreezeInputsPlugin",
+      "options": {}
+    },
+    {
+      "name": "step2_retrieve_domain_local",
+      "plugin": "pipeline_merge.step2:Step2RetrieveDomainLocalPlugin",
+      "options": {}
+    },
+    {
+      "name": "step3_identify_structures",
+      "plugin": "pipeline_merge.step3:Step3IdentifyStructuresPlugin",
+      "options": {}
+    },
+    {
+      "name": "step3b_align_domain_spine",
+      "plugin": "pipeline_merge.step3b:Step3bAlignDomainSpinePlugin",
+      "options": {}
+    },
+    {
+      "name": "step4_formalize_integration",
+      "plugin": "pipeline_merge.step4:Step4FormalizeIntegrationPlugin",
+      "options": {}
+    },
     {
       "name": "step5_compile_gaia_ir",
       "plugin": "pipeline_merge.step5:Step5CompileMergedGaiaIRPlugin",
-      "options": {"compiler_plugin": "pipeline_harness.domain.compiler:Gaia05OfficialCompilerTool"}
+      "options": {
+        "compiler_plugin": "pipeline_harness.domain.compiler:Gaia05OfficialCompilerTool"
+      }
     }
   ]
 }

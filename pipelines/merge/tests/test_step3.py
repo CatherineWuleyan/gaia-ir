@@ -82,10 +82,74 @@ class Step3Tests(unittest.TestCase):
         self.assertEqual(proposal["operators"][0]["variables"], ["papers:new::a", "papers:old::b"])
 
 
+class LinkRetryTests(unittest.TestCase):
+    """A group that found nothing in round 1 is asked again with a directed framing.
+
+    The neutral first question ("is there a relation?") is answered conservatively
+    for the abstract sentences a cross-Package group is made of, so a real link
+    can be missed.  The retry must recover it through the same mechanical
+    validation chain, and must not run when round 1 already produced a relation.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _run(self, *, round_one, round_two):
+        content = "sparse networks transfer across dataset settings"
+        atomic_write_json(self.root/"new.json", _ir("new", "claim_1", content))
+        atomic_write_json(self.root/"old.json", _ir("old", "claim_1", content))
+        atomic_write_json(self.root/"manifest.json", {"artifacts": [
+            {"path": "new.json", "kind": "gaia.ir"}, {"path": "old.json", "kind": "gaia.ir"}]})
+        store = RunStore.create(self.root/"runs", _config(), input_manifest=self.root/"manifest.json")
+        calls: list[str] = []
+
+        def fake(prompt):
+            if "produced no relation in the first pass" in prompt:
+                kind = "link_gate"
+            elif "operator_candidate|not_operator" in prompt:
+                kind = "operator_gate"
+            elif "deterministic operator candidates" in prompt:
+                kind = "operator_type"
+            else:
+                kind = "weakpoint"
+            calls.append(kind)
+            candidates = json.loads(prompt.split("CANDIDATES=", 1)[1])
+            if kind in {"operator_gate", "link_gate"}:
+                decision = round_one if kind == "operator_gate" else round_two
+                return {"decisions": [{"candidate_id": item["candidate_id"], "decision": decision}
+                                      for item in candidates]}
+            if kind == "operator_type":
+                return {"decisions": [{"candidate_id": item["candidate_id"], "type": "equivalence",
+                                       "variables": item["source_qids"], "expression": "equivalent"}
+                                      for item in candidates]}
+            return {"weakpoints": []}
+
+        with patch("pipeline_merge.step1._validate_with_official_gaia",
+                   side_effect=lambda payload: (payload, "test")), \
+             patch("pipeline_merge.step3._post_json", side_effect=fake):
+            run_pipeline(store.run_dir)
+        ref = next(r for r in store.load_artifacts() if r.kind == "integration.step3_proposals")
+        return calls, read_json(store.artifact_path(ref))
+
+    def test_retry_recovers_a_relation_the_first_pass_missed(self):
+        calls, proposal = self._run(round_one="insufficient_evidence", round_two="operator_candidate")
+        self.assertIn("link_gate", calls)
+        self.assertEqual(len(proposal["operators"]), 1)
+        self.assertEqual(proposal["operators"][0]["type"], "equivalence")
+
+    def test_no_retry_when_the_first_pass_found_a_relation(self):
+        calls, proposal = self._run(round_one="operator_candidate", round_two="operator_candidate")
+        self.assertNotIn("link_gate", calls)
+        self.assertEqual(len(proposal["operators"]), 1)
+
+
 def _record(qid, package):
     return {"qid": qid, "package": package, "content": f"content of {qid}", "type": "claim",
             "metadata": {}, "source_anchor_ids": [], "category": None}
-
 
 class RetrievalCoverageTests(unittest.TestCase):
     """Bootstrap retrieval must anchor every Package, not just the smallest."""
