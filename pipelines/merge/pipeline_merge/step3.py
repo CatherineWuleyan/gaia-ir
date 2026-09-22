@@ -447,11 +447,18 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
         shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
     elif kind == "operator_type":
         instruction = ("Classify only deterministic operator candidates. Allowed types: equivalence, contradiction, negation, "
-                       "conjunction, disjunction. Equivalence requires compatible object, direction, scope, conditions, metrics "
-                       "and uncertainty. Contradiction requires compatible conditions and assertions that cannot both be true. "
-                       "A pair that differs only in wording, or where one statement is a special case of the other, is "
-                       "equivalence or neither -- NOT contradiction, and not both. Two statements that share a subject but "
-                       "make independent claims are a conjunction at most; only a direct negating clash is a contradiction.")
+                       "conjunction, disjunction. Equivalence requires compatible object, direction, scope, conditions, "
+                       "metrics and uncertainty.\n"
+                       "Before choosing contradiction, run this test and be strict about it:\n"
+                       "  (a) both statements are about the SAME measurement under COMPATIBLE conditions (dataset, model, "
+                       "      metric, setting);\n"
+                       "  (b) you can name the single assertion one makes that the other denies — write it as "
+                       "      \"X holds\" against \"X does not hold\".\n"
+                       "A specific result from one ablation does not conflict with a general statement that does not deny "
+                       "it. A statement that qualifies, narrows or explains another is NOT a contradiction. A wording "
+                       "difference is equivalence, never contradiction, and never both. If you cannot write the X / not-X "
+                       "pair, it is not a contradiction: use conjunction when both simply hold, equivalence when they say "
+                       "the same thing.")
         shape = '{"decisions":[{"candidate_id":"...","type":"...","variables":["qid"],"expression":"..."}]}'
     else:
         instruction = ("Classify non-operator relations between the supplied candidates as deduction, abduction, analogy, or "
