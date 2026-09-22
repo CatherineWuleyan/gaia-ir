@@ -64,6 +64,8 @@ _HELPER_ID_RE = re.compile(
 # experimental claims as "first-class observations").  An explicit
 # `observation_claim` type is honoured when a Package does carry it.
 _OBSERVATION_ID_RE = re.compile(r"^claim_(?:O|E)(?=$|\d|_)")
+# Knowledge ids written inside a weakpoint expression, e.g. "[prem1] -> [K]".
+_BRACKET_ID = re.compile(r"\[([^\]]+)\]")
 
 
 def _is_observation(record: Mapping[str, Any] | None) -> bool:
@@ -77,6 +79,96 @@ def _is_observation(record: Mapping[str, Any] | None) -> bool:
 def _stable_id(prefix: str, values: list[str]) -> str:
     raw = "|".join([prefix, *sorted(values)])
     return f"{prefix}_{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:16]}"
+
+
+def merge_equivalent_nodes(
+    operators: list[JSONDict], weakpoints: list[JSONDict], candidate_ids: set[str],
+) -> tuple[list[JSONDict], list[JSONDict], dict[str, str], list[JSONDict]]:
+    """Collapse every LLM-approved equivalence into one node and rewrite endpoints.
+
+    An approved equivalence *is* the decision that two propositions are the same
+    one, so keeping both nodes is a duplicate rather than a relation.  On the
+    3-cluster corpus the gate typed 80 pairs of paraphrases as `conjunction`,
+    which asserts nothing; the ones it did type as `equivalence` were left as two
+    nodes until Step 4/3b.
+
+    This runs once, after every relation of the stage has been collected.  A
+    merge inside the per-group judge would have concurrent groups writing shared
+    state, and the same conclusion appears in several overlapping groups, so the
+    outcome would depend on scheduling.
+
+    Only `equivalence` merges.  `conjunction` is a real (if weak) operator and is
+    deliberately not a merge trigger; the fix for a conjunction of paraphrases
+    belongs in the typing gate.
+    """
+    parent: dict[str, str] = {}
+
+    def find(qid: str) -> str:
+        parent.setdefault(qid, qid)
+        while parent[qid] != qid:
+            parent[qid] = parent[parent[qid]]
+            qid = parent[qid]
+        return qid
+
+    for operator in operators:
+        if operator.get("type") != "equivalence":
+            continue
+        variables = [str(v) for v in operator.get("variables") or []]
+        if len(variables) != 2:
+            continue
+        first, second = find(variables[0]), find(variables[1])
+        if first != second:
+            representative, alias = min(first, second), max(first, second)
+            parent[alias] = representative
+
+    aliases = {qid: find(qid) for qid in parent}
+    absorbed = {qid for qid, representative in aliases.items() if qid != representative}
+    classes: dict[str, list[str]] = defaultdict(list)
+    for qid, representative in aliases.items():
+        classes[representative].append(qid)
+    merges = [{"representative_qid": representative, "merged_qids": sorted(members)}
+              for representative, members in sorted(classes.items()) if len(members) > 1]
+    if not merges:
+        return operators, weakpoints, {}, []
+
+    def rewrite(qid: Any) -> str:
+        value = str(qid)
+        return aliases.get(value, value)
+
+    kept_operators: list[JSONDict] = []
+    for operator in operators:
+        kind = operator.get("type")
+        if kind == "equivalence":
+            continue  # the merge itself is now the record of this equivalence
+        variables = list(dict.fromkeys(rewrite(v) for v in operator.get("variables") or []))
+        arity = {"negation": 1, "contradiction": 2}.get(str(kind))
+        if arity is not None and len(variables) != arity:
+            continue
+        if kind in {"conjunction", "disjunction"} and len(variables) < 2:
+            continue
+        # Two operators that differed only by which member of a class they named
+        # are now the same operator, so the id is recomputed from the endpoints.
+        rewritten = {**operator, "variables": variables,
+                     "id": _stable_id(f"operator_{kind}", variables) if variables else operator.get("id")}
+        kept_operators.append(rewritten)
+    kept_operators = list({json.dumps(item, sort_keys=True): item for item in kept_operators}.values())
+
+    kept_weakpoints: list[JSONDict] = []
+    for weakpoint in weakpoints:
+        payload = weakpoint.get("payload")
+        if not isinstance(payload, Mapping):
+            continue
+        evidence = list(dict.fromkeys(rewrite(q) for q in payload.get("evidence_claim_ids") or []))
+        targets = list(dict.fromkeys(rewrite(q) for q in payload.get("target_claim_id") or []))
+        if not evidence or not targets or set(evidence) & set(targets):
+            continue  # a relation whose two sides are now one node is not a relation
+        kept_weakpoints.append({**weakpoint, "payload": {
+            **payload, "evidence_claim_ids": evidence, "target_claim_id": targets,
+            "expression": _BRACKET_ID.sub(lambda match: f"[{rewrite(match.group(1))}]",
+                                          str(payload.get("expression") or "")),
+        }})
+    kept_weakpoints = list({json.dumps(item, sort_keys=True): item for item in kept_weakpoints}.values())
+    return kept_operators, kept_weakpoints, aliases, merges
 
 
 def _worker_count(env_name: str, default: int) -> int:
@@ -874,10 +966,28 @@ class Step3IdentifyStructuresPlugin:
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())
+            # Every approved equivalence is a decision that two propositions are
+            # one, so collapse the classes now, while the whole relation set is
+            # frozen: the graph handed to Step 3b is already deduplicated instead
+            # of carrying the same conclusion under several ids.
+            before_operators, before_weakpoints = len(operators), len(weakpoints)
+            operators, weakpoints, equivalence_aliases, equivalence_merges = merge_equivalent_nodes(
+                operators, weakpoints, {str(item["id"]) for item in candidate_knowledges
+                                        if isinstance(item, Mapping) and isinstance(item.get("id"), str)})
+            if equivalence_merges:
+                absorbed = {qid for merge in equivalence_merges for qid in merge["merged_qids"]
+                            if qid != merge["representative_qid"]}
+                candidate_knowledges = [item for item in candidate_knowledges
+                                        if not (isinstance(item, Mapping) and str(item.get("id")) in absorbed)]
+                _Progress("step3", 0).note(
+                    f"equivalence merge: {len(equivalence_merges)} classes, {len(absorbed)} nodes "
+                    f"absorbed, relations {before_operators}+{before_weakpoints} -> "
+                    f"{len(operators)}+{len(weakpoints)}")
             artifact = {"schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                         "source_context_artifact": {"artifact_id": local_ref.artifact_id, "kind": local_ref.kind, "sha256": local_ref.sha256},
                         "groups": [{"group_id": g["group_id"]} for g in groups if isinstance(g, Mapping) and isinstance(g.get("group_id"), str)],
                         "operators": operators, "weakpoints": weakpoints, "candidate_knowledges": candidate_knowledges,
+                        "equivalence_merges": equivalence_merges,
                         "package_set": sorted(set(local.get("package_set") or []))}
             output = context.work_dir / "integration_step3_proposals.json"
             atomic_write_json(output, artifact)
@@ -888,9 +998,12 @@ class Step3IdentifyStructuresPlugin:
                 "schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                 "operator_count": len(operators), "weakpoint_count": len(weakpoints), "candidate_knowledge_count": len(candidate_knowledges),
                 "unjudged_group_count": len(unjudged),
+                "equivalence_merge_count": len(equivalence_merges),
             })], findings=findings,
                 metadata={"step": 3, "operator_count": len(operators), "weakpoint_count": len(weakpoints),
                           "candidate_knowledge_count": len(candidate_knowledges),
+                          "equivalence_merge_count": len(equivalence_merges),
+                          "equivalence_merged_node_count": sum(len(m["merged_qids"]) - 1 for m in equivalence_merges),
                           "round_one_group_count": len(jobs), "round_one_relation_count": round_one_relations,
                           "retry_group_count": len(retry_jobs), "retry_relation_count": retried_relations,
                           "unjudged_group_count": len(unjudged), "unjudged_groups": unjudged[:20],

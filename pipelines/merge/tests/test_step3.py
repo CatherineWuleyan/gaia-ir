@@ -14,6 +14,7 @@ from pipeline_merge.step3 import (
     _retrieve_related,
     _summarize_abduction_stars,
     _synthesize_conclusion_tree,
+    merge_equivalent_nodes,
 )
 
 
@@ -34,13 +35,24 @@ class Step3Tests(unittest.TestCase):
     def setUp(self): self.tmp=tempfile.TemporaryDirectory(); self.root=Path(self.tmp.name)
     def tearDown(self): self.tmp.cleanup()
 
-    def _run(self, old_content):
+    def _run(self, old_content, evidence=None):
         atomic_write_json(self.root/"new.json", _ir("new","a","sparse networks transfer across dataset settings"))
         atomic_write_json(self.root/"old.json", _ir("old","b",old_content))
         atomic_write_json(self.root/"manifest.json", {"artifacts":[{"path":"new.json","kind":"gaia.ir"},{"path":"old.json","kind":"gaia.ir"}]})
         store=RunStore.create(self.root/"runs",_config(),input_manifest=self.root/"manifest.json")
+
+        def llm(prompt):
+            if evidence is not None and "Classify non-operator relations" in prompt:
+                candidates = json.loads(prompt.split("CANDIDATES=", 1)[1])
+                return {"weakpoints": [{"candidate_id": candidates[0]["candidate_id"],
+                                        "evidence_claim_ids": [evidence],
+                                        "target_claim_id": ["papers:new::a"],
+                                        "reasoning_type": "deduction", "evidence_anchor_ids": [],
+                                        "expression": f"[{evidence}] -> [papers:new::a]"}]}
+            return self._llm(prompt)
+
         with patch("pipeline_merge.step1._validate_with_official_gaia",side_effect=lambda payload:(payload,"test")), \
-             patch("pipeline_merge.step3._post_json", side_effect=self._llm):
+             patch("pipeline_merge.step3._post_json", side_effect=llm):
             run=run_pipeline(store.run_dir)
         ref=next(r for r in store.load_artifacts() if r.kind=="integration.step3_proposals")
         return run,read_json(store.artifact_path(ref))
@@ -56,10 +68,20 @@ class Step3Tests(unittest.TestCase):
             return {"decisions": [{"candidate_id": item["candidate_id"], "type": "equivalence", "variables": item["source_qids"], "expression": "equivalent"} for item in candidates]}
         return {"weakpoints": []}
 
-    def test_exact_cross_package_hit_becomes_operator(self):
+    def test_exact_cross_package_hit_merges_the_two_nodes(self):
+        """An approved equivalence is merged here, not left as two nodes plus an edge.
+
+        The gate deciding "these are the same proposition" *is* the decision, so
+        keeping both nodes is a duplicate, and leaving the equivalence as an
+        operator would make Step 4/3b re-derive a merge Step 3 already knows.
+        """
         run, proposal = self._run("sparse networks transfer across dataset settings")
         self.assertEqual(run.status, "succeeded")
-        self.assertEqual(proposal["operators"][0]["type"], "equivalence")
+        self.assertEqual(proposal["operators"], [], "the equivalence is consumed by the merge")
+        self.assertEqual(len(proposal["equivalence_merges"]), 1)
+        merge = proposal["equivalence_merges"][0]
+        self.assertEqual(merge["merged_qids"], ["papers:new::a", "papers:old::b"])
+        self.assertEqual(merge["representative_qid"], "papers:new::a")
 
     def test_non_exact_hit_is_rejected_not_invented(self):
         run, proposal = self._run("sparse networks transfer across model settings")
@@ -67,7 +89,24 @@ class Step3Tests(unittest.TestCase):
         self.assertEqual(proposal["operators"], [])
         self.assertEqual(proposal["weakpoints"], [])
 
-    def test_same_category_equivalence_is_left_for_step4_merge(self):
+    def test_relations_are_repointed_onto_the_representative(self):
+        """Every endpoint in the stage moves with the merge, so nothing dangles."""
+        _, proposal = self._run("sparse networks transfer across dataset settings",
+                                evidence="papers:old::b")
+        self.assertEqual(len(proposal["equivalence_merges"]), 1)
+        self.assertNotIn("papers:old::b", proposal["equivalence_merges"][0]["representative_qid"])
+        for weakpoint in proposal["weakpoints"]:
+            endpoints = [*weakpoint["payload"]["evidence_claim_ids"],
+                         *weakpoint["payload"]["target_claim_id"]]
+            self.assertEqual(endpoints, list(dict.fromkeys(endpoints)))
+        # The relation that used the absorbed id is gone only if it became a
+        # self-loop; either way no surviving weakpoint may name the alias.
+        for weakpoint in proposal["weakpoints"]:
+            self.assertNotIn("papers:old::b",
+                             [*weakpoint["payload"]["evidence_claim_ids"],
+                              *weakpoint["payload"]["target_claim_id"]])
+
+    def test_same_category_equivalence_is_merged_once(self):
         atomic_write_json(self.root/"new.json", _ir("new","a","sparse networks transfer across dataset settings", "O"))
         atomic_write_json(self.root/"old.json", _ir("old","b","sparse networks transfer across dataset settings", "O"))
         atomic_write_json(self.root/"manifest.json", {"artifacts":[{"path":"new.json","kind":"gaia.ir"},{"path":"old.json","kind":"gaia.ir"}]})
@@ -78,8 +117,58 @@ class Step3Tests(unittest.TestCase):
         ref=next(r for r in store.load_artifacts() if r.kind=="integration.step3_proposals")
         proposal=read_json(store.artifact_path(ref))
         self.assertEqual(run.status, "succeeded")
-        self.assertNotIn("equivalence_merges", proposal)
-        self.assertEqual(proposal["operators"][0]["variables"], ["papers:new::a", "papers:old::b"])
+        self.assertEqual(len(proposal["equivalence_merges"]), 1)
+        self.assertEqual(proposal["equivalence_merges"][0]["merged_qids"],
+                         ["papers:new::a", "papers:old::b"])
+
+
+class EquivalenceMergeTests(unittest.TestCase):
+    """An approved equivalence must leave one node, not two nodes and an edge."""
+
+    @staticmethod
+    def _equiv(left, right):
+        return {"id": f"operator_equivalence_{left}_{right}", "type": "equivalence",
+                "variables": [left, right], "conclusion": None, "metadata": {}}
+
+    def test_a_class_collapses_to_its_representative(self):
+        operators, weakpoints, aliases, merges = merge_equivalent_nodes(
+            [self._equiv("c", "a"), self._equiv("b", "a")], [], {"a", "b", "c"})
+        self.assertEqual(operators, [])
+        self.assertEqual(aliases["b"], "a")
+        self.assertEqual(aliases["c"], "a")
+        self.assertEqual([m["merged_qids"] for m in merges], [["a", "b", "c"]])
+
+    def test_endpoints_and_expressions_follow_the_merge(self):
+        weakpoints = [{"id": "w1", "payload": {
+            "evidence_claim_ids": ["paper1"], "target_claim_id": ["b"],
+            "reasoning_type": "deduction", "evidence_anchor_ids": [],
+            "expression": "[paper1] -> [b]"}}]
+        _, rewritten, _, _ = merge_equivalent_nodes([self._equiv("b", "a")], weakpoints, {"a", "b"})
+        self.assertEqual(rewritten[0]["payload"]["target_claim_id"], ["a"])
+        self.assertEqual(rewritten[0]["payload"]["expression"], "[paper1] -> [a]")
+
+    def test_a_relation_that_becomes_a_self_loop_is_dropped(self):
+        weakpoints = [{"id": "w1", "payload": {
+            "evidence_claim_ids": ["b"], "target_claim_id": ["a"],
+            "reasoning_type": "deduction", "evidence_anchor_ids": [], "expression": "[b]->[a]"}}]
+        _, rewritten, _, _ = merge_equivalent_nodes([self._equiv("b", "a")], weakpoints, {"a", "b"})
+        self.assertEqual(rewritten, [], "a -> a is not a relation")
+
+    def test_conjunction_is_not_a_merge_trigger(self):
+        """Only equivalence merges; conjunction is a weak operator, not a decision of sameness."""
+        operators = [{"id": "op1", "type": "conjunction", "variables": ["b", "a"],
+                      "conclusion": None, "metadata": {}}]
+        kept, _, aliases, merges = merge_equivalent_nodes(operators, [], {"a", "b"})
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(merges, [])
+        self.assertEqual(aliases, {})
+
+    def test_no_equivalence_leaves_everything_untouched(self):
+        operators = [{"id": "op1", "type": "contradiction", "variables": ["a", "b"],
+                      "conclusion": None, "metadata": {}}]
+        kept, _, aliases, merges = merge_equivalent_nodes(operators, [], {"a", "b"})
+        self.assertEqual(len(kept), 1)
+        self.assertEqual((aliases, merges), ({}, []))
 
 
 class LinkRetryTests(unittest.TestCase):
@@ -140,19 +229,21 @@ class LinkRetryTests(unittest.TestCase):
         calls, proposal = self._run(round_one="operator_candidate", round_two="insufficient_evidence")
         self.assertIn("group_gate", calls)
         self.assertNotIn("operator_gate", calls, "a group that answered round 1 needs no retry")
-        self.assertEqual(len(proposal["operators"]), 1)
+        # The operator it found is an equivalence, which Step 3 merges rather than
+        # emitting: the merge record is the surviving evidence that it was found.
+        self.assertEqual(len(proposal["equivalence_merges"]), 1)
+        self.assertEqual(proposal["operators"], [])
 
     def test_the_retry_asks_the_other_question(self):
         """A group the directed round missed is re-asked neutrally, not identically."""
         calls, proposal = self._run(round_one="insufficient_evidence", round_two="operator_candidate")
         self.assertEqual(calls[:2], ["group_gate", "operator_gate"])
-        self.assertEqual(len(proposal["operators"]), 1)
-        self.assertEqual(proposal["operators"][0]["type"], "equivalence")
+        self.assertEqual(len(proposal["equivalence_merges"]), 1)
 
     def test_no_retry_when_the_first_round_found_a_relation(self):
         calls, proposal = self._run(round_one="operator_candidate", round_two="operator_candidate")
         self.assertNotIn("operator_gate", calls)
-        self.assertEqual(len(proposal["operators"]), 1)
+        self.assertEqual(len(proposal["equivalence_merges"]), 1)
 
 
 class JudgeResilienceTests(unittest.TestCase):
