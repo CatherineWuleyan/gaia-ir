@@ -108,18 +108,18 @@ class LinkRetryTests(unittest.TestCase):
         calls: list[str] = []
 
         def fake(prompt):
-            if "produced no relation in the first pass" in prompt:
-                kind = "link_gate"
-            elif "operator_candidate|not_operator" in prompt:
-                kind = "operator_gate"
+            if "Re-read both propositions from scratch" in prompt:
+                kind = "operator_gate"          # round 2: the neutral re-ask
+            elif "support, refine, contradict, or " in prompt:
+                kind = "group_gate"             # round 1: the directed question
             elif "deterministic operator candidates" in prompt:
                 kind = "operator_type"
             else:
                 kind = "weakpoint"
             calls.append(kind)
             candidates = json.loads(prompt.split("CANDIDATES=", 1)[1])
-            if kind in {"operator_gate", "link_gate"}:
-                decision = round_one if kind == "operator_gate" else round_two
+            if kind in {"group_gate", "operator_gate"}:
+                decision = round_one if kind == "group_gate" else round_two
                 return {"decisions": [{"candidate_id": item["candidate_id"], "decision": decision}
                                       for item in candidates]}
             if kind == "operator_type":
@@ -135,15 +135,23 @@ class LinkRetryTests(unittest.TestCase):
         ref = next(r for r in store.load_artifacts() if r.kind == "integration.step3_proposals")
         return calls, read_json(store.artifact_path(ref))
 
-    def test_retry_recovers_a_relation_the_first_pass_missed(self):
+    def test_first_round_asks_the_directed_question(self):
+        """The directed framing is round 1: it is where the relations come from."""
+        calls, proposal = self._run(round_one="operator_candidate", round_two="insufficient_evidence")
+        self.assertIn("group_gate", calls)
+        self.assertNotIn("operator_gate", calls, "a group that answered round 1 needs no retry")
+        self.assertEqual(len(proposal["operators"]), 1)
+
+    def test_the_retry_asks_the_other_question(self):
+        """A group the directed round missed is re-asked neutrally, not identically."""
         calls, proposal = self._run(round_one="insufficient_evidence", round_two="operator_candidate")
-        self.assertIn("link_gate", calls)
+        self.assertEqual(calls[:2], ["group_gate", "operator_gate"])
         self.assertEqual(len(proposal["operators"]), 1)
         self.assertEqual(proposal["operators"][0]["type"], "equivalence")
 
-    def test_no_retry_when_the_first_pass_found_a_relation(self):
+    def test_no_retry_when_the_first_round_found_a_relation(self):
         calls, proposal = self._run(round_one="operator_candidate", round_two="operator_candidate")
-        self.assertNotIn("link_gate", calls)
+        self.assertNotIn("operator_gate", calls)
         self.assertEqual(len(proposal["operators"]), 1)
 
 

@@ -314,31 +314,41 @@ def _decode(prompt: str, key: str) -> list[JSONDict]:
 
 
 def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
-    if kind == "operator_gate":
-        instruction = ("Decide for every candidate whether a directly valid deterministic logical operator exists. "
-                       "Return operator_candidate if yes; not_operator only if a non-deterministic reasoning relation "
+    if kind == "group_gate":
+        # First round for a Step 2 group.  The neutral question "is there a
+        # relation?" is answered conservatively for the terse, abstract sentences
+        # a cross-Package group is made of: measured on the 3-cluster corpus, it
+        # returned nothing for 96 of 138 groups and every relation came from the
+        # directed re-ask.  So ask the directed question first — the framing names
+        # the roles instead of leaving the model to volunteer a relation.
+        instruction = ("Ask of EVERY candidate: does one of the two propositions support, refine, contradict, or "
+                       "narrow the other under compatible conditions? The first proposition is the retrieval anchor "
+                       "and is usually the more abstract one, so prefer reading the candidate as evidence, a special "
+                       "case, or a qualification of it. Return operator_candidate when a deterministic operator "
+                       "holds, not_operator when a directed reasoning relation is supported, and "
+                       "insufficient_evidence only when the supplied content really does not allow either. Do not "
+                       "invent content and do not accept topic overlap alone.")
+        shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
+    elif kind == "operator_gate":
+        # Second round, used only for groups where the directed question found
+        # nothing.  This is the neutral framing: a group the directed question
+        # missed may still contain a relation the model only volunteers when asked
+        # without a suggested direction, so the retry is a genuinely different
+        # question rather than the same one repeated.
+        instruction = ("This group produced no relation when asked whether one proposition supports, refines, "
+                       "contradicts or narrows the other. Re-read both propositions from scratch. Decide for every "
+                       "candidate whether a directly valid deterministic logical operator exists. Return "
+                       "operator_candidate if yes; not_operator only if a non-deterministic reasoning relation "
                        "(deduction/abduction/analogy/infer) is supported by the supplied content; otherwise "
                        "insufficient_evidence. Superficial topical similarity alone is insufficient_evidence.")
-        shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
-    elif kind == "link_gate":
-        # Second round, used only for groups where round 1 found nothing.  The
-        # first round asks a neutral "is there a relation?" question, which the
-        # model answers conservatively for the terse, abstract sentences a
-        # domain conclusion is made of.  Framing the same frozen pair as "does
-        # one of these support the other?" recovers links that exist but were
-        # not volunteered.
-        instruction = ("This group produced no relation in the first pass. Ask of EVERY candidate: does one of the "
-                       "two propositions support, refine, contradict, or narrow the other under compatible "
-                       "conditions? The first proposition is the retrieval anchor and is usually the more abstract "
-                       "one, so prefer reading the candidate as evidence, a special case, or a qualification of it. "
-                       "Return operator_candidate when a deterministic operator holds, not_operator when a directed "
-                       "reasoning relation is supported, and insufficient_evidence only when the supplied content "
-                       "really does not allow either. Do not invent content and do not accept topic overlap alone.")
         shape = '{"decisions":[{"candidate_id":"...","decision":"operator_candidate|not_operator|insufficient_evidence"}]}'
     elif kind == "operator_type":
         instruction = ("Classify only deterministic operator candidates. Allowed types: equivalence, contradiction, negation, "
                        "conjunction, disjunction. Equivalence requires compatible object, direction, scope, conditions, metrics "
-                       "and uncertainty. Contradiction requires compatible conditions and assertions that cannot both be true.")
+                       "and uncertainty. Contradiction requires compatible conditions and assertions that cannot both be true. "
+                       "A pair that differs only in wording, or where one statement is a special case of the other, is "
+                       "equivalence or neither -- NOT contradiction, and not both. Two statements that share a subject but "
+                       "make independent claims are a conjunction at most; only a direct negating clash is a contradiction.")
         shape = '{"decisions":[{"candidate_id":"...","type":"...","variables":["qid"],"expression":"..."}]}'
     else:
         instruction = ("Classify non-operator relations between the supplied candidates as deduction, abduction, analogy, or "
@@ -665,7 +675,7 @@ class Step3IdentifyStructuresPlugin:
     @staticmethod
     def _judge_candidates(
         candidates: list[JSONDict], group_id: str, records: Mapping[str, JSONDict],
-        gate_kind: str = "operator_gate",
+        gate_kind: str = "group_gate",
     ) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict]]:
         """Run the gate/type/weakpoint sequence over one candidate batch."""
         if not candidates:
@@ -753,7 +763,7 @@ class Step3IdentifyStructuresPlugin:
         )
 
     @staticmethod
-    def _judge_jobs(jobs, records, progress, gate_kind="operator_gate"):
+    def _judge_jobs(jobs, records, progress, gate_kind="group_gate"):
         """Judge every job in parallel, reporting progress as each one lands.
 
         A group whose calls never succeed is dropped rather than raised: Step 3
@@ -779,6 +789,11 @@ class Step3IdentifyStructuresPlugin:
         ) as pool:
             results = list(pool.map(run, jobs))
         return results, unjudged
+
+    @staticmethod
+    def _relation_count(results) -> int:
+        """Relations a round of groups actually produced."""
+        return sum(len(operators) + len(weakpoints) for operators, weakpoints, _ in results)
 
     def run(self, context: StageContext) -> StageResult:
         try:
@@ -806,32 +821,39 @@ class Step3IdentifyStructuresPlugin:
             else:
                 jobs = [(_group_candidates(group, records), str(group["group_id"])) for group in groups]
             round_one = _Progress("step3 round-1 groups", len(jobs), every=25)
-            round_one.note(f"{len(jobs)} groups, {sum(len(job[0]) for job in jobs)} candidate pairs")
+            round_one.note(f"{len(jobs)} groups, {sum(len(job[0]) for job in jobs)} candidate pairs, "
+                           f"directed framing")
             results, unjudged = self._judge_jobs(jobs, records, round_one)
+            round_one_relations = self._relation_count(results)
+            round_one.note(f"{round_one_relations} relations from the directed round")
             for group_operators, group_weakpoints, group_candidates in results:
                 operators.extend(group_operators)
                 weakpoints.extend(group_weakpoints)
                 candidate_knowledges.extend(group_candidates)
             # Round 2: a group whose frozen pair produced nothing in round 1 is
-            # asked again with the relation framed as "does one proposition
-            # support / narrow / contradict the other?".  The neutral first
-            # question is answered conservatively for the abstract sentences that
-            # a cross-Package local context is made of, so a real link can be
-            # missed; the retry recovers it without loosening the mechanical
-            # validation, and everything it returns is still checked exactly like
-            # round 1.  Bootstrap batches are already joint and are not retried.
+            # asked again with the OTHER framing.  Round 1 asks the directed
+            # question ("does one support / narrow / contradict the other?"),
+            # which measured far better than the neutral one; the retry asks the
+            # neutral question, so a group the directed framing missed still gets
+            # a genuinely different reading.  Everything the retry returns goes
+            # through exactly the same mechanical validation.  Bootstrap batches
+            # are joint comparisons of every cross-Package pair and are not
+            # retried.
             retry_jobs: list[tuple[list[JSONDict], str]] = []
             if local.get("mode") != "bootstrap":
                 for job, (group_operators, group_weakpoints, _) in zip(jobs, results):
                     if not group_operators and not group_weakpoints and job[0]:
                         retry_jobs.append(job)
+            retry_gate_kind = "operator_gate"
             retried_relations = 0
             if retry_jobs:
                 round_two = _Progress("step3 round-2 retries", len(retry_jobs), every=25)
-                round_two.note(f"{len(retry_jobs)} of {len(jobs)} groups produced no relation in round 1")
+                round_two.note(f"{len(retry_jobs)} of {len(jobs)} groups produced no relation in "
+                               f"round 1 (directed); retrying with the neutral framing")
                 retried, unjudged_two = self._judge_jobs(
-                    retry_jobs, records, round_two, gate_kind="link_gate")
+                    retry_jobs, records, round_two, gate_kind=retry_gate_kind)
                 unjudged.extend(unjudged_two)
+                round_two.note(f"{self._relation_count(retried)} relations from the neutral retry")
                 for group_operators, group_weakpoints, _ in retried:
                     retried_relations += len(group_operators) + len(group_weakpoints)
                     operators.extend(group_operators)
@@ -869,7 +891,8 @@ class Step3IdentifyStructuresPlugin:
             })], findings=findings,
                 metadata={"step": 3, "operator_count": len(operators), "weakpoint_count": len(weakpoints),
                           "candidate_knowledge_count": len(candidate_knowledges),
-                          "link_retry_group_count": len(retry_jobs), "link_retry_relation_count": retried_relations,
+                          "round_one_group_count": len(jobs), "round_one_relation_count": round_one_relations,
+                          "retry_group_count": len(retry_jobs), "retry_relation_count": retried_relations,
                           "unjudged_group_count": len(unjudged), "unjudged_groups": unjudged[:20],
                           **summary_stats, **tree_stats})
         except (Step1InputError, ValueError, KeyError, RuntimeError, OSError, json.JSONDecodeError) as exc:
