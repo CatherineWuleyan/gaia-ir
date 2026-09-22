@@ -406,8 +406,20 @@ class Step4FormalizeIntegrationPlugin:
             spine = spine if isinstance(spine, Mapping) else None
             records, anchors = _load_records(context)
             raw_operators = [copy.deepcopy(item) for item in proposals.get("operators") or [] if isinstance(item, dict)]
+            # Step 3b's ungrouped audit reports same-meaning pairs directly.  They
+            # join the merge below (which keeps the O/E/non-OE category guard)
+            # instead of becoming an operator the compiler would reject.
+            for pair in proposals.get("equivalence_pairs") or []:
+                if isinstance(pair, (list, tuple)) and len(pair) == 2:
+                    raw_operators.append({"type": "equivalence",
+                                          "variables": [str(pair[0]), str(pair[1])], "conclusion": None,
+                                          "metadata": {"source": "step3b_ungrouped"}})
             aliases, merges = _equivalence_aliases(raw_operators, records)
-            operators = [rewritten for item in raw_operators if (rewritten := _rewrite_operator(item, aliases)) is not None]
+            # An equivalence was already consumed by the merge, in Step 3 or here;
+            # emitting it as an operator would only make Step 5 reject it.
+            operators = [rewritten for item in raw_operators
+                         if item.get("type") != "equivalence"
+                         and (rewritten := _rewrite_operator(item, aliases)) is not None]
             operators = list({json.dumps(item, sort_keys=True): item for item in operators}.values())
             weakpoints = [rewritten for item in proposals.get("weakpoints") or []
                           if isinstance(item, dict) and (rewritten := _rewrite_weakpoint(item, aliases)) is not None]

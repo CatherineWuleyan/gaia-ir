@@ -915,6 +915,17 @@ class Step3IdentifyStructuresPlugin:
             round_one = _Progress("step3 round-1 groups", len(jobs), every=25)
             round_one.note(f"{len(jobs)} groups, {sum(len(job[0]) for job in jobs)} candidate pairs, "
                            f"directed framing")
+            # A group with no candidate pair is not a judgement of "no relation":
+            # there was nothing to judge.  Measured on the 3-cluster corpus, most
+            # empty groups are of this kind — Step 2 builds a group from a seed
+            # plus its lexical hits, the hit list is capped globally (`TOP_K`), and
+            # an unretrieved seed degenerates to a one-proposition group that
+            # `_build_groups` drops.  Counting it separately keeps a retrieval gap
+            # from reading as a model verdict.
+            empty_jobs = sum(1 for job in jobs if not job[0])
+            if empty_jobs:
+                round_one.note(f"{empty_jobs} groups have no candidate pair at all "
+                               f"(a Step 2 retrieval gap, not a judgement)")
             results, unjudged = self._judge_jobs(jobs, records, round_one)
             round_one_relations = self._relation_count(results)
             round_one.note(f"{round_one_relations} relations from the directed round")
@@ -994,6 +1005,12 @@ class Step3IdentifyStructuresPlugin:
             findings = [Finding("STEP3_GROUP_UNJUDGED", "warning",
                                 f"group {entry} was dropped after repeated call failures")
                         for entry in unjudged]
+            if empty_jobs:
+                findings.append(Finding(
+                    "STEP3_GROUP_WITHOUT_CANDIDATES", "warning",
+                    f"{empty_jobs} of {len(jobs)} Step 2 groups contain no cross-Package candidate "
+                    f"pair, so no relation could be judged for them: this is a Step 2 retrieval gap "
+                    f"(global TOP_K cap plus lexical cosine), not a model verdict"))
             return StageResult("succeeded", artifacts=[ArtifactDraft(output, "integration.step3_proposals", "application/json", {
                 "schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                 "operator_count": len(operators), "weakpoint_count": len(weakpoints), "candidate_knowledge_count": len(candidate_knowledges),
@@ -1005,6 +1022,7 @@ class Step3IdentifyStructuresPlugin:
                           "equivalence_merge_count": len(equivalence_merges),
                           "equivalence_merged_node_count": sum(len(m["merged_qids"]) - 1 for m in equivalence_merges),
                           "round_one_group_count": len(jobs), "round_one_relation_count": round_one_relations,
+                          "empty_group_count": empty_jobs,
                           "retry_group_count": len(retry_jobs), "retry_relation_count": retried_relations,
                           "unjudged_group_count": len(unjudged), "unjudged_groups": unjudged[:20],
                           **summary_stats, **tree_stats})

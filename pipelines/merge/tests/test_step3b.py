@@ -11,6 +11,7 @@ from pipeline_merge.step3b import (
     SPINE_SCHEMA,
     Step3bAlignDomainSpinePlugin,
     _equivalence_classes,
+    _locate_ungrouped,
     _merged_content,
     _rewrite_relation_endpoints,
 )
@@ -206,6 +207,63 @@ class Step3bPipelineTests(unittest.TestCase):
                              "relation": "supports", "confidence": 1.0, "reason": "invented"}]})
         self.assertEqual(spine["cluster_links"], [])
         self.assertEqual(spine["unlinked_conclusion_ids"], [self.PREMISE])
+
+
+class UngroupedAuditTests(unittest.TestCase):
+    """A conclusion in no relation must be located, not silently absent.
+
+    `isolated` is the honest answer for a real gap; `synonym` is what stops the
+    same proposal from standing as two nodes; `supports` is a relation the gate
+    missed.  All three are recorded, and an unusable answer is treated as a gap
+    rather than a link.
+    """
+
+    @staticmethod
+    def _contents():
+        return {
+            "integration:i::candidate_K_aa": "the domain conclusion",
+            "integration:i::candidate_A_cc": "a cluster reached the same effect",
+            "integration:i::candidate_A_dd": "an unrelated cluster result",
+        }
+
+    def _locate(self, response, ungrouped=("integration:i::candidate_A_cc",)):
+        with patch("pipeline_merge.step3b._post_json", return_value=response):
+            return _locate_ungrouped(
+                list(ungrouped),
+                ["integration:i::candidate_K_aa"],
+                ["integration:i::candidate_A_cc", "integration:i::candidate_A_dd"],
+                self._contents(), max_workers=1)
+
+    def test_a_synonym_is_reported_with_its_partner(self):
+        rows = self._locate({"match": "synonym", "target": "integration:i::candidate_A_dd",
+                             "reason": "same claim"})
+        self.assertEqual(rows[0]["match"], "synonym")
+        self.assertEqual(rows[0]["target"], "integration:i::candidate_A_dd")
+
+    def test_an_invented_target_is_downgraded_to_isolated(self):
+        rows = self._locate({"match": "synonym", "target": "integration:i::candidate_K_ghost",
+                             "reason": "invented"})
+        self.assertEqual(rows[0]["match"], "isolated")
+        self.assertIsNone(rows[0]["target"])
+
+    def test_a_support_link_names_a_real_domain_conclusion(self):
+        rows = self._locate({"match": "supports", "target": "integration:i::candidate_K_aa",
+                             "reason": "instance of it"})
+        self.assertEqual((rows[0]["match"], rows[0]["target"]),
+                         ("supports", "integration:i::candidate_K_aa"))
+
+    def test_a_failed_call_is_recorded_as_unknown_not_as_a_link(self):
+        with patch("pipeline_merge.step3b._post_json",
+                   side_effect=RuntimeError("DeepSeek request failed after 5 attempts: 402")):
+            rows = _locate_ungrouped(["integration:i::candidate_A_cc"],
+                                     ["integration:i::candidate_K_aa"],
+                                     ["integration:i::candidate_A_cc"], self._contents(), max_workers=1)
+        self.assertEqual(rows[0]["match"], "unknown")
+        self.assertIsNone(rows[0]["target"])
+
+    def test_no_ungrouped_conclusions_makes_no_calls(self):
+        with patch("pipeline_merge.step3b._post_json", side_effect=AssertionError("must not be called")):
+            self.assertEqual(_locate_ungrouped([], ["k"], ["k"], {}), [])
 
 
 class Step3bChainTests(unittest.TestCase):

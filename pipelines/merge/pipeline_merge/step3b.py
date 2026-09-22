@@ -319,6 +319,71 @@ def _link_retry(
     return links, sorted(set(unlinked) - placed)
 
 
+_LOCATE_PROMPT = """One conclusion of a cross-paper integration did not end up in any relation. Locate it.
+
+For the INPUT statement, decide exactly one of:
+- "synonym": it says the SAME proposition as one of the OTHER INTEGRATION CONCLUSIONS. Name that id.
+- "supports": it supports or narrows one of the DOMAIN CONCLUSIONS. Name that id.
+- "isolated": none of the supplied statements is the same proposition, and none of the domain
+  conclusions is one it supports.
+
+Rules:
+1. Name only ids from the supplied lists; never invent one.
+2. "synonym" means same subject, same predicate, same direction, same scope. A statement that merely
+   implies another, or holds in a narrower setting, is not a synonym.
+3. Prefer "isolated" over a topical match; a wrong link is worse than an honest gap.
+Return JSON only: {"match":"synonym|supports|isolated","target":"<id>|null","reason":"<=14 words"}
+INPUT={statement}"""
+
+
+def _locate_ungrouped(
+    ungrouped: list[str], domain_ids: list[str], integration_ids: list[str],
+    contents: Mapping[str, str], max_workers: int | None = None,
+) -> list[JSONDict]:
+    """Ask what each conclusion that reached no relation is the same as, or supports.
+
+    This is the "where did this cluster go?" audit.  A conclusion in no relation
+    at all is invisible in the graph, so it cannot be distinguished from a
+    conclusion the integration never formed; asking once, against the material
+    that *is* there, turns it into an explicit record (`synonym` / `supports` /
+    `isolated`) instead of silence.
+    """
+    if not ungrouped:
+        return []
+    domain = [{"id": qid, "content": contents.get(qid, "")} for qid in sorted(domain_ids)]
+    others = [{"id": qid, "content": contents.get(qid, "")} for qid in sorted(integration_ids)
+              if qid not in set(domain_ids)]
+    batch_prompt = (f"DOMAIN CONCLUSIONS={json.dumps(domain, ensure_ascii=False, sort_keys=True)}\n"
+                    f"OTHER INTEGRATION CONCLUSIONS={json.dumps(others, ensure_ascii=False, sort_keys=True)}")
+    known = set(domain_ids) | set(integration_ids)
+
+    def locate(qid: str) -> JSONDict:
+        prompt = (f"{batch_prompt}\n" + _LOCATE_PROMPT.replace(
+            "{statement}", json.dumps({"id": qid, "content": contents.get(qid, "")}, ensure_ascii=False)))
+        try:
+            response = _post_json(prompt)
+        except RuntimeError as exc:
+            return {"id": qid, "match": "unknown", "target": None, "reason": str(exc)[:120]}
+        match = str(response.get("match") or "") if isinstance(response, dict) else ""
+        target = str(response.get("target") or "") if isinstance(response, dict) else ""
+        if match not in {"synonym", "supports", "isolated"} or (match != "isolated" and target not in known):
+            match, target = "isolated", ""  # an unusable answer is a gap, not a link
+        return {"id": qid, "match": match, "target": target or None,
+                "reason": str(response.get("reason") or "")[:160] if isinstance(response, dict) else ""}
+
+    workers = max_workers if max_workers is not None else _worker_count("GAIA_MERGE_JUDGE_WORKERS", 8)
+    progress = _Progress("step3b ungrouped conclusions", len(ungrouped), every=10)
+    progress.note(f"{len(ungrouped)} integration conclusions reached no relation at all")
+
+    def run(qid: str) -> JSONDict:
+        row = locate(qid)
+        progress.tick()
+        return row
+
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, len(ungrouped)))) as pool:
+        return list(pool.map(run, sorted(ungrouped)))
+
+
 class Step3bAlignDomainSpinePlugin:
     stage_name = "step3b_align_domain_spine"
 
@@ -396,6 +461,25 @@ class Step3bAlignDomainSpinePlugin:
             weakpoints.extend(self._synthesize_links(links))
             weakpoints = list({json.dumps(item, sort_keys=True): item for item in weakpoints}.values())
 
+            # Where did the conclusions that reached no relation at all go?  A
+            # conclusion in no relation is invisible in the graph, so it cannot be
+            # told apart from one the integration never formed.  Audit every one of
+            # them against the material that does exist and record the verdict.
+            integration_ids = sorted(qid for qid in contents if _is_premise_candidate(qid))
+            ungrouped = sorted(qid for qid in integration_ids
+                               if not neighbours.get(qid) and qid not in spine_ids
+                               and qid not in {link["id"] for link in links})
+            located = _locate_ungrouped(ungrouped, domain_ids, integration_ids, contents)
+            synonym_pairs = [[row["id"], row["target"]] for row in located
+                             if row["match"] == "synonym" and row["target"]]
+            located_support = [{"id": row["id"], "domain_id": row["target"], "relation": "supports",
+                                "confidence": None, "reason": row["reason"]}
+                               for row in located if row["match"] == "supports" and row["target"]]
+            if located_support:
+                weakpoints.extend(self._synthesize_links(located_support))
+                weakpoints = list({json.dumps(item, sort_keys=True): item for item in weakpoints}.values())
+            still_isolated = sorted(row["id"] for row in located if row["match"] == "isolated")
+
             artifact = {
                 "schema_name": SPINE_SCHEMA,
                 "schema_version": SPINE_VERSION,
@@ -412,6 +496,10 @@ class Step3bAlignDomainSpinePlugin:
                 "proposed_class_count": proposed,
                 "cluster_links": links,
                 "unlinked_conclusion_ids": unlinked,
+                "ungrouped_conclusion_count": len(ungrouped),
+                "ungrouped_conclusions": located,
+                "synonym_pairs": synonym_pairs,
+                "isolated_conclusion_ids": still_isolated,
                 "candidate_knowledges": merged_candidates,
                 "operators": operators,
                 "weakpoints": weakpoints,
@@ -429,12 +517,19 @@ class Step3bAlignDomainSpinePlugin:
                 "operators": operators,
                 "weakpoints": weakpoints,
                 "candidate_knowledges": merged_candidates,
+                # Same-meaning pairs found by the ungrouped audit, so Step 4's
+                # mechanical merge (which keeps the O/E/non-OE category guard)
+                # folds them instead of leaving two nodes for one proposition.
+                "equivalence_pairs": synonym_pairs,
                 "spine_alignment": {
                     "domain_conclusion_count": len(domain_ids),
                     "domain_merge_count": len(merges),
                     "cluster_link_count": len(links),
                     "unlinked_conclusion_count": len(unlinked),
                     "unlinked_conclusion_ids": unlinked,
+                    "ungrouped_conclusion_count": len(ungrouped),
+                    "isolated_conclusion_count": len(still_isolated),
+                    "isolated_conclusion_ids": still_isolated,
                     "spine_artifact_id": None,  # filled in below, from the spine bytes
                 },
             }
@@ -453,6 +548,21 @@ class Step3bAlignDomainSpinePlugin:
                 findings.append(Finding(
                     "STEP3B_PACKAGE_CONCLUSION_UNLINKED", "warning",
                     f"{qid} supports no domain conclusion after the retry and stays unlinked"))
+            for row in located:
+                if row["match"] == "synonym":
+                    findings.append(Finding(
+                        "STEP3B_UNGROUPED_CONCLUSION_SYNONYM", "info",
+                        f"{row['id']} reached no relation but says the same proposition as "
+                        f"{row['target']}: {row['reason']}"))
+                elif row["match"] == "supports":
+                    findings.append(Finding(
+                        "STEP3B_UNGROUPED_CONCLUSION_SUPPORTS", "info",
+                        f"{row['id']} reached no relation but supports {row['target']}: {row['reason']}"))
+            for qid in still_isolated:
+                findings.append(Finding(
+                    "STEP3B_CONCLUSION_ISOLATED", "warning",
+                    f"{qid} reached no relation, is not a restatement, and supports no domain "
+                    f"conclusion: it is a genuine gap in this integration"))
 
             # Publish the spine first so the aligned proposal can name its exact
             # byte-for-byte hash; the audit trail then survives a checkpoint.
@@ -469,6 +579,9 @@ class Step3bAlignDomainSpinePlugin:
                         "domain_merge_count": len(merges),
                         "cluster_link_count": len(links),
                         "unlinked_conclusion_count": len(unlinked),
+                        "ungrouped_conclusion_count": len(ungrouped),
+                        "isolated_conclusion_count": len(still_isolated),
+                        "synonym_pair_count": len(synonym_pairs),
                     }),
                     ArtifactDraft(aligned_output, PROPOSAL_KIND, "application/json", {
                         "schema_name": PROPOSAL_SCHEMA, "schema_version": PROPOSAL_VERSION,
@@ -487,6 +600,10 @@ class Step3bAlignDomainSpinePlugin:
                     "domain_merged_away": len(absorbed),
                     "cluster_link_count": len(links),
                     "unlinked_conclusion_count": len(unlinked),
+                    "ungrouped_conclusion_count": len(ungrouped),
+                    "synonym_pair_count": len(synonym_pairs),
+                    "isolated_conclusion_count": len(still_isolated),
+                    "isolated_conclusion_ids": still_isolated[:20],
                     "link_retry_candidate_count": len(integration_owned),
                 },
             )
