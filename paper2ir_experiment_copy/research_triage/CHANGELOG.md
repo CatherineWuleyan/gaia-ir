@@ -1,5 +1,24 @@
 # Research triage change log
 
+## 2026-10-02 — v2 tool-loop and fairness gate
+
+- Added the provider-agnostic `live_tool_loop.py` preflight. It keeps the
+  complete `merge.html` graph behind retrieval tools, records typed returned
+  IDs, and validates against the runner-owned trace; the scripted tests make
+  no network requests.
+- Added `v2_fairness.py` and persisted its report in the v2 plan manifest.
+  The three conditions now have mechanically checked paper hashes, corpus
+  membership, resource isolation, graph identity, and equal 8-call/4000-token
+  budgets. The current bundle is labelled `bridge_suitability=warning` because
+  the focal paper already contains the likely answer terms.
+- Added explicit opt-in loading of the provenance sidecar. Sidecar anchors are
+  exposed as `derived` with a warning and never upgraded to direct
+  `merge.html` provenance. The authoritative viewer remains `merge.html`.
+- Added `lth_bridge_v2_bingo_task.json` and its 27-cell plan. The original
+  rewinding bundle remains a leakage warning; the BINGO focal paper passes the
+  current bridge-suitability diagnostic and is the next candidate for a live
+  retrieval pilot.
+
 ## 2026-10-02
 
 - Revised `reasoning_graph` so it no longer filters the model input to a
@@ -536,3 +555,10 @@
   and 110 unresolved edges; direct provenance remains zero. Graph evidence
   credit is therefore disabled until a source-grounded map is explicitly
   reviewed.
+- Added `v2_fairness.py` and `test_v2_fairness.py`. The plan now persists a
+  mechanical audit showing the three conditions share the same full target
+  paper, 8-call/4000-token retrieval budget, and focal-excluded 88-paper
+  corpus. The audit also records the current graph-provenance warning and the
+  fact that the required focal paper itself contains rewinding, initialization,
+  warmup, and schedule terms that may make this bundle answerable without a
+  cross-paper bridge.

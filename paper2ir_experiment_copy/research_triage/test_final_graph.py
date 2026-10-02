@@ -44,3 +44,18 @@ def test_retrieval_session_records_budget_and_missing_provenance_warning():
     assert trace["call_count"] == 2
     assert trace["returned_tokens"] > 0
     assert trace["warnings"]
+
+
+def test_provenance_sidecar_is_explicit_and_remains_derived():
+    graph = load_final_graph(
+        ROOT / "merge.html",
+        provenance_path=ROOT / "paper2ir_experiment_copy/evidence/lth_final_graph_20261002/provenance_mapping.json",
+    )
+    hits = graph.search_claims("initialization sparsity", k=1)
+    assert hits
+    assert hits[0]["source_anchor_ids"]
+    assert hits[0]["provenance_class"] == "derived"
+    anchor = graph.get_source_anchor(hits[0]["source_anchor_ids"][0])
+    assert anchor["status"] == "available"
+    assert anchor["provenance_class"] == "derived"
+    assert "not direct" in anchor["warning"]

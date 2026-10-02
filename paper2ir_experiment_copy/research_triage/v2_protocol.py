@@ -309,6 +309,56 @@ def _trace_returned_ids(trace: Iterable[Any]) -> set[str]:
     return result
 
 
+def _trace_returned_refs(trace: Iterable[Any]) -> dict[str, set[str]]:
+    """Return retrieval IDs grouped by the reference type they can support.
+
+    The v2 task deliberately does not embed the 240-node final graph in the
+    model input.  When a runner supplies its trusted retrieval trace, that
+    trace is therefore the authority for graph and external-text IDs.  New
+    sessions record ``returned_refs`` explicitly; the fallback keeps old
+    traces usable while remaining conservative about paper anchors.
+    """
+
+    grouped: dict[str, set[str]] = {
+        "paper_anchor": set(),
+        "external_text": set(),
+        "graph_node": set(),
+        "graph_edge": set(),
+    }
+    for item in trace:
+        if not isinstance(item, dict):
+            continue
+        returned_refs = item.get("returned_refs")
+        if isinstance(returned_refs, list):
+            for ref in returned_refs:
+                if not isinstance(ref, dict):
+                    continue
+                ref_type, ref_id = ref.get("ref_type"), ref.get("ref_id")
+                if ref_type in grouped and isinstance(ref_id, str) and ref_id:
+                    grouped[ref_type].add(ref_id)
+            continue
+        # Backward-compatible typed fallback for traces emitted before the
+        # explicit returned_refs field was added.
+        tool = item.get("tool")
+        ids = item.get("returned_ids", [])
+        if not isinstance(ids, list):
+            continue
+        if tool == "search_paper":
+            grouped["paper_anchor"].update(x for x in ids if isinstance(x, str))
+        elif tool == "search_external_text":
+            grouped["external_text"].update(x for x in ids if isinstance(x, str))
+        elif tool == "search_claims":
+            grouped["graph_node"].update(x for x in ids if isinstance(x, str))
+        elif tool == "expand_neighbors":
+            # Older traces do not preserve whether each returned ID was an
+            # edge or a node.  Accepting it for either graph reference keeps
+            # the fallback auditable; new traces are type precise.
+            values = {x for x in ids if isinstance(x, str)}
+            grouped["graph_node"].update(values)
+            grouped["graph_edge"].update(values)
+    return grouped
+
+
 def validate_v2(
     task: dict[str, Any],
     proposal: dict[str, Any],
@@ -346,6 +396,13 @@ def validate_v2(
     trace_for_closure = actual_retrieval_trace if actual_retrieval_trace is not None else trace
     tools = _condition_tools(condition)
     trace_ids = _trace_returned_ids(trace_for_closure)
+    typed_trace_ids = _trace_returned_refs(trace_for_closure)
+    if actual_retrieval_trace is not None:
+        # Graph node/edge IDs are not expected in task JSON when the graph is
+        # exposed as a frozen backend resource.  Add only IDs returned by an
+        # actual, budgeted tool call; never trust the model's claimed IDs.
+        for ref_type in ("graph_node", "graph_edge", "external_text", "paper_anchor"):
+            allowed[ref_type].update(typed_trace_ids[ref_type])
     for index, call in enumerate(trace):
         if not isinstance(call, dict):
             continue
@@ -357,7 +414,14 @@ def validate_v2(
         if not isinstance(ref, dict):
             continue
         ref_type, ref_id = ref.get("ref_type"), ref.get("ref_id")
-        if ref_type not in allowed or ref_id not in allowed.get(ref_type, set()):
+        # For graph/external conditions, a real runner may retrieve IDs from
+        # the frozen backend even though those IDs are intentionally absent
+        # from the task JSON.  The trusted actual trace is sufficient to
+        # close that reference; without it, only explicitly embedded IDs are
+        # accepted (useful for unit fixtures and offline validation).
+        visible_ids = allowed.get(ref_type, set())
+        trusted_ids = typed_trace_ids.get(ref_type, set()) if actual_retrieval_trace is not None else set()
+        if ref_type not in allowed or (ref_id not in visible_ids and ref_id not in trusted_ids):
             errors.append(f"evidence[{index}] cites unavailable {ref_type}:{ref_id}")
         elif ref_type != "paper_anchor" and ref_id not in trace_ids:
             errors.append(f"evidence[{index}] cites {ref_id} without a retrieval_trace return")

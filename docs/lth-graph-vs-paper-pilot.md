@@ -160,6 +160,10 @@ MLAgentBench 先只作接口 sanity check：它的 evaluator 能判断“生成�
 
 确认每个 cell 的任务 hash、graph snapshot hash、token budget、prompt 差异和输出目录后，再发起 live call。当前三模型 plan-only 产物为 [`lth_graph_v2_plan_20261002`](../paper2ir_experiment_copy/evidence/lth_graph_v2_plan_20261002/)，共 27 个计划 cell；它只写 prompt 和 manifest，没有发模型请求。第一轮 live 仍只生成设计卡，不执行训练代码；没有合法 LTH entrypoint 时允许 `experiment.entrypoint=null`，但不得伪造 `ExecutionPass` 或训练结果。
 
+该 manifest 还保存了自动 fairness audit：三个条件看到相同的目标论文（SHA256 `4a250a...63afa`），共用 8 次调用/4000 返回 token 的总预算，并从同一份排除 focal paper 的 88 篇外部语料检索。审计同时保留两个警告：`merge.html` 当前没有可评分的 graph source anchor；目标论文原文已经出现 rewinding、initialization、warmup 和 schedule 等可能的答案词。因此这组 bundle 不能单独证明跨论文图的增益。
+
+为避免把这组 warning 当成主结果，另外冻结了一个更适合做 bridge audit 的候选任务：[`lth_bridge_v2_bingo_task.json`](../paper2ir_experiment_copy/research_triage/fixtures/lth_bridge_v2_bingo_task.json)。它以只报告单一 MNIST/feed-forward 设置的 BINGO 论文为 focal paper，问题要求判断效率优势能否迁移到其他数据集和模型；自动审计将它标为 `bridge_suitability=candidate`。对应的 27-cell plan 在 [`lth_bingo_v2_plan_20261002`](../paper2ir_experiment_copy/evidence/lth_bingo_v2_plan_20261002/)；它仍是 plan-only，且 graph provenance warning 仍然保留。
+
 旧版三模型版本已经冻结在
 `paper2ir_experiment_copy/evidence/lth_graph_vs_paper_pilot_multimodel_20261001/`；它是 legacy baseline，不能冒充 v2 结果。v2 运行必须新建目录：
 
@@ -214,7 +218,7 @@ error metadata，不自动换模型或重试到另一个 provider。
 
 这轮代码已经把输入边界和三种条件固定下来，但下面几件事还不能被结果替代：
 
-1. **还没有 live tool loop。** 27 个 cell 目前是 plan-only，模型还没有真正调用 `search_paper`、`search_external_text` 或图检索工具；因此现在不能报告图相对文本的性能提升。
+1. **还没有真实 provider 结果。** 离线 `live_tool_loop.py` 已经实现工具调用、预算和真实 trace 校验，但 27 个 cell 仍是 plan-only，尚未向 DeepSeek/Trisol 发请求；因此现在不能报告图相对文本的性能提升。
 2. **最终图的 provenance 仍不够。** `merge.html` 的 240 个节点没有直接 source anchor。sidecar 只能把一部分节点和边回溯为 derived，不能把 derived closure 当成原文直接证据，所以当前图证据分数必须保持关闭。
 3. **没有可执行的 LTH 入口。** 当前任务是 `design_only`、GPU 预算为 0；它只能评实验卡和证据使用，不能证明 agent 选出的实验真的更有用或能跑通。
 4. **开放式“最好下一步”没有唯一金标。** 必须先锁定可接受的干预族，再由不知道条件的多名专家盲评科学必要性、区分力、控制变量、falsifier 和成本，并报告一致性。单靠 schema 通过不够。

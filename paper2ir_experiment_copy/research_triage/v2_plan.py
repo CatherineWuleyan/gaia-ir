@@ -2,8 +2,9 @@
 
 The plan is intentionally separate from the legacy evidence-mode runner.  It
 materialises the exact model inputs for ``paper_only``, ``external_text`` and
-``reasoning_graph`` without making a provider request.  A live runner can only
-be added after the tool-call loop is available and this plan has been checked.
+``reasoning_graph`` without making a provider request.  The provider-agnostic
+tool-loop preflight lives in ``live_tool_loop.py``; this module remains the
+no-network plan and authorization gate.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from .final_graph import load_final_graph
+from .v2_fairness import audit_v2_fairness
 from .v2_protocol import V2_CONDITIONS, build_prompt, condition_input
 
 
@@ -39,6 +41,9 @@ def create_plan(
 ) -> dict[str, Any]:
     task = json.loads(fixture.read_text(encoding="utf-8"))
     graph = load_final_graph(graph_html)
+    fairness_audit = audit_v2_fairness(task, graph=graph, repo_root=graph_html.parent)
+    if not fairness_audit["ok"]:
+        raise ValueError("v2 fairness audit failed: " + "; ".join(fairness_audit["errors"]))
     declared_hash = ((task.get("graph") or {}).get("snapshot_sha256"))
     if declared_hash and declared_hash != graph.embedded_sha256:
         raise ValueError("fixture graph snapshot hash does not match merge.html")
@@ -88,13 +93,14 @@ def create_plan(
         "graph_snapshot_sha256": graph.embedded_sha256,
         "graph_canonical_snapshot_sha256": graph.canonical_sha256,
         "graph_provenance_status": ((task.get("graph") or {}).get("provenance_status") or "unknown"),
+        "fairness_audit": fairness_audit,
         "conditions": list(V2_CONDITIONS),
         "seeds": list(seeds),
         "model_profiles": list(model_profiles),
         "target_cells": len(cells),
         "request_budget_total": len(cells),
         "request_budget_per_invocation": 1,
-        "tool_call_loop": "not_implemented; plan-only",
+        "tool_call_loop": "implemented_interface_only; plan-only",
         "evaluation_policy": {
             "no_allowed_actions_in_model_input": True,
             "no_candidate_experiments_in_model_input": True,

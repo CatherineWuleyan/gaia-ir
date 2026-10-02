@@ -115,3 +115,28 @@ def test_actual_retrieval_trace_is_authoritative_for_graph_refs():
     )
     assert result["ok"] is False
     assert result["metrics"]["retrieval_trace_verified"] is True
+
+
+def test_trusted_trace_closes_ids_from_external_graph_resource():
+    """The final graph stays out of task JSON; the runner trace closes refs."""
+
+    proposal = _proposal(
+        evidence=[{"ref_type": "graph_node", "ref_id": "node-from-merge", "role": "support"}],
+        retrieval_trace=[{
+            "tool": "search_claims",
+            "arguments": {"query": "intervention"},
+            "returned_ids": ["node-from-merge"],
+            "purpose": "find a cross-paper mechanism",
+        }],
+    )
+    result = validate_v2(
+        _task(), proposal, "reasoning_graph", actual_retrieval_trace=[{
+            "tool": "search_claims",
+            "arguments": {"query": "intervention"},
+            "returned_ids": ["node-from-merge"],
+            "returned_refs": [{"ref_type": "graph_node", "ref_id": "node-from-merge"}],
+            "purpose": "runner trace",
+        }],
+    )
+    assert result["ok"] is True
+    assert result["metrics"]["retrieval_trace_verified"] is True

@@ -10,6 +10,190 @@
   "graph_snapshot_sha256": "9c5442d726b4dee26471d724c84e18170f72550f3933d81dde9a53056484e5c4",
   "graph_canonical_snapshot_sha256": "9deaac0d4767d4f75e98f6383fc238513643708d37c7ed577e5bab68c629d74d",
   "graph_provenance_status": "missing",
+  "fairness_audit": {
+    "ok": true,
+    "errors": [],
+    "warnings": [
+      "graph provenance is missing; graph nodes/edges must receive zero evidence credit",
+      "full target paper contains likely answer terms: rewinding=36, initialization=23, warmup=17, learning rate schedule=1"
+    ],
+    "checks": [
+      {
+        "name": "target_paper_nonempty",
+        "ok": true,
+        "detail": "full target paper text is present"
+      },
+      {
+        "name": "target_paper_hash",
+        "ok": true,
+        "detail": "sha256=4a250a5ebc0d917ab99ae6b20906097eb9f1e3f802669f3460cc9d46feb63afa; declared=4a250a5ebc0d917ab99ae6b20906097eb9f1e3f802669f3460cc9d46feb63afa"
+      },
+      {
+        "name": "same_full_target_paper",
+        "ok": true,
+        "detail": "{\"external_text\":\"4a250a5ebc0d917ab99ae6b20906097eb9f1e3f802669f3460cc9d46feb63afa\",\"paper_only\":\"4a250a5ebc0d917ab99ae6b20906097eb9f1e3f802669f3460cc9d46feb63afa\",\"reasoning_graph\":\"4a250a5ebc0d917ab99ae6b20906097eb9f1e3f802669f3460cc9d46feb63afa\"}"
+      },
+      {
+        "name": "same_task_id",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_question",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_hypothesis",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_context",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_execution",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_allowed_dataset_refs",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_allowed_entrypoint_refs",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_evidence_cutoff",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_knowledge_access",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "same_web_tools_enabled",
+        "ok": true,
+        "detail": "all three conditions match"
+      },
+      {
+        "name": "matched_retrieval_budget",
+        "ok": true,
+        "detail": "{\"external_text\":[8,4000],\"paper_only\":[8,4000],\"reasoning_graph\":[8,4000]}"
+      },
+      {
+        "name": "tools_paper_only",
+        "ok": true,
+        "detail": "actual=['search_paper'] expected=['search_paper']"
+      },
+      {
+        "name": "tools_external_text",
+        "ok": true,
+        "detail": "actual=['search_external_text', 'search_paper'] expected=['search_external_text', 'search_paper']"
+      },
+      {
+        "name": "tools_reasoning_graph",
+        "ok": true,
+        "detail": "actual=['expand_neighbors', 'get_source_anchor', 'search_claims', 'search_external_text', 'search_paper'] expected=['expand_neighbors', 'get_source_anchor', 'search_claims', 'search_external_text', 'search_paper']"
+      },
+      {
+        "name": "paper_only_no_external_resource",
+        "ok": true,
+        "detail": "condition-specific resources are isolated"
+      },
+      {
+        "name": "external_text_no_graph_resource",
+        "ok": true,
+        "detail": "condition-specific resources are isolated"
+      },
+      {
+        "name": "reasoning_graph_has_graph_resource",
+        "ok": true,
+        "detail": "condition-specific resources are isolated"
+      },
+      {
+        "name": "external_sources_unique",
+        "ok": true,
+        "detail": "declared=88 unique=88"
+      },
+      {
+        "name": "external_corpus_count",
+        "ok": true,
+        "detail": "metadata=88 declared=88"
+      },
+      {
+        "name": "focal_paper_excluded",
+        "ok": true,
+        "detail": "focal=867769152067076667 in_external=False"
+      },
+      {
+        "name": "same_external_corpus_metadata",
+        "ok": true,
+        "detail": "external_text and reasoning_graph advertise the same frozen corpus"
+      },
+      {
+        "name": "external_index_matches_manifest",
+        "ok": true,
+        "detail": "indexed=88 declared=88"
+      },
+      {
+        "name": "graph_snapshot_identity",
+        "ok": true,
+        "detail": "declared=9c5442d726b4dee26471d724c84e18170f72550f3933d81dde9a53056484e5c4 actual=9c5442d726b4dee26471d724c84e18170f72550f3933d81dde9a53056484e5c4"
+      },
+      {
+        "name": "no_evaluator_fields",
+        "ok": true,
+        "detail": "no hidden evaluator keys"
+      },
+      {
+        "name": "no_known_answer_ids",
+        "ok": true,
+        "detail": "no known answer IDs"
+      },
+      {
+        "name": "answer_term_diagnostic",
+        "ok": false,
+        "detail": "{\"initialization\":23,\"learning rate schedule\":1,\"rewinding\":36,\"warmup\":17}"
+      }
+    ],
+    "metrics": {
+      "target_paper_sha256": "4a250a5ebc0d917ab99ae6b20906097eb9f1e3f802669f3460cc9d46feb63afa",
+      "external_paper_count": 88,
+      "indexed_external_paper_count": 88,
+      "focal_paper_id": "867769152067076667",
+      "retrieval_budget": {
+        "paper_only": [
+          8,
+          4000
+        ],
+        "external_text": [
+          8,
+          4000
+        ],
+        "reasoning_graph": [
+          8,
+          4000
+        ]
+      },
+      "graph_provenance_status": "missing",
+      "graph_anchor_count": 0,
+      "likely_answer_terms_present": {
+        "rewinding": 36,
+        "initialization": 23,
+        "warmup": 17,
+        "learning rate schedule": 1
+      },
+      "bridge_suitability": "warning"
+    }
+  },
   "conditions": [
     "paper_only",
     "external_text",
@@ -28,7 +212,7 @@
   "target_cells": 27,
   "request_budget_total": 27,
   "request_budget_per_invocation": 1,
-  "tool_call_loop": "not_implemented; plan-only",
+  "tool_call_loop": "implemented_interface_only; plan-only",
   "evaluation_policy": {
     "no_allowed_actions_in_model_input": true,
     "no_candidate_experiments_in_model_input": true,

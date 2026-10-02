@@ -209,6 +209,12 @@ class V2RetrievalSession:
             "tool": tool,
             "arguments": arguments,
             "returned_ids": _ids(result),
+            # The flat ID list is retained for backward-compatible manifests.
+            # ``returned_refs`` preserves the type needed when a task carries
+            # only graph metadata (rather than enumerating graph nodes/edges
+            # in the model-facing JSON).  The hidden runner trace can then
+            # authorise exactly the graph IDs returned by this call.
+            "returned_refs": _typed_refs(tool, result),
             "returned_tokens": tokens,
             "cumulative_returned_tokens": self.returned_tokens,
         })
@@ -269,3 +275,31 @@ def _ids(value: Any) -> list[str]:
         for key in ("edge", "source", "target"):
             found.update(_ids(value.get(key)))
     return sorted(found)
+
+
+def _typed_refs(tool: str, value: Any) -> list[dict[str, str]]:
+    """Annotate returned IDs so v2 validation can distinguish node/edge refs."""
+
+    refs: set[tuple[str, str]] = set()
+
+    def visit(item: Any) -> None:
+        if isinstance(item, list):
+            for child in item:
+                visit(child)
+            return
+        if not isinstance(item, dict):
+            return
+        if tool == "search_paper" and isinstance(item.get("ref_id"), str):
+            refs.add(("paper_anchor", item["ref_id"]))
+        if tool == "search_external_text" and isinstance(item.get("ref_id"), str):
+            refs.add(("external_text", item["ref_id"]))
+        if tool in {"search_claims", "expand_neighbors"}:
+            if isinstance(item.get("node_id"), str):
+                refs.add(("graph_node", item["node_id"]))
+            if isinstance(item.get("edge_id"), str):
+                refs.add(("graph_edge", item["edge_id"]))
+        for key in ("edge", "source", "target"):
+            visit(item.get(key))
+
+    visit(value)
+    return [{"ref_type": ref_type, "ref_id": ref_id} for ref_type, ref_id in sorted(refs)]

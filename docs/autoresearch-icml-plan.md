@@ -174,6 +174,8 @@ LKM 不只是一个“把更多论文放进 prompt”的上下文源，而是四
 
 先以 [`merge.html`](../merge.html) 作为唯一最终图；抽取后的锁定快照保存在 `paper2ir_experiment_copy/evidence/lth_final_graph_20261002/`。它的 240 个节点、235 条边是 viewer 的 merge/finalization 结果，但 provenance 当前缺失，必须在任务层补回原文 anchor 后才能计入 `EvidenceIntegrity`。首批 6 个任务覆盖不同类型的跨论文依赖：
 
+当前 `Stabilizing the Lottery Ticket Hypothesis` bundle 的完整论文原文已经直接出现 rewinding、initialization 和 warmup 等机制词，因此自动 fairness audit 将其标为 `bridge_suitability=warning`；它保留作协议/泄漏诊断，不单独作为图优势证据。新增的 BINGO 跨设置任务（[`lth_bridge_v2_bingo_task.json`](../paper2ir_experiment_copy/research_triage/fixtures/lth_bridge_v2_bingo_task.json)）只在 MNIST/feed-forward 设置报告效率结果，适合作为第一道 `bridge_required` 候选题；其 plan-only 产物在 `paper2ir_experiment_copy/evidence/lth_bingo_v2_plan_20261002/`。
+
 | 争议 | 必须桥接的论文/图节点 | 下一步实验的最小干预 |
 |---|---|---|
 | 稳定性与 rewind | P01 vs P53/P55/P62，K03 | batch size × rewind-k × iterative/one-shot，并做 isolation retraining |

@@ -183,6 +183,25 @@ class FinalGraph:
     payload: dict[str, Any]
     html_sha256: str
     embedded_sha256: str
+    provenance_sidecar: dict[str, Any] | None = None
+
+    @property
+    def _provenance_nodes(self) -> dict[str, dict[str, Any]]:
+        payload = self.provenance_sidecar or {}
+        return {
+            item.get("graph_node_id"): item
+            for item in payload.get("nodes", [])
+            if isinstance(item, dict) and isinstance(item.get("graph_node_id"), str)
+        }
+
+    @property
+    def _provenance_edges(self) -> dict[str, dict[str, Any]]:
+        payload = self.provenance_sidecar or {}
+        return {
+            item.get("graph_edge_id"): item
+            for item in payload.get("edges", [])
+            if isinstance(item, dict) and isinstance(item.get("graph_edge_id"), str)
+        }
 
     @property
     def canonical_sha256(self) -> str:
@@ -249,27 +268,48 @@ class FinalGraph:
         for target in self.payload.get("source_targets") or []:
             if isinstance(target, dict) and target.get("anchor_id") == anchor_id:
                 return {"anchor_id": anchor_id, "status": "available", **target}
+        # The viewer remains authoritative.  A sidecar is an explicit,
+        # separately audited opt-in and is labelled ``derived`` so callers do
+        # not mistake a reverse closure for a direct edge/node citation.
+        matches: list[dict[str, Any]] = []
+        for node_id, item in sorted(self._provenance_nodes.items()):
+            for source in item.get("source_anchors", []):
+                if isinstance(source, dict) and source.get("anchor_id") == anchor_id:
+                    matches.append({"graph_node_id": node_id, **source})
+        if matches:
+            return {
+                "anchor_id": anchor_id,
+                "status": "available",
+                "provenance_class": "derived",
+                "source_matches": matches,
+                "warning": "sidecar reverse closure; not direct merge.html provenance",
+            }
         return {"anchor_id": anchor_id, "status": "unavailable", "reason": "final merge.html has no audited source anchor for this id"}
 
     def _node(self, node_id: str | None) -> dict[str, Any]:
         return next((node for node in self.nodes if node.get("id") == node_id), {"id": node_id, "display_label": node_id, "summary": ""})
 
-    @staticmethod
-    def _public_node(node: dict[str, Any], score: int | None = None) -> dict[str, Any]:
+    def _public_node(self, node: dict[str, Any], score: int | None = None) -> dict[str, Any]:
+        provenance = self._provenance_nodes.get(node.get("id"), {})
         result = {
             "node_id": node.get("id"),
             "label": node.get("display_label") or node.get("label"),
             "kind": node.get("kind"),
             "summary": node.get("summary") or (node.get("details") or {}).get("content", ""),
-            "source_anchor_ids": list(node.get("source_anchor_ids") or []),
+            "source_anchor_ids": sorted(set(
+                list(node.get("source_anchor_ids") or [])
+                + list(provenance.get("source_anchor_ids") or [])
+            )),
         }
+        if provenance:
+            result["provenance_class"] = provenance.get("provenance_class", "derived")
         if score is not None:
             result["lexical_score"] = score
         return result
 
-    @staticmethod
-    def _public_edge(edge: dict[str, Any]) -> dict[str, Any]:
-        return {
+    def _public_edge(self, edge: dict[str, Any]) -> dict[str, Any]:
+        provenance = self._provenance_edges.get(edge.get("id"), {})
+        result = {
             "edge_id": edge.get("id"),
             "source": edge.get("source"),
             "target": edge.get("target"),
@@ -277,6 +317,9 @@ class FinalGraph:
             "reasoning_state": edge.get("reasoning_state"),
             "provenance": (edge.get("details") or {}).get("provenance"),
         }
+        if provenance:
+            result["provenance_class"] = provenance.get("provenance_class", "derived")
+        return result
 
 
 class RetrievalSession:
@@ -363,10 +406,44 @@ def _returned_ids(result: Any) -> list[str]:
     return sorted(set(ids))
 
 
-def load_final_graph(html_path: Path) -> FinalGraph:
+def load_provenance_sidecar(path: Path, graph: FinalGraph) -> dict[str, Any]:
+    """Load an explicitly opted-in provenance sidecar for ``merge.html``.
+
+    The sidecar must describe the same node/edge counts as the frozen viewer.
+    It is allowed to add derived reverse-closure metadata, but never changes
+    the authoritative graph payload or upgrades derived provenance to direct.
+    """
+
+    if not path.is_file():
+        raise FinalGraphError(f"provenance sidecar does not exist: {path}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise FinalGraphError(f"invalid provenance sidecar: {path}") from exc
+    if not isinstance(payload, dict):
+        raise FinalGraphError("provenance sidecar must be an object")
+    summary = payload.get("summary") or {}
+    if summary.get("graph_node_count") != len(graph.nodes) or summary.get("graph_edge_count") != len(graph.edges):
+        raise FinalGraphError("provenance sidecar graph counts do not match merge.html")
+    if not isinstance(payload.get("nodes"), list) or not isinstance(payload.get("edges"), list):
+        raise FinalGraphError("provenance sidecar must contain nodes and edges lists")
+    node_ids = {node.get("graph_node_id") for node in payload["nodes"] if isinstance(node, dict)}
+    edge_ids = {edge.get("graph_edge_id") for edge in payload["edges"] if isinstance(edge, dict)}
+    if not node_ids.issubset({node.get("id") for node in graph.nodes}):
+        raise FinalGraphError("provenance sidecar contains an unknown graph node")
+    if not edge_ids.issubset({edge.get("id") for edge in graph.edges}):
+        raise FinalGraphError("provenance sidecar contains an unknown graph edge")
+    return payload
+
+
+def load_final_graph(html_path: Path, *, provenance_path: Path | None = None) -> FinalGraph:
     payload, html_sha256, embedded_sha256 = extract_view_data(html_path)
     audit_graph(payload)
-    return FinalGraph(payload, html_sha256, embedded_sha256)
+    graph = FinalGraph(payload, html_sha256, embedded_sha256)
+    if provenance_path is not None:
+        sidecar = load_provenance_sidecar(provenance_path, graph)
+        graph = FinalGraph(payload, html_sha256, embedded_sha256, sidecar)
+    return graph
 
 
 def write_snapshot(html_path: Path, output_dir: Path) -> dict[str, Any]:
