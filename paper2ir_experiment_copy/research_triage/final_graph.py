@@ -184,6 +184,10 @@ class FinalGraph:
     html_sha256: str
     embedded_sha256: str
     provenance_sidecar: dict[str, Any] | None = None
+    # Optional exact standalone copy of the viewer's embedded payload.  It is
+    # useful for index-based retrieval, but it is accepted only after its
+    # canonical content matches the authoritative merge.html payload.
+    index_sha256: str | None = None
 
     @property
     def _provenance_nodes(self) -> dict[str, dict[str, Any]]:
@@ -436,13 +440,53 @@ def load_provenance_sidecar(path: Path, graph: FinalGraph) -> dict[str, Any]:
     return payload
 
 
-def load_final_graph(html_path: Path, *, provenance_path: Path | None = None) -> FinalGraph:
+def load_matching_index(path: Path, graph: FinalGraph) -> tuple[dict[str, Any], str]:
+    """Load a standalone graph index only when it is an exact graph match.
+
+    The index is a retrieval copy of the viewer model, not a second source of
+    truth.  Comparing the canonical payload prevents accidentally pairing an
+    older ``view_model.json`` with the final ``merge.html``.
+    """
+
+    if not path.is_file():
+        raise FinalGraphError(f"graph index does not exist: {path}")
+    try:
+        raw = path.read_text(encoding="utf-8")
+        payload = json.loads(raw)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise FinalGraphError(f"invalid graph index: {path}") from exc
+    if not isinstance(payload, dict):
+        raise FinalGraphError("graph index must be a JSON object")
+    if not isinstance(payload.get("nodes"), list) or not isinstance(payload.get("edges"), list):
+        raise FinalGraphError("graph index must contain nodes and edges lists")
+    audit_graph(payload)
+    canonical = sha256_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+    if canonical != graph.canonical_sha256:
+        raise FinalGraphError(
+            "graph index canonical payload does not match merge.html "
+            f"({canonical} != {graph.canonical_sha256})"
+        )
+    return payload, sha256_text(raw)
+
+
+def load_final_graph(
+    html_path: Path,
+    *,
+    provenance_path: Path | None = None,
+    index_path: Path | None = None,
+) -> FinalGraph:
     payload, html_sha256, embedded_sha256 = extract_view_data(html_path)
     audit_graph(payload)
     graph = FinalGraph(payload, html_sha256, embedded_sha256)
+    index_sha256 = None
+    if index_path is not None:
+        indexed_payload, index_sha256 = load_matching_index(index_path, graph)
+        # The bytes may differ from the HTML's embedded JSON formatting, but
+        # canonical equality above guarantees the graph content is identical.
+        graph = FinalGraph(indexed_payload, html_sha256, embedded_sha256, index_sha256=index_sha256)
     if provenance_path is not None:
         sidecar = load_provenance_sidecar(provenance_path, graph)
-        graph = FinalGraph(payload, html_sha256, embedded_sha256, sidecar)
+        graph = FinalGraph(graph.payload, html_sha256, embedded_sha256, sidecar, index_sha256)
     return graph
 
 

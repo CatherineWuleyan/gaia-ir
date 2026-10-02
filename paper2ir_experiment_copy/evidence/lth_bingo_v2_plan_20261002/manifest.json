@@ -9,6 +9,8 @@
   "graph_html_sha256": "3c7e9df131305d2e6326e24b97e3db7132c2c68aed5f8ba824c3960c126cd1bf",
   "graph_snapshot_sha256": "9c5442d726b4dee26471d724c84e18170f72550f3933d81dde9a53056484e5c4",
   "graph_canonical_snapshot_sha256": "9deaac0d4767d4f75e98f6383fc238513643708d37c7ed577e5bab68c629d74d",
+  "graph_index": "paper2ir_experiment_copy/evidence/lth_final_graph_20261002/graph_index.json",
+  "graph_index_sha256": "5011c3aa5eae744541dc84e720528c2152268e775abd66aea379ae65e59e84c1",
   "graph_provenance_status": "missing",
   "fairness_audit": {
     "ok": true,

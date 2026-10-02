@@ -22,6 +22,8 @@ def test_plan_materialises_three_conditions_without_requests(tmp_path):
     assert manifest["api_requests_made"] == 0
     assert manifest["target_cells"] == 9
     assert manifest["graph_provenance_status"] == "missing"
+    assert manifest["graph_index"].endswith("paper2ir_experiment_copy/evidence/lth_final_graph_20261002/graph_index.json")
+    assert manifest["graph_index_sha256"]
     for cell in manifest["cells"]:
         value = json.loads((output / cell["model_input"]).read_text(encoding="utf-8"))
         text = json.dumps(value, ensure_ascii=False)

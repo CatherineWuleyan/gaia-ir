@@ -1,5 +1,22 @@
 # Research triage change log
 
+## 2026-10-02 — freeze the matching merge indexes
+
+- Located the original companion artifacts for the authoritative root
+  `merge.html`: `outputs/merge_corpus/view_model.reference.json` and the
+  matching merge-run `knowledge_index.json`/artifact registry under
+  `outputs/bohr_runs/merge_reconcile/.../run_20260921T180006Z_c2c7a5cd`.
+- Copied them to
+  `evidence/lth_final_graph_20261002/` as `graph_index.json`,
+  `knowledge.index.json`, and `artifact_index.json`. The graph index has the
+  exact canonical payload hash and 240/235 node-edge counts; the artifact
+  registry proves the copied knowledge index and merged `gaia.ir` belong to the
+  same run.
+- `load_final_graph(..., index_path=...)` now rejects a stale graph index by
+  canonical hash before retrieval. The index is a read-only retrieval copy;
+  `merge.html` remains authoritative and graph provenance is still not
+  upgraded from indirect knowledge-index anchors.
+
 ## 2026-10-02 — v2 tool-loop and fairness gate
 
 - Added the provider-agnostic `live_tool_loop.py` preflight. It keeps the

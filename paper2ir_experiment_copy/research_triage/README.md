@@ -11,6 +11,14 @@
 同一份冻结外部语料，`reasoning_graph` 才能调用完整图的检索工具。图节点和边
 不会预先塞进 prompt。
 
+最终图的配套索引已冻结在
+`evidence/lth_final_graph_20261002/`：`graph_index.json` 是完整
+`view_model.reference.json` 的精确副本，`knowledge.index.json` 是同一次 merge
+run 的 claim/source-anchor 索引，`artifact_index.json` 是运行 artifact 注册表。
+对 `merge.html` 做计划时，`v2_plan.py` 会传入并校验 `graph_index.json` 的
+canonical hash；旧索引会直接拒绝加载。索引只服务于只读检索和审计，不能改变
+`merge.html` 的权威图或把间接 anchor 变成 direct provenance。
+
 离线工具循环在 `live_tool_loop.py`：模型先请求工具，runner 在本地执行并记录
 typed retrieval trace，最后用真实 trace 调 `validate_v2`。`ScriptedProvider` 只做
 离线 preflight，不产生网络请求。`v2_fairness.py` 会检查目标论文 hash、focal

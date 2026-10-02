@@ -31,6 +31,15 @@ def _sha_json(value: Any) -> str:
     return _sha_bytes(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
 
 
+def _companion_graph_index(graph_html: Path) -> Path | None:
+    """Return the frozen LTH graph index when planning against merge.html."""
+
+    if graph_html.name != "merge.html":
+        return None
+    candidate = graph_html.parent / "paper2ir_experiment_copy/evidence/lth_final_graph_20261002/graph_index.json"
+    return candidate if candidate.is_file() else None
+
+
 def create_plan(
     *,
     fixture: Path,
@@ -40,7 +49,8 @@ def create_plan(
     model_profiles: tuple[str, ...] = DEFAULT_PROFILES,
 ) -> dict[str, Any]:
     task = json.loads(fixture.read_text(encoding="utf-8"))
-    graph = load_final_graph(graph_html)
+    graph_index = _companion_graph_index(graph_html)
+    graph = load_final_graph(graph_html, index_path=graph_index)
     fairness_audit = audit_v2_fairness(task, graph=graph, repo_root=graph_html.parent)
     if not fairness_audit["ok"]:
         raise ValueError("v2 fairness audit failed: " + "; ".join(fairness_audit["errors"]))
@@ -92,6 +102,8 @@ def create_plan(
         "graph_html_sha256": graph.html_sha256,
         "graph_snapshot_sha256": graph.embedded_sha256,
         "graph_canonical_snapshot_sha256": graph.canonical_sha256,
+        "graph_index": str(graph_index) if graph_index is not None else None,
+        "graph_index_sha256": graph.index_sha256,
         "graph_provenance_status": ((task.get("graph") or {}).get("provenance_status") or "unknown"),
         "fairness_audit": fairness_audit,
         "conditions": list(V2_CONDITIONS),

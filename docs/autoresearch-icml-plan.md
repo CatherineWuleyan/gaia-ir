@@ -105,6 +105,8 @@ agent 先给 3–5 个自己提出的、彼此不同的短方向，再选择一�
 
 第一阶段主 benchmark 使用工作区的最终图 [`merge.html`](../merge.html)，后端读取其锁定的 JSON snapshot，而不是执行 HTML。snapshot 当前为 240 个节点、235 条边、103 个无向连通分量，其中 102 个节点孤立；节点没有 `source_anchor_ids`，payload 也没有可验证的 `paper_id`，anchor coverage 为 0/240。因此它目前只能作为结构候选底座，不能直接作为带 provenance 的 gold evidence graph。6–10 个 LTH bridge task 的 target/external/bridge/condition/cutoff 仍需回到原文另行审计，不能把图中的 `K` 总结节点或未锚定边直接当作答案标签。
 
+同一次 merge run 的配套文件已冻结在 [`lth_final_graph_20261002`](../paper2ir_experiment_copy/evidence/lth_final_graph_20261002/)：`graph_index.json` 与 `merge.html` 的 canonical payload 完全一致（240 节点、235 条边），`knowledge.index.json` 提供 71 个可检索 claim 条目和 57 个 source anchors，`artifact_index.json` 记录 23 个运行 artifact。加载 graph index 时先校验 canonical hash；它是检索副本，不能覆盖 `merge.html` 的权威性，也不能把 knowledge index 的 anchor 自动升级为图节点的 direct provenance。
+
 第二阶段外部执行 benchmark 采用 ScienceAgentBench verified split。其论文明确给出 102 个任务、来自 44 篇同行评审论文、覆盖四个学科，并把目标统一为可执行 Python 程序；官方摘要报告三次尝试下最佳 agent 独立完成率为 32.4%，加入专家知识为 34.3%。见 [ICLR 2025 官方摘要页](https://proceedings.iclr.cc/paper_files/paper/2025/hash/f12b4df26344f3be803c06b555252efe-Abstract-Conference.html)、[官方代码](https://github.com/OSU-NLP-Group/ScienceAgentBench) 和 [verified split](https://huggingface.co/datasets/osunlp/ScienceAgentBench)。它可验证选定实验的程序结果与成本，但不是跨论文方向的金标。
 
 执行顺序是 12–20 个分层任务 pilot → 30 个任务主实验 → 102 个任务扩展。2026-04-30 起官方提供 `verified` split；实验必须从 [Hugging Face verified split](https://huggingface.co/datasets/osunlp/ScienceAgentBench) 和官方 harness 加载，锁定数据集 revision、代码 commit、容器 digest、数据许可和 evaluator 版本。当前工作树仍未下载该 verified 运行包；在下载、校验并复现官方日志前，所有 SAB 数字只能称为 schema/执行链 sanity check，不能称为官方 `TaskSuccess`。

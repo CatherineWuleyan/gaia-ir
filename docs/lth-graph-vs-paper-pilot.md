@@ -132,6 +132,15 @@ reasoning_graph − paper_only
 最终图只认 [`merge.html`](../merge.html)。它的嵌入 `view-data` 已锁定到
 `paper2ir_experiment_copy/evidence/lth_final_graph_20261002/`，当前审计为 240 个节点、235 条边、103 个无向连通分量，其中 102 个节点孤立。这个 viewer 图没有节点 source anchors、没有 `source_targets`，也没有可从 payload 直接验证的 paper id；当前 anchor coverage 为 0/240。因此 `get_source_anchor` 对未补回的 anchor 必须返回 unavailable，不能为了让卡片通过而编造 provenance。
 
+已经把同一次 merge run 的配套索引复制到这个目录：`graph_index.json` 是
+`outputs/merge_corpus/view_model.reference.json` 的逐字副本，canonical hash 与
+`merge.html` 都是 `9deaac0d...629d74d`，节点/边数同为 240/235；`knowledge.index.json`
+有 71 个可检索条目和 57 个 source anchors，`artifact_index.json` 有 23 个 artifact，
+并且其中的 merged `gaia.ir` SHA-256 与 `outputs/merge_corpus/gaia.ir.json` 一致。检索器
+加载 `graph_index.json` 前会强制做 canonical hash 比对，发现旧索引就拒绝加载；
+`merge.html` 仍是唯一权威图源。这些索引补足了检索和运行追踪，但不把
+`knowledge.index.json` 的 source anchor 自动变成 viewer 节点的 direct provenance。
+
 已经做了一次保守的 sidecar 回溯，但它不能改写 `merge.html`：从每个 cluster 的 `gaia.ir.json` strategy 反向追到论文 claim，再连接本地 `formalization.json` 和 `ocr.md`。结果是 220 个节点为 `derived`、20 个节点 unresolved；235 条边中 125 条只有两端的 derived closure、110 条 unresolved；direct provenance 仍为 0。报告在 [`provenance_mapping_report.md`](../paper2ir_experiment_copy/evidence/lth_final_graph_20261002/provenance_mapping_report.md)，因此当前主 pilot 仍把图 anchor credit 关闭。
 
 图里的 `K02`、`K03` 等 domain summary 是展示层的人工整理节点。它们不能直接放入主任务的模型输入，否则题目会把“mask/init”或“stability/rewinding”答案写给模型。首轮只允许检索原始 claim/observation 及其经 audit 的关系；summary 节点留作 evaluator-only 或单独的 answer-leakage 对照。235 条边虽然在 viewer 中都标为 `confirmed`，但只有 99 条保留 `original_relation`、96 条有 confidence；`confirmed` 不能代替 source-grounded provenance。
