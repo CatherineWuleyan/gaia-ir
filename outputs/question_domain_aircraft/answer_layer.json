@@ -1,0 +1,3641 @@
+{
+ "schema_name": "gaia.integration.question_answer_layer",
+ "schema_version": "0.1.0",
+ "question": {
+  "zh": "怎么完成飞机的仿真设计？",
+  "en": "How can aircraft simulation design be carried out?",
+  "domain": "aircraft simulation design (conceptual design, flight dynamics, aerodynamic modeling, MDO, HIL validation)"
+ },
+ "root_ids": [
+  "answer:r1",
+  "answer:r2",
+  "answer:r3",
+  "answer:r4",
+  "answer:r5"
+ ],
+ "bridge_ids": [],
+ "axiom_ids": [],
+ "roots": [
+  {
+   "code": "R1",
+   "id": "answer:r1",
+   "title_zh": "集成概念设计环境",
+   "title_en": "Integrated conceptual design environment",
+   "statement": "Aircraft simulation design can be organized around an integrated conceptual-design and simulation-optimization environment that runs an end-to-end civil-airplane design case and uses an optimizer to minimize a design objective such as direct operating cost.",
+   "answer_type": "method_route",
+   "scope": "Applies when an integrated conceptual-design toolset and a simulation-integration optimizer are available for civil-airplane conceptual design.",
+   "criteria": "Evidence would include claims showing an end-to-end conceptual design system and an optimization environment minimizing a design objective within that workflow.",
+   "seed_claim_ids": [
+    "knowledge:papers:paper_aec49f8f::claim_41",
+    "knowledge:papers:paper_aec49f8f::claim_46",
+    "knowledge:papers:paper_c6f44cb4::claim_5",
+    "knowledge:papers:paper_c6f44cb4::claim_25"
+   ],
+   "verdict_class": "primary",
+   "verdict": "multi-paper support",
+   "color": "#b42318",
+   "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
+   "stats": {
+    "support_claim_count": 10,
+    "support_paper_count": 2,
+    "support_papers": [
+     "paper_aec49f8f",
+     "paper_c6f44cb4"
+    ],
+    "chain_count": 22,
+    "leaf_count": 14,
+    "max_depth": 4,
+    "boundary_count": 0,
+    "oppose_count": 0
+   },
+   "support_ids": [
+    "knowledge:papers:paper_aec49f8f::claim_41",
+    "knowledge:papers:paper_aec49f8f::claim_46",
+    "knowledge:papers:paper_aec49f8f::claim_15",
+    "knowledge:papers:paper_aec49f8f::claim_36",
+    "knowledge:papers:paper_aec49f8f::claim_37",
+    "knowledge:papers:paper_aec49f8f::claim_57",
+    "knowledge:papers:paper_aec49f8f::claim_47",
+    "knowledge:papers:paper_c6f44cb4::claim_1",
+    "knowledge:papers:paper_c6f44cb4::claim_5",
+    "knowledge:papers:paper_c6f44cb4::claim_25"
+   ],
+   "oppose_ids": [],
+   "boundary_ids": [],
+   "links": [
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_41",
+     "relation": "support",
+     "reason": "CACDS runs the CJX civil-airplane case end-to-end, evidencing an integrated conceptual-design environment."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_46",
+     "relation": "support",
+     "reason": "The CJX case uses ModelCenter's Boeing Design Explorer optimizer for DOC minimization, evidencing simulation-integration optimization."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_15",
+     "relation": "support",
+     "reason": "CACDS provides a unified geometry-to-analysis-to-optimization workflow, supporting an integrated end-to-end design route."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_36",
+     "relation": "support",
+     "reason": "CACDS is coupled with ModelCenter as optimization engine via defined inputs/outputs, supporting simulation-optimization integration."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_37",
+     "relation": "support",
+     "reason": "CACDS exposes design variables, constraints, and objectives to ModelCenter, enabling optimizer setup."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_57",
+     "relation": "support",
+     "reason": "ModelCenter includes DOC-minimization and other optimization templates, supporting objective-minimizing design workflows."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_aec49f8f::claim_47",
+     "relation": "support",
+     "reason": "The DOC-optimized concept changes wing geometry, showing the optimizer applied within the design case."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_1",
+     "relation": "support",
+     "reason": "A unified modular MDO framework integrates disciplinary modules into one optimization environment, supporting integrated aircraft optimization."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_5",
+     "relation": "support",
+     "reason": "The MDO framework's Level 2 module optimizes configuration geometry with objective functions, supporting the optimization-environment route."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_25",
+     "relation": "support",
+     "reason": "The MDO framework's Level 2 module optimizes wing layout and planform parameters, further evidencing optimization within conceptual design."
+    }
+   ],
+   "chains": [
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_17",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_17",
+     "leaf_code": "P17",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_20",
+      "knowledge:papers:paper_9c2fb427::claim_19",
+      "knowledge:papers:paper_aec49f8f::claim_15",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_20",
+     "leaf_code": "P225",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_47",
+      "knowledge:papers:paper_aec49f8f::claim_46",
+      "knowledge:papers:paper_aec49f8f::claim_41",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_47",
+     "leaf_code": "P47",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_aec49f8f::claim_49",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_58",
+      "knowledge:papers:paper_aec49f8f::claim_46",
+      "knowledge:papers:paper_aec49f8f::claim_41",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_58",
+     "leaf_code": "P58",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_17",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_17",
+     "leaf_code": "P17",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_37",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_37",
+     "leaf_code": "P37",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_4",
+      "knowledge:papers:paper_c6f44cb4::claim_1",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_4",
+     "leaf_code": "P4",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_42",
+      "knowledge:papers:paper_aec49f8f::claim_41",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_42",
+     "leaf_code": "P42",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_43",
+      "knowledge:papers:paper_aec49f8f::claim_41",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_43",
+     "leaf_code": "P43",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_44",
+      "knowledge:papers:paper_aec49f8f::claim_41",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_44",
+     "leaf_code": "P44",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_45",
+      "knowledge:papers:paper_aec49f8f::claim_41",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_45",
+     "leaf_code": "P45",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_47",
+      "knowledge:papers:paper_aec49f8f::claim_46",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_47",
+     "leaf_code": "P47",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_58",
+      "knowledge:papers:paper_aec49f8f::claim_46",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_58",
+     "leaf_code": "P58",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_36",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_36",
+     "leaf_code": "P36",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_37",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_37",
+     "leaf_code": "P37",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_47",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_47",
+     "leaf_code": "P47",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_57",
+      "answer:r1"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_57",
+     "leaf_code": "P57",
+     "depth": 2
+    }
+   ]
+  },
+  {
+   "code": "R2",
+   "id": "answer:r2",
+   "title_zh": "嵌套多学科优化",
+   "title_en": "Nested multidisciplinary optimization",
+   "statement": "Conceptual aircraft design can be pursued through a unified modular multidisciplinary design optimization framework with nested optimization levels that optimize configuration and wing-box design variables, while structural and static-margin constraints may materially affect the resulting design.",
+   "answer_type": "method_route",
+   "scope": "Applies when a modular MDO framework and appropriate structural or static-margin constraints are available for conceptual aircraft design.",
+   "criteria": "Evidence would include a modular MDO framework with nested optimization levels and studies showing how structural or static-margin constraints change optimized designs.",
+   "seed_claim_ids": [
+    "knowledge:papers:paper_c6f44cb4::claim_25",
+    "knowledge:papers:paper_c6f44cb4::claim_5",
+    "knowledge:papers:paper_9c2fb427::claim_11",
+    "knowledge:papers:paper_9c2fb427::claim_10",
+    "knowledge:papers:paper_9c2fb427::claim_27",
+    "knowledge:papers:paper_9c2fb427::claim_6"
+   ],
+   "verdict_class": "primary",
+   "verdict": "multi-paper support",
+   "color": "#b42318",
+   "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
+   "stats": {
+    "support_claim_count": 8,
+    "support_paper_count": 2,
+    "support_papers": [
+     "paper_9c2fb427",
+     "paper_c6f44cb4"
+    ],
+    "chain_count": 26,
+    "leaf_count": 13,
+    "max_depth": 5,
+    "boundary_count": 2,
+    "oppose_count": 0
+   },
+   "support_ids": [
+    "knowledge:papers:paper_c6f44cb4::claim_3",
+    "knowledge:papers:paper_c6f44cb4::claim_1",
+    "knowledge:papers:paper_c6f44cb4::claim_5",
+    "knowledge:papers:paper_c6f44cb4::claim_25",
+    "knowledge:papers:paper_c6f44cb4::claim_4",
+    "knowledge:papers:paper_9c2fb427::claim_27",
+    "knowledge:papers:paper_9c2fb427::claim_10",
+    "knowledge:papers:paper_9c2fb427::claim_6"
+   ],
+   "oppose_ids": [],
+   "boundary_ids": [
+    "knowledge:papers:paper_9c2fb427::claim_11",
+    "knowledge:papers:paper_9c2fb427::claim_8"
+   ],
+   "links": [
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_3",
+     "relation": "support",
+     "reason": "States the modular MDO framework has two nested optimization levels, matching the answer's core architecture."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_1",
+     "relation": "support",
+     "reason": "Confirms a unified modular MDO framework integrating disciplinary modules was implemented for conceptual aircraft design."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_5",
+     "relation": "support",
+     "reason": "Shows the upper nested level optimizes configuration geometric variables, supporting configuration optimization in the route."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_25",
+     "relation": "support",
+     "reason": "Shows the upper nested level optimizes wing-box layout and wingtip/tip-chord variables."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_c6f44cb4::claim_4",
+     "relation": "support",
+     "reason": "Describes Level 1 performance optimizations, supporting the two-level nested optimization structure."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_9c2fb427::claim_27",
+     "relation": "support",
+     "reason": "Reports static-margin enforcement raised gross weight about 6%, showing static-margin constraints materially change optimized design."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_9c2fb427::claim_10",
+     "relation": "support",
+     "reason": "Shows plate-buckling constraints were included, supporting structural constraints in the MDO problem."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_9c2fb427::claim_6",
+     "relation": "support",
+     "reason": "Finds the wing box was primarily sized by plate-buckling constraints, supporting structural constraints materially affecting design."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_9c2fb427::claim_11",
+     "relation": "bounds",
+     "reason": "Limits the structural-constraint claim: this MDO problem omitted stress and displacement constraints."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_9c2fb427::claim_8",
+     "relation": "bounds",
+     "reason": "Shows the displacement constraint was inactive, bounding which structural constraints materially affect this design."
+    }
+   ],
+   "chains": [
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_17",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_aec49f8f::claim_23",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_17",
+     "leaf_code": "P17",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_aec49f8f::claim_23",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_aec49f8f::claim_23",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_17",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_17",
+     "leaf_code": "P17",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_17",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_17",
+     "leaf_code": "P17",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_14",
+      "knowledge:papers:paper_c6f44cb4::claim_24",
+      "knowledge:papers:paper_c6f44cb4::claim_4",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_14",
+     "leaf_code": "P174",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_9",
+      "knowledge:papers:paper_9c2fb427::claim_8",
+      "knowledge:papers:paper_9c2fb427::claim_10",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_9",
+     "leaf_code": "P214",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_7c211832::claim_5",
+      "knowledge:papers:paper_c6f44cb4::claim_24",
+      "knowledge:papers:paper_c6f44cb4::claim_4",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_7c211832::claim_5",
+     "leaf_code": "P290",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_aec49f8f::claim_49",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_1438825f::claim_38",
+      "knowledge:papers:paper_9c2fb427::claim_30",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_1438825f::claim_38",
+     "leaf_code": "P84",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_17",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_17",
+     "leaf_code": "P17",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_6",
+      "knowledge:papers:paper_9c2fb427::claim_10",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_6",
+     "leaf_code": "P211",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_7",
+      "knowledge:papers:paper_9c2fb427::claim_10",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_7",
+     "leaf_code": "P212",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_9",
+      "knowledge:papers:paper_9c2fb427::claim_10",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_9",
+     "leaf_code": "P214",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_29",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_29",
+     "leaf_code": "P231",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_31",
+      "knowledge:papers:paper_9c2fb427::claim_27",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_31",
+     "leaf_code": "P233",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_37",
+      "knowledge:papers:paper_c6f44cb4::claim_5",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_37",
+     "leaf_code": "P37",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_4",
+      "knowledge:papers:paper_c6f44cb4::claim_1",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_4",
+     "leaf_code": "P4",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_aec49f8f::claim_48",
+      "knowledge:papers:paper_c6f44cb4::claim_25",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_aec49f8f::claim_48",
+     "leaf_code": "P48",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_6",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_6",
+     "leaf_code": "P211",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_c6f44cb4::claim_3",
+      "answer:r2"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_c6f44cb4::claim_3",
+     "leaf_code": "P61",
+     "depth": 2
+    }
+   ]
+  },
+  {
+   "code": "R3",
+   "id": "answer:r3",
+   "title_zh": "非线性飞行动力学建模",
+   "title_en": "Nonlinear flight-dynamics formulation",
+   "statement": "Aircraft simulation can be formulated as a coupled nonlinear differential-algebraic flight-dynamics model with six-degree-of-freedom equations expressed in body or wind axes, requiring state variables and parameters to be specified.",
+   "answer_type": "modeling_choice",
+   "scope": "Applies when a physics-based flight-dynamics model is needed and the equation structure, axis system, variables, and parameters can be specified.",
+   "criteria": "Evidence would include claims specifying the DAE structure, axis-system equations, and variable or parameter requirements for flight-dynamics simulation.",
+   "seed_claim_ids": [
+    "knowledge:papers:paper_014abc68::claim_1",
+    "knowledge:papers:paper_014abc68::claim_8",
+    "knowledge:papers:paper_014abc68::claim_21",
+    "knowledge:papers:paper_014abc68::claim_6"
+   ],
+   "verdict_class": "primary",
+   "verdict": "multi-paper support",
+   "color": "#b42318",
+   "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
+   "stats": {
+    "support_claim_count": 8,
+    "support_paper_count": 2,
+    "support_papers": [
+     "paper_014abc68",
+     "paper_26dddb44"
+    ],
+    "chain_count": 27,
+    "leaf_count": 16,
+    "max_depth": 9,
+    "boundary_count": 2,
+    "oppose_count": 0
+   },
+   "support_ids": [
+    "knowledge:papers:paper_014abc68::claim_1",
+    "knowledge:papers:paper_014abc68::claim_8",
+    "knowledge:papers:paper_014abc68::claim_7",
+    "knowledge:papers:paper_014abc68::claim_9",
+    "knowledge:papers:paper_014abc68::claim_6",
+    "knowledge:papers:paper_014abc68::claim_10",
+    "knowledge:papers:paper_014abc68::claim_4",
+    "knowledge:papers:paper_26dddb44::claim_4"
+   ],
+   "oppose_ids": [],
+   "boundary_ids": [
+    "knowledge:papers:paper_014abc68::claim_5",
+    "knowledge:papers:paper_014abc68::claim_20"
+   ],
+   "links": [
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_1",
+     "relation": "support",
+     "reason": "Specifies the coupled 35-equation nonlinear DAE with 39 variables and 30 parameters."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_8",
+     "relation": "support",
+     "reason": "Gives a wind-axis force equation, showing axis-system equation structure for flight simulation."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_7",
+     "relation": "support",
+     "reason": "Gives a wind-axis scalar equation, supporting velocity-axis formulation of flight dynamics."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_9",
+     "relation": "support",
+     "reason": "Gives a wind-axis angle-of-attack equation, supporting axis-system simulation equations."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_6",
+     "relation": "support",
+     "reason": "Expresses body-axis angular rates from Euler angles, specifying state-variable relation."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_10",
+     "relation": "support",
+     "reason": "Provides body-axis rotational acceleration equations, supporting six-DOF equation structure."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_4",
+     "relation": "support",
+     "reason": "States forward-simulation input variables needed for a unique solution."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_5",
+     "relation": "bounds",
+     "reason": "Constrains input specification to inverse-simulation mode with trajectory coordinates plus one variable."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_014abc68::claim_20",
+     "relation": "bounds",
+     "reason": "Limits reduced moment equations to left-right symmetric airplanes."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_4",
+     "relation": "support",
+     "reason": "Describes real-time simulation computing aircraft dynamics differential equations."
+    }
+   ],
+   "chains": [
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_34",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_34",
+     "leaf_code": "P116",
+     "depth": 9
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_35",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_35",
+     "leaf_code": "P117",
+     "depth": 9
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_36",
+     "leaf_code": "P118",
+     "depth": 9
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_8",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_36",
+     "leaf_code": "P283",
+     "depth": 9
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_6",
+      "knowledge:papers:paper_066432fe::claim_3",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_6",
+     "leaf_code": "P183",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_14",
+      "knowledge:papers:paper_18f90780::claim_4",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_14",
+     "leaf_code": "P191",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_14",
+      "knowledge:papers:paper_18f90780::claim_4",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_14",
+     "leaf_code": "P191",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_13",
+      "knowledge:papers:paper_18f90780::claim_12",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_13",
+     "leaf_code": "P260",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_13",
+      "knowledge:papers:paper_18f90780::claim_12",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_13",
+     "leaf_code": "P260",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_2",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_2",
+     "leaf_code": "P123",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_14",
+      "knowledge:papers:paper_18f90780::claim_4",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_14",
+     "leaf_code": "P191",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_6",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "knowledge:papers:paper_18f90780::claim_23",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_6",
+     "leaf_code": "P253",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_13",
+      "knowledge:papers:paper_18f90780::claim_12",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_13",
+     "leaf_code": "P260",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_34",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_014abc68::claim_10",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_34",
+     "leaf_code": "P116",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_35",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_014abc68::claim_10",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_35",
+     "leaf_code": "P117",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_014abc68::claim_10",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_36",
+     "leaf_code": "P118",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_18",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_18",
+     "leaf_code": "P265",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_18",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_18",
+     "leaf_code": "P265",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_8",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_014abc68::claim_10",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_36",
+     "leaf_code": "P283",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_18",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_18",
+     "leaf_code": "P265",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_24",
+      "knowledge:papers:paper_18f90780::claim_25",
+      "knowledge:papers:paper_014abc68::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_24",
+     "leaf_code": "P271",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_17",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_17",
+     "leaf_code": "P194",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_9c2fb427::claim_20",
+      "knowledge:papers:paper_014abc68::claim_1",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_9c2fb427::claim_20",
+     "leaf_code": "P225",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_1",
+      "knowledge:papers:paper_014abc68::claim_1",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_1",
+     "leaf_code": "P248",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_6",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_6",
+     "leaf_code": "P183",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_7",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_7",
+     "leaf_code": "P184",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_9",
+      "answer:r3"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_9",
+     "leaf_code": "P186",
+     "depth": 2
+    }
+   ]
+  },
+  {
+   "code": "R4",
+   "id": "answer:r4",
+   "title_zh": "飞行数据模型校正",
+   "title_en": "Flight-data model calibration",
+   "statement": "Simulation-model fidelity can be improved by identifying aerodynamic delta or parameter models from flight-test or simulated doublet data and updating the original aerodynamic database, followed by checking predictions against measured flight parameters.",
+   "answer_type": "method_route",
+   "scope": "Applies when test or simulated maneuver data are available for identifying aerodynamic increments or parameters and updating an existing simulation model.",
+   "criteria": "Evidence would include identification of aerodynamic increments or parameters from test data and reported improvement of simulation predictions after updating the model.",
+   "seed_claim_ids": [
+    "knowledge:papers:paper_066432fe::claim_1",
+    "knowledge:papers:paper_066432fe::claim_6",
+    "knowledge:papers:paper_066432fe::claim_4",
+    "knowledge:papers:paper_066432fe::claim_5",
+    "knowledge:papers:paper_066432fe::claim_8",
+    "knowledge:papers:paper_53166ac1::claim_6"
+   ],
+   "verdict_class": "primary",
+   "verdict": "multi-paper support",
+   "color": "#b42318",
+   "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
+   "stats": {
+    "support_claim_count": 10,
+    "support_paper_count": 2,
+    "support_papers": [
+     "paper_066432fe",
+     "paper_53166ac1"
+    ],
+    "chain_count": 24,
+    "leaf_count": 13,
+    "max_depth": 6,
+    "boundary_count": 0,
+    "oppose_count": 0
+   },
+   "support_ids": [
+    "knowledge:papers:paper_066432fe::claim_1",
+    "knowledge:papers:paper_066432fe::claim_2",
+    "knowledge:papers:paper_066432fe::claim_3",
+    "knowledge:papers:paper_066432fe::claim_4",
+    "knowledge:papers:paper_066432fe::claim_5",
+    "knowledge:papers:paper_066432fe::claim_6",
+    "knowledge:papers:paper_066432fe::claim_7",
+    "knowledge:papers:paper_066432fe::claim_8",
+    "knowledge:papers:paper_066432fe::claim_9",
+    "knowledge:papers:paper_53166ac1::claim_6"
+   ],
+   "oppose_ids": [],
+   "boundary_ids": [],
+   "links": [
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_1",
+     "relation": "support",
+     "reason": "Reports estimating a delta aerodynamic model from flight data for simulation updating."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_2",
+     "relation": "support",
+     "reason": "Gives identified ΔC_X delta-model parameters from flight-test maneuvers."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_3",
+     "relation": "support",
+     "reason": "Gives identified ΔC_Z delta-model parameters from flight-test maneuvers."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_4",
+     "relation": "support",
+     "reason": "Gives identified ΔC_m delta-model parameters from flight-test maneuvers."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_5",
+     "relation": "support",
+     "reason": "Describes estimated delta aerodynamic models for longitudinal coefficients used to update simulation."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_6",
+     "relation": "support",
+     "reason": "States augmented aerodynamic database significantly improves flight-parameter predictions."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_7",
+     "relation": "support",
+     "reason": "Reports independent flight-test validation of the updated model's improvement."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_8",
+     "relation": "support",
+     "reason": "Shows updated model closely matches measured angle of attack, pitch, and altitude."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_066432fe::claim_9",
+     "relation": "support",
+     "reason": "Shows original model deviates from measured flight profiles, motivating data-based calibration."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_53166ac1::claim_6",
+     "relation": "support",
+     "reason": "Describes parameter identification from simulated elevator-doublet data reproducing longitudinal coefficients."
+    }
+   ],
+   "chains": [
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_34",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_34",
+     "leaf_code": "P116",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_35",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_35",
+     "leaf_code": "P117",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_36",
+     "leaf_code": "P118",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_8",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_36",
+     "leaf_code": "P283",
+     "depth": 6
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_34",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_34",
+     "leaf_code": "P116",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_35",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_35",
+     "leaf_code": "P117",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_6a2ef68a::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_33",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_6a2ef68a::claim_36",
+     "leaf_code": "P118",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_14",
+      "knowledge:papers:paper_18f90780::claim_4",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_14",
+     "leaf_code": "P191",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_13",
+      "knowledge:papers:paper_18f90780::claim_12",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_13",
+     "leaf_code": "P260",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_36",
+      "knowledge:papers:paper_6a2ef68a::claim_8",
+      "knowledge:papers:paper_18f90780::claim_9",
+      "knowledge:papers:paper_066432fe::claim_4",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_36",
+     "leaf_code": "P283",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_6",
+      "knowledge:papers:paper_066432fe::claim_3",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_6",
+     "leaf_code": "P183",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_14",
+      "knowledge:papers:paper_18f90780::claim_4",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_14",
+     "leaf_code": "P191",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_13",
+      "knowledge:papers:paper_18f90780::claim_12",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_13",
+     "leaf_code": "P260",
+     "depth": 4
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_2",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_2",
+     "leaf_code": "P123",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_7",
+      "knowledge:papers:paper_066432fe::claim_6",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_7",
+     "leaf_code": "P128",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_8",
+      "knowledge:papers:paper_066432fe::claim_6",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_8",
+     "leaf_code": "P129",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_9",
+      "knowledge:papers:paper_066432fe::claim_6",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_9",
+     "leaf_code": "P130",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_6",
+      "knowledge:papers:paper_066432fe::claim_3",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_6",
+     "leaf_code": "P183",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_6",
+      "knowledge:papers:paper_066432fe::claim_1",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_6",
+     "leaf_code": "P253",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_18",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_18",
+     "leaf_code": "P265",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_2",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_2",
+     "leaf_code": "P123",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_7",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_7",
+     "leaf_code": "P128",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_8",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_8",
+     "leaf_code": "P129",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_066432fe::claim_9",
+      "answer:r4"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_066432fe::claim_9",
+     "leaf_code": "P130",
+     "depth": 2
+    }
+   ]
+  },
+  {
+   "code": "R5",
+   "id": "answer:r5",
+   "title_zh": "硬件在环验证",
+   "title_en": "Hardware-in-the-loop validation",
+   "statement": "Before flight test, aircraft simulation design can be validated through real-time hardware-in-the-loop testing in which a ground computer solves the aircraft dynamics and the integrated control and propulsion systems are exercised under specified tracking-error criteria.",
+   "answer_type": "validation_route",
+   "scope": "Applies when a real-time HIL test platform and integrated control or propulsion components are available for pre-flight evaluation.",
+   "criteria": "Evidence would include a real-time HIL system computing aircraft dynamics, integrated control or propulsion operation, and reported tracking or stability results supporting pre-flight evaluation.",
+   "seed_claim_ids": [
+    "knowledge:papers:paper_26dddb44::claim_4",
+    "knowledge:papers:paper_26dddb44::claim_16",
+    "knowledge:papers:paper_26dddb44::claim_14",
+    "knowledge:papers:paper_26dddb44::claim_15",
+    "knowledge:papers:paper_755906eb::claim_10"
+   ],
+   "verdict_class": "primary",
+   "verdict": "multi-paper support",
+   "color": "#b42318",
+   "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
+   "stats": {
+    "support_claim_count": 9,
+    "support_paper_count": 2,
+    "support_papers": [
+     "paper_26dddb44",
+     "paper_755906eb"
+    ],
+    "chain_count": 19,
+    "leaf_count": 13,
+    "max_depth": 7,
+    "boundary_count": 1,
+    "oppose_count": 0
+   },
+   "support_ids": [
+    "knowledge:papers:paper_26dddb44::claim_4",
+    "knowledge:papers:paper_26dddb44::claim_16",
+    "knowledge:papers:paper_26dddb44::claim_14",
+    "knowledge:papers:paper_26dddb44::claim_15",
+    "knowledge:papers:paper_26dddb44::claim_12",
+    "knowledge:papers:paper_26dddb44::claim_13",
+    "knowledge:papers:paper_26dddb44::claim_1",
+    "knowledge:papers:paper_26dddb44::claim_2",
+    "knowledge:papers:paper_755906eb::claim_10"
+   ],
+   "oppose_ids": [],
+   "boundary_ids": [
+    "knowledge:papers:paper_755906eb::claim_11"
+   ],
+   "links": [
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_4",
+     "relation": "support",
+     "reason": "Ground computer solving aircraft dynamics each cycle directly instantiates the real-time HIL computational core."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_16",
+     "relation": "support",
+     "reason": "HIL system running stably before flight test directly supports pre-flight validation."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_14",
+     "relation": "support",
+     "reason": "Engine control with specified permissible tracking errors directly supports tracking-error validation in HIL."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_15",
+     "relation": "support",
+     "reason": "Integrated flight control and propulsion operating effectively supports exercising integrated systems in HIL validation."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_12",
+     "relation": "support",
+     "reason": "Reported attitude stability in joint HIL supports validation via stability results."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_13",
+     "relation": "support",
+     "reason": "Successful reference trajectory tracking in joint HIL supports validation via tracking results."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_1",
+     "relation": "support",
+     "reason": "Closed-loop HIL platform integrating flight control, propulsion, simulation equipment, and database supports the validation route."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_26dddb44::claim_2",
+     "relation": "support",
+     "reason": "Hardware set including flight control computer, engine controller/simulator, and ground computer supports HIL validation setup."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_755906eb::claim_10",
+     "relation": "support",
+     "reason": "Low-cost workflow combining dynamics model, autopilot, and SITL/HITL testing supports HIL validation as a method."
+    },
+    {
+     "claim_id": "knowledge:papers:paper_755906eb::claim_11",
+     "relation": "bounds",
+     "reason": "HIL-versus-flight discrepancies around 10% bound the fidelity/accuracy claim for HIL validation."
+    }
+   ],
+   "chains": [
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_14",
+      "knowledge:papers:paper_18f90780::claim_4",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_14",
+     "leaf_code": "P191",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_13",
+      "knowledge:papers:paper_18f90780::claim_12",
+      "knowledge:papers:paper_53166ac1::claim_6",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_13",
+     "leaf_code": "P260",
+     "depth": 7
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_18",
+      "knowledge:papers:paper_066432fe::claim_5",
+      "knowledge:papers:paper_014abc68::claim_8",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "infer",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_18",
+     "leaf_code": "P265",
+     "depth": 5
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_755906eb::claim_11",
+      "knowledge:papers:paper_755906eb::claim_10",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_755906eb::claim_11",
+     "leaf_code": "P159",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_12",
+      "knowledge:papers:paper_26dddb44::claim_16",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_12",
+     "leaf_code": "P172",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_12",
+      "knowledge:papers:paper_26dddb44::claim_15",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_12",
+     "leaf_code": "P172",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_13",
+      "knowledge:papers:paper_26dddb44::claim_16",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_13",
+     "leaf_code": "P173",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_13",
+      "knowledge:papers:paper_26dddb44::claim_15",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_13",
+     "leaf_code": "P173",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_14",
+      "knowledge:papers:paper_26dddb44::claim_16",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_14",
+     "leaf_code": "P174",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_14",
+      "knowledge:papers:paper_26dddb44::claim_15",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_14",
+     "leaf_code": "P174",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_014abc68::claim_17",
+      "knowledge:papers:paper_26dddb44::claim_4",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_014abc68::claim_17",
+     "leaf_code": "P194",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_1",
+      "knowledge:papers:paper_755906eb::claim_10",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_1",
+     "leaf_code": "P248",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_2",
+      "knowledge:papers:paper_26dddb44::claim_15",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_2",
+     "leaf_code": "P249",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_18f90780::claim_40",
+      "knowledge:papers:paper_26dddb44::claim_15",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "infer",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_18f90780::claim_40",
+     "leaf_code": "P287",
+     "depth": 3
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_1",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_1",
+     "leaf_code": "P162",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_2",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_2",
+     "leaf_code": "P163",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_12",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_12",
+     "leaf_code": "P172",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_13",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_13",
+     "leaf_code": "P173",
+     "depth": 2
+    },
+    {
+     "path": [
+      "knowledge:papers:paper_26dddb44::claim_14",
+      "answer:r5"
+     ],
+     "rels": [
+      "",
+      "support"
+     ],
+     "leaf": "knowledge:papers:paper_26dddb44::claim_14",
+     "leaf_code": "P174",
+     "depth": 2
+    }
+   ]
+  }
+ ],
+ "answer_edges": [
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_41",
+   "source": "knowledge:papers:paper_aec49f8f::claim_41",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "CACDS runs the CJX civil-airplane case end-to-end, evidencing an integrated conceptual-design environment.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_41",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_46",
+   "source": "knowledge:papers:paper_aec49f8f::claim_46",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "The CJX case uses ModelCenter's Boeing Design Explorer optimizer for DOC minimization, evidencing simulation-integration optimization.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_46",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_15",
+   "source": "knowledge:papers:paper_aec49f8f::claim_15",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "CACDS provides a unified geometry-to-analysis-to-optimization workflow, supporting an integrated end-to-end design route.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_15",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_36",
+   "source": "knowledge:papers:paper_aec49f8f::claim_36",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "CACDS is coupled with ModelCenter as optimization engine via defined inputs/outputs, supporting simulation-optimization integration.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_36",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_37",
+   "source": "knowledge:papers:paper_aec49f8f::claim_37",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "CACDS exposes design variables, constraints, and objectives to ModelCenter, enabling optimizer setup.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_37",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_57",
+   "source": "knowledge:papers:paper_aec49f8f::claim_57",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "ModelCenter includes DOC-minimization and other optimization templates, supporting objective-minimizing design workflows.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_57",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_aec49f8f::claim_47",
+   "source": "knowledge:papers:paper_aec49f8f::claim_47",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "The DOC-optimized concept changes wing geometry, showing the optimizer applied within the design case.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_aec49f8f::claim_47",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_c6f44cb4::claim_1",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_1",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "A unified modular MDO framework integrates disciplinary modules into one optimization environment, supporting integrated aircraft optimization.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_1",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_c6f44cb4::claim_5",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_5",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "The MDO framework's Level 2 module optimizes configuration geometry with objective functions, supporting the optimization-environment route.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_5",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r1:knowledge:papers:paper_c6f44cb4::claim_25",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_25",
+   "target": "answer:r1",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "The MDO framework's Level 2 module optimizes wing layout and planform parameters, further evidencing optimization within conceptual design.",
+    "root_id": "answer:r1",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_25",
+    "target": "answer:r1"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_c6f44cb4::claim_3",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_3",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "States the modular MDO framework has two nested optimization levels, matching the answer's core architecture.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_3",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_c6f44cb4::claim_1",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_1",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Confirms a unified modular MDO framework integrating disciplinary modules was implemented for conceptual aircraft design.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_1",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_c6f44cb4::claim_5",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_5",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Shows the upper nested level optimizes configuration geometric variables, supporting configuration optimization in the route.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_5",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_c6f44cb4::claim_25",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_25",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Shows the upper nested level optimizes wing-box layout and wingtip/tip-chord variables.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_25",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_c6f44cb4::claim_4",
+   "source": "knowledge:papers:paper_c6f44cb4::claim_4",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Describes Level 1 performance optimizations, supporting the two-level nested optimization structure.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_c6f44cb4::claim_4",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_9c2fb427::claim_27",
+   "source": "knowledge:papers:paper_9c2fb427::claim_27",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Reports static-margin enforcement raised gross weight about 6%, showing static-margin constraints materially change optimized design.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_9c2fb427::claim_27",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_9c2fb427::claim_10",
+   "source": "knowledge:papers:paper_9c2fb427::claim_10",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Shows plate-buckling constraints were included, supporting structural constraints in the MDO problem.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_9c2fb427::claim_10",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_9c2fb427::claim_6",
+   "source": "knowledge:papers:paper_9c2fb427::claim_6",
+   "target": "answer:r2",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Finds the wing box was primarily sized by plate-buckling constraints, supporting structural constraints materially affecting design.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_9c2fb427::claim_6",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_9c2fb427::claim_11",
+   "source": "knowledge:papers:paper_9c2fb427::claim_11",
+   "target": "answer:r2",
+   "label": "bounds",
+   "semantic_type": "bounds",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "bounds",
+    "reason": "Limits the structural-constraint claim: this MDO problem omitted stress and displacement constraints.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_9c2fb427::claim_11",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r2:knowledge:papers:paper_9c2fb427::claim_8",
+   "source": "knowledge:papers:paper_9c2fb427::claim_8",
+   "target": "answer:r2",
+   "label": "bounds",
+   "semantic_type": "bounds",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "bounds",
+    "reason": "Shows the displacement constraint was inactive, bounding which structural constraints materially affect this design.",
+    "root_id": "answer:r2",
+    "source": "knowledge:papers:paper_9c2fb427::claim_8",
+    "target": "answer:r2"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_1",
+   "source": "knowledge:papers:paper_014abc68::claim_1",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Specifies the coupled 35-equation nonlinear DAE with 39 variables and 30 parameters.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_1",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_8",
+   "source": "knowledge:papers:paper_014abc68::claim_8",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Gives a wind-axis force equation, showing axis-system equation structure for flight simulation.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_8",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_7",
+   "source": "knowledge:papers:paper_014abc68::claim_7",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Gives a wind-axis scalar equation, supporting velocity-axis formulation of flight dynamics.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_7",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_9",
+   "source": "knowledge:papers:paper_014abc68::claim_9",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Gives a wind-axis angle-of-attack equation, supporting axis-system simulation equations.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_9",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_6",
+   "source": "knowledge:papers:paper_014abc68::claim_6",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Expresses body-axis angular rates from Euler angles, specifying state-variable relation.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_6",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_10",
+   "source": "knowledge:papers:paper_014abc68::claim_10",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Provides body-axis rotational acceleration equations, supporting six-DOF equation structure.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_10",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_4",
+   "source": "knowledge:papers:paper_014abc68::claim_4",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "States forward-simulation input variables needed for a unique solution.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_4",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_5",
+   "source": "knowledge:papers:paper_014abc68::claim_5",
+   "target": "answer:r3",
+   "label": "bounds",
+   "semantic_type": "bounds",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "bounds",
+    "reason": "Constrains input specification to inverse-simulation mode with trajectory coordinates plus one variable.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_5",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_014abc68::claim_20",
+   "source": "knowledge:papers:paper_014abc68::claim_20",
+   "target": "answer:r3",
+   "label": "bounds",
+   "semantic_type": "bounds",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "bounds",
+    "reason": "Limits reduced moment equations to left-right symmetric airplanes.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_014abc68::claim_20",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r3:knowledge:papers:paper_26dddb44::claim_4",
+   "source": "knowledge:papers:paper_26dddb44::claim_4",
+   "target": "answer:r3",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Describes real-time simulation computing aircraft dynamics differential equations.",
+    "root_id": "answer:r3",
+    "source": "knowledge:papers:paper_26dddb44::claim_4",
+    "target": "answer:r3"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_1",
+   "source": "knowledge:papers:paper_066432fe::claim_1",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Reports estimating a delta aerodynamic model from flight data for simulation updating.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_1",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_2",
+   "source": "knowledge:papers:paper_066432fe::claim_2",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Gives identified ΔC_X delta-model parameters from flight-test maneuvers.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_2",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_3",
+   "source": "knowledge:papers:paper_066432fe::claim_3",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Gives identified ΔC_Z delta-model parameters from flight-test maneuvers.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_3",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_4",
+   "source": "knowledge:papers:paper_066432fe::claim_4",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Gives identified ΔC_m delta-model parameters from flight-test maneuvers.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_4",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_5",
+   "source": "knowledge:papers:paper_066432fe::claim_5",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Describes estimated delta aerodynamic models for longitudinal coefficients used to update simulation.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_5",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_6",
+   "source": "knowledge:papers:paper_066432fe::claim_6",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "States augmented aerodynamic database significantly improves flight-parameter predictions.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_6",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_7",
+   "source": "knowledge:papers:paper_066432fe::claim_7",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Reports independent flight-test validation of the updated model's improvement.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_7",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_8",
+   "source": "knowledge:papers:paper_066432fe::claim_8",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Shows updated model closely matches measured angle of attack, pitch, and altitude.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_8",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_066432fe::claim_9",
+   "source": "knowledge:papers:paper_066432fe::claim_9",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Shows original model deviates from measured flight profiles, motivating data-based calibration.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_066432fe::claim_9",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r4:knowledge:papers:paper_53166ac1::claim_6",
+   "source": "knowledge:papers:paper_53166ac1::claim_6",
+   "target": "answer:r4",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Describes parameter identification from simulated elevator-doublet data reproducing longitudinal coefficients.",
+    "root_id": "answer:r4",
+    "source": "knowledge:papers:paper_53166ac1::claim_6",
+    "target": "answer:r4"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_4",
+   "source": "knowledge:papers:paper_26dddb44::claim_4",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Ground computer solving aircraft dynamics each cycle directly instantiates the real-time HIL computational core.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_4",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_16",
+   "source": "knowledge:papers:paper_26dddb44::claim_16",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "HIL system running stably before flight test directly supports pre-flight validation.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_16",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_14",
+   "source": "knowledge:papers:paper_26dddb44::claim_14",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Engine control with specified permissible tracking errors directly supports tracking-error validation in HIL.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_14",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_15",
+   "source": "knowledge:papers:paper_26dddb44::claim_15",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Integrated flight control and propulsion operating effectively supports exercising integrated systems in HIL validation.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_15",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_12",
+   "source": "knowledge:papers:paper_26dddb44::claim_12",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Reported attitude stability in joint HIL supports validation via stability results.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_12",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_13",
+   "source": "knowledge:papers:paper_26dddb44::claim_13",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Successful reference trajectory tracking in joint HIL supports validation via tracking results.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_13",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_1",
+   "source": "knowledge:papers:paper_26dddb44::claim_1",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Closed-loop HIL platform integrating flight control, propulsion, simulation equipment, and database supports the validation route.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_1",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_26dddb44::claim_2",
+   "source": "knowledge:papers:paper_26dddb44::claim_2",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Hardware set including flight control computer, engine controller/simulator, and ground computer supports HIL validation setup.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_26dddb44::claim_2",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_755906eb::claim_10",
+   "source": "knowledge:papers:paper_755906eb::claim_10",
+   "target": "answer:r5",
+   "label": "supports",
+   "semantic_type": "support",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "support",
+    "reason": "Low-cost workflow combining dynamics model, autopilot, and SITL/HITL testing supports HIL validation as a method.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_755906eb::claim_10",
+    "target": "answer:r5"
+   }
+  },
+  {
+   "id": "answer:r5:knowledge:papers:paper_755906eb::claim_11",
+   "source": "knowledge:papers:paper_755906eb::claim_11",
+   "target": "answer:r5",
+   "label": "bounds",
+   "semantic_type": "bounds",
+   "edge_class": "answer",
+   "layer": "answer",
+   "step": 6,
+   "visible_at": [
+    "overview",
+    "standard"
+   ],
+   "min_granularity": "overview",
+   "details": {
+    "relation": "bounds",
+    "reason": "HIL-versus-flight discrepancies around 10% bound the fidelity/accuracy claim for HIL validation.",
+    "root_id": "answer:r5",
+    "source": "knowledge:papers:paper_755906eb::claim_11",
+    "target": "answer:r5"
+   }
+  }
+ ],
+ "generation": {
+  "prompt_version": "question-answer-v1",
+  "model": "deepseek-v4-flash",
+  "generated_at": "2026-10-17T14:31:53.897728+00:00",
+  "root_count": 5,
+  "answer_edge_count": 50,
+  "chain_count": 118,
+  "base_node_count": 311,
+  "base_edge_count": 208
+ }
+}

@@ -1,0 +1,195 @@
+{
+ "question": {
+  "zh": "怎么完成飞机的仿真设计？",
+  "en": "How can aircraft simulation design be carried out?",
+  "domain": "aircraft simulation design (conceptual design, flight dynamics, aerodynamic modeling, MDO, HIL validation)"
+ },
+ "base": {
+  "node_count": 311,
+  "edge_count": 208,
+  "connected_claim_count": 222,
+  "paper_count": 13
+ },
+ "answer_layer": {
+  "root_count": 5,
+  "answer_edge_count": 50,
+  "linked_claim_count": 46,
+  "chain_node_count": 83,
+  "linked_or_chained_claim_count": 86,
+  "coverage_of_connected_claims": 0.3649,
+  "coverage_of_all_claims": 0.2765,
+  "papers_touched": 12,
+  "claims_on_multiple_roots": 4,
+  "claims_per_paper": {
+   "paper_014abc68": 11,
+   "paper_066432fe": 9,
+   "paper_1438825f": 1,
+   "paper_18f90780": 13,
+   "paper_26dddb44": 8,
+   "paper_53166ac1": 1,
+   "paper_6a2ef68a": 5,
+   "paper_755906eb": 2,
+   "paper_7c211832": 1,
+   "paper_9c2fb427": 12,
+   "paper_aec49f8f": 17,
+   "paper_c6f44cb4": 6
+  }
+ },
+ "roots": [
+  {
+   "code": "R1",
+   "title_zh": "集成概念设计环境",
+   "title_en": "Integrated conceptual design environment",
+   "verdict_class": "primary",
+   "support_claim_count": 10,
+   "support_paper_count": 2,
+   "support_papers": [
+    "paper_aec49f8f",
+    "paper_c6f44cb4"
+   ],
+   "boundary_count": 0,
+   "oppose_count": 0,
+   "chain_count": 22,
+   "leaf_count": 14,
+   "max_depth": 4,
+   "chain_node_count": 22,
+   "direct_ids": [
+    "knowledge:papers:paper_aec49f8f::claim_15",
+    "knowledge:papers:paper_aec49f8f::claim_36",
+    "knowledge:papers:paper_aec49f8f::claim_37",
+    "knowledge:papers:paper_aec49f8f::claim_41",
+    "knowledge:papers:paper_aec49f8f::claim_46",
+    "knowledge:papers:paper_aec49f8f::claim_47",
+    "knowledge:papers:paper_aec49f8f::claim_57",
+    "knowledge:papers:paper_c6f44cb4::claim_1",
+    "knowledge:papers:paper_c6f44cb4::claim_25",
+    "knowledge:papers:paper_c6f44cb4::claim_5"
+   ],
+   "statement": "Aircraft simulation design can be organized around an integrated conceptual-design and simulation-optimization environment that runs an end-to-end civil-airplane design case and uses an optimizer to minimize a design objective such as direct operating cost."
+  },
+  {
+   "code": "R2",
+   "title_zh": "嵌套多学科优化",
+   "title_en": "Nested multidisciplinary optimization",
+   "verdict_class": "primary",
+   "support_claim_count": 8,
+   "support_paper_count": 2,
+   "support_papers": [
+    "paper_9c2fb427",
+    "paper_c6f44cb4"
+   ],
+   "boundary_count": 2,
+   "oppose_count": 0,
+   "chain_count": 26,
+   "leaf_count": 13,
+   "max_depth": 5,
+   "chain_node_count": 24,
+   "direct_ids": [
+    "knowledge:papers:paper_9c2fb427::claim_10",
+    "knowledge:papers:paper_9c2fb427::claim_11",
+    "knowledge:papers:paper_9c2fb427::claim_27",
+    "knowledge:papers:paper_9c2fb427::claim_6",
+    "knowledge:papers:paper_9c2fb427::claim_8",
+    "knowledge:papers:paper_c6f44cb4::claim_1",
+    "knowledge:papers:paper_c6f44cb4::claim_25",
+    "knowledge:papers:paper_c6f44cb4::claim_3",
+    "knowledge:papers:paper_c6f44cb4::claim_4",
+    "knowledge:papers:paper_c6f44cb4::claim_5"
+   ],
+   "statement": "Conceptual aircraft design can be pursued through a unified modular multidisciplinary design optimization framework with nested optimization levels that optimize configuration and wing-box design variables, while structural and static-margin constraints may materially affect the resulting design."
+  },
+  {
+   "code": "R3",
+   "title_zh": "非线性飞行动力学建模",
+   "title_en": "Nonlinear flight-dynamics formulation",
+   "verdict_class": "primary",
+   "support_claim_count": 8,
+   "support_paper_count": 2,
+   "support_papers": [
+    "paper_014abc68",
+    "paper_26dddb44"
+   ],
+   "boundary_count": 2,
+   "oppose_count": 0,
+   "chain_count": 27,
+   "leaf_count": 16,
+   "max_depth": 9,
+   "chain_node_count": 33,
+   "direct_ids": [
+    "knowledge:papers:paper_014abc68::claim_1",
+    "knowledge:papers:paper_014abc68::claim_10",
+    "knowledge:papers:paper_014abc68::claim_20",
+    "knowledge:papers:paper_014abc68::claim_4",
+    "knowledge:papers:paper_014abc68::claim_5",
+    "knowledge:papers:paper_014abc68::claim_6",
+    "knowledge:papers:paper_014abc68::claim_7",
+    "knowledge:papers:paper_014abc68::claim_8",
+    "knowledge:papers:paper_014abc68::claim_9",
+    "knowledge:papers:paper_26dddb44::claim_4"
+   ],
+   "statement": "Aircraft simulation can be formulated as a coupled nonlinear differential-algebraic flight-dynamics model with six-degree-of-freedom equations expressed in body or wind axes, requiring state variables and parameters to be specified."
+  },
+  {
+   "code": "R4",
+   "title_zh": "飞行数据模型校正",
+   "title_en": "Flight-data model calibration",
+   "verdict_class": "primary",
+   "support_claim_count": 10,
+   "support_paper_count": 2,
+   "support_papers": [
+    "paper_066432fe",
+    "paper_53166ac1"
+   ],
+   "boundary_count": 0,
+   "oppose_count": 0,
+   "chain_count": 24,
+   "leaf_count": 13,
+   "max_depth": 6,
+   "chain_node_count": 24,
+   "direct_ids": [
+    "knowledge:papers:paper_066432fe::claim_1",
+    "knowledge:papers:paper_066432fe::claim_2",
+    "knowledge:papers:paper_066432fe::claim_3",
+    "knowledge:papers:paper_066432fe::claim_4",
+    "knowledge:papers:paper_066432fe::claim_5",
+    "knowledge:papers:paper_066432fe::claim_6",
+    "knowledge:papers:paper_066432fe::claim_7",
+    "knowledge:papers:paper_066432fe::claim_8",
+    "knowledge:papers:paper_066432fe::claim_9",
+    "knowledge:papers:paper_53166ac1::claim_6"
+   ],
+   "statement": "Simulation-model fidelity can be improved by identifying aerodynamic delta or parameter models from flight-test or simulated doublet data and updating the original aerodynamic database, followed by checking predictions against measured flight parameters."
+  },
+  {
+   "code": "R5",
+   "title_zh": "硬件在环验证",
+   "title_en": "Hardware-in-the-loop validation",
+   "verdict_class": "primary",
+   "support_claim_count": 9,
+   "support_paper_count": 2,
+   "support_papers": [
+    "paper_26dddb44",
+    "paper_755906eb"
+   ],
+   "boundary_count": 1,
+   "oppose_count": 0,
+   "chain_count": 19,
+   "leaf_count": 13,
+   "max_depth": 7,
+   "chain_node_count": 22,
+   "direct_ids": [
+    "knowledge:papers:paper_26dddb44::claim_1",
+    "knowledge:papers:paper_26dddb44::claim_12",
+    "knowledge:papers:paper_26dddb44::claim_13",
+    "knowledge:papers:paper_26dddb44::claim_14",
+    "knowledge:papers:paper_26dddb44::claim_15",
+    "knowledge:papers:paper_26dddb44::claim_16",
+    "knowledge:papers:paper_26dddb44::claim_2",
+    "knowledge:papers:paper_26dddb44::claim_4",
+    "knowledge:papers:paper_755906eb::claim_10",
+    "knowledge:papers:paper_755906eb::claim_11"
+   ],
+   "statement": "Before flight test, aircraft simulation design can be validated through real-time hardware-in-the-loop testing in which a ground computer solves the aircraft dynamics and the integrated control and propulsion systems are exercised under specified tracking-error criteria."
+  }
+ ]
+}

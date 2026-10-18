@@ -1,0 +1,6 @@
+{"stage": "merge_step3", "model": "deepseek-v4-flash", "prompt_tokens": 5819, "completion_tokens": 4530, "cached_tokens": 0}
+{"stage": "merge_step3", "model": "deepseek-v4-flash", "prompt_tokens": 5568, "completion_tokens": 4677, "cached_tokens": 0}
+{"stage": "merge_step3", "model": "deepseek-v4-flash", "prompt_tokens": 5326, "completion_tokens": 3839, "cached_tokens": 0}
+{"stage": "merge_step3", "model": "deepseek-v4-flash", "prompt_tokens": 5766, "completion_tokens": 3349, "cached_tokens": 0}
+{"stage": "merge_step3", "model": "deepseek-v4-flash", "prompt_tokens": 5743, "completion_tokens": 1560, "cached_tokens": 0}
+{"stage": "merge_step3", "model": "deepseek-v4-flash", "prompt_tokens": 5321, "completion_tokens": 2089, "cached_tokens": 0}
