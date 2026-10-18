@@ -4,6 +4,56 @@
 范围：`pipelines/merge/pipeline_merge_question`（新副本）与
 `outputs/question_domain_aircraft`（本次冻结图运行结果）
 
+> **2026-10-18 typed-edge revision（当前版本）**
+> 本文下面的原始运行记录保留为历史对照。当前图已按“具体类型优先、`infer`
+> 兜底且不可链”的规则更新；原 86 条连接/链中的深链现在只作为
+> `exploratory_paths` 展示，不再计入 support/coverage。
+
+## 0. 当前版本（typed-edge revision）
+
+### 0.1 规则
+
+- `deduction > special_case > reproduces > bounds > abduction > analogy > infer`；
+- 只有 `deduction` 是 chainable；
+- `infer` 是 residual：必须带 `residual_reason=precondition|enabling|instance|unclear`，
+  且 `chainable=false`；
+- `special_case / reproduces / bounds` 在 Gaia strategy schema 中不可编译，
+  因此作为 **typed display links** 保留，不静默丢弃；
+- viewer 的 `Typed support chains` 只显示 deduction 链；
+  旧 infer 路径放在 `Exploratory paths`，默认隐藏，且明确标注 not evidence。
+
+### 0.2 当前结果
+
+- 基础图：311 claims / **223 edges**（新增 15 条 Step 3
+  `special_case`/`bounds` display links）；
+- 5 个候选回答，50 条 answer edge（45 support + 5 bounds，0 oppose）；
+- **46 claims 直接连接**；typed support chains **0**；
+- exploratory paths：R1 18 / R2 24 / R3 24 / R4 20 / R5 14；
+- 直接+exploratory 覆盖 86 claims，占 connected claims 的 **35.8%**；
+- 边角色分布：`infer 202 / special_case 13 / bounds 5 / reproduces 3`，
+  chainable 0；没有 deduction。
+- 这不是 bug：冻结图的 **68 条 cross-paper weakpoint 全是 `infer`**，
+  原因是 Step 3 把它们用于 “needs/requires/can represent/instance” 等关系；
+  当前规则下没有一条被证明为 deduction，因此没有 typed support chain。
+
+### 0.3 变更文件
+
+- `step3.py`：具体类型优先、`infer` 必须带 `residual_reason`、`chainable=false`；
+- `question_layer.py`：只沿 chainable 边建链；`exploratory_paths` 分离；
+  原生 typed view 可直接提供 edge role；
+- `view.py`：把 Step 3 的 `special_case/reproduces/bounds` 作为 display links
+  注入 view，并保留每条边的 type/expression；
+- `edge_role_audit.py`：对冻结图做规则/LLM edge-role 审计；
+- `build_typed_view.py`：为已冻结图补回 Step 4 丢弃的 15 条 typed links；
+- `viewer_question.html`：reasoning type 图例、typed/exploratory 分区、
+  exploratory 开关、root 的 `no typed chain` badge；
+- `run_question_layer.py`：新增 `--edge-roles`。
+
+### 0.4 原始运行（历史）
+
+下面的数字（86 linked/chained、36.5% coverage、22–27 条深链）是**旧口径**：
+把 `infer` 当作支持链。按当前规则，它们应读作 exploratory，而不是 evidence。
+
 ## 0. 结论摘要
 
 - 新增了 `pipeline_merge_question` 副本，原 `pipeline_merge` 未改。

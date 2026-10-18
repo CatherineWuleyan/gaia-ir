@@ -42,6 +42,9 @@ WEAKPOINT_TYPES = {"deduction", "abduction", "analogy"}
 #: being an instance of the other.  They are opt-in because on abstracted claims
 #: the generic families dominate and say little.
 CROSS_PAPER_EXTRA_TYPES = frozenset({"infer", "reproduces", "bounds", "special_case"})
+#: Why an edge fell through to the residual ``infer`` class.  ``infer`` is not a
+#: support type; downstream code must not build a support chain from it.
+INFER_RESIDUAL_REASONS = frozenset({"precondition", "enabling", "instance", "unclear"})
 #: A relation has to name what is shared and what follows.  These phrases mark an
 #: expression that only asserts topical relevance: measured on real claims, the
 #: judge produced "supports relevance of ..." links between a monolayer-on-graphene
@@ -582,14 +585,23 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
                  '"variables":["<that candidate\'s two source_qids, copied verbatim>"],'
                  '"expression":"..."}]}')
     else:
-        instruction = ("Classify non-operator relations between the supplied candidates as deduction, abduction, analogy, "
-                       "infer, reproduces, bounds, or special_case.\n"
-                       "  reproduces: an INDEPENDENT measurement of the same quantity in a compatible setting, with a "
-                       "              stated value that agrees (name both values);\n"
-                       "  bounds:     the premise constrains the range the conclusion may hold over (say which range);\n"
-                       "  special_case: the premise is an instance of the conclusion, or vice versa (say which);\n"
-                       "  infer:      a directed relation that is clear and specific but is none of the above;\n"
-                       "  deduction / abduction / analogy as defined below. Use only supplied IDs/content. Deduction needs every premise; analogy needs a supplied bridge "
+        instruction = ("Classify non-operator relations between the supplied candidates. Choose the MOST SPECIFIC type "
+                       "in this exact priority order:\n"
+                       "  deduction > special_case > reproduces > bounds > abduction > analogy > infer.\n"
+                       "  deduction:    the premise and conclusion are about the SAME object/quantity/conditions and the "
+                       "                conclusion follows logically with no missing rule; every premise is required;\n"
+                       "  special_case: the premise is an explicit instance/subtype of the conclusion, or vice versa;\n"
+                       "  reproduces:   an INDEPENDENT measurement of the same quantity in a compatible setting, with a "
+                       "                stated value that agrees (name both values);\n"
+                       "  bounds:       the premise constrains the range the conclusion may hold over (say which range);\n"
+                       "  abduction:    a hypothesis explains an observation (alternative explanations possible);\n"
+                       "  analogy:      a cross-object/cross-domain mapping (different aircraft, dataset, or model);\n"
+                       "  infer:        ONLY when none of the six specific types fits. This is the residual class. It is "
+                       "                NOT a default and NOT a synonym for 'supports'. For infer you MUST give "
+                       "                residual_reason=precondition|enabling|instance|unclear and chainable=false.\n"
+                       "Do NOT promote 'B needs A', 'A is an input for B', 'A can represent B', or a cross-aircraft "
+                       "similarity to deduction. Do NOT use infer when special_case, reproduces, bounds, abduction, "
+                       "or analogy genuinely fits. Use only supplied IDs/content. Analogy needs a supplied bridge "
                        "claim; abduction must identify observation and hypothesis. Abduction may use several observation "
                        "premises, but at most one explicit alternative explanation; multiple alternatives must already be "
                        "represented by one supplied disjunction claim. Make the expression show which IDs are observations "
@@ -607,7 +619,8 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
                        "share a named quantity or value, and no stronger family fits; do not default to infer, and never "
                        "emit an infer whose expression does not satisfy (a) and (b). Never propose a new conclusion here.")
         shape = ('{"weakpoints":[{"candidate_id":"...","evidence_claim_ids":["..."],"target_claim_id":["..."],'
-                 '"reasoning_type":"...","evidence_anchor_ids":[],"expression":"..."}]}')
+                 '"reasoning_type":"...","residual_reason":"precondition|enabling|instance|unclear|null",'
+                 '"evidence_anchor_ids":[],"expression":"..."}]}')
     return ("You are a constrained scientific relation judge. Use ONLY this frozen Step 2 group; do not retrieve, read paper "
             "text, use outside knowledge, invent facts or IDs, or treat similarity as proof. Return JSON only. " + instruction +
             f" Output shape: {shape}\nGROUP={group_id}\nCANDIDATES={json.dumps(candidates, ensure_ascii=False, sort_keys=True)}")
@@ -1010,6 +1023,13 @@ class Step3IdentifyStructuresPlugin:
                 reasoning_type = item.get("reasoning_type")
                 if reasoning_type not in allowed_weakpoints:
                     continue
+                residual_reason = item.get("residual_reason")
+                if reasoning_type == "infer":
+                    residual_reason = str(residual_reason) if residual_reason in INFER_RESIDUAL_REASONS else "unclear"
+                    chainable = False
+                else:
+                    residual_reason = None
+                    chainable = reasoning_type == "deduction"
                 expression = str(item.get("expression") or "").strip()
                 if not expression or any(marker in expression.lower() for marker in _NON_RELATION_MARKERS):
                     continue
@@ -1039,6 +1059,8 @@ class Step3IdentifyStructuresPlugin:
                 weakpoints.append({"id": _stable_id("weakpoint", [group_id, str(item["candidate_id"])]),
                                    "payload": {"evidence_claim_ids": evidence, "target_claim_id": targets,
                                                "reasoning_type": reasoning_type,
+                                               "residual_reason": residual_reason,
+                                               "chainable": chainable,
                                                "evidence_anchor_ids": list(item.get("evidence_anchor_ids") or []),
                                                "expression": expression}})
         if vacuous_conjunctions:

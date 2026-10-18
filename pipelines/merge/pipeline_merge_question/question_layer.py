@@ -50,8 +50,8 @@ VERDICT_COLORS = {
     "exploratory": "#475467",
 }
 VERDICT_LABELS = {
-    "primary": "multi-paper support",
-    "partial": "single-paper support",
+    "primary": "multi-paper direct support",
+    "partial": "single-paper direct support",
     "contested": "opposed in the graph",
     "exploratory": "exploratory",
 }
@@ -138,6 +138,57 @@ def infer_up_adjacency(edges: Iterable[Mapping[str, Any]]) -> dict[str, list[tup
         rel = str(edge.get("semantic_type") or edge.get("label") or "")
         if rel == "infer":
             up[str(edge.get("target"))].append((str(edge.get("source")), "infer"))
+    return up
+
+
+def normalize_edge_roles(edge_roles: Any) -> dict[str, dict[str, Any]]:
+    """Accept both {edge_id: role} and [{edge_id, ...}] role collections."""
+    if not edge_roles:
+        return {}
+    if isinstance(edge_roles, Mapping):
+        result = {}
+        for edge_id, role in edge_roles.items():
+            if isinstance(role, Mapping):
+                item = dict(role)
+                item.setdefault("edge_id", str(edge_id))
+                result[str(edge_id)] = item
+        return result
+    if isinstance(edge_roles, list):
+        return {
+            str(item.get("edge_id")): dict(item)
+            for item in edge_roles
+            if isinstance(item, Mapping) and item.get("edge_id")
+        }
+    return {}
+
+
+def chain_up_adjacency(
+    edges: Iterable[Mapping[str, Any]],
+    edge_roles: Any,
+) -> dict[str, list[tuple[str, str]]]:
+    """conclusion -> [(premise, type)] for *chainable* edges only.
+
+    `infer` is the residual class and is not chainable.  Edges without a role
+    are treated as non-chainable: a missing audit is not evidence.
+    """
+    roles = normalize_edge_roles(edge_roles)
+    up: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    for edge in edges:
+        rel = str(edge.get("semantic_type") or edge.get("label") or "")
+        if rel != "infer":
+            continue
+        role = roles.get(str(edge.get("id")))
+        if role is not None:
+            chainable = bool(role.get("chainable"))
+            reasoning_type = str(role.get("reasoning_type") or "infer")
+        else:
+            # A native typed view (Step 4/5 projection) carries the role on the
+            # edge itself; a missing flag is conservative, not chainable.
+            chainable = bool(edge.get("chainable") or (edge.get("details") or {}).get("chainable"))
+            reasoning_type = str(edge.get("reasoning_type") or (edge.get("details") or {}).get("reasoning_type") or "infer")
+        if not chainable:
+            continue
+        up[str(edge.get("target"))].append((str(edge.get("source")), reasoning_type))
     return up
 
 
@@ -586,20 +637,77 @@ def _root_chains(
     return paths
 
 
+def annotate_chain(
+    chain: Mapping[str, Any],
+    root: Mapping[str, Any],
+    edge_lookup: Mapping[tuple[str, str], Mapping[str, Any]],
+    roles: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Attach per-step reasoning types to a path.
+
+    The last step is the answer edge (claim -> root) and is labelled ``support``.
+    A path is ``deduction`` only if every graph step is a chainable deduction.
+    """
+    path = [str(item) for item in chain.get("path") or []]
+    types: list[str] = [""] * len(path)
+    edge_ids: list[str | None] = []
+    for index in range(len(path) - 1):
+        source, target = path[index], path[index + 1]
+        if index == len(path) - 2 and target == str(root.get("id")):
+            types[index + 1] = "support"
+            edge_ids.append(None)
+            continue
+        edge = edge_lookup.get((source, target))
+        role = roles.get(str(edge.get("id"))) if edge else None
+        types[index + 1] = str(role.get("reasoning_type") or "infer") if role else "infer"
+        edge_ids.append(str(edge.get("id")) if edge else None)
+    out = dict(chain)
+    out["types"] = types
+    out["edge_ids"] = edge_ids
+    out["typed_steps"] = sum(1 for item in types[1:] if item in {"deduction", "reproduces"})
+    out["chain_type"] = (
+        "deduction" if all(item in {"deduction", "support"} for item in types[1:]) else "mixed"
+    )
+    return out
+
+
 def build_answer_layer(
     view: Mapping[str, Any],
     question: Mapping[str, str],
     roots: list[Mapping[str, Any]],
     links_by_root: Mapping[str, list[Mapping[str, str]]],
+    edge_roles: Any = None,
 ) -> dict[str, Any]:
     nodes = list(view.get("nodes") or [])
     edges = list(view.get("edges") or [])
     nodes_by_id = {str(node.get("id")): node for node in nodes}
-    up = infer_up_adjacency(edges)
+    roles = normalize_edge_roles(edge_roles)
+    if not roles:
+        # A native typed view already carries the role on each edge; use it when
+        # no external audit sidecar was supplied (full pipeline runs).
+        for edge in edges:
+            details = edge.get("details") or {}
+            reasoning_type = edge.get("reasoning_type") or details.get("reasoning_type")
+            if not reasoning_type:
+                continue
+            roles[str(edge.get("id"))] = {
+                "edge_id": str(edge.get("id")),
+                "reasoning_type": str(reasoning_type),
+                "residual_reason": edge.get("residual_reason") or details.get("residual_reason"),
+                "chainable": bool(edge.get("chainable") or details.get("chainable")),
+                "reason": edge.get("role_reason") or details.get("role_reason") or "",
+            }
+    up_chain = chain_up_adjacency(edges, roles)
+    up_all = infer_up_adjacency(edges)
+    edge_lookup = {
+        (str(edge.get("source")), str(edge.get("target"))): edge
+        for edge in edges
+    }
 
     built_roots: list[dict[str, Any]] = []
     answer_edges: list[dict[str, Any]] = []
     total_chains = 0
+    total_exploratory = 0
     for root in roots:
         links = list(links_by_root.get(root["code"]) or [])
         supported = [link for link in links if link["relation"] == "support"]
@@ -607,8 +715,26 @@ def build_answer_layer(
         opposes = [link for link in links if link["relation"] == "oppose"]
         if not supported:
             continue  # an isolated root would be a floating assertion, not a route
-        chains = _root_chains(root, links, up, nodes_by_id)
+
+        chains = [
+            annotate_chain(chain, root, edge_lookup, roles)
+            for chain in _root_chains(root, links, up_chain, nodes_by_id)
+        ]
+        # A depth-2 path is just the direct answer link; it is already counted in
+        # support_ids.  A support chain must contain at least one graph step.
+        chains = [
+            chain for chain in chains
+            if chain.get("chain_type") == "deduction" and chain.get("depth", 0) >= 3
+        ]
+        valid_keys = {tuple(chain["path"]) for chain in chains}
+        exploratory = [
+            annotate_chain(chain, root, edge_lookup, roles)
+            for chain in _root_chains(root, links, up_all, nodes_by_id)
+            if chain.get("depth", 0) >= 3 and tuple(chain["path"]) not in valid_keys
+        ]
         total_chains += len(chains)
+        total_exploratory += len(exploratory)
+
         support_papers = sorted({
             paper
             for link in supported
@@ -617,6 +743,8 @@ def build_answer_layer(
         support_claims = [str(link["claim_id"]) for link in supported]
         leaves = {chain["leaf"] for chain in chains}
         depth = max((chain["depth"] for chain in chains), default=0)
+        exploratory_leaves = {chain["leaf"] for chain in exploratory}
+        exploratory_depth = max((chain["depth"] for chain in exploratory), default=0)
         if opposes:
             verdict_class = "contested"
         elif len(support_papers) >= 2 and len(supported) >= 3:
@@ -640,6 +768,11 @@ def build_answer_layer(
                 "chain_count": len(chains),
                 "leaf_count": len(leaves),
                 "max_depth": depth,
+                "chain_status": "typed" if chains else "no_typed_chain",
+                "exploratory_path_count": len(exploratory),
+                "exploratory_leaf_count": len(exploratory_leaves),
+                "exploratory_max_depth": exploratory_depth,
+                "deduction_step_count": sum(1 for chain in chains for item in chain["types"] if item == "deduction"),
                 "boundary_count": len(boundaries),
                 "oppose_count": len(opposes),
             },
@@ -648,6 +781,7 @@ def build_answer_layer(
             "boundary_ids": [str(link["claim_id"]) for link in boundaries],
             "links": links,
             "chains": chains,
+            "exploratory_paths": exploratory,
         })
         built_roots.append(built)
         for link in links:
@@ -672,6 +806,9 @@ def build_answer_layer(
             })
     if not built_roots:
         raise ValueError("no candidate answer received a defensible support link")
+
+    role_list = sorted(roles.values(), key=lambda item: str(item.get("edge_id")))
+    role_counts = Counter(str(item.get("reasoning_type") or "unknown") for item in role_list)
     return {
         "schema_name": SCHEMA_NAME,
         "schema_version": SCHEMA_VERSION,
@@ -681,6 +818,9 @@ def build_answer_layer(
         "axiom_ids": [],
         "roots": built_roots,
         "answer_edges": answer_edges,
+        "edge_roles": role_list,
+        "edge_role_counts": dict(sorted(role_counts.items())),
+        "chainable_edge_count": sum(1 for item in role_list if item.get("chainable")),
         "generation": {
             "prompt_version": PROMPT_VERSION,
             "model": os.environ.get("DEEPSEEK_MERGE_MODEL", "deepseek-v4-flash"),
@@ -688,20 +828,39 @@ def build_answer_layer(
             "root_count": len(built_roots),
             "answer_edge_count": len(answer_edges),
             "chain_count": total_chains,
+            "exploratory_path_count": total_exploratory,
+            "edge_role_count": len(role_list),
             "base_node_count": len(nodes),
             "base_edge_count": len(edges),
         },
     }
 
 
-# ---------------------------------------------------------------------------
-# View injection / evaluation
-# ---------------------------------------------------------------------------
 def inject_answer_layer(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[str, Any]:
     result = copy.deepcopy(dict(view))
     nodes = result.setdefault("nodes", [])
     edges = result.setdefault("edges", [])
     search_documents = result.setdefault("search_documents", [])
+    # Attach the audit's reasoning type to the *base* edges so the viewer can
+    # distinguish deduction / special_case / analogy / residual infer without
+    # another lookup table.
+    roles = normalize_edge_roles(answer_layer.get("edge_roles"))
+    for edge in edges:
+        role = roles.get(str(edge.get("id")))
+        if not role:
+            continue
+        edge["reasoning_type"] = role.get("reasoning_type")
+        edge["residual_reason"] = role.get("residual_reason")
+        edge["chainable"] = bool(role.get("chainable"))
+        edge["role_reason"] = role.get("reason")
+        details = dict(edge.get("details") or {})
+        details.update({
+            "reasoning_type": role.get("reasoning_type"),
+            "residual_reason": role.get("residual_reason"),
+            "chainable": bool(role.get("chainable")),
+            "role_reason": role.get("reason"),
+        })
+        edge["details"] = details
     existing = {str(node.get("id")) for node in nodes}
     for root in answer_layer.get("roots") or []:
         root_id = str(root["id"])
@@ -764,6 +923,13 @@ def inject_answer_layer(view: Mapping[str, Any], answer_layer: Mapping[str, Any]
         for node_id in chain.get("path") or []
         if str(node_id) not in root_ids
     }
+    exploratory_nodes = {
+        str(node_id)
+        for root in answer_layer.get("roots") or []
+        for chain in root.get("exploratory_paths") or []
+        for node_id in chain.get("path") or []
+        if str(node_id) not in root_ids
+    }
     metadata.update({
         "answer_question": answer_layer.get("question", {}),
         "answer_root_count": len(answer_layer.get("roots") or []),
@@ -771,6 +937,12 @@ def inject_answer_layer(view: Mapping[str, Any], answer_layer: Mapping[str, Any]
         "answer_linked_claim_count": len(linked),
         "answer_chain_node_count": len(chain_nodes),
         "answer_chain_count": sum(len(root.get("chains") or []) for root in answer_layer.get("roots") or []),
+        "answer_exploratory_path_count": sum(
+            len(root.get("exploratory_paths") or []) for root in answer_layer.get("roots") or []
+        ),
+        "answer_exploratory_node_count": len(exploratory_nodes),
+        "answer_edge_role_counts": answer_layer.get("edge_role_counts", {}),
+        "answer_chainable_edge_count": answer_layer.get("chainable_edge_count", 0),
     })
     result["metadata"] = metadata
     layers = list(result.get("layers") or [])
@@ -787,6 +959,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
     degree = degree_map(edges)
     connected = {str(node.get("id")) for node in nodes if degree[str(node.get("id"))] > 0}
     chain_nodes: set[str] = set()
+    exploratory_nodes: set[str] = set()
     linked: set[str] = set()
     per_root = []
     for root in answer_layer.get("roots") or []:
@@ -794,11 +967,17 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
         boundaries = set(str(item) for item in root.get("boundary_ids") or [])
         opposes = set(str(item) for item in root.get("oppose_ids") or [])
         chains = root.get("chains") or []
+        exploratory = root.get("exploratory_paths") or []
         root_chain_nodes = {
             str(nid) for chain in chains for nid in chain.get("path") or []
             if str(nid) != str(root.get("id"))
         }
+        root_exploratory_nodes = {
+            str(nid) for chain in exploratory for nid in chain.get("path") or []
+            if str(nid) != str(root.get("id"))
+        }
         chain_nodes |= root_chain_nodes
+        exploratory_nodes |= root_exploratory_nodes
         linked |= support | boundaries | opposes
         per_root.append({
             "code": root.get("code"),
@@ -811,6 +990,12 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "boundary_count": len(boundaries),
             "oppose_count": len(opposes),
             "chain_count": len(chains),
+            "chain_status": (root.get("stats") or {}).get("chain_status", "no_typed_chain"),
+            "typed_step_count": sum(
+                1 for chain in chains for item in chain.get("types") or [] if item == "deduction"
+            ),
+            "exploratory_path_count": len(exploratory),
+            "exploratory_node_count": len(root_exploratory_nodes),
             "leaf_count": len({chain.get("leaf") for chain in chains}),
             "max_depth": max((int(chain.get("depth") or 0) for chain in chains), default=0),
             "chain_node_count": len(root_chain_nodes),
@@ -818,6 +1003,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "statement": root.get("statement"),
         })
     linked_or_chained = linked | chain_nodes
+    linked_or_chained_with_exploratory = linked_or_chained | exploratory_nodes
     count_by_paper: dict[str, int] = Counter()
     touched_papers: set[str] = set()
     for node_id in linked_or_chained:
@@ -842,12 +1028,22 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "answer_edge_count": len(answer_layer.get("answer_edges") or []),
             "linked_claim_count": len(linked),
             "chain_node_count": len(chain_nodes),
+            "exploratory_node_count": len(exploratory_nodes),
+            "exploratory_path_count": sum(
+                len(root.get("exploratory_paths") or []) for root in answer_layer.get("roots") or []
+            ),
             "linked_or_chained_claim_count": len(linked_or_chained),
+            "linked_or_chained_with_exploratory_count": len(linked_or_chained_with_exploratory),
             "coverage_of_connected_claims": round(len(linked_or_chained & connected) / max(1, len(connected)), 4),
+            "coverage_with_exploratory": round(
+                len(linked_or_chained_with_exploratory & connected) / max(1, len(connected)), 4
+            ),
             "coverage_of_all_claims": round(len(linked_or_chained) / max(1, len(nodes)), 4),
             "papers_touched": len(touched_papers),
             "claims_on_multiple_roots": sum(1 for value in multi_root.values() if value > 1),
             "claims_per_paper": dict(sorted(count_by_paper.items())),
+            "edge_role_counts": answer_layer.get("edge_role_counts", {}),
+            "chainable_edge_count": answer_layer.get("chainable_edge_count", 0),
         },
         "roots": per_root,
     }
@@ -870,6 +1066,11 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
         f"{layer.get('coverage_of_all_claims', 0) * 100:.1f}% of all claims)",
         f"- Papers touched: {layer.get('papers_touched')}",
         f"- Claims supporting more than one answer: {layer.get('claims_on_multiple_roots')}",
+        f"- Chainable edges: {layer.get('chainable_edge_count', 0)}; "
+        f"edge role counts: {layer.get('edge_role_counts', {})}",
+        f"- Typed support-chain coverage: {layer.get('linked_or_chained_claim_count')} claims; "
+        f"with exploratory paths: {layer.get('linked_or_chained_with_exploratory_count')} "
+        f"({layer.get('coverage_with_exploratory', 0) * 100:.1f}% of connected)",
         "",
         "## Candidate answers",
         "",
@@ -880,8 +1081,10 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
             "",
             f"- Verdict: {root.get('verdict_class')}",
             f"- Support: {root.get('support_claim_count')} claims from "
-            f"{root.get('support_paper_count')} papers; chains: {root.get('chain_count')} "
-            f"(leaves {root.get('leaf_count')}, max depth {root.get('max_depth')})",
+            f"{root.get('support_paper_count')} papers; typed chains: {root.get('chain_count')} "
+            f"({root.get('chain_status')}; leaves {root.get('leaf_count')}, max depth {root.get('max_depth')})",
+            f"- Exploratory (non-evidential) paths: {root.get('exploratory_path_count')} "
+            f"({root.get('exploratory_node_count')} nodes)",
             f"- Boundary: {root.get('boundary_count')} · Oppose: {root.get('oppose_count')}",
             f"- Chain nodes: {root.get('chain_node_count')}",
             f"- Statement: {root.get('statement')}",
@@ -890,8 +1093,13 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
     lines.extend([
         "## Reading the numbers",
         "",
-        "- Coverage counts claims that are direct answer links *or* nodes on a support chain. "
+        "- Coverage counts claims that are direct answer links *or* nodes on a **typed** support chain. "
         "A claim can appear in several roots when the routes overlap; overlap is reported, not hidden.",
+        "- Only `deduction` edges are chainable. `special_case`, `reproduces`, `bounds`, `abduction`, "
+        "`analogy` and residual `infer` are shown but do not form support chains; `infer` with "
+        "`residual_reason` is explicitly non-chainable.",
+        "- `exploratory_paths` are the old infer-based graph paths. They are useful for exploration but "
+        "are **not counted** in direct support, typed chains, or coverage.",
         "- `support` / `oppose` / `bounds` are LLM-judged links that were mechanically checked against "
         "the frozen candidate set. They are not a proof and not a vote count.",
         "- This run starts from a claim-level graph without domain conclusions. In a full pipeline run "
@@ -906,5 +1114,6 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
 __all__ = [
     "SCHEMA_NAME", "SCHEMA_VERSION", "PROMPT_VERSION", "VERDICT_COLORS",
     "build_digest", "generate_roots", "candidate_pool", "link_roots",
+    "normalize_edge_roles", "chain_up_adjacency", "annotate_chain",
     "build_answer_layer", "inject_answer_layer", "evaluate", "evaluation_markdown",
 ]

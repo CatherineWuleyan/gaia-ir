@@ -11,11 +11,13 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| `question_layer.py` | 回答层核心：根节点生成、claim 连接、链预计算、视图注入、评估 |
+| `question_layer.py` | 回答层核心：根节点生成、claim 连接、typed 链预计算、视图注入、评估 |
 | `step6_question_layer.py` | Pipeline Step 6：把回答层固化为 `question.answer_layer` artifact |
-| `question_view.py` | View adapter：把回答层注入 Step 4/5 的领域图，输出 316 节点/258 边的 view |
+| `question_view.py` | View adapter：把回答层注入 Step 4/5 的领域图，输出 316 节点/273 边的 typed view |
 | `run_question_layer.py` | 独立 runner：只对冻结的 `domain_view_model.json` 跑最后的回答层 |
-| `viewer_question.html` | 问题主导 viewer 模板（根节点、回答边、Full domain graph 开关、根节点详情） |
+| `edge_role_audit.py` | 对已有图做 edge-role 审计；`--rules-only` 为确定性分类，LLM 模式可细化 |
+| `build_typed_view.py` | 对冻结图补回 Step 4 不能编译的 `special_case/reproduces/bounds` display links |
+| `viewer_question.html` | 问题主导 viewer 模板（根节点、回答边、reasoning type、exploratory 开关、根节点详情） |
 | `render_question_viewer.py` | 把任意 view model 注入 viewer 模板 |
 | `pipeline.question.json` | 完整 pipeline 配置：13 篇飞机论文 + K 层 + Step 6 + 新 view adapter |
 
@@ -45,8 +47,10 @@ viewer_question.html
 2. **claim 连接**：每个 root 从 seed、1 跳邻居、词面 top、每篇论文代表、delta
    节点组成 44–60 条候选池；LLM 只能在这个冻结池里选 `support` / `bounds` /
    `oppose`，机械校验 ID、去重、拒绝同 claim 的矛盾关系。
-3. **链预计算**：从 root 的 support claim 沿有向 `infer` 边向上枚举到叶子，
-   组成 `path`（leaf → … → claim → root）。`conjunction` 是对称关系，不走进链。
+3. **typed 链预计算**：从 root 的 support claim 沿 **chainable** 边向上枚举到叶子。
+   只有 `deduction` 是 chainable；`infer` 是 residual，`special_case / reproduces /
+   bounds / abduction / analogy` 都不进入 typed support chain。旧的全 `infer`
+   路径保留为 `exploratory_paths`，明确标注 not evidence；`conjunction` 仍不走进链。
 
 根节点的 verdict 只是结构描述，不是真值：
 
@@ -61,8 +65,25 @@ viewer_question.html
 
 ```bash
 cd /Users/catherinewu/Documents/gaia-ir
-python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
+
+# 1) 对已有图做 edge-role 分类；--rules-only 不调用 LLM
+python3 pipelines/merge/pipeline_merge_question/edge_role_audit.py \
+  --rules-only \
+  --out outputs/question_domain_aircraft/edge_roles.json
+
+# 2) 补回 Step 4 丢弃的 typed display links（本次 15 条）
+python3 pipelines/merge/pipeline_merge_question/build_typed_view.py \
   --view weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json \
+  --step3 outputs/aircraft_domain_merge/run_20261013T093612Z_c7fc9087/artifacts/blobs/artifact_42958528016f4cbe972f8675b327ee44.json \
+  --roles outputs/question_domain_aircraft/edge_roles.json \
+  --out-view outputs/question_domain_aircraft/domain_view_typed.json \
+  --out-roles outputs/question_domain_aircraft/edge_roles_typed.json
+
+# 3) 跑回答层（fixture 可离线重放；真实 LLM 时去掉 --fixture）
+python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
+  --view outputs/question_domain_aircraft/domain_view_typed.json \
+  --edge-roles outputs/question_domain_aircraft/edge_roles_typed.json \
+  --fixture outputs/question_domain_aircraft/answer_fixture.json \
   --out outputs/question_domain_aircraft
 ```
 
@@ -88,9 +109,12 @@ python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
 
 ```text
 outputs/question_domain_aircraft/
-  answer_layer.json           # roots / answer edges / chains / generation audit
+  answer_layer.json           # roots / answer edges / typed chains / exploratory paths
   domain_view_question.json   # 原 view + roots + answer edges + top-level answer_layer
   domain_viewer_question.html # 自包含 viewer
+  domain_view_typed.json      # 补回 typed display links 的 base view
+  edge_roles.json             # 规则/LLM edge-role 审计
+  edge_roles_typed.json       # 含 15 条 display-only links 的角色表
   evaluation.json
   evaluation.md
   llm_raw.json                # 生成与连接两阶段 prompt/response 审计
@@ -128,13 +152,16 @@ python3 pipelines/merge/pipeline_merge_question/render_question_viewer.py \
 同一个 Step 6 和同一个 viewer。本次只对配置做了 `pipeline_harness init` /
 `check` 验证，实际执行的是方式 A；完整 Step 0–6 尚未跑。
 
-## 5. 本次结果（冻结图，无 K 层）
+## 5. 本次结果（冻结图，无 K 层，typed-edge revision）
 
-- 5 个候选回答，50 条 answer edge（45 support + 5 bounds），无 oppose；
-- 46 条 claim 被直接连接，86 条 claim 进入连接或链（占 connected claims 的 36.5%）；
-- 12/13 篇论文被触及，4 条 claim 同时支持 >1 个回答；
-- 6 次 LLM 调用，约 53.6k tokens；
-- 所有根节点都是 multi-paper support（2 篇论文/根）。
+- 基础图 311 claims / **223 edges**（补回 15 条 `special_case`/`bounds` typed links）；
+- 5 个候选回答，50 条 answer edge（45 support + 5 bounds，无 oppose）；
+- 46 条 claim 被直接连接；**typed support chains = 0**；
+- exploratory paths：R1 18 / R2 24 / R3 24 / R4 20 / R5 14；直接+exploratory
+  覆盖 86 claims（connected 的 35.8%），但 exploratory 不计入 evidence；
+- 边角色：`infer 202 / special_case 13 / bounds 5 / reproduces 3`，deduction 0；
+- 8 篇论文被直接支持触及；
+- 本轮回答层复用 fixture，未新增根/连接 LLM 调用；edge role 为规则分类。
 
 详细评估见 `outputs/question_domain_aircraft/PIPELINE_EVALUATION.md` 和
 `evaluation.md`；逐根典型链与可靠性分级见
@@ -149,9 +176,10 @@ python3 pipelines/merge/pipeline_merge_question/render_question_viewer.py \
 3. 连接阶段候选池有界（44–60 条）；池外的相关 claim 会被判 none，是召回上限。
 4. 根节点由一次 LLM 调用生成；提示词/模型变化会改变根集合。生产使用应加人工
    accept/reject 或冻结 fixture。
-5. viewer 是原型：默认 answer-focused 视图在 1600px 下比较横向，根节点下方留白
-   较多。图例里的 `Full domain graph` 默认不勾选；勾选后显示全部 connected
-   domain nodes（本次 232 个，含未连到 R 的节点），布局会更散。
+5. viewer 是原型：默认 answer-focused 视图只显示 direct support + typed chains；
+   `Exploratory paths` 默认不勾选，勾选后显示旧的 infer 路径（灰色虚线，不计 support）；
+   `Full domain graph` 默认不勾选，勾选后显示全部 connected domain nodes（本次
+   226 个），布局会更散。
 
 ## 7. 下一步建议
 
@@ -160,4 +188,8 @@ python3 pipelines/merge/pipeline_merge_question/render_question_viewer.py \
 - 增加人工审核 UI，把根节点/连接写入可复用 fixture，保证跨 run 的稳定身份；
 - 加入 contradiction/opposition 来源，让 `contested` 真正可用；
 - 对连接做第二轮扩大召回，并用人工标注集评估 precision/recall；
-- 把 `viewer_question.html` 的根节点布局改成“根带 + 链列”，减少横向铺开。
+- 对 `edge_role_audit.py` 的 LLM 模式做小批量人工 gold set 校准；当前冻结图
+  使用 `--rules-only`，其中 154 条 paper-internal 边仍是 residual `infer`，
+  需要逐条回原文才能升级为 deduction/special_case。
+- 给 viewer 增加“只看 direct support / 只看 typed chain / 显示 exploratory”的
+  三档过滤，并保留当前的 root `no typed chain` badge。

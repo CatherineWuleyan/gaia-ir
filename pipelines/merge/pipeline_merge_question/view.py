@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from typing import Any, Mapping
 
 from pipeline_harness.models import ArtifactRef, JSONDict
@@ -45,6 +46,7 @@ from pipeline_harness.view.model import ViewDocument
 from .relations import reconcile_operator_types, reconcile_rendered_arms
 
 _INTEGRATION_STAGE = "step4_formalize_integration"
+_STEP3_KIND = "integration.step3_proposals"
 _STEP = 4
 _DELTA_LAYER = "weakpoints"
 _CONTEXT_LAYER = "claims"
@@ -175,6 +177,24 @@ class MergeViewAdapter:
         for ref in artifacts:
             if ref.kind == "formalization" and ref.producer_stage == _INTEGRATION_STAGE:
                 integration_doc = _read_json(store, ref)
+        # Step 3's proposals retain the reasoning type/expression of each
+        # cross-paper weakpoint.  Step 4 can compile only the Gaia strategy
+        # types; special_case/reproduces/bounds are kept as typed display links
+        # instead of being silently dropped.
+        step3_weakpoints: list[Mapping[str, Any]] = []
+        for ref in artifacts:
+            if ref.kind != _STEP3_KIND:
+                continue
+            payload = _read_json(store, ref)
+            step3_weakpoints.extend(
+                item for item in payload.get("weakpoints") or [] if isinstance(item, Mapping)
+            )
+        weakpoint_by_pair: dict[tuple[str, str], Mapping[str, Any]] = {}
+        for weakpoint in step3_weakpoints:
+            payload = weakpoint.get("payload") or {}
+            for evidence in payload.get("evidence_claim_ids") or []:
+                for target in payload.get("target_claim_id") or []:
+                    weakpoint_by_pair[(str(evidence), str(target))] = payload
         delta_qids: set[str] = set()
         k_ids: list[str] = []
         if integration_doc is not None:
@@ -244,9 +264,13 @@ class MergeViewAdapter:
                             original=knowledge_id.split("::")[-1],
                             metadata={"package_provenance": provenance})
 
-        def relation_edge(source: str, target: str, label: str, layer: str) -> None:
+        def relation_edge(source: str, target: str, label: str, layer: str,
+                          *, reasoning_type: str | None = None,
+                          expression: str = "") -> None:
             if f"knowledge:{source}" not in emitted or f"knowledge:{target}" not in emitted:
                 return  # endpoint is a helper / unknown node: drop the edge
+            kind = reasoning_type or label
+            chainable = kind == "deduction"
             edges.append({
                 "id": f"edge:{len(edges)}:{source}:{target}:{label}:{layer}",
                 "source": f"knowledge:{source}",
@@ -255,11 +279,17 @@ class MergeViewAdapter:
                 "layer": layer,
                 "edge_class": "reasoning",
                 "semantic_type": label,
+                "reasoning_type": kind,
+                "residual_reason": None,
+                "chainable": chainable,
+                "role_reason": expression,
                 "reasoning_state": "confirmed",
                 "step": _STEP,
                 "visible_at": ["overview", "standard"],
                 "min_granularity": "overview",
-                "details": {"source": source, "target": target, "relation": label},
+                "details": {"source": source, "target": target, "relation": label,
+                            "reasoning_type": kind, "chainable": chainable,
+                            "role_reason": expression},
             })
 
         # 3. Paper claims + package-internal reasoning.
@@ -285,7 +315,8 @@ class MergeViewAdapter:
                     continue
                 strategy_type = str(strategy.get("type") or "infer")
                 for premise in premises:
-                    relation_edge(premise, conclusion, strategy_type, _PAPER_EDGE_LAYER)
+                    relation_edge(premise, conclusion, strategy_type, _PAPER_EDGE_LAYER,
+                                  reasoning_type=strategy_type)
 
         # 4. Integration delta: candidate nodes + new cross-paper edges.
         type_conflicts: list[JSONDict] = []
@@ -346,7 +377,57 @@ class MergeViewAdapter:
                     continue
                 strategy_type = str(strategy.get("type") or "infer")
                 for premise in premises:
-                    relation_edge(premise, conclusion, strategy_type, _DELTA_LAYER)
+                    relation_edge(premise, conclusion, strategy_type, _DELTA_LAYER,
+                                  reasoning_type=strategy_type)
+            # Display-only Step 3 types that Gaia cannot compile as strategies.
+            seen_pairs = {
+                (edge["source"].replace("knowledge:", ""), edge["target"].replace("knowledge:", ""),
+                 edge.get("semantic_type"))
+                for edge in edges
+            }
+            for weakpoint in step3_weakpoints:
+                payload = weakpoint.get("payload") or {}
+                reasoning_type = str(payload.get("reasoning_type") or "")
+                if reasoning_type not in {"special_case", "reproduces", "bounds"}:
+                    continue
+                expression = str(payload.get("expression") or "")
+                for evidence in payload.get("evidence_claim_ids") or []:
+                    for target in payload.get("target_claim_id") or []:
+                        key = (str(evidence), str(target), reasoning_type)
+                        if key in seen_pairs:
+                            continue
+                        relation_edge(str(evidence), str(target), reasoning_type, _DELTA_LAYER,
+                                      reasoning_type=reasoning_type, expression=expression)
+                        seen_pairs.add(key)
+
+        # Use Step 3's own type/expression for compiled integration edges.  This
+        # is what keeps an `infer` from being treated as a support step merely
+        # because Step 4's strategy schema has no finer type.
+        for edge in edges:
+            if edge.get("layer") != _DELTA_LAYER:
+                continue
+            source = edge["source"].replace("knowledge:", "")
+            target = edge["target"].replace("knowledge:", "")
+            payload = weakpoint_by_pair.get((source, target))
+            if payload is None:
+                continue
+            reasoning_type = str(payload.get("reasoning_type") or edge.get("reasoning_type") or "infer")
+            residual_reason = payload.get("residual_reason")
+            chainable = bool(payload.get("chainable")) or (
+                reasoning_type == "deduction" and str(payload.get("residual_reason") or "") == ""
+            )
+            edge["reasoning_type"] = reasoning_type
+            edge["residual_reason"] = residual_reason
+            edge["chainable"] = chainable
+            edge["role_reason"] = str(payload.get("expression") or "")
+            details = dict(edge.get("details") or {})
+            details.update({
+                "reasoning_type": reasoning_type,
+                "residual_reason": residual_reason,
+                "chainable": chainable,
+                "role_reason": edge["role_reason"],
+            })
+            edge["details"] = details
 
         # 5. Drop isolated K conclusions.
         # A `candidate_K_*` conclusion that no edge touches is either context the
@@ -378,6 +459,10 @@ class MergeViewAdapter:
             metadata={
                 "latest_step": _STEP,
                 "merge": True,
+                "reasoning_type_counts": dict(sorted(Counter(
+                    str(edge.get("reasoning_type") or "unknown") for edge in edges
+                ).items())),
+                "chainable_edge_count": sum(1 for edge in edges if edge.get("chainable")),
                 "delta_node_count": sum(1 for node in nodes if node["layer"] == _DELTA_LAYER),
                 "integration_edge_count": sum(1 for edge in edges if edge["layer"] == _DELTA_LAYER),
                 "unused_context_conclusions_dropped": len(dropped),

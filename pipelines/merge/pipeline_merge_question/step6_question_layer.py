@@ -79,6 +79,11 @@ class Step6QuestionLayerPlugin:
         }
         max_roots = int(options.get("max_roots") or 5)
         fixture = options.get("answers_fixture")
+        edge_roles = None
+        edge_roles_path = options.get("edge_roles")
+        if edge_roles_path:
+            payload = json.loads(Path(str(edge_roles_path)).read_text(encoding="utf-8"))
+            edge_roles = payload.get("edges") if isinstance(payload, dict) else payload
         try:
             store = RunStore(context.run_dir)
             base_view = MergeViewAdapter().project(store, context.inputs)
@@ -97,7 +102,9 @@ class Step6QuestionLayerPlugin:
                     view, question, roots, call_json=_post_json,
                 )
 
-            answer_layer = build_answer_layer(view, question, roots, links_by_root)
+            answer_layer = build_answer_layer(
+                view, question, roots, links_by_root, edge_roles=edge_roles,
+            )
             evaluation = evaluate(view, answer_layer)
             augmented = inject_answer_layer(view, answer_layer)
             # Validate the injected view before publishing it; the view adapter
@@ -159,6 +166,8 @@ class Step6QuestionLayerPlugin:
                     "linked_claim_count": stats.get("linked_claim_count"),
                     "chain_node_count": stats.get("chain_node_count"),
                     "coverage_of_connected_claims": stats.get("coverage_of_connected_claims"),
+                    "chainable_edge_count": stats.get("chainable_edge_count", 0),
+                    "edge_role_counts": stats.get("edge_role_counts", {}),
                     "roots": [
                         {
                             "code": root["code"],
