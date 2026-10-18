@@ -7,7 +7,22 @@ from pathlib import Path
 
 from ariadne import paper2ir
 from ariadne.full import REQUIRED_FILES
-from ariadne.util import REPO
+from ariadne.util import REPO, new_run_dir
+
+
+class RunDirectoryTest(unittest.TestCase):
+    def test_relative_out_path_is_absolute(self) -> None:
+        import os
+
+        previous = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                path = new_run_dir("question", Path("relative/run"))
+            finally:
+                os.chdir(previous)
+            self.assertTrue(path.is_absolute())
+            self.assertEqual(path, (Path(tmp) / "relative" / "run").resolve())
 
 
 class PublicDependenciesTest(unittest.TestCase):

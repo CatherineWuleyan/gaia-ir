@@ -80,6 +80,9 @@ def slugify(value: str, limit: int = 42) -> str:
 
 def new_run_dir(question: str, out: Path | None = None) -> Path:
     if out is not None:
+        # Keep every downstream subprocess path absolute.  A relative --out
+        # would otherwise be joined twice once the child runs with cwd=stage.
+        out = Path(out).expanduser().resolve()
         out.mkdir(parents=True, exist_ok=True)
         return out
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")

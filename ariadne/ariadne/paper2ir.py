@@ -29,6 +29,7 @@ def _copy_pipeline(dest: Path) -> Path:
     source = REPO / "pipelines" / "clean_claims"
     if not source.is_dir():
         raise AriadneError(f"paper2ir pipeline not found: {source}")
+    dest = dest.resolve()
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(source, dest, ignore=IGNORE)
@@ -47,6 +48,9 @@ def _load_module(path: Path):
 def run_one(paper: Mapping[str, Any], stage_dir: Path, pipeline_dir: Path,
             module: Any, run_root: Path, python: str) -> dict[str, Any]:
     pid = str(paper["lkm_id"])
+    stage_dir = stage_dir.resolve()
+    pipeline_dir = pipeline_dir.resolve()
+    run_root = run_root.resolve()
     paper_dir = stage_dir / "data" / pid
     paper_dir.mkdir(parents=True, exist_ok=True)
     for name in ("graph.json", "ocr.md"):
@@ -60,7 +64,7 @@ def run_one(paper: Mapping[str, Any], stage_dir: Path, pipeline_dir: Path,
     log = stage_log(stage_dir, f"paper2ir_{pid}")
     print(f"[paper2ir] {paper.get('title', pid)[:70]}", flush=True)
     for index, (script_rel, expected_output, _needs_api) in enumerate(module.STEPS, start=1):
-        script = pipeline_dir / script_rel
+        script = (pipeline_dir / script_rel).resolve()
         expected = paper_dir / expected_output
         # Keep the child's output in the product log, not in the terminal.
         proc = run(
