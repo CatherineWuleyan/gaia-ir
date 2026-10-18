@@ -17,6 +17,7 @@
 | `run_question_layer.py` | 独立 runner：只对冻结的 `domain_view_model.json` 跑最后的回答层 |
 | `edge_role_audit.py` | 对已有图做 edge-role 审计；`--rules-only` 为确定性分类，LLM 模式可细化 |
 | `build_typed_view.py` | 对冻结图补回 Step 4 不能编译的 `special_case/reproduces/bounds` display links |
+| `export_chains_markdown.py` | 导出所有指向 R 的多步链（same-paper + graph path）到 Markdown/Mermaid |
 | `viewer_question.html` | 问题主导 viewer 模板（根节点、回答边、reasoning type、exploratory 开关、根节点详情） |
 | `render_question_viewer.py` | 把任意 view model 注入 viewer 模板 |
 | `pipeline.question.json` | 完整 pipeline 配置：13 篇飞机论文 + K 层 + Step 6 + 新 view adapter |
@@ -166,7 +167,8 @@ python3 pipelines/merge/pipeline_merge_question/render_question_viewer.py \
 
 详细评估见 `outputs/question_domain_aircraft/PIPELINE_EVALUATION.md` 和
 `evaluation.md`；逐根典型链与可靠性分级见
-`outputs/question_domain_aircraft/CHAIN_RELIABILITY.md`。
+`outputs/question_domain_aircraft/CHAIN_RELIABILITY.md`；全部多步链见
+`outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md`。
 
 ## 6. 已知限制
 

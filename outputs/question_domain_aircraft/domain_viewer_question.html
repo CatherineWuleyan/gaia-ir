@@ -776,15 +776,11 @@ function renderRich(value) {
 
     const questionText = answerLayer && answerLayer.question
       ? (answerLayer.question.zh || answerLayer.question.en || '') : '';
-    const exploratoryToggle = exploratoryNodes.size
-      ? '<label class="chk" style="margin:0 0 7px" title="Show the old infer-based graph paths; they are exploratory and are not counted as evidence"><input type="checkbox" id="toggle-exploratory"> Exploratory paths</label>'
-      : '';
 
     legend.innerHTML =
       (questionText ? '<div class="legend-note" style="margin:0 0 7px;color:#344054;font-weight:650">' +
         escapeHtml(questionText) + '</div>' : '') +
       (answerRoots.length ? '<label class="chk" style="margin:0 0 7px" title="Show all connected domain nodes, including nodes not linked to any answer root"><input type="checkbox" id="toggle-full-domain"> Full domain graph</label>' : '') +
-      exploratoryToggle +
       (answerRows ? '<div class="legend-title">Candidate answers</div>' + answerRows +
         '<div class="legend-note" style="margin-top:2px">Roots are candidate answers generated from the question; ' +
         'support counts are graph links, not a truth vote. Green = support, orange dashed = boundary, red dashed = opposition.</div>' : '') +
@@ -805,7 +801,7 @@ function renderRich(value) {
       '<div class="legend-note" style="margin-top:2px">Click a paper row to highlight it in place; click again to clear.</div></div></details>' +
       '<div class="legend-note">P&lt;n&gt; = claim node · radius ∝ √degree · solid = integration delta · ' +
       'thicker = cross-paper · blue arrow = deduction · gray dotted = residual infer · purple dashed = conjunction. ' +
-      'Exploratory paths are graph reachability, not evidence.</div>';
+      'All graph paths are shown by default; dashed gray paths are graph reachability, not evidence.</div>';
 
     legend.querySelectorAll('.pick[data-paper]').forEach(function(el){
       el.addEventListener('click', function(){ focusPaper(el.dataset.paper); });
@@ -813,20 +809,6 @@ function renderRich(value) {
     legend.querySelectorAll('.pick[data-answer]').forEach(function(el){
       el.addEventListener('click', function(){ focusRoot(el.dataset.answer); });
     });
-    const exploratory = legend.querySelector('#toggle-exploratory');
-    if (exploratory) {
-      exploratory.addEventListener('change', function(){
-        clearSelection();
-        applyFilters();
-        if (answerRoots.length) {
-          layoutRoots();
-          state.fitted = false;
-          runLayout(220);
-        } else {
-          fit();
-        }
-      });
-    }
   }
 
   // ---- 力学布局（Fruchterman–Reingold / d3-force 模型） -------------------------
@@ -1049,8 +1031,7 @@ function renderRich(value) {
     const fullDomainToggle = document.getElementById('toggle-full-domain');
     const hasAnswerLayer = answerRoots.length > 0;
     const showFullDomain = !!(fullDomainToggle && fullDomainToggle.checked && hasAnswerLayer);
-    const exploratoryToggle = document.getElementById('toggle-exploratory');
-    const showExploratory = !!(exploratoryToggle && exploratoryToggle.checked && hasAnswerLayer);
+    const showExploratory = hasAnswerLayer;
     const answerFocus = hasAnswerLayer && !showFullDomain;
     nodes.forEach(function(node, i){
       const p = state.positions[i];
@@ -1410,8 +1391,7 @@ function renderRich(value) {
     const fullDomainToggle = document.getElementById('toggle-full-domain');
     const hasAnswerLayer = answerRoots.length > 0;
     const showFullDomain = !!(fullDomainToggle && fullDomainToggle.checked && hasAnswerLayer);
-    const exploratoryToggle = document.getElementById('toggle-exploratory');
-    const showExploratory = !!(exploratoryToggle && exploratoryToggle.checked && hasAnswerLayer);
+    const showExploratory = hasAnswerLayer;
 
     nodes.forEach(function(node){
       const deltaOk = !deltaOnly || node.delta;
@@ -1706,10 +1686,6 @@ function renderRich(value) {
     const params = new URLSearchParams(location.search);
     if (params.get('full') === '1') {
       const toggle = document.getElementById('toggle-full-domain');
-      if (toggle) { toggle.checked = true; toggle.dispatchEvent(new Event('change')); }
-    }
-    if (params.get('exploratory') === '1') {
-      const toggle = document.getElementById('toggle-exploratory');
       if (toggle) { toggle.checked = true; toggle.dispatchEvent(new Event('change')); }
     }
     if (params.get('select')) {
