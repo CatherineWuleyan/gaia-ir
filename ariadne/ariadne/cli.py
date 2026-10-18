@@ -55,6 +55,19 @@ def _config_summary(runtime: Runtime) -> dict[str, Any]:
             if runtime.config.exists else None
         ),
         "runtime": runtime.summary(),
+        "retrieval": _retrieval_config(runtime.config),
+    }
+
+
+def _retrieval_config(config: Config) -> dict[str, Any]:
+    return {
+        "use_query_planner": bool(config.get("retrieval.use_query_planner", True)),
+        "queries": int(config.get("retrieval.queries", 5)),
+        "per_query": int(config.get("retrieval.per_query", 8)),
+        "candidate_limit": int(config.get("retrieval.candidate_limit", 16)),
+        "min_papers": int(config.get("retrieval.min_papers", 2)),
+        "min_graph_nodes": int(config.get("retrieval.min_graph_nodes", 3)),
+        "min_relevance": float(config.get("retrieval.min_relevance", 0.2)),
     }
 
 
@@ -94,6 +107,15 @@ def _print_config_summary(runtime: Runtime) -> None:
     print("\nRuntime")
     _print_kv("python", runtime.python)
     _print_kv("config precedence", "CLI > env > config file > agent/.env")
+    retrieval = _retrieval_config(runtime.config)
+    print("\nRetrieval")
+    _print_kv("query planner", "on" if retrieval["use_query_planner"] else "off")
+    _print_kv("queries / per_query",
+              f"{retrieval['queries']} / {retrieval['per_query']}")
+    _print_kv("graph probes (first pass)", retrieval["candidate_limit"])
+    _print_kv("min papers / min nodes",
+              f"{retrieval['min_papers']} / {retrieval['min_graph_nodes']}")
+    _print_kv("min relevance", retrieval["min_relevance"])
 
 
 # --------------------------------------------------------------------------- #
@@ -161,6 +183,7 @@ def _doctor(runtime: Runtime) -> dict[str, Any]:
             "ready": demo_ready,
             "files": {name: path.is_file() for name, path in demo_files.items()},
         },
+        "retrieval": _retrieval_config(runtime.config),
         "pipelines": {
             "ready": pipeline_ready,
             "files": {rel: path.is_file() for rel, path in pipeline_files.items()},
@@ -204,6 +227,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
               ok=checks["model"]["api_key_present"])
     if checks["model"]["anthropic_key_present"] and not checks["model"]["api_key_present"]:
         print("        ANTHROPIC_API_KEY alone is not supported by the bundled stages.")
+    retrieval = checks["retrieval"]
+    print("\nRetrieval")
+    _print_kv("query planner", "on" if retrieval["use_query_planner"] else "off",
+              ok=True)
+    _print_kv("queries / per_query",
+              f"{retrieval['queries']} / {retrieval['per_query']}")
+    _print_kv("first-pass graph probes", retrieval["candidate_limit"])
+    _print_kv("min papers / min nodes",
+              f"{retrieval['min_papers']} / {retrieval['min_graph_nodes']}")
+    _print_kv("min relevance", retrieval["min_relevance"])
     print("\nBohr")
     _print_kv("cli", checks["bohr"]["cli"] or "not found", ok=bool(checks["bohr"]["cli"]))
     if checks["bohr"]["version"]:
@@ -303,6 +336,9 @@ def cmd_ask(args: argparse.Namespace) -> int:
             yes=args.yes,
             fulltext=not args.no_fulltext,
             dry_run=args.dry_run,
+            max_queries=args.queries,
+            candidate_limit=args.candidate_limit,
+            use_query_planner=args.use_query_planner,
         )
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -711,6 +747,13 @@ def build_parser() -> argparse.ArgumentParser:
                      help="skip PDF parsing and use graph-derived text")
     ask.add_argument("--dry-run", action="store_true",
                      help="show the plan and preflight, write nothing")
+    ask.add_argument("--queries", type=int,
+                     help="max LKM queries for automatic retrieval (default: config)")
+    ask.add_argument("--candidate-limit", type=int,
+                     help="max candidate graphs to probe before selection")
+    ask.add_argument("--no-query-planner", dest="use_query_planner",
+                     action="store_false", default=None,
+                     help="disable the LLM query planner; use deterministic queries")
     _add_model_overrides(ask)
     _add_config_flag(ask)
     ask.add_argument("--json", action="store_true")

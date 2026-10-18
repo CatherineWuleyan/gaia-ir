@@ -67,10 +67,37 @@ DEFAULTS: dict[str, Any] = {
     "runtime": {
         "python": "",
     },
+    "retrieval": {
+        "use_query_planner": True,
+        "queries": 5,
+        "per_query": 8,
+        "candidate_limit": 16,
+        "min_papers": 2,
+        "min_graph_nodes": 3,
+        "min_relevance": 0.2,
+    },
 }
 
 SECRET_KEYS = frozenset({"model.api_key", "bohr.access_key"})
-BOOL_KEYS = frozenset({"bohr.auto_approve_spend"})
+BOOL_KEYS = frozenset({
+    "bohr.auto_approve_spend",
+    "retrieval.use_query_planner",
+})
+INT_KEYS = frozenset({
+    "retrieval.queries",
+    "retrieval.per_query",
+    "retrieval.candidate_limit",
+    "retrieval.min_papers",
+    "retrieval.min_graph_nodes",
+})
+FLOAT_KEYS = frozenset({"retrieval.min_relevance"})
+INT_RANGES = {
+    "retrieval.queries": (1, 8),
+    "retrieval.per_query": (1, 50),
+    "retrieval.candidate_limit": (2, 40),
+    "retrieval.min_papers": (2, 20),
+    "retrieval.min_graph_nodes": (1, 100),
+}
 KNOWN_KEYS = frozenset({
     "model.provider",
     "model.api_key",
@@ -83,6 +110,13 @@ KNOWN_KEYS = frozenset({
     "bohr.auto_approve_spend",
     "bohr.payment_source",
     "runtime.python",
+    "retrieval.use_query_planner",
+    "retrieval.queries",
+    "retrieval.per_query",
+    "retrieval.candidate_limit",
+    "retrieval.min_papers",
+    "retrieval.min_graph_nodes",
+    "retrieval.min_relevance",
 })
 PROVIDERS = frozenset({"deepseek", "openai-compatible"})
 PAYMENT_SOURCES = frozenset({"", "photon", "balance"})
@@ -276,6 +310,23 @@ class Config:
 def coerce_value(key: str, value: Any) -> Any:
     if key in BOOL_KEYS:
         return parse_bool(value)
+    if key in INT_KEYS:
+        try:
+            number = int(str(value).strip())
+        except ValueError as exc:
+            raise AriadneError(f"{key} must be an integer") from exc
+        low, high = INT_RANGES[key]
+        if not low <= number <= high:
+            raise AriadneError(f"{key} must be between {low} and {high}")
+        return number
+    if key in FLOAT_KEYS:
+        try:
+            number = float(str(value).strip())
+        except ValueError as exc:
+            raise AriadneError(f"{key} must be a number") from exc
+        if not 0.0 <= number <= 1.0:
+            raise AriadneError(f"{key} must be between 0 and 1")
+        return number
     if key == "model.provider":
         provider = str(value).strip().lower()
         if provider == "openai":

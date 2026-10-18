@@ -5,7 +5,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from . import __version__, merge, paper2ir, retrieval, single
 from .config import (
@@ -110,16 +110,50 @@ def _spec_needs_lkm(paper_spec: Path | None) -> tuple[bool, int]:
     return bool(remote), remote
 
 
+def _retrieval_options(runtime: Runtime, *, max_queries: int | None = None,
+                       candidate_limit: int | None = None,
+                       use_query_planner: bool | None = None) -> dict[str, Any]:
+    config = runtime.config
+    return {
+        "max_queries": int(
+            max_queries if max_queries is not None
+            else config.get("retrieval.queries", 5)
+        ),
+        "per_query": int(config.get("retrieval.per_query", 8)),
+        "candidate_limit": int(
+            candidate_limit if candidate_limit is not None
+            else config.get("retrieval.candidate_limit", 16)
+        ),
+        "min_papers": int(config.get("retrieval.min_papers", 2)),
+        "min_graph_nodes": int(config.get("retrieval.min_graph_nodes", 3)),
+        "min_relevance": float(config.get("retrieval.min_relevance", 0.2)),
+        "use_query_planner": bool(
+            config.get("retrieval.use_query_planner", True)
+            if use_query_planner is None else use_query_planner
+        ),
+    }
+
+
 def _confirm_spend(runtime: Runtime, top_k: int, needs_lkm: bool,
-                   remote: int, fulltext: bool) -> None:
+                   remote: int, fulltext: bool,
+                   options: Mapping[str, Any]) -> None:
     if not needs_lkm or runtime.auto_approve_spend:
         return
-    calls = remote if remote else 1 + top_k
+    if remote:
+        calls = remote
+        detail = f"{remote} graph call(s)"
+    else:
+        calls = int(options["max_queries"]) + int(options["candidate_limit"]) * 2
+        detail = (
+            f"up to {options['max_queries']} search queries + "
+            f"up to {options['candidate_limit']} first-pass graph probes "
+            f"(extended only if needed)"
+        )
     cost = calls * 0.05
     print(
         "\n[spend] This run makes billable Bohrium LKM calls: "
         f"up to {calls} x 0.05 CNY (~{cost:.2f} CNY), before the monthly "
-        "1,000-call free quota."
+        "1,000-call free quota. " + detail + "."
     )
     if fulltext:
         print("[spend] PDF parsing, when an arXiv id is available, may add charges.")
@@ -134,15 +168,26 @@ def _confirm_spend(runtime: Runtime, top_k: int, needs_lkm: bool,
 
 
 def _print_plan(question: str, runtime: Runtime, top_k: int,
-                paper_spec: Path | None, max_roots: int, fulltext: bool) -> None:
+                paper_spec: Path | None, max_roots: int, fulltext: bool,
+                options: Mapping[str, Any]) -> None:
     needs_lkm, remote = _spec_needs_lkm(paper_spec)
-    calls = remote if remote else (1 + top_k if needs_lkm else 0)
     print("\nAriadne plan")
     print(f"  question:  {question}")
     print(f"  config:    {runtime.config.path}")
     print(f"  model:     {runtime.model} @ {runtime.model_base_url}")
     if needs_lkm:
-        print(f"  retrieval: LKM search top-{top_k} + graph per paper")
+        if remote:
+            print(f"  retrieval: offline spec with {remote} LKM graph call(s)")
+            calls = remote
+        else:
+            planner = "LLM" if options["use_query_planner"] else "deterministic"
+            print(
+                f"  retrieval: {planner} queries up to {options['max_queries']}, "
+                f"{options['per_query']} results/query, "
+                f"graph-probe up to {options['candidate_limit']} candidates, "
+                f"select {top_k}"
+            )
+            calls = int(options["max_queries"]) + int(options["candidate_limit"]) * 2
         print(f"  billable:  up to {calls} x 0.05 CNY (~{calls * 0.05:.2f} CNY)")
     else:
         print(f"  retrieval: offline spec {paper_spec}")
@@ -165,24 +210,33 @@ def run_full(
     yes: bool = False,
     fulltext: bool = True,
     dry_run: bool = False,
+    max_queries: int | None = None,
+    candidate_limit: int | None = None,
+    use_query_planner: bool | None = None,
 ) -> dict[str, Any]:
     if runtime is None:
         runtime = resolve_runtime(Config.load(), yes=yes)
     runtime.apply_env()
     question_en = question_en or question
     domain = domain or "the domain named by the question"
+    retrieval_options = _retrieval_options(
+        runtime, max_queries=max_queries, candidate_limit=candidate_limit,
+        use_query_planner=use_query_planner,
+    )
 
     details = _preflight(runtime, paper_spec)
     needs_lkm, remote = _spec_needs_lkm(paper_spec)
     if dry_run:
-        _print_plan(question, runtime, top_k, paper_spec, max_roots, fulltext)
+        _print_plan(question, runtime, top_k, paper_spec, max_roots, fulltext,
+                    retrieval_options)
         return {
             "dry_run": True,
             "question": question,
             "runtime": runtime.summary(),
+            "retrieval": retrieval_options,
             "preflight": details,
         }
-    _confirm_spend(runtime, top_k, needs_lkm, remote, fulltext)
+    _confirm_spend(runtime, top_k, needs_lkm, remote, fulltext, retrieval_options)
 
     run_dir = new_run_dir(question, out)
     record: dict[str, Any] = {
@@ -193,6 +247,7 @@ def run_full(
         "started_at": _utcnow(),
         "question": {"zh": question, "en": question_en, "domain": domain},
         "runtime": runtime.summary(),
+        "retrieval": retrieval_options,
         "preflight": details,
         "stages": {},
         "outputs": {},
@@ -217,6 +272,8 @@ def run_full(
             lambda: retrieval.retrieve(
                 question, run_dir, top_k=top_k, paper_spec=paper_spec,
                 runtime=runtime, fulltext=fulltext,
+                question_en=question_en, domain=domain,
+                **retrieval_options,
             ),
             papers=0,
         )

@@ -62,6 +62,23 @@ class ConfigFileTest(unittest.TestCase):
         with self.assertRaises(Exception):
             config.set("bohr.payment_source", "credit-card")
 
+    def test_retrieval_config_roundtrip_and_ranges(self) -> None:
+        config = Config.load(self.path)
+        config.set("retrieval.queries", "3")
+        config.set("retrieval.use_query_planner", "false")
+        config.set("retrieval.candidate_limit", "10")
+        config.set("retrieval.min_relevance", "0.35")
+        config.save()
+        reloaded = Config.load(self.path)
+        self.assertEqual(reloaded.get("retrieval.queries"), 3)
+        self.assertFalse(reloaded.get("retrieval.use_query_planner"))
+        self.assertEqual(reloaded.get("retrieval.candidate_limit"), 10)
+        self.assertAlmostEqual(reloaded.get("retrieval.min_relevance"), 0.35)
+        with self.assertRaises(Exception):
+            config.set("retrieval.candidate_limit", "1")
+        with self.assertRaises(Exception):
+            config.set("retrieval.queries", "many")
+
     def test_mask_never_reveals_secret(self) -> None:
         self.assertEqual(mask_secret(""), "")
         self.assertEqual(mask_secret("short"), "********")

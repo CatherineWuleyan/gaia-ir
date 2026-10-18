@@ -21,7 +21,7 @@ lead to it.
 
 ```text
 question
-  -> LKM search + paper knowledge graphs
+  -> LKM query planning + multi-query search + graph-backed paper selection
   -> paper2ir      (paper graph -> claims_final)
   -> single-paper  (claims -> Gaia IR package)
   -> merge         (many packages -> domain graph)
@@ -230,6 +230,12 @@ Start with **two papers** while you check quality and cost:
 ./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --yes
 ```
 
+Ariadne now chooses the papers itself: an LLM query planner expands the
+question into several LKM queries, the candidate papers are merged and ranked,
+and each candidate graph is probed. Empty or conclusion-less graphs are skipped
+before `paper2ir` starts. The full audit is written to
+`01_retrieval/selection.json`.
+
 Preview first without spending anything:
 
 ```bash
@@ -243,8 +249,46 @@ Notes:
 - `--top-k 2` keeps paper2ir cost and latency small. Each paper runs **14 LLM
   steps** in paper2ir, then the single and merge pipelines call models again.
 - `--no-fulltext` skips arXiv PDF download/parsing and uses graph-derived text.
-- `--papers papers.json` replaces LKM search with a local spec (see
+- `--no-query-planner` uses only deterministic fallback queries.
+- `--queries N` / `--candidate-limit N` tune search breadth and graph probing.
+- `--papers papers.json` replaces automatic retrieval with a local spec (see
   [Offline paper specs](#offline-paper-specs)).
+
+## Automatic retrieval
+
+Live mode does not ask you to choose papers. The retrieval stage is:
+
+1. **Plan queries** — ask the configured LLM for several short English LKM
+   queries covering the question's concepts, methods/systems, and evaluation
+   setting. The English question and deterministic keyword query are always
+   included as fallbacks.
+2. **Search broadly** — run up to `retrieval.queries` hybrid LKM searches
+   (`conclusion,abstract` scopes) and merge papers by LKM id.
+3. **Rank candidates** — combine multi-query hits, LKM rerank scores, a cheap
+   lexical topic relevance score, and (after probing) graph size.
+4. **Probe graphs** — fetch each candidate's paper graph. Empty graphs,
+   graphs with no conclusion nodes, and very thin graphs are skipped. If the
+   first pass does not yield enough usable papers, Ariadne extends the probe
+   instead of failing.
+5. **Select and audit** — choose the best graph-backed papers, then write
+   `01_retrieval/selection.json` with every query, candidate, graph probe,
+   skip reason, relevance score, and the final selection.
+
+The result is deterministic enough to audit and robust to LKM's real-world
+gaps: many papers are indexed but have no extractable graph. `--papers ...`
+still bypasses this entire path when you already know the corpus.
+
+To tune retrieval without editing code:
+
+```bash
+./ariadne/run.sh ask "..." --queries 5 --candidate-limit 16
+./ariadne/run.sh ask "..." --no-query-planner   # deterministic queries only
+./ariadne/run.sh config set retrieval.min_relevance 0.2
+```
+
+`selection.json` is the first file to inspect when the selected corpus looks
+wrong. `queries.json` shows the plan; `candidates.json` shows the ranked pool;
+`search_raw_*.json` keeps each LKM response.
 
 ## Configuration
 
@@ -327,6 +371,13 @@ Supported keys:
 | `bohr.auto_approve_spend` | if true, always pass `--yes` to billable LKM commands |
 | `bohr.payment_source` | empty (gateway default), `photon`, or `balance` |
 | `runtime.python` | Python used for pipeline subprocesses |
+| `retrieval.use_query_planner` | use the LLM query planner (default true) |
+| `retrieval.queries` | max LKM queries per question (default 5) |
+| `retrieval.per_query` | results requested per query (default 8) |
+| `retrieval.candidate_limit` | first-pass graph probes (default 16; extended if needed) |
+| `retrieval.min_papers` | minimum usable graph-backed papers (default 2) |
+| `retrieval.min_graph_nodes` | reject graphs below this node count (default 3) |
+| `retrieval.min_relevance` | lexical topic gate for preferred papers (default 0.2) |
 
 ### Environment variables
 
@@ -417,7 +468,10 @@ when your venv is not named `.venv`:
 | `ask ... --mode demo` | answer-layer step on the frozen aircraft graph |
 | `ask ... --dry-run` | preflight and plan, no files, no spending |
 | `ask ... --papers spec.json` | offline paper spec instead of LKM search |
-| `ask ... --top-k N` | papers to retrieve (start with 2) |
+| `ask ... --top-k N` | papers to select (start with 2) |
+| `ask ... --queries N` | max LKM queries for automatic retrieval |
+| `ask ... --candidate-limit N` | first-pass graph probes before extended probing |
+| `ask ... --no-query-planner` | disable the LLM planner; use fallback queries |
 | `ask ... --yes` | approve billable LKM calls for this run |
 | `ask ... --no-fulltext` | skip PDF parsing; use graph-derived text |
 | `demo` | offline aircraft example |
@@ -454,7 +508,8 @@ run root.
 For a full run, intermediate stages are kept:
 
 ```text
-01_retrieval/   papers.json, search_raw.json, per-paper graph.json + ocr.md
+01_retrieval/   queries.json, candidates.json, selection.json,
+                search_raw_*.json, per-paper graph.json + ocr.md
 02_paper2ir/    run-local clean_claims copy, claims_final.json per paper
 03_single/      Gaia IR packages, formalization.json, knowledge.index.json
 04_merge/       merge pipeline run, view_model.json
@@ -468,7 +523,7 @@ failed paper2ir step does not contaminate the next run.
 
 | Stage | What it does | Implementation |
 | --- | --- | --- |
-| `01_retrieval` | `bohr lkm search` for the question, then `bohr lkm graph --paper-id`; fetch full text when possible, otherwise build graph-derived text | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
+| `01_retrieval` | plan multiple LKM queries, merge/rank candidates, probe graphs, skip empty or conclusion-less papers, then fetch full text when possible | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
 | `02_paper2ir` | 14-step paper2ir pipeline: LKM graph + text → `claims_final.json` | [`pipelines/clean_claims`](../pipelines/clean_claims/) from a run-local copy |
 | `03_single` | maintained single-paper pipeline: claims → `gaia.ir.json`, `formalization.json`, `knowledge.index.json` | [`pipelines/single_paper`](../pipelines/single_paper/) + harness |
 | `04_merge` | merge paper packages into one domain graph, with K conclusions and Step 6 answer roots/links | [`pipelines/merge/pipeline.question.json`](../pipelines/merge/pipeline.question.json) |
@@ -570,9 +625,12 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 
 - `demo` is tested offline on the frozen aircraft graph and writes both
   deliverables.
-- `full` is wired to the maintained stages and preflight-checks config, Python,
-  pipeline files, and Bohr login before spending. A complete live 2+ paper run
-  needs your keys and LKM quota; start with `--top-k 2 --no-fulltext`.
+- A fresh automatic `full` run was completed from the question alone: LLM query
+  planning, multi-query LKM search, graph probing, paper2ir, single, merge, and
+  the answer layer all ran without a manual spec or recovery step. It selected
+  two graph-backed papers and produced 5 candidate answers.
+- `full` preflight-checks config, Python, pipeline files, and Bohr login before
+  spending. Start with `--top-k 2 --no-fulltext` while checking quality and cost.
 - The quality of full-mode chains depends on paper2ir, single, merge, and the
   question layer. Ariadne reports what those stages produce; it does not invent
   missing evidence or upgrade `infer` to `deduction`.
@@ -589,9 +647,10 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 | LKM PDF extraction | separate billing; check `bohr billing pricing` |
 | LLM calls | billed by your provider; paper2ir is 14 steps per paper plus single/merge |
 
-A two-paper run makes roughly 1 search + 2 graph calls (plus optional PDF
-parsing) before the LLM pipeline. Use `--dry-run` to see the plan and
-`--no-fulltext` to skip PDF parsing.
+A two-paper automatic run makes up to `retrieval.queries` search calls plus
+graph probes (first pass up to `retrieval.candidate_limit`, extended only if
+too few graphs are usable), before the LLM pipeline. Use `--dry-run` to see
+the upper-bound plan and `--no-fulltext` to skip PDF parsing.
 
 ## License
 

@@ -16,5 +16,14 @@
   },
   "runtime": {
     "python": ""
+  },
+  "retrieval": {
+    "use_query_planner": true,
+    "queries": 5,
+    "per_query": 8,
+    "candidate_limit": 16,
+    "min_papers": 2,
+    "min_graph_nodes": 3,
+    "min_relevance": 0.2
   }
 }

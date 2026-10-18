@@ -19,7 +19,7 @@ Ariadne 把领域问题变成一张可检查的图：论文、claim、候选答�
 
 ```text
 问题
-  -> LKM 检索 + 论文知识图
+  -> LKM 查询规划 + 多查询检索 + 图探测选论文
   -> paper2ir      (论文图 -> claims_final)
   -> single-paper  (claims -> Gaia IR package)
   -> merge         (多篇 package -> 领域图)
@@ -216,6 +216,10 @@ xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
 ./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --yes
 ```
 
+现在 Ariadne 会自己选论文：LLM 查询规划器把问题扩成多条 LKM 查询，候选论文
+去重排序后逐个探测论文图；空图、没有 conclusion 的图和过薄的图会被跳过，然后
+才进入 paper2ir。完整审计写在 `01_retrieval/selection.json`。
+
 不花钱先看计划：
 
 ```bash
@@ -229,8 +233,39 @@ xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
 - `--top-k 2` 控制 paper2ir 的成本和延迟。每篇论文 paper2ir 有 **14 个 LLM
   步骤**，之后 single 和 merge 还会调模型。
 - `--no-fulltext` 跳过 arXiv PDF 下载/解析，改用图派生文本。
-- `--papers papers.json` 用本地 spec 替代 LKM 检索（见
+- `--no-query-planner` 只用确定性 fallback 查询。
+- `--queries N` / `--candidate-limit N` 调整检索宽度和图探测数量。
+- `--papers papers.json` 用本地 spec 替代自动检索（见
   [离线论文 spec](#离线论文-spec)）。
+
+## 自动检索
+
+full 模式不需要你手动选论文。检索阶段是：
+
+1. **查询规划**：让模型把问题扩成多条简短英文 LKM 查询，覆盖核心概念、
+   方法/系统、评估场景；英文问题和确定性关键词查询始终作为 fallback 保留。
+2. **多查询检索**：最多执行 `retrieval.queries` 次 hybrid LKM 搜索
+   （`conclusion,abstract` scope），按 LKM id 合并论文。
+3. **候选排序**：综合命中查询数、LKM rerank 分数、轻量词面相关性和
+   （探测后的）图规模排序。
+4. **图探测**：逐篇取论文图；空图、没有 conclusion 节点的图、过薄的图直接
+   跳过。第一轮不够 `min_papers` 时会继续扩展探测，而不是整次失败。
+5. **选择与审计**：选出有图且相关的论文，把每条查询、候选、探测结果、
+   跳过原因、相关性分数和最终选择写入 `01_retrieval/selection.json`。
+
+这条路径专门处理 LKM 的真实情况：很多论文被索引了，但没有可抽取的知识图。
+`--papers ...` 仍会完全绕过自动检索，适合你已经知道语料的情况。
+
+调参：
+
+```bash
+./ariadne/run.sh ask "..." --queries 5 --candidate-limit 16
+./ariadne/run.sh ask "..." --no-query-planner   # 只用确定性查询
+./ariadne/run.sh config set retrieval.min_relevance 0.2
+```
+
+如果选出来的论文不对，先看 `selection.json`：`queries.json` 是查询计划，
+`candidates.json` 是排序后的候选池，`search_raw_*.json` 是每次 LKM 原始响应。
 
 ## 配置
 
@@ -312,6 +347,13 @@ Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
 | `bohr.auto_approve_spend` | true 时总是给计费 LKM 命令加 `--yes` |
 | `bohr.payment_source` | 空（网关默认）、`photon` 或 `balance` |
 | `runtime.python` | pipeline 子进程使用的 Python |
+| `retrieval.use_query_planner` | 是否使用 LLM 查询规划器（默认 true） |
+| `retrieval.queries` | 每个问题的最大 LKM 查询数（默认 5） |
+| `retrieval.per_query` | 每条查询请求的结果数（默认 8） |
+| `retrieval.candidate_limit` | 第一轮图探测数（默认 16，不够会扩展） |
+| `retrieval.min_papers` | 至少需要几篇有图的论文（默认 2） |
+| `retrieval.min_graph_nodes` | 低于该节点数的图视为过薄（默认 3） |
+| `retrieval.min_relevance` | 优先论文的词面相关性门槛（默认 0.2） |
 
 ### 环境变量
 
@@ -399,7 +441,10 @@ venv 不叫 `.venv` 时建议显式指定：
 | `ask ... --mode demo` | 在冻结飞机图上跑答案层 |
 | `ask ... --dry-run` | 预检并打印计划，不写文件、不花钱 |
 | `ask ... --papers spec.json` | 用离线论文 spec 替代 LKM 检索 |
-| `ask ... --top-k N` | 检索论文数（先用 2） |
+| `ask ... --top-k N` | 选出的论文数（先用 2） |
+| `ask ... --queries N` | 自动检索的最大 LKM 查询数 |
+| `ask ... --candidate-limit N` | 第一轮图探测的候选数 |
+| `ask ... --no-query-planner` | 关闭 LLM 查询规划器，只用 fallback 查询 |
 | `ask ... --yes` | 授权本次计费 LKM 调用 |
 | `ask ... --no-fulltext` | 跳过 PDF 解析，改用图派生文本 |
 | `demo` | 离线飞机示例 |
@@ -436,7 +481,8 @@ venv 不叫 `.venv` 时建议显式指定：
 full 运行会保留中间阶段：
 
 ```text
-01_retrieval/   papers.json、search_raw.json、每篇 graph.json + ocr.md
+01_retrieval/   queries.json、candidates.json、selection.json、
+                search_raw_*.json、每篇 graph.json + ocr.md
 02_paper2ir/    run-local clean_claims 副本、每篇 claims_final.json
 03_single/      Gaia IR package、formalization.json、knowledge.index.json
 04_merge/       merge run、view_model.json
@@ -450,7 +496,7 @@ full 运行会保留中间阶段：
 
 | 阶段 | 做什么 | 实现 |
 | --- | --- | --- |
-| `01_retrieval` | `bohr lkm search` 搜问题，再 `bohr lkm graph --paper-id`；能取全文就取，否则用图派生文本 | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
+| `01_retrieval` | 规划多条 LKM 查询、合并排序候选、探测论文图、跳过空图/无 conclusion/过薄图，再取全文或用图派生文本 | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
 | `02_paper2ir` | 14 步 paper2ir：LKM 图 + 文本 → `claims_final.json` | [`pipelines/clean_claims`](../pipelines/clean_claims/)（run-local 副本） |
 | `03_single` | 维护中的 single pipeline：claims → `gaia.ir.json`、`formalization.json`、`knowledge.index.json` | [`pipelines/single_paper`](../pipelines/single_paper/) + harness |
 | `04_merge` | 把多篇 package 合成一张领域图，含 K conclusions 和 Step 6 答案 root/link | [`pipelines/merge/pipeline.question.json`](../pipelines/merge/pipeline.question.json) |
@@ -547,9 +593,11 @@ Ariadne 封装的三套维护中 pipeline：
 ## 状态与边界
 
 - `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
-- `full` 已接到维护中的阶段，并在花钱前预检配置、Python、pipeline 文件和
-  Bohr 登录。完整的 2+ 篇实时运行需要你的 key 和 LKM 额度；建议先用
-  `--top-k 2 --no-fulltext`。
+- 已从问题出发完成一次全新的自动 `full`：LLM 查询规划、多查询 LKM 检索、
+  图探测、paper2ir、single、merge 和答案层全部自动跑通，没有手动 spec，也没有
+  手动恢复。它自动选了两篇有图的论文，产出 5 个候选答案。
+- `full` 在花钱前预检配置、Python、pipeline 文件和 Bohr 登录。建议先用
+  `--top-k 2 --no-fulltext` 检查质量和成本。
 - full 模式链条质量取决于 paper2ir、single、merge 和问题层。Ariadne 只报告这些
   阶段产生的东西，不伪造缺失证据，也不把 `infer` 升级成 `deduction`。
 - viewer 默认显示全部图路径。能画出来不代表自动成为 support chain。
@@ -564,9 +612,9 @@ Ariadne 封装的三套维护中 pipeline：
 | LKM PDF 抽取 | 单独计费；用 `bohr billing pricing` 查 |
 | LLM 调用 | 由你的 provider 计费；paper2ir 每篇 14 步，之后还有 single/merge |
 
-两篇论文的运行大约先产生 1 次 search + 2 次 graph（加上可选 PDF 解析），
-然后才进入 LLM pipeline。用 `--dry-run` 看计划，用 `--no-fulltext` 跳过
-PDF 解析。
+两篇论文的自动运行最多产生 `retrieval.queries` 次 search 加图探测
+（第一轮最多 `retrieval.candidate_limit` 次，图不够才扩展），然后才进入
+LLM pipeline。用 `--dry-run` 看上限计划，用 `--no-fulltext` 跳过 PDF 解析。
 
 ## License
 
