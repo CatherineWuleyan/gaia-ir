@@ -3546,7 +3546,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:122:papers:paper_014abc68::claim_6:papers:paper_7c211832::claim_3:conjunction:weakpoints",
@@ -3565,7 +3565,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3575,7 +3575,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:123:papers:paper_066432fe::claim_1:papers:paper_53166ac1::claim_6:conjunction:weakpoints",
@@ -3594,7 +3594,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3604,7 +3604,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:124:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -3623,7 +3623,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3633,7 +3633,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:125:papers:paper_26dddb44::claim_4:papers:paper_014abc68::claim_1:conjunction:weakpoints",
@@ -3652,7 +3652,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3662,7 +3662,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:126:papers:paper_755906eb::claim_2:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -3681,7 +3681,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3691,7 +3691,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:127:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_12:conjunction:weakpoints",
@@ -3710,7 +3710,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3720,7 +3720,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:128:papers:paper_014abc68::claim_1:papers:paper_7c211832::claim_23:conjunction:weakpoints",
@@ -3739,7 +3739,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3749,7 +3749,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:129:papers:paper_014abc68::claim_13:papers:paper_26dddb44::claim_4:conjunction:weakpoints",
@@ -3768,7 +3768,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3778,7 +3778,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:130:papers:paper_014abc68::claim_8:papers:paper_18f90780::claim_4:conjunction:weakpoints",
@@ -3797,7 +3797,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3807,7 +3807,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:131:papers:paper_755906eb::claim_4:papers:paper_066432fe::claim_5:conjunction:weakpoints",
@@ -3826,7 +3826,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3836,7 +3836,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:132:papers:paper_26dddb44::claim_1:papers:paper_7c211832::claim_4:conjunction:weakpoints",
@@ -3855,7 +3855,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3865,7 +3865,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:133:papers:paper_755906eb::claim_10:papers:paper_7c211832::claim_22:conjunction:weakpoints",
@@ -3884,7 +3884,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3894,7 +3894,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:134:papers:paper_014abc68::claim_6:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -3913,7 +3913,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3923,7 +3923,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:135:papers:paper_014abc68::claim_8:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -3942,7 +3942,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3952,7 +3952,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:136:papers:paper_18f90780::claim_25:papers:paper_755906eb::claim_4:conjunction:weakpoints",
@@ -3971,7 +3971,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -3981,7 +3981,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:137:papers:paper_014abc68::claim_21:papers:paper_53166ac1::claim_1:conjunction:weakpoints",
@@ -4000,7 +4000,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -4010,7 +4010,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:138:papers:paper_014abc68::claim_5:papers:paper_7c211832::claim_3:conjunction:weakpoints",
@@ -4029,7 +4029,7 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
@@ -4039,7 +4039,7 @@
     "reasoning_type": "conjunction",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "symmetric conjunction operator; not a reasoning type"
+    "role_reason": "Symmetric conjunction operator; kept as a structural relation."
    },
    "edge_class": "reasoning",
    "id": "edge:139:papers:paper_014abc68::claim_4:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -4058,17 +4058,17 @@
    "reasoning_type": "conjunction",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "symmetric conjunction operator; not a reasoning type"
+   "role_reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_6",
     "target": "papers:paper_7c211832::claim_25",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:140:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_25:infer:weakpoints",
@@ -4084,20 +4084,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_aec49f8f::claim_49",
     "target": "papers:paper_c6f44cb4::claim_5",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:141:papers:paper_aec49f8f::claim_49:papers:paper_c6f44cb4::claim_5:infer:weakpoints",
@@ -4113,10 +4113,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -4124,9 +4124,9 @@
     "source": "papers:paper_6a2ef68a::claim_8",
     "target": "papers:paper_18f90780::claim_38",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:142:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_38:infer:weakpoints",
@@ -4143,9 +4143,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -4153,9 +4153,9 @@
     "source": "papers:paper_aec49f8f::claim_23",
     "target": "papers:paper_9c2fb427::claim_27",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:143:papers:paper_aec49f8f::claim_23:papers:paper_9c2fb427::claim_27:infer:weakpoints",
@@ -4172,19 +4172,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_8",
     "target": "papers:paper_7c211832::claim_19",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:144:papers:paper_066432fe::claim_8:papers:paper_7c211832::claim_19:infer:weakpoints",
@@ -4200,10 +4200,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -4211,9 +4211,9 @@
     "source": "papers:paper_aec49f8f::claim_4",
     "target": "papers:paper_c6f44cb4::claim_1",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:145:papers:paper_aec49f8f::claim_4:papers:paper_c6f44cb4::claim_1:infer:weakpoints",
@@ -4230,19 +4230,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_26dddb44::claim_14",
     "target": "papers:paper_c6f44cb4::claim_24",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:146:papers:paper_26dddb44::claim_14:papers:paper_c6f44cb4::claim_24:infer:weakpoints",
@@ -4258,20 +4258,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_6",
     "target": "papers:paper_066432fe::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:147:papers:paper_18f90780::claim_6:papers:paper_066432fe::claim_1:infer:weakpoints",
@@ -4287,20 +4287,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_aec49f8f::claim_48",
     "target": "papers:paper_c6f44cb4::claim_25",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:148:papers:paper_aec49f8f::claim_48:papers:paper_c6f44cb4::claim_25:infer:weakpoints",
@@ -4316,10 +4316,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -4327,9 +4327,9 @@
     "source": "papers:paper_7c211832::claim_13",
     "target": "papers:paper_aec49f8f::claim_29",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:149:papers:paper_7c211832::claim_13:papers:paper_aec49f8f::claim_29:infer:weakpoints",
@@ -4346,9 +4346,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -4356,9 +4356,9 @@
     "source": "papers:paper_6a2ef68a::claim_8",
     "target": "papers:paper_18f90780::claim_11",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:150:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_11:infer:weakpoints",
@@ -4375,9 +4375,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -4385,9 +4385,9 @@
     "source": "papers:paper_014abc68::claim_6",
     "target": "papers:paper_066432fe::claim_3",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:151:papers:paper_014abc68::claim_6:papers:paper_066432fe::claim_3:infer:weakpoints",
@@ -4404,19 +4404,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_12",
     "target": "papers:paper_53166ac1::claim_6",
-    "reasoning_type": "reproduces",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "independent reproduction wording"
+    "role_reason": "Different aircraft/quantity; not an independent reproduction."
    },
    "edge_class": "reasoning",
    "id": "edge:152:papers:paper_18f90780::claim_12:papers:paper_53166ac1::claim_6:infer:weakpoints",
@@ -4432,20 +4432,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "reproduces",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "independent reproduction wording"
+   "role_reason": "Different aircraft/quantity; not an independent reproduction."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_6",
     "target": "papers:paper_7c211832::claim_23",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:153:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_23:infer:weakpoints",
@@ -4461,20 +4461,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_6",
     "target": "papers:paper_7c211832::claim_22",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:154:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_22:infer:weakpoints",
@@ -4490,20 +4490,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_014abc68::claim_20",
     "target": "papers:paper_7c211832::claim_3",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:155:papers:paper_014abc68::claim_20:papers:paper_7c211832::claim_3:infer:weakpoints",
@@ -4519,20 +4519,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_9",
     "target": "papers:paper_066432fe::claim_4",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:156:papers:paper_18f90780::claim_9:papers:paper_066432fe::claim_4:infer:weakpoints",
@@ -4548,20 +4548,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_9c2fb427::claim_45",
     "target": "papers:paper_c6f44cb4::claim_10",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:157:papers:paper_9c2fb427::claim_45:papers:paper_c6f44cb4::claim_10:infer:weakpoints",
@@ -4577,20 +4577,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_18",
     "target": "papers:paper_066432fe::claim_5",
-    "reasoning_type": "reproduces",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "independent reproduction wording"
+    "role_reason": "CZ-150 coefficient-fit R² does not reproduce the 450 kg glider delta model."
    },
    "edge_class": "reasoning",
    "id": "edge:158:papers:paper_18f90780::claim_18:papers:paper_066432fe::claim_5:infer:weakpoints",
@@ -4606,20 +4606,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "reproduces",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "independent reproduction wording"
+   "role_reason": "CZ-150 coefficient-fit R² does not reproduce the 450 kg glider delta model."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_53166ac1::claim_6",
     "target": "papers:paper_066432fe::claim_5",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:159:papers:paper_53166ac1::claim_6:papers:paper_066432fe::claim_5:infer:weakpoints",
@@ -4635,20 +4635,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_1438825f::claim_38",
     "target": "papers:paper_9c2fb427::claim_30",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:160:papers:paper_1438825f::claim_38:papers:paper_9c2fb427::claim_30:infer:weakpoints",
@@ -4664,20 +4664,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_1",
     "target": "papers:paper_014abc68::claim_22",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "explicit special-case/subtype wording"
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
    },
    "edge_class": "reasoning",
    "id": "edge:161:papers:paper_066432fe::claim_1:papers:paper_014abc68::claim_22:infer:weakpoints",
@@ -4693,20 +4693,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "explicit special-case/subtype wording"
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_11",
     "target": "papers:paper_6a2ef68a::claim_38",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:162:papers:paper_18f90780::claim_11:papers:paper_6a2ef68a::claim_38:infer:weakpoints",
@@ -4722,10 +4722,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -4733,9 +4733,9 @@
     "source": "papers:paper_18f90780::claim_1",
     "target": "papers:paper_014abc68::claim_1",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:163:papers:paper_18f90780::claim_1:papers:paper_014abc68::claim_1:infer:weakpoints",
@@ -4752,9 +4752,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -4764,7 +4764,7 @@
     "reasoning_type": "bounds",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "scope/range wording"
+    "role_reason": "Numeric/scope bound; kept with cross-object caveat."
    },
    "edge_class": "reasoning",
    "id": "edge:164:papers:paper_aec49f8f::claim_58:papers:paper_9c2fb427::claim_46:infer:weakpoints",
@@ -4783,7 +4783,7 @@
    "reasoning_type": "bounds",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "scope/range wording"
+   "role_reason": "Numeric/scope bound; kept with cross-object caveat."
   },
   {
    "details": {
@@ -4791,9 +4791,9 @@
     "source": "papers:paper_014abc68::claim_8",
     "target": "papers:paper_26dddb44::claim_4",
     "reasoning_type": "infer",
-    "residual_reason": "instance",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression uses the claim as an example/instance"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:165:papers:paper_014abc68::claim_8:papers:paper_26dddb44::claim_4:infer:weakpoints",
@@ -4810,19 +4810,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "instance",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression uses the claim as an example/instance"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_1",
     "target": "papers:paper_755906eb::claim_10",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:166:papers:paper_18f90780::claim_1:papers:paper_755906eb::claim_10:infer:weakpoints",
@@ -4838,20 +4838,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_6a2ef68a::claim_12",
     "target": "papers:paper_53166ac1::claim_5",
-    "reasoning_type": "bounds",
-    "residual_reason": null,
+    "reasoning_type": "infer",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "scope/range wording"
+    "role_reason": "Range of forward speeds in another aircraft is not a bound on the 115 kg UAV target."
    },
    "edge_class": "reasoning",
    "id": "edge:167:papers:paper_6a2ef68a::claim_12:papers:paper_53166ac1::claim_5:infer:weakpoints",
@@ -4867,20 +4867,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "bounds",
-   "residual_reason": null,
+   "reasoning_type": "infer",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "scope/range wording"
+   "role_reason": "Range of forward speeds in another aircraft is not a bound on the 115 kg UAV target."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_6",
     "target": "papers:paper_7c211832::claim_19",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:168:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_19:infer:weakpoints",
@@ -4896,20 +4896,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_9c2fb427::claim_7",
     "target": "papers:paper_c6f44cb4::claim_25",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:169:papers:paper_9c2fb427::claim_7:papers:paper_c6f44cb4::claim_25:infer:weakpoints",
@@ -4925,20 +4925,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_9",
     "target": "papers:paper_014abc68::claim_10",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:170:papers:paper_18f90780::claim_9:papers:paper_014abc68::claim_10:infer:weakpoints",
@@ -4954,20 +4954,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_4",
     "target": "papers:paper_014abc68::claim_21",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:171:papers:paper_066432fe::claim_4:papers:paper_014abc68::claim_21:infer:weakpoints",
@@ -4983,20 +4983,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_40",
     "target": "papers:paper_26dddb44::claim_15",
-    "reasoning_type": "infer",
-    "residual_reason": "enabling",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a representation/capability relation"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:172:papers:paper_18f90780::claim_40:papers:paper_26dddb44::claim_15:infer:weakpoints",
@@ -5012,20 +5012,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a representation/capability relation"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_53166ac1::claim_6",
     "target": "papers:paper_755906eb::claim_12",
-    "reasoning_type": "infer",
-    "residual_reason": "enabling",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a representation/capability relation"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:173:papers:paper_53166ac1::claim_6:papers:paper_755906eb::claim_12:infer:weakpoints",
@@ -5041,20 +5041,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a representation/capability relation"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_755906eb::claim_1",
     "target": "papers:paper_014abc68::claim_2",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:174:papers:paper_755906eb::claim_1:papers:paper_014abc68::claim_2:infer:weakpoints",
@@ -5070,10 +5070,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5081,9 +5081,9 @@
     "source": "papers:paper_aec49f8f::claim_17",
     "target": "papers:paper_c6f44cb4::claim_25",
     "reasoning_type": "infer",
-    "residual_reason": "enabling",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a representation/capability relation"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:175:papers:paper_aec49f8f::claim_17:papers:paper_c6f44cb4::claim_25:infer:weakpoints",
@@ -5100,19 +5100,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a representation/capability relation"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_6a2ef68a::claim_33",
     "target": "papers:paper_18f90780::claim_9",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:176:papers:paper_6a2ef68a::claim_33:papers:paper_18f90780::claim_9:infer:weakpoints",
@@ -5128,20 +5128,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_755906eb::claim_4",
     "target": "papers:paper_53166ac1::claim_5",
-    "reasoning_type": "infer",
-    "residual_reason": "instance",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression uses the claim as an example/instance"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:177:papers:paper_755906eb::claim_4:papers:paper_53166ac1::claim_5:infer:weakpoints",
@@ -5157,10 +5157,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "instance",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression uses the claim as an example/instance"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5168,9 +5168,9 @@
     "source": "papers:paper_014abc68::claim_22",
     "target": "papers:paper_1438825f::claim_1",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:178:papers:paper_014abc68::claim_22:papers:paper_1438825f::claim_1:infer:weakpoints",
@@ -5187,9 +5187,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5197,9 +5197,9 @@
     "source": "papers:paper_18f90780::claim_36",
     "target": "papers:paper_6a2ef68a::claim_8",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:179:papers:paper_18f90780::claim_36:papers:paper_6a2ef68a::claim_8:infer:weakpoints",
@@ -5216,9 +5216,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5226,9 +5226,9 @@
     "source": "papers:paper_c6f44cb4::claim_25",
     "target": "papers:paper_9c2fb427::claim_27",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:180:papers:paper_c6f44cb4::claim_25:papers:paper_9c2fb427::claim_27:infer:weakpoints",
@@ -5245,9 +5245,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5255,9 +5255,9 @@
     "source": "papers:paper_014abc68::claim_5",
     "target": "papers:paper_7c211832::claim_16",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:181:papers:paper_014abc68::claim_5:papers:paper_7c211832::claim_16:infer:weakpoints",
@@ -5274,9 +5274,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5284,9 +5284,9 @@
     "source": "papers:paper_7c211832::claim_22",
     "target": "papers:paper_18f90780::claim_14",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:182:papers:paper_7c211832::claim_22:papers:paper_18f90780::claim_14:infer:weakpoints",
@@ -5303,19 +5303,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_aec49f8f::claim_22",
     "target": "papers:paper_6a2ef68a::claim_2",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:183:papers:paper_aec49f8f::claim_22:papers:paper_6a2ef68a::claim_2:infer:weakpoints",
@@ -5331,10 +5331,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5342,9 +5342,9 @@
     "source": "papers:paper_18f90780::claim_25",
     "target": "papers:paper_014abc68::claim_4",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:184:papers:paper_18f90780::claim_25:papers:paper_014abc68::claim_4:infer:weakpoints",
@@ -5361,9 +5361,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5371,9 +5371,9 @@
     "source": "papers:paper_014abc68::claim_14",
     "target": "papers:paper_18f90780::claim_4",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:185:papers:paper_014abc68::claim_14:papers:paper_18f90780::claim_4:infer:weakpoints",
@@ -5390,19 +5390,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_5",
     "target": "papers:paper_014abc68::claim_8",
-    "reasoning_type": "reproduces",
-    "residual_reason": null,
+    "reasoning_type": "infer",
+    "residual_reason": "enabling",
     "chainable": false,
-    "role_reason": "independent reproduction wording"
+    "role_reason": "The delta model supplies coefficients used by the wind-axis equation; this is enabling, not reproduction."
    },
    "edge_class": "reasoning",
    "id": "edge:186:papers:paper_066432fe::claim_5:papers:paper_014abc68::claim_8:infer:weakpoints",
@@ -5418,20 +5418,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "reproduces",
-   "residual_reason": null,
+   "reasoning_type": "infer",
+   "residual_reason": "enabling",
    "chainable": false,
-   "role_reason": "independent reproduction wording"
+   "role_reason": "The delta model supplies coefficients used by the wind-axis equation; this is enabling, not reproduction."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_1",
     "target": "papers:paper_18f90780::claim_23",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:187:papers:paper_066432fe::claim_1:papers:paper_18f90780::claim_23:infer:weakpoints",
@@ -5447,20 +5447,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_2",
     "target": "papers:paper_26dddb44::claim_15",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:188:papers:paper_18f90780::claim_2:papers:paper_26dddb44::claim_15:infer:weakpoints",
@@ -5476,10 +5476,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5487,9 +5487,9 @@
     "source": "papers:paper_18f90780::claim_4",
     "target": "papers:paper_53166ac1::claim_6",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:189:papers:paper_18f90780::claim_4:papers:paper_53166ac1::claim_6:infer:weakpoints",
@@ -5506,9 +5506,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5516,9 +5516,9 @@
     "source": "papers:paper_c6f44cb4::claim_25",
     "target": "papers:paper_aec49f8f::claim_23",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:190:papers:paper_c6f44cb4::claim_25:papers:paper_aec49f8f::claim_23:infer:weakpoints",
@@ -5535,19 +5535,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_18f90780::claim_34",
     "target": "papers:paper_7c211832::claim_22",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:191:papers:paper_18f90780::claim_34:papers:paper_7c211832::claim_22:infer:weakpoints",
@@ -5563,20 +5563,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_6a2ef68a::claim_8",
     "target": "papers:paper_18f90780::claim_29",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:192:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_29:infer:weakpoints",
@@ -5592,20 +5592,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_7c211832::claim_5",
     "target": "papers:paper_c6f44cb4::claim_24",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:193:papers:paper_7c211832::claim_5:papers:paper_c6f44cb4::claim_24:infer:weakpoints",
@@ -5621,20 +5621,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_7c211832::claim_10",
     "target": "papers:paper_aec49f8f::claim_29",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:194:papers:paper_7c211832::claim_10:papers:paper_aec49f8f::claim_29:infer:weakpoints",
@@ -5650,20 +5650,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_014abc68::claim_16",
     "target": "papers:paper_7c211832::claim_3",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:195:papers:paper_014abc68::claim_16:papers:paper_7c211832::claim_3:infer:weakpoints",
@@ -5679,20 +5679,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_1438825f::claim_38",
     "target": "papers:paper_c6f44cb4::claim_15",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:196:papers:paper_1438825f::claim_38:papers:paper_c6f44cb4::claim_15:infer:weakpoints",
@@ -5708,20 +5708,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_8",
     "target": "papers:paper_7c211832::claim_14",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:197:papers:paper_066432fe::claim_8:papers:paper_7c211832::claim_14:infer:weakpoints",
@@ -5737,10 +5737,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5748,9 +5748,9 @@
     "source": "papers:paper_aec49f8f::claim_17",
     "target": "papers:paper_7c211832::claim_25",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:198:papers:paper_aec49f8f::claim_17:papers:paper_7c211832::claim_25:infer:weakpoints",
@@ -5767,9 +5767,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5777,9 +5777,9 @@
     "source": "papers:paper_6a2ef68a::claim_8",
     "target": "papers:paper_18f90780::claim_9",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:199:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_9:infer:weakpoints",
@@ -5796,19 +5796,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_066432fe::claim_5",
     "target": "papers:paper_18f90780::claim_25",
-    "reasoning_type": "infer",
-    "residual_reason": "enabling",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a representation/capability relation"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:200:papers:paper_066432fe::claim_5:papers:paper_18f90780::claim_25:infer:weakpoints",
@@ -5824,10 +5824,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a representation/capability relation"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5835,9 +5835,9 @@
     "source": "papers:paper_014abc68::claim_21",
     "target": "papers:paper_c6f44cb4::claim_21",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:201:papers:paper_014abc68::claim_21:papers:paper_c6f44cb4::claim_21:infer:weakpoints",
@@ -5854,9 +5854,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5864,9 +5864,9 @@
     "source": "papers:paper_014abc68::claim_17",
     "target": "papers:paper_26dddb44::claim_4",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:202:papers:paper_014abc68::claim_17:papers:paper_26dddb44::claim_4:infer:weakpoints",
@@ -5883,19 +5883,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_9c2fb427::claim_19",
     "target": "papers:paper_aec49f8f::claim_15",
-    "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:203:papers:paper_9c2fb427::claim_19:papers:paper_aec49f8f::claim_15:infer:weakpoints",
@@ -5911,10 +5911,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
@@ -5922,9 +5922,9 @@
     "source": "papers:paper_aec49f8f::claim_27",
     "target": "papers:paper_0fc191d1::claim_9",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:204:papers:paper_aec49f8f::claim_27:papers:paper_0fc191d1::claim_9:infer:weakpoints",
@@ -5941,9 +5941,9 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
@@ -5951,9 +5951,9 @@
     "source": "papers:paper_aec49f8f::claim_27",
     "target": "papers:paper_014abc68::claim_23",
     "reasoning_type": "infer",
-    "residual_reason": "precondition",
+    "residual_reason": "unclear",
     "chainable": false,
-    "role_reason": "Step 3 expression states a dependency/precondition"
+    "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
    },
    "edge_class": "reasoning",
    "id": "edge:205:papers:paper_aec49f8f::claim_27:papers:paper_014abc68::claim_23:infer:weakpoints",
@@ -5970,19 +5970,19 @@
     "standard"
    ],
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "chainable": false,
-   "role_reason": "Step 3 expression states a dependency/precondition"
+   "role_reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_9c2fb427::claim_20",
     "target": "papers:paper_014abc68::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "enabling",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "Step 3 expression states a representation/capability relation"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:206:papers:paper_9c2fb427::claim_20:papers:paper_014abc68::claim_1:infer:weakpoints",
@@ -5998,20 +5998,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "Step 3 expression states a representation/capability relation"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "details": {
     "relation": "infer",
     "source": "papers:paper_aec49f8f::claim_37",
     "target": "papers:paper_c6f44cb4::claim_5",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "analogy",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "no specific entailment established by the Step 3 expression"
+    "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
    },
    "edge_class": "reasoning",
    "id": "edge:207:papers:paper_aec49f8f::claim_37:papers:paper_c6f44cb4::claim_5:infer:weakpoints",
@@ -6027,10 +6027,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "no specific entailment established by the Step 3 expression"
+   "role_reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "id": "typed:bounds:papers:paper_18f90780::claim_22:papers:paper_53166ac1::claim_6",
@@ -6049,7 +6049,7 @@
    "reasoning_type": "bounds",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "The shared object is the longitudinal x-axis force coefficient (C_Tx/C_x). The evidence claim_22 attaches NRMSE values of 1.08% (modeling) and 0.84% (validation) to C_Tx, bounding the error of reproducing this coefficient to about 1%. The target claim_6 asserts that a two-step identification procedure reproduces C_x with residuals; the evidence supplies a quantitative range (about 1% NRMSE) within which those residuals for the x-force coefficient must lie, so the evidence bounds the target's residual magnitude.",
+   "role_reason": "Numeric/scope bound; kept with cross-object caveat.",
    "details": {
     "source": "papers:paper_18f90780::claim_22",
     "target": "papers:paper_53166ac1::claim_6",
@@ -6057,7 +6057,7 @@
     "reasoning_type": "bounds",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "The shared object is the longitudinal x-axis force coefficient (C_Tx/C_x). The evidence claim_22 attaches NRMSE values of 1.08% (modeling) and 0.84% (validation) to C_Tx, bounding the error of reproducing this coefficient to about 1%. The target claim_6 asserts that a two-step identification procedure reproduces C_x with residuals; the evidence supplies a quantitative range (about 1% NRMSE) within which those residuals for the x-force coefficient must lie, so the evidence bounds the target's residual magnitude.",
+    "role_reason": "Numeric/scope bound; kept with cross-object caveat.",
     "step3_weakpoint_id": "weakpoint_852807f5c1e3326a"
    }
   },
@@ -6075,18 +6075,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "The shared object is the longitudinal force coefficient C_X. The evidence claim_2 gives concrete estimated parameters for the delta aerodynamic model of ΔC_X (α^3 term 57.120±1.136 and static term −0.034±0.004) for a 450 kg tail-controlled gliding air vehicle. The target claim_6 describes a two-step parameter-identification procedure that reproduces C_x (and C_z, C_m) with residuals. The evidence is a specific instance of the kind of longitudinal coefficient identification that the target procedure performs, so the relation is special_case.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_066432fe::claim_2",
     "target": "papers:paper_53166ac1::claim_6",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "The shared object is the longitudinal force coefficient C_X. The evidence claim_2 gives concrete estimated parameters for the delta aerodynamic model of ΔC_X (α^3 term 57.120±1.136 and static term −0.034±0.004) for a 450 kg tail-controlled gliding air vehicle. The target claim_6 describes a two-step parameter-identification procedure that reproduces C_x (and C_z, C_m) with residuals. The evidence is a specific instance of the kind of longitudinal coefficient identification that the target procedure performs, so the relation is special_case.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_103fb3968e901085"
    }
   },
@@ -6104,18 +6104,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "The shared object is disciplinary modules integrated into a conceptual aircraft design framework. The evidence claim_22 states that the CoG module computes model CoG for parameterized geometry produced by CACDS. The target claim_1 states that a unified modular MDO framework integrates the main aircraft disciplinary modules into a single optimization environment. The CoG module is a specific instance of the disciplinary modules that the target framework integrates, so the relation is special_case.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_aec49f8f::claim_22",
     "target": "papers:paper_c6f44cb4::claim_1",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "The shared object is disciplinary modules integrated into a conceptual aircraft design framework. The evidence claim_22 states that the CoG module computes model CoG for parameterized geometry produced by CACDS. The target claim_1 states that a unified modular MDO framework integrates the main aircraft disciplinary modules into a single optimization environment. The CoG module is a specific instance of the disciplinary modules that the target framework integrates, so the relation is special_case.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_561cac8fe4ae0e1a"
    }
   },
@@ -6136,7 +6136,7 @@
    "reasoning_type": "bounds",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "The shared object is heading/altitude excursions in simulation. The evidence claim_14 states that in a joint HIL simulation the permissible tracking errors were ±4° for Euler angles and ±3 m for flight height. The target claim_31 states that during a 3-knot lateral velocity step command, heading and altitude excursions were minimal. The evidence bounds the range within which the target's 'minimal' excursions must lie (within ±4° Euler and ±3 m altitude), so the relation is bounds.",
+   "role_reason": "Numeric/scope bound; kept with cross-object caveat.",
    "details": {
     "source": "papers:paper_26dddb44::claim_14",
     "target": "papers:paper_6a2ef68a::claim_31",
@@ -6144,7 +6144,7 @@
     "reasoning_type": "bounds",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "The shared object is heading/altitude excursions in simulation. The evidence claim_14 states that in a joint HIL simulation the permissible tracking errors were ±4° for Euler angles and ±3 m for flight height. The target claim_31 states that during a 3-knot lateral velocity step command, heading and altitude excursions were minimal. The evidence bounds the range within which the target's 'minimal' excursions must lie (within ±4° Euler and ±3 m altitude), so the relation is bounds.",
+    "role_reason": "Numeric/scope bound; kept with cross-object caveat.",
     "step3_weakpoint_id": "weakpoint_2be0ec9c134cbcea"
    }
   },
@@ -6162,18 +6162,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: the MDO framework's Level 2 optimization with Level 1 constraints. P2 (paper_c6f44cb4::claim_5) states Level 2 optimizes configuration geometric design variables while including Level 1 objective functions and constraints. P1 (paper_9c2fb427::claim_30) reports a full-scale gross-weight minimization of the NASA lift-plus-cruise vehicle constrained by an 8% static margin, with motor mass 279 kg vs 227 kg. The candidate hint identifies this as the same MDO framework, so P1 is a special case (instance) of the Level 2 constrained optimization described in P2; P2 adds that Level 2 includes Level 1 constraints, which P1 needs to be an instance of that framework.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_c6f44cb4::claim_5",
     "target": "papers:paper_9c2fb427::claim_30",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: the MDO framework's Level 2 optimization with Level 1 constraints. P2 (paper_c6f44cb4::claim_5) states Level 2 optimizes configuration geometric design variables while including Level 1 objective functions and constraints. P1 (paper_9c2fb427::claim_30) reports a full-scale gross-weight minimization of the NASA lift-plus-cruise vehicle constrained by an 8% static margin, with motor mass 279 kg vs 227 kg. The candidate hint identifies this as the same MDO framework, so P1 is a special case (instance) of the Level 2 constrained optimization described in P2; P2 adds that Level 2 includes Level 1 constraints, which P1 needs to be an instance of that framework.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_f44a569ae316f762"
    }
   },
@@ -6191,18 +6191,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: the conceptual-design workflow combining geometry, analysis and optimization under a unified framework. paper_c6f44cb4::claim_24 instantiates this in a specific implementation: the unified modular MDO framework's Level 1 Performance Module, which performs single-level optimization over angle of attack, throttle, and morphing parameters theta_wt, Gamma_wt, Lambda_wt for a fixed configuration. paper_aec49f8f::claim_15 states the general CACDS workflow from parametric geometry modeling through analysis to optimization under a unified framework. The Level 1 optimization step is a concrete instance of the general optimization step in the CACDS workflow, so the specific case supports the general framework claim.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_c6f44cb4::claim_24",
     "target": "papers:paper_aec49f8f::claim_15",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: the conceptual-design workflow combining geometry, analysis and optimization under a unified framework. paper_c6f44cb4::claim_24 instantiates this in a specific implementation: the unified modular MDO framework's Level 1 Performance Module, which performs single-level optimization over angle of attack, throttle, and morphing parameters theta_wt, Gamma_wt, Lambda_wt for a fixed configuration. paper_aec49f8f::claim_15 states the general CACDS workflow from parametric geometry modeling through analysis to optimization under a unified framework. The Level 1 optimization step is a concrete instance of the general optimization step in the CACDS workflow, so the specific case supports the general framework claim.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_18a5ce850f8423d5"
    }
   },
@@ -6220,18 +6220,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: cross-axis coupling in translational dynamics. paper_014abc68::claim_15 claims that the mixed-axes (velocity-aligned) strategy reduces numerical scale disparity and undesirable coupling in the translational EOMs; paper_6a2ef68a::claim_32 reports that a 3-knot lateral velocity step command produced about 14 m lateral displacement with a very small fore/aft drift of order 10 cm. The near-absent fore/aft drift during a pure lateral maneuver is a concrete instance of the low cross-axis coupling the general mixed-axes claim asserts.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_6a2ef68a::claim_32",
     "target": "papers:paper_014abc68::claim_15",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: cross-axis coupling in translational dynamics. paper_014abc68::claim_15 claims that the mixed-axes (velocity-aligned) strategy reduces numerical scale disparity and undesirable coupling in the translational EOMs; paper_6a2ef68a::claim_32 reports that a 3-knot lateral velocity step command produced about 14 m lateral displacement with a very small fore/aft drift of order 10 cm. The near-absent fore/aft drift during a pure lateral maneuver is a concrete instance of the low cross-axis coupling the general mixed-axes claim asserts.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_346a5f4b99920234"
    }
   },
@@ -6249,18 +6249,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: yawing moment N and yaw angular acceleration. Target claim_33 demonstrates pure yaw rotation during hover on HCPAV-V1 using opposing front and aft rotor vane deflection to generate a yawing moment; evidence claim_10 gives the general asymmetric-aircraft rotational dynamics equations in which the yawing moment N enters T3 and therefore drives r_dot. What follows: the target's demonstrated yaw rotation from a yawing moment is a special case of the general rotational dynamics in the evidence.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_014abc68::claim_10",
     "target": "papers:paper_6a2ef68a::claim_33",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: yawing moment N and yaw angular acceleration. Target claim_33 demonstrates pure yaw rotation during hover on HCPAV-V1 using opposing front and aft rotor vane deflection to generate a yawing moment; evidence claim_10 gives the general asymmetric-aircraft rotational dynamics equations in which the yawing moment N enters T3 and therefore drives r_dot. What follows: the target's demonstrated yaw rotation from a yawing moment is a special case of the general rotational dynamics in the evidence.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_950ca07ed1402505"
    }
   },
@@ -6278,18 +6278,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: modular separate aerodynamics/propulsion formulation for flight dynamics simulation. Target claim_4 states the data-enhanced dynamic flight simulation model includes modular atmosphere, gravitation, aerodynamics, propulsion, and mass components; evidence claim_25 gives C_Tx = C_Tx,a + C_Tx,p, a separate airframe plus propulsion body x-axis force coefficient formulation for flight dynamics simulations. What follows: the evidence's separate airframe/propulsion formulation is a specific instance of the modular aerodynamics/propulsion component in the target's simulation architecture.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_18f90780::claim_25",
     "target": "papers:paper_7c211832::claim_4",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: modular separate aerodynamics/propulsion formulation for flight dynamics simulation. Target claim_4 states the data-enhanced dynamic flight simulation model includes modular atmosphere, gravitation, aerodynamics, propulsion, and mass components; evidence claim_25 gives C_Tx = C_Tx,a + C_Tx,p, a separate airframe plus propulsion body x-axis force coefficient formulation for flight dynamics simulations. What follows: the evidence's separate airframe/propulsion formulation is a specific instance of the modular aerodynamics/propulsion component in the target's simulation architecture.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_3495b7de2c765b65"
    }
   },
@@ -6307,18 +6307,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: the body x-axis aerodynamic force coefficient. Claim papers:paper_18f90780::claim_25 attaches the decomposition C_Tx = C_Tx,a (bare airframe body x-axis force coefficient model) + C_Tx,p (propulsion model); claim papers:paper_066432fe::claim_2 attaches the estimated longitudinal coefficient model delta C_X = 57.120*alpha^3 - 0.034 (95% bounds +/-1.136 and +/-0.004) for a 450 kg, tail-controlled, gliding (unpowered) autonomous vehicle. What follows: the gliding vehicle carries no propulsion, so its fitted delta C_X is a concrete instance of the bare-airframe coefficient C_Tx,a; the premise (claim_2) is the special case that realizes the airframe term the conclusion (claim_25) separates from C_Tx,p. The quantity transferring is the body x-axis force coefficient, instantiated by claim_2's fitted values for claim_25's C_Tx,a.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_066432fe::claim_2",
     "target": "papers:paper_18f90780::claim_25",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: the body x-axis aerodynamic force coefficient. Claim papers:paper_18f90780::claim_25 attaches the decomposition C_Tx = C_Tx,a (bare airframe body x-axis force coefficient model) + C_Tx,p (propulsion model); claim papers:paper_066432fe::claim_2 attaches the estimated longitudinal coefficient model delta C_X = 57.120*alpha^3 - 0.034 (95% bounds +/-1.136 and +/-0.004) for a 450 kg, tail-controlled, gliding (unpowered) autonomous vehicle. What follows: the gliding vehicle carries no propulsion, so its fitted delta C_X is a concrete instance of the bare-airframe coefficient C_Tx,a; the premise (claim_2) is the special case that realizes the airframe term the conclusion (claim_25) separates from C_Tx,p. The quantity transferring is the body x-axis force coefficient, instantiated by claim_2's fitted values for claim_25's C_Tx,a.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_6114f2d7a3075d3b"
    }
   },
@@ -6336,18 +6336,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object is the trim force balance: claim_24 gives the steady, level, nonrotating balance m g_0 = \\bar{q} S C_L, while claim_12 obtains HCPAV-V1 trim solutions by numerically zeroing the six body-axis translational and angular acceleration components over forward speeds. claim_24 is the special-case vertical force balance that the zero-acceleration trim condition in claim_12 contains.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_014abc68::claim_24",
     "target": "papers:paper_6a2ef68a::claim_12",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object is the trim force balance: claim_24 gives the steady, level, nonrotating balance m g_0 = \\bar{q} S C_L, while claim_12 obtains HCPAV-V1 trim solutions by numerically zeroing the six body-axis translational and angular acceleration components over forward speeds. claim_24 is the special-case vertical force balance that the zero-acceleration trim condition in claim_12 contains.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_b502b6ded862b155"
    }
   },
@@ -6365,18 +6365,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: the one additional flight variable required for a unique inverse-simulation solution. paper_014abc68::claim_5 requires the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable as inputs; paper_6a2ef68a::claim_27 supplies a 3-knot lateral velocity step command applied at t=5 s and removed at t=20 s. The target lateral velocity command is a special case of the additional flight variable required by the premise, so it can serve as that input.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_014abc68::claim_5",
     "target": "papers:paper_6a2ef68a::claim_27",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: the one additional flight variable required for a unique inverse-simulation solution. paper_014abc68::claim_5 requires the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable as inputs; paper_6a2ef68a::claim_27 supplies a 3-knot lateral velocity step command applied at t=5 s and removed at t=20 s. The target lateral velocity command is a special case of the additional flight variable required by the premise, so it can serve as that input.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_d13fb0a58118c49c"
    }
   },
@@ -6394,18 +6394,18 @@
     "standard"
    ],
    "min_granularity": "overview",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "P1 (papers:paper_6a2ef68a::claim_28) is a special case of P2 (papers:paper_014abc68::claim_5): P2 states the general inverse-simulation input requirement that the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable be specified to obtain a unique solution; P1 instantiates that additional-variable part by commanding a lateral velocity of 3 knots and obtaining vane deflections reaching the 10° allowable limit. The shared object is the inverse-simulation setup for the flight dynamics model; P2 supplies the general input condition, and P1 supplies the concrete commanded lateral velocity/control-deflection instance.",
+   "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
    "details": {
     "source": "papers:paper_6a2ef68a::claim_28",
     "target": "papers:paper_014abc68::claim_5",
     "relation": "special_case",
-    "reasoning_type": "special_case",
+    "reasoning_type": "analogy",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "P1 (papers:paper_6a2ef68a::claim_28) is a special case of P2 (papers:paper_014abc68::claim_5): P2 states the general inverse-simulation input requirement that the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable be specified to obtain a unique solution; P1 instantiates that additional-variable part by commanding a lateral velocity of 3 knots and obtaining vane deflections reaching the 10° allowable limit. The shared object is the inverse-simulation setup for the flight dynamics model; P2 supplies the general input condition, and P1 supplies the concrete commanded lateral velocity/control-deflection instance.",
+    "role_reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case.",
     "step3_weakpoint_id": "weakpoint_2a8597c114a5b568"
    }
   },
@@ -6426,7 +6426,7 @@
    "reasoning_type": "special_case",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: point-mass cruise flight dynamics and the steady-level force balance. claim_18 gives the condition 'HKG-LHR cruise and step-climb segments' for a data-enhanced dynamic flight simulation model solving point-mass rigid-body equations with QAR-derived segment constraints, and states the trajectories matched actual QAR data to an acceptable degree; claim_23 states the special case 'steady, level, nonrotating' with T = \\bar{q}S C_D. What follows: claim_23's steady-level thrust-drag balance is a special case of the point-mass EOM used in claim_18; claim_18 adds that the full point-mass model matches real QAR cruise/step-climb trajectories, so the special-case balance is applicable in cruise.",
+   "role_reason": "Mathematical special case (steady-level point-mass balance); kept with different-data caveat.",
    "details": {
     "source": "papers:paper_7c211832::claim_18",
     "target": "papers:paper_014abc68::claim_23",
@@ -6434,7 +6434,7 @@
     "reasoning_type": "special_case",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: point-mass cruise flight dynamics and the steady-level force balance. claim_18 gives the condition 'HKG-LHR cruise and step-climb segments' for a data-enhanced dynamic flight simulation model solving point-mass rigid-body equations with QAR-derived segment constraints, and states the trajectories matched actual QAR data to an acceptable degree; claim_23 states the special case 'steady, level, nonrotating' with T = \\bar{q}S C_D. What follows: claim_23's steady-level thrust-drag balance is a special case of the point-mass EOM used in claim_18; claim_18 adds that the full point-mass model matches real QAR cruise/step-climb trajectories, so the special-case balance is applicable in cruise.",
+    "role_reason": "Mathematical special case (steady-level point-mass balance); kept with different-data caveat.",
     "step3_weakpoint_id": "weakpoint_d4dfa9b710588687"
    }
   },
@@ -6455,7 +6455,7 @@
    "reasoning_type": "bounds",
    "residual_reason": null,
    "chainable": false,
-   "role_reason": "Shared object: the large-scale multidisciplinary sizing and mission optimization (MDO) of the NASA lift-plus-cruise vehicle and its reported gross-weight reduction. claim_14 states this optimization omitted the mass and complexity of morphing actuators and mechanisms; claim_23 states that, with and without an 8% static-margin constraint, the MDO reduced gross weight by about 6.5% with all constraints satisfied. claim_14 bounds claim_23's 6.5% reduction to a design space that excludes morphing actuator mass and complexity, so the reported value holds only under that omission.",
+   "role_reason": "Numeric/scope bound; kept with cross-object caveat.",
    "details": {
     "source": "papers:paper_c6f44cb4::claim_14",
     "target": "papers:paper_9c2fb427::claim_23",
@@ -6463,7 +6463,7 @@
     "reasoning_type": "bounds",
     "residual_reason": null,
     "chainable": false,
-    "role_reason": "Shared object: the large-scale multidisciplinary sizing and mission optimization (MDO) of the NASA lift-plus-cruise vehicle and its reported gross-weight reduction. claim_14 states this optimization omitted the mass and complexity of morphing actuators and mechanisms; claim_23 states that, with and without an 8% static-margin constraint, the MDO reduced gross weight by about 6.5% with all constraints satisfied. claim_14 bounds claim_23's 6.5% reduction to a design space that excludes morphing actuator mass and complexity, so the reported value holds only under that omission.",
+    "role_reason": "Numeric/scope bound; kept with cross-object caveat.",
     "step3_weakpoint_id": "weakpoint_ab9aeedcbe3834d6"
    }
   }
@@ -6517,6 +6517,14 @@
   "typed_display_edge_types": {
    "bounds": 3,
    "special_case": 12
+  },
+  "cross_paper_edge_count": 101,
+  "cross_paper_type_counts": {
+   "analogy": 52,
+   "bounds": 4,
+   "conjunction": 18,
+   "infer": 26,
+   "special_case": 1
   }
  },
  "nodes": [

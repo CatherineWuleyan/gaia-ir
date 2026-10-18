@@ -7,7 +7,7 @@
 - Linked / chained claims: 46 (18.1% of connected claims, 14.8% of all claims)
 - Papers touched: 8
 - Claims supporting more than one answer: 4
-- Chainable edges: 0; edge role counts: {'bounds': 5, 'conjunction': 18, 'infer': 184, 'reproduces': 3, 'special_case': 13}
+- Chainable edges: 0; edge role counts: {'analogy': 52, 'bounds': 4, 'conjunction': 18, 'infer': 148, 'special_case': 1}
 - Typed support-chain coverage: 46 claims; with exploratory paths: 86 (35.8% of connected)
 
 ## Candidate answers

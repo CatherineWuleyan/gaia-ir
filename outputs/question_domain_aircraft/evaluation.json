@@ -35,11 +35,11 @@
    "paper_c6f44cb4": 5
   },
   "edge_role_counts": {
-   "bounds": 5,
+   "analogy": 52,
+   "bounds": 4,
    "conjunction": 18,
-   "infer": 184,
-   "reproduces": 3,
-   "special_case": 13
+   "infer": 148,
+   "special_case": 1
   },
   "chainable_edge_count": 0
  },

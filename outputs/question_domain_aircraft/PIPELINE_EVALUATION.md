@@ -30,14 +30,27 @@
 - **46 claims 直接连接**；typed support chains **0**；
 - exploratory paths：R1 18 / R2 24 / R3 24 / R4 20 / R5 14；
 - 直接+exploratory 覆盖 86 claims，占 connected claims 的 **35.8%**；
-- 边角色分布：`infer 184 / conjunction 18 / special_case 13 / bounds 5 /
-  reproduces 3`，chainable 0；没有 deduction。`conjunction` 是对称算子，
-  不是 reasoning type，单独计数。
+- 边角色分布：`analogy 52 / infer 148 / conjunction 18 / bounds 4 / special_case 1`，
+  chainable 0；没有 deduction。`conjunction` 是对称算子，不是 reasoning type，单独计数。
+  跨论文边 101 条全部保留并默认可见：`analogy 52 / infer 26 / conjunction 18 /
+  bounds 4 / special_case 1`；其中 54 条经过人工审阅改类型，详见
+  `CROSS_PAPER_AUDIT.md` / `cross_paper_audit.json`。
 - 这不是 bug：冻结图的 **68 条 cross-paper weakpoint 全是 `infer`**，
   原因是 Step 3 把它们用于 “needs/requires/can represent/instance” 等关系；
   当前规则下没有一条被证明为 deduction，因此没有 typed support chain。
 
-### 0.3 变更文件
+### 0.3 跨论文边人工审阅
+
+- 101 条跨论文边全部保留，默认显示，不隐藏；
+- 52 条标为 `analogy`（跨飞机/跨框架方法迁移，不是 support）；
+- 26 条保留 `infer`（方向清楚但没有更强类型）；
+- 18 条是 `conjunction`（对称算子）；
+- 4 条是 `bounds`（数值/范围约束，保留跨对象 caveat）；
+- 1 条是真正的数学 `special_case`（`P303→P200`，稳态点质量平衡）；
+- 0 条跨论文 `deduction` / `reproduces`；没有强行升级。
+- 逐条理由见 `CROSS_PAPER_AUDIT.md` 和 `cross_paper_audit.json`。
+
+### 0.4 变更文件
 
 - `step3.py`：具体类型优先、`infer` 必须带 `residual_reason`、`chainable=false`；
 - `question_layer.py`：只沿 chainable 边建链；`exploratory_paths` 分离；
@@ -50,7 +63,7 @@
   exploratory 开关、root 的 `no typed chain` badge；
 - `run_question_layer.py`：新增 `--edge-roles`。
 
-### 0.4 原始运行（历史）
+### 0.5 原始运行（历史）
 
 下面的数字（86 linked/chained、36.5% coverage、22–27 条深链）是**旧口径**：
 把 `infer` 当作支持链。按当前规则，它们应读作 exploratory，而不是 evidence。

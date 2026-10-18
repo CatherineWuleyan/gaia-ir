@@ -4,16 +4,14 @@
  "generated_at": "2026-10-18T05:58:35.365957+00:00",
  "model": "deepseek-v4-flash",
  "policy": "deduction > special_case > reproduces > bounds > abduction > analogy > infer (residual, non-chainable)",
- "chainable_types": [
-  "deduction"
- ],
+ "chainable_types": [],
  "edge_count": 223,
  "type_counts": {
-  "bounds": 5,
+  "analogy": 52,
+  "bounds": 4,
   "conjunction": 18,
-  "infer": 184,
-  "reproduces": 3,
-  "special_case": 13
+  "infer": 148,
+  "special_case": 1
  },
  "edges": [
   {
@@ -2474,7 +2472,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:123:papers:paper_066432fe::claim_1:papers:paper_53166ac1::claim_6:conjunction:weakpoints",
@@ -2494,7 +2492,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:124:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -2514,7 +2512,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:125:papers:paper_26dddb44::claim_4:papers:paper_014abc68::claim_1:conjunction:weakpoints",
@@ -2534,7 +2532,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:126:papers:paper_755906eb::claim_2:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -2554,7 +2552,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:127:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_12:conjunction:weakpoints",
@@ -2574,7 +2572,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:128:papers:paper_014abc68::claim_1:papers:paper_7c211832::claim_23:conjunction:weakpoints",
@@ -2594,7 +2592,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:129:papers:paper_014abc68::claim_13:papers:paper_26dddb44::claim_4:conjunction:weakpoints",
@@ -2614,7 +2612,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:130:papers:paper_014abc68::claim_8:papers:paper_18f90780::claim_4:conjunction:weakpoints",
@@ -2634,7 +2632,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:131:papers:paper_755906eb::claim_4:papers:paper_066432fe::claim_5:conjunction:weakpoints",
@@ -2654,7 +2652,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:132:papers:paper_26dddb44::claim_1:papers:paper_7c211832::claim_4:conjunction:weakpoints",
@@ -2674,7 +2672,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:133:papers:paper_755906eb::claim_10:papers:paper_7c211832::claim_22:conjunction:weakpoints",
@@ -2694,7 +2692,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:134:papers:paper_014abc68::claim_6:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -2714,7 +2712,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:135:papers:paper_014abc68::claim_8:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -2734,7 +2732,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:136:papers:paper_18f90780::claim_25:papers:paper_755906eb::claim_4:conjunction:weakpoints",
@@ -2754,7 +2752,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:137:papers:paper_014abc68::claim_21:papers:paper_53166ac1::claim_1:conjunction:weakpoints",
@@ -2774,7 +2772,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:138:papers:paper_014abc68::claim_5:papers:paper_7c211832::claim_3:conjunction:weakpoints",
@@ -2794,7 +2792,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:139:papers:paper_014abc68::claim_4:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -2814,7 +2812,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "symmetric conjunction operator; not a reasoning type"
+   "reason": "Symmetric conjunction operator; kept as a structural relation."
   },
   {
    "edge_id": "edge:140:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_25:infer:weakpoints",
@@ -2830,11 +2828,11 @@
    "target_content": "The data-enhanced dynamic flight simulation model includes modular atmosphere, gravitation, aerodynamics, propulsion, and mass components, and requires only elementary engine parameters and wing geometric characteristics.",
    "step3_expression": "Shared object: the aerodynamic component/database of a data-enhanced/updated flight simulation model. paper_066432fe::claim_6 attaches that the original aerodynamic database was augmented with an estimated delta model and yielded significantly improved flight-parameter predictions; paper_7c211832::claim_25 attaches that the data-enhanced dynamic flight simulation model includes modular aerodynamics among its components. What follows: the successful augmentation of the aerodynamic database with a delta model shows the aerodynamics component can be separately modified/replaced, which is the modularity assertion the target needs.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:141:papers:paper_aec49f8f::claim_49:papers:paper_c6f44cb4::claim_5:infer:weakpoints",
@@ -2850,11 +2848,11 @@
    "target_content": "Level 2 (the Optimization Module) of the two nested optimization levels supported by the implementation of a unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design optimizes configuration geometric design variables while including the objective functions and constraints of Level 1 (the Performance Module) so that configuration-level decisions account for optimized control/morphing strategies.",
    "step3_expression": "Shared object: configuration/wing geometric design variables in an MDO framework. claim_49 attaches DOC main effects of 29% (inboard spanwise length), 32% (outboard spanwise length), and 16% (outboard sweep) to the seven wing geometric variables; claim_5 attaches Level 2 optimization of configuration geometric design variables while including Level 1 objectives/constraints. The premise adds that specific configuration geometric variables have large DOC main effects, which claim_5 needs to justify prioritizing configuration geometric variables in Level 2.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:142:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_38:infer:weakpoints",
@@ -2871,10 +2869,10 @@
    "step3_expression": "Shared object: propulsor rotational speed (RPM) in aerodynamic force/moment coefficient models. claim_8 attaches total airplane lift and drag coefficients with and without high-lift propeller blowing at C_T=0.037 and 4,548 RPM, showing propulsor contributions; claim_38 attaches using propulsor rotational speed n as an additional regressor in the yawing-moment coefficient equation (estimating I_p=0.000718 slug·ft^2). The premise adds that propulsor RPM changes aerodynamic force coefficients, which claim_38 needs to justify including n as a regressor.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:143:papers:paper_aec49f8f::claim_23:papers:paper_9c2fb427::claim_27:infer:weakpoints",
@@ -2891,10 +2889,10 @@
    "step3_expression": "Shared object: weight and CoG calculations in MDO gross-weight minimization. claim_23 attaches automatic passing of configuration and model parameters from the geometry module to weight and CoG calculations; claim_27 attaches that enforcing the 8% static-margin constraint increased gross weight by roughly 6% in the NASA lift-plus-cruise full-scale minimization. The premise adds that weight/CoG calculations are automatically driven from geometry parameters, which claim_27 needs to perform constraint-driven gross-weight minimization.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:144:papers:paper_066432fe::claim_8:papers:paper_7c211832::claim_19:infer:weakpoints",
@@ -2910,11 +2908,11 @@
    "target_content": "The angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions were physically reasonable.",
    "step3_expression": "Shared object: the angle-of-attack profile generated by a data-enhanced simulation model. The evidence claim (papers:paper_066432fe::claim_8) attaches the condition that the updated simulation model closely matches measured angle of attack, pitch angle, and altitude across three independent flight tests. The target claim (papers:paper_7c211832::claim_19) attaches the condition that the data-enhanced dynamic flight simulation model produced physically reasonable angle-of-attack and throttle-factor profiles for simulated Boeing 777-300ER missions. The evidence adds that a data-enhanced simulation model's angle-of-attack profile can closely match measured flight data, which is the physical-reasonableness assertion the target needs for its own simulated angle-of-attack profile; the quantity transferring is the fidelity-to-real/measured behavior of simulated angle-of-attack profiles, because …",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:145:papers:paper_aec49f8f::claim_4:papers:paper_c6f44cb4::claim_1:infer:weakpoints",
@@ -2931,10 +2929,10 @@
    "step3_expression": "The shared object is disciplinary modules (packaged knowledge components containing product data descriptions and methods/tools). The evidence claim_4 states these components are published to and retrieved from a web knowledge server. The target claim_1 states that a unified modular MDO framework integrates main aircraft disciplinary modules into a single optimization environment. The evidence adds that such modules are available through a web knowledge server, which the target needs as a source of modules to integrate; this is a directed enabling relation, so infer.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:146:papers:paper_26dddb44::claim_14:papers:paper_c6f44cb4::claim_24:infer:weakpoints",
@@ -2950,11 +2948,11 @@
    "target_content": "Level 1 (the Performance Module) of the two nested optimization levels supported by the implementation of a unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design performs single-level optimizations over angle of attack α, engine throttle setting proportional to fuel flow, and the morphing control parameters wingtip toe angle θ_{wt}, cant Γ_{wt}, and sweep Λ_{wt} for a fixed aircraft configuration.",
    "step3_expression": "The shared object is engine fuel flow / throttle setting proportional to fuel flow. The evidence claim_14 states that in a joint HIL simulation the engine fuel flow was controlled well with acceptable tracking error, with a permissible tracking error of ±0.1 kg/s for fuel flow. The target claim_24 states that Level 1 optimization uses engine throttle setting proportional to fuel flow as an optimization variable. The evidence adds that fuel flow can be controlled within ±0.1 kg/s, which the target needs to treat throttle setting as a controllable optimization variable; this is a directed enabling relation, so infer.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:147:papers:paper_18f90780::claim_6:papers:paper_066432fe::claim_1:infer:weakpoints",
@@ -2970,11 +2968,11 @@
    "target_content": "The delta aerodynamic model for the longitudinal coefficients \\(C_X\\) (force coefficient in the \\(x\\)-direction), \\(C_Z\\) (force coefficient in the \\(z\\)-direction), and \\(C_m\\) (moment coefficient about the \\(y\\)-axis), which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, corrects the prior aerodynamic database by adding polynomial functions of angle of attack (\\(\\alpha\\)), Mach number, pitch rate (\\(q\\)), elevator defl…",
    "step3_expression": "The shared object is polynomial model structures for the longitudinal/body x-axis force coefficient (C_Tx/C_X). The evidence claim_6 shows that identical polynomial model structures fitted to C_Tx gave a significantly better fit with the centered inverse-advance-ratio variable J̄ = J − 2 than with J̄_adv = J_adv − 0.5, achieving higher R² and NRMSE 3.8 times lower. The target claim_1 states that a delta aerodynamic model for C_X uses polynomial functions of α, Mach, q, δ_e, and interactions. The evidence adds that polynomial model structures improve flight-data fits for this x-force coefficient, which the target needs to justify its polynomial correction of the aerodynamic database; this is a directed inferential relation, so infer.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:148:papers:paper_aec49f8f::claim_48:papers:paper_c6f44cb4::claim_25:infer:weakpoints",
@@ -2990,11 +2988,11 @@
    "target_content": "Level 2 (the Optimization Module) of the two nested optimization levels supported by the implementation of a unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design optimizes internal wing box layout parameters, wingtip span b_{wt}, and tip chord c_{wt} while including the objective functions and constraints of Level 1 (the Performance Module) so that configuration-level decisions account for optimized control/morphing strategies.",
    "step3_expression": "The shared object is wing design variables and the DOC objective in conceptual aircraft design. The evidence claim_48 reports a sensitivity analysis using DOE that computed main effects (change in DOC with respect to each design variable) for the CJX 150-seat airplane in CACDS. The target claim_25 describes a Level 2 optimization that optimizes internal wing box layout parameters, wingtip span b_wt, and tip chord c_wt while including Level 1 objectives and constraints. The evidence adds which design variables affect DOC, which the target needs to optimize those wing parameters; this is a directed inferential relation, so infer.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:149:papers:paper_7c211832::claim_13:papers:paper_aec49f8f::claim_29:infer:weakpoints",
@@ -3011,10 +3009,10 @@
    "step3_expression": "Shared object: classical flight-performance algorithms. P2 (paper_7c211832::claim_13) states that for the HKG-LHR sector the performances of the data-enhanced dynamic simulation, Breguet range equation, and OpenAP open-source performance model are comparable. P1 (paper_aec49f8f::claim_29) states that STARPerform is based on classical flight-performance algorithms. The candidate hint identifies Breguet/OpenAP as classical; P2 adds that those classical algorithms are adequate for a long-haul sector, which P1 needs to support the viability of the classical algorithms on which STARPerform is based.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:150:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_11:infer:weakpoints",
@@ -3031,10 +3029,10 @@
    "step3_expression": "Shared object: propeller-induced changes in body-axis aerodynamic force coefficients. P2 (paper_6a2ef68a::claim_8) states that lift and drag coefficients were produced with and without high-lift propeller blowing at C_T=0.037 and 4,548 RPM, showing a measurable propeller effect on force coefficients. P1 (paper_18f90780::claim_11) states that a propeller incidence-angle variable was retained in a body-axis force coefficient model for the CZ-150. P2 adds that propeller operation measurably alters lift/drag, which P1 needs to justify retaining a propeller-related explanatory variable in a force coefficient model.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:151:papers:paper_014abc68::claim_6:papers:paper_066432fe::claim_3:infer:weakpoints",
@@ -3051,10 +3049,10 @@
    "step3_expression": "Shared object: the pitch-rate term q used as a regressor in the aerodynamic model of paper_066432fe::claim_3, which attaches an estimated Delta-C_Z coefficient of 1184.722 +/- 79.434 to q. paper_014abc68::claim_6 defines q = cos(phi)*theta_dot + cos(theta)*sin(phi)*psi_dot as the body-axis pitch angular velocity expressed in Euler angles and rates. The definition supplies the physical identity of the q regressor that the coefficient estimate requires for its pitch-rate interpretation.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:152:papers:paper_18f90780::claim_12:papers:paper_53166ac1::claim_6:infer:weakpoints",
@@ -3070,11 +3068,11 @@
    "target_content": "A two-step longitudinal parameter-identification procedure for a fixed-wing unmanned aerial vehicle (UAV), applied to simulated elevator-doublet flight data at 1000 m altitude and 42 m/s nominal airspeed, reproduces the longitudinal force coefficients $C_x$ and $C_z$ and the pitching-moment coefficient $C_m$, with residuals between measured and estimated values.",
    "step3_expression": "Shared object: the pitching-moment coefficient C_m model of a fixed-wing UAV. paper_18f90780::claim_12 establishes that propeller incidence-angle contributions to the rolling-, pitching- and yawing-moment models were too small to warrant inclusion for the CZ-150; paper_53166ac1::claim_6 identifies C_m along with C_x and C_z from elevator-doublet data with measured-vs-estimated residuals. The demonstrated negligibility of propeller incidence-angle moment terms is what justifies excluding those terms as candidate regressors in the C_m identification the conclusion performs.",
    "step3_type": "infer",
-   "reasoning_type": "reproduces",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "independent reproduction wording"
+   "reason": "Different aircraft/quantity; not an independent reproduction."
   },
   {
    "edge_id": "edge:153:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_23:infer:weakpoints",
@@ -3090,11 +3088,11 @@
    "target_content": "The accuracy of the state variables not computed from residual equations was not significantly affected by the overestimation of the values of the angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions during cruise relative to Quick Access Recorder (QAR) data.",
    "step3_expression": "Shared object: accuracy of state-variable predictions from a data-enhanced dynamic flight simulation model. paper_066432fe::claim_6 asserts that the original aerodynamic database augmented with the estimated delta model yields significantly improved predictions of the vehicle's flight parameters; paper_7c211832::claim_23 asserts that overestimation of angle-of-attack and throttle-factor profiles does not significantly affect the accuracy of state variables not computed from residual equations. The significantly-improved-prediction result supplies the evidence that such a data-enhanced model attains accurate state-variable predictions, which the conclusion's non-significant-effect statement depends on.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:154:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_22:infer:weakpoints",
@@ -3110,11 +3108,11 @@
    "target_content": "During cruise, the overestimation of the values of the angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions relative to Quick Access Recorder (QAR) data is attributed to the low fidelity of the aerodynamics and propulsion models or to differences in throttle setting.",
    "step3_expression": "Shared object: the role of aerodynamic-model fidelity in the prediction accuracy of a simulation model. paper_066432fe::claim_6 reports that augmenting the original aerodynamic database with the estimated delta model significantly improves predictions of the vehicle's flight parameters; paper_7c211832::claim_22 attributes residual cruise overestimation of alpha and throttle profiles to the low fidelity of the aerodynamics and propulsion models. The improvement gained by augmenting the aerodynamic database is the evidence that aerodynamic-model fidelity is a controlling factor in exactly the prediction error the conclusion attributes to low fidelity.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:155:papers:paper_014abc68::claim_20:papers:paper_7c211832::claim_3:infer:weakpoints",
@@ -3130,11 +3128,11 @@
    "target_content": "In the data-enhanced dynamic flight simulation model, the angular velocity is computed from differences in the specified Euler angles, namely yaw $\\psi$, pitch $\\theta$, and roll $\\phi$, between consecutive time steps rather than by solving the rotational equations of motion, eliminating the requirement of a control model.",
    "step3_expression": "Shared object: the rotational equations of motion governing an airplane's angular velocity. paper_014abc68::claim_20 states that for left-right symmetric airplanes the six angular-momentum equations collapse to three reduced scalar rotational differential equations; paper_7c211832::claim_3 states that in the data-enhanced model angular velocity is obtained from differences in the specified Euler angles psi, theta, phi between consecutive time steps rather than by solving the rotational equations of motion, removing the need for a control model. The premise supplies that aircraft angular velocity is normally governed by these three rotational equations, which is precisely the requirement the conclusion's Euler-difference method eliminates.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:156:papers:paper_18f90780::claim_9:papers:paper_066432fe::claim_4:infer:weakpoints",
@@ -3150,11 +3148,11 @@
    "target_content": "The estimated parameters and their 95% confidence bounds for the delta aerodynamic model of the longitudinal coefficient ΔC_m, which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, are terms in Mach of 1.188 ± 0.123, δ_e of 34.716 ± 1.644, α·δ_e of 209.064 ± 5.396, and a static term of 0.522 ± 0.163.",
    "step3_expression": "Shared object: control-surface-interaction terms, specifically elevator-deflection terms, in the pitching-moment coefficient C_m. paper_18f90780::claim_9 retains propulsion-specific terms in all six nondimensional body-axis force and moment equations, both isolated and in interactions with control surface deflections such as J_bar*delta_e (J_bar = J-2); paper_066432fe::claim_4 estimates for Delta-C_m a delta_e term of 34.716 +/- 1.644 and an alpha*delta_e term of 209.064 +/- 5.396. The demonstration that delta_e interaction terms are physically retained in a C_m equation supports keeping and interpreting the significant delta_e and alpha*delta_e terms the conclusion reports.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:157:papers:paper_9c2fb427::claim_45:papers:paper_c6f44cb4::claim_10:infer:weakpoints",
@@ -3170,11 +3168,11 @@
    "target_content": "For the Embraer™-based regional-jet reference model designated EMB9MOR used in the study, the wing structural mass increased from 1502.63 kg (no wingtip) to 1913.81 kg (with wingtip).",
    "step3_expression": "Shared object: wing structural mass sizing for a transport wing. paper_c6f44cb4::claim_10 reports that the EMB9MOR regional-jet wing structural mass rose from 1502.63 kg (no wingtip) to 1913.81 kg (with wingtip); paper_9c2fb427::claim_45 states that panel buckling is the primary sizing constraint under steady +3g/-1g structural conditions. The buckling-governed sizing constraint supplies the structural mechanism by which adding a wingtip, which raises bending loads, drives the reported wing structural mass increase.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:158:papers:paper_18f90780::claim_18:papers:paper_066432fe::claim_5:infer:weakpoints",
@@ -3190,11 +3188,11 @@
    "target_content": "The delta aerodynamic model for the longitudinal coefficients \\(C_X\\) (force coefficient in the \\(x\\)-direction), \\(C_Z\\) (force coefficient in the \\(z\\)-direction), and \\(C_m\\) (moment coefficient about the \\(y\\)-axis), which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, reproduces the aerodynamic coefficients \\(C_X\\), \\(C_Z\\), and \\(C_m\\) calculated from the four estimation maneuvers with good fidelity.",
    "step3_expression": "Shared object: the achievable fidelity of flight-data-identified body-axis force and moment coefficient models, including C_X/C_Z/C_m. paper_066432fe::claim_5 reports that the delta aerodynamic model reproduces C_X, C_Z and C_m from the four estimation maneuvers with good fidelity; paper_18f90780::claim_18 supplies quantified coefficients of determination R^2 = 99.6%, 95.4%, 90.1%, 80.6%, 86.5% and 91.9% for the six flight-identified body-axis coefficient equations. The quantified R^2 values are the evidence that flight-data-derived coefficient models in fact reach the good reproduction fidelity the conclusion asserts.",
    "step3_type": "infer",
-   "reasoning_type": "reproduces",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "independent reproduction wording"
+   "reason": "CZ-150 coefficient-fit R² does not reproduce the 450 kg glider delta model."
   },
   {
    "edge_id": "edge:159:papers:paper_53166ac1::claim_6:papers:paper_066432fe::claim_5:infer:weakpoints",
@@ -3210,11 +3208,11 @@
    "target_content": "The delta aerodynamic model for the longitudinal coefficients \\(C_X\\) (force coefficient in the \\(x\\)-direction), \\(C_Z\\) (force coefficient in the \\(z\\)-direction), and \\(C_m\\) (moment coefficient about the \\(y\\)-axis), which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, reproduces the aerodynamic coefficients \\(C_X\\), \\(C_Z\\), and \\(C_m\\) calculated from the four estimation maneuvers with good fidelity.",
    "step3_expression": "Shared object: identification of the longitudinal force and moment coefficients C_x, C_z and C_m with measured-vs-estimated residual evaluation. paper_066432fe::claim_5 reports that the delta aerodynamic model reproduces C_X, C_Z and C_m from the four estimation maneuvers with good fidelity; paper_53166ac1::claim_6 reports a two-step longitudinal parameter-identification procedure reproducing C_x, C_z and C_m from simulated elevator-doublet data with residuals between measured and estimated values. The independent procedure with explicit residuals is evidence that this longitudinal coefficient set is reproducible from flight-derived data, which the conclusion's good-fidelity assertion requires.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:160:papers:paper_1438825f::claim_38:papers:paper_9c2fb427::claim_30:infer:weakpoints",
@@ -3230,11 +3228,11 @@
    "target_content": "In the full-scale gross-weight minimization of the NASA lift-plus-cruise vehicle, the design constrained by enforcing the 8% static-margin constraint had motor mass 23% higher (279 kg versus 227 kg) compared with the optimized design without the constraint.",
    "step3_expression": "Shared object: the accuracy of aircraft mass/component mass breakdowns. paper_9c2fb427::claim_30 compares motor masses in the NASA lift-plus-cruise gross-weight minimization, 279 kg with the 8% static-margin constraint enforced versus 227 kg without it (23% higher); paper_1438825f::claim_38 states that JPAD weight and mass breakdowns differ by about 1% from public A220 figures. The validated ~1% accuracy of mass breakdowns supports the credibility of the motor-mass values being compared in the conclusion.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:161:papers:paper_066432fe::claim_1:papers:paper_014abc68::claim_22:infer:weakpoints",
@@ -3250,11 +3248,11 @@
    "target_content": "In the steady, level, nonrotating special case the DAE system reduces to two algebraic force‑balance relations.",
    "step3_expression": "Shared object: longitudinal force and moment coefficients C_X, C_Z, C_m that enter the force-balance relations. Target claim_22 states the DAE system reduces to two algebraic force-balance relations in the steady, level, nonrotating case; evidence claim_1 gives a delta aerodynamic model for C_X, C_Z, C_m that corrects the prior database with polynomial functions of alpha, Mach, q, delta_e, and their interactions. What follows: the evidence supplies the coefficient model needed to evaluate the target's force-balance relations.",
    "step3_type": "infer",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "explicit special-case/subtype wording"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "edge:162:papers:paper_18f90780::claim_11:papers:paper_6a2ef68a::claim_38:infer:weakpoints",
@@ -3270,11 +3268,11 @@
    "target_content": "The axis tilt angle command $\\delta_{axis}$ is generated by slowly integrating the pitch attitude command: $\\delta_{axis}(s) = \\left(K_{axis}/s\\right)\\theta_{cmd}(s)$, where $K_{axis}$ is a proportional gain, $s$ is the Laplace variable, and $\\theta_{cmd}$ is the commanded pitch attitude; this approach allows the pitch attitude of the Hexa-Chakra Personal Air Vehicle version 2 (HCPAV-V2) model to return to zero over the full range of forward speeds.",
    "step3_expression": "Shared object: propeller incidence/axis tilt angle. Target claim_38 defines the axis tilt angle command delta_axis(s)=(K_axis/s)theta_cmd(s) to return pitch attitude to zero over forward speeds; evidence claim_11 states a propeller incidence-angle variable was retained in a body-axis force coefficient model for the CZ-150. What follows: the evidence adds that incidence/tilt angle affects body-axis forces, which the target needs to justify commanding axis tilt for pitch attitude control.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:163:papers:paper_18f90780::claim_1:papers:paper_014abc68::claim_1:infer:weakpoints",
@@ -3291,10 +3289,10 @@
    "step3_expression": "Shared object: parameters of a flight dynamics model. Target claim_1 describes a coupled nonlinear DAE flight dynamics model with 35 scalar equations, 39 flight variables, and 30 independent constant parameters; evidence claim_1 describes a flight experiment for aero-propulsive system identification of the CZ-150 that identifies integrated propulsion and airframe aerodynamics in a single maneuver. What follows: the evidence provides a method to identify aero-propulsive parameters that the target's DAE requires.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:164:papers:paper_aec49f8f::claim_58:papers:paper_9c2fb427::claim_46:infer:weakpoints",
@@ -3314,7 +3312,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "scope/range wording"
+   "reason": "Numeric/scope bound; kept with cross-object caveat."
   },
   {
    "edge_id": "edge:165:papers:paper_014abc68::claim_8:papers:paper_26dddb44::claim_4:infer:weakpoints",
@@ -3331,10 +3329,10 @@
    "step3_expression": "Shared object: aircraft dynamics differential equations. Target claim_4 states that in each real-time simulation cycle the ground simulation computer computes the aircraft dynamics differential equations and generates angular velocity and acceleration; evidence claim_8 gives one explicit wind-axis scalar equation for mV beta_dot with its aerodynamic, gravity, thrust, and rate terms. What follows: the evidence supplies one specific aircraft dynamics differential equation that the target's computer computes.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "instance",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression uses the claim as an example/instance"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:166:papers:paper_18f90780::claim_1:papers:paper_755906eb::claim_10:infer:weakpoints",
@@ -3350,11 +3348,11 @@
    "target_content": "In the practical, low‑cost development and verification workflow for a small civilian unmanned aircraft system that is obtained by combining (1) a flight dynamics model, (2) the Paparazzi open‑source autopilot software, and (3) both software‑in‑the‑loop and hardware‑in‑the‑loop testing practices, the hardware‑in‑the‑loop (HITL) tests produced behavior that was consistent enough with the real flight examples to be useful for rapid controller development, controller tuning, avionics verification, and preliminary fail…",
    "step3_expression": "Shared object: high-fidelity flight dynamics/propulsion model. Target claim_10 states HITL tests are useful when the flight dynamics model is of comparable fidelity to the real aircraft; evidence claim_1 describes a flight experiment for aero-propulsive system identification of the CZ-150 that identifies integrated propulsion and airframe aerodynamics in a single maneuver. What follows: the evidence provides a flight method to obtain the high-fidelity aero-propulsive model that the target's HITL usefulness requires.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:167:papers:paper_6a2ef68a::claim_12:papers:paper_53166ac1::claim_5:infer:weakpoints",
@@ -3370,11 +3368,11 @@
    "target_content": "For a 115 kg fixed-wing unmanned aerial vehicle (UAV) trimmed at 1000 m altitude and 80 knots, the open-loop responses to elevator deflection show that the phugoid mode of the linearized longitudinal small-perturbation state-space model dominates, causing low-frequency, lightly damped behaviour in nearly all variables.",
    "step3_expression": "Shared object: trimmed flight condition. Target claim_5 states that for a 115 kg UAV trimmed at 1000 m and 80 knots, the open-loop elevator response shows the phugoid mode dominates; evidence claim_12 describes obtaining trim solutions for HCPAV-V1 by numerically zeroing six body-axis translational and angular acceleration components with MATLAB fsolve over forward speeds. What follows: the evidence supplies the trim procedure that yields the trimmed condition from which the target's open-loop phugoid response is computed.",
    "step3_type": "infer",
-   "reasoning_type": "bounds",
-   "residual_reason": null,
+   "reasoning_type": "infer",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "scope/range wording"
+   "reason": "Range of forward speeds in another aircraft is not a bound on the 115 kg UAV target."
   },
   {
    "edge_id": "edge:168:papers:paper_066432fe::claim_6:papers:paper_7c211832::claim_19:infer:weakpoints",
@@ -3390,11 +3388,11 @@
    "target_content": "The angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions were physically reasonable.",
    "step3_expression": "Shared object: the data-enhanced/updated simulation model's flight-parameter predictions (angle-of-attack and throttle-factor profiles); claim 6 attaches that the original aerodynamic database augmented with the estimated delta model yields significantly improved predictions of the vehicle's flight parameters versus the original model, while claim 19 attaches that AoA and throttle-factor profiles from the data-enhanced dynamic flight simulation model for simulated Boeing 777-300ER missions were physically reasonable. Claim 6 adds that the delta-model augmentation improves the vehicle's flight-parameter predictions, which claim 19 needs to treat those AoA/throttle-factor profiles as reasonable outputs of the enhanced model.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:169:papers:paper_9c2fb427::claim_7:papers:paper_c6f44cb4::claim_25:infer:weakpoints",
@@ -3410,11 +3408,11 @@
    "target_content": "Level 2 (the Optimization Module) of the two nested optimization levels supported by the implementation of a unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design optimizes internal wing box layout parameters, wingtip span b_{wt}, and tip chord c_{wt} while including the objective functions and constraints of Level 1 (the Performance Module) so that configuration-level decisions account for optimized control/morphing strategies.",
    "step3_expression": "Shared object: the wing-box internal layout and its stress constraint; claim 7 attaches that under the +3g static wing sizing load case the stress constraint was active only at the innermost shear panel of the NASA lift-plus-cruise wing box, while claim 25 attaches that Level 2 optimizes internal wing-box layout parameters, wingtip span b_wt, and tip chord c_wt. Claim 7 adds that the active structural constraint is localized to an internal wing-box panel under +3g, which claim 25 needs to include internal wing-box layout parameters among its optimization variables.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:170:papers:paper_18f90780::claim_9:papers:paper_014abc68::claim_10:infer:weakpoints",
@@ -3430,11 +3428,11 @@
    "target_content": "The rotational dynamics for a generic asymmetric aircraft are given as three differential equations for the body angular acceleration components $(\\dot{p},\\dot{q},\\dot{r})$ in terms of the inertia determinant $T_0$ and auxiliary moment quantities $(T_1,T_2,T_3)$; the equation for the body angular acceleration component $\\dot{p}$ is $T_0\\dot{p} = (BC - D^2)T_1 + (FC + ED)T_2 + (FD + EB)T_3$, where the inertia determinant is $T_0 = ABC - A D^2 - B E^2 - C F^2 - 2 D E F$, where $A=I_{xx}, B=I_{yy}, C=I_{zz}, D=I_{yz},…",
    "step3_expression": "Shared object: the body-axis aerodynamic moment. Claim papers:paper_014abc68::claim_10 attaches the dimensional aerodynamic moments L, M, N about body axes x_b, y_b, z_b (L enters T_1, M enters T_2, N enters T_3 of the generic asymmetric-aircraft rotational equations); claim papers:paper_18f90780::claim_9 attaches the non-dimensional body-axis moment coefficients C_l, C_m, C_n for the CZ-150 with propulsion terms retained (e.g. interactions Jbar*delta_e, Jbar*delta_a, Jbar*delta_r). What follows: claim_9 supplies the identified coefficient definitions of the body-axis moments that claim_10 leaves as the undetermined L, M, N, the two being the same physical moment related by qbar, reference area and reference length. The quantity that transfers is the body-axis aerodynamic moment, in coefficient (C_l, C_m, C_n) versus dimensional (L, M, N) form.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:171:papers:paper_066432fe::claim_4:papers:paper_014abc68::claim_21:infer:weakpoints",
@@ -3450,11 +3448,11 @@
    "target_content": "For airplanes with left–right symmetry, representative reduced forms provided include (symbolically) $$ \\dot{p}(AC-E^2) = (BC - E^2 - C^2)qr + (A-B+C)E p q + C\\,L + E\\,N, $$ where $A=I_{xx}$, $B=I_{yy}$, $C=I_{zz}$, $E=I_{xz}$ are moments of inertia, and $L$, $M$, $N$ are the aerodynamic moments about the body axes $x_b$, $y_b$, $z_b$ respectively.",
    "step3_expression": "Shared object: the pitching moment about the body y-axis. claim_4 gives a delta aerodynamic model for the longitudinal pitching-moment coefficient ΔC_m with estimated parameters Mach 1.188 ± 0.123, δ_e 34.716 ± 1.644, α·δ_e 209.064 ± 5.396, and static 0.522 ± 0.163 for a 450 kg vehicle; claim_21 uses the aerodynamic moment M about y_b in its reduced equations. What follows: the ΔC_m model supplies the pitching-moment coefficient needed to evaluate the M term in claim_21's equations.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:172:papers:paper_18f90780::claim_40:papers:paper_26dddb44::claim_15:infer:weakpoints",
@@ -3470,11 +3468,11 @@
    "target_content": "The integrated flight control system and propulsion system were judged to operate effectively.",
    "step3_expression": "Shared object: integrated flight-control/propulsion operation. claim_40 states that the propulsion system and control surfaces are excited simultaneously in the multisine identification maneuver; claim_15 states that the integrated flight control system and propulsion system were judged to operate effectively. What follows: claim_40 provides a specific simultaneous-excitation condition for the integrated operation that claim_15 assesses.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a representation/capability relation"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:173:papers:paper_53166ac1::claim_6:papers:paper_755906eb::claim_12:infer:weakpoints",
@@ -3490,11 +3488,11 @@
    "target_content": "Individual aerodynamic force terms in the linearized six-degree-of-freedom (6-DOF) state-space flight dynamics model of the AggieAir Minion are formed from (1/2) ρ V^2 S_w C_Z.",
    "step3_expression": "Shared object: the longitudinal force coefficient C_z. claim_6 reports a two-step longitudinal parameter-identification procedure that reproduces C_x and C_z (and C_m) from simulated elevator-doublet data at 1000 m and 42 m/s for a fixed-wing UAV; claim_12 states that individual aerodynamic force terms in the AggieAir Minion model are formed from (1/2)ρV^2 S_w C_Z. What follows: the reproduced C_z coefficient can provide the C_Z value used in claim_12's force term.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a representation/capability relation"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:174:papers:paper_755906eb::claim_1:papers:paper_014abc68::claim_2:infer:weakpoints",
@@ -3510,11 +3508,11 @@
    "target_content": "The 35 scalar DAE equations of the flight dynamics model comprise 12 differential equations and 23 algebraic equations.",
    "step3_expression": "Shared object: the 12 differential equations/rigid-body states of a flight dynamics model. claim_1 defines a linearized 6-DOF model whose state vector x contains 12 rigid-body states (three positions, three velocities, three Euler angles, three angular rates); claim_2 states that the DAE flight dynamics model has 12 differential equations. What follows: claim_1 identifies the 12 rigid-body states that constitute the 12 differential equations in claim_2's DAE model.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:175:papers:paper_aec49f8f::claim_17:papers:paper_c6f44cb4::claim_25:infer:weakpoints",
@@ -3531,10 +3529,10 @@
    "step3_expression": "Shared object: wing box layout, wingtip span b_wt, and tip chord c_wt. claim_17 states that CACDS supports multi-section wing modeling; claim_25 states that Level 2 optimizes internal wing box layout parameters, wingtip span b_wt, and tip chord c_wt. What follows: CACDS's multi-section wing modeling can represent the wing box and wingtip span/chord parameters that Level 2 optimizes.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a representation/capability relation"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:176:papers:paper_6a2ef68a::claim_33:papers:paper_18f90780::claim_9:infer:weakpoints",
@@ -3550,11 +3548,11 @@
    "target_content": "In the integrated aero-propulsive (Approach I) models identified for the CZ-150, propulsion-specific terms were retained in all six nondimensional body-axis force and moment coefficient equations ($C_{T_x}$, $C_{T_y}$, $C_{T_z}$, $C_l$, $C_m$, $C_n$), both as isolated terms and in interactions with control surface deflections such as $\\bar{J}\\delta_e$, $\\bar{J}\\delta_a$, and $\\bar{J}\\delta_r$, based on the centered inverse advance ratio $\\bar{J} = J - 2$, with $J = nD/V$, where $\\delta_e$, $\\delta_a$, and $\\delta_r…",
    "step3_expression": "Shared object is propulsion-generated yawing moment and its coefficient C_n: claim_33 demonstrates a yawing moment by opposing front/aft rotor vane deflection during hover on the Hexa-Chakra PAV v1, while claim_9 retains propulsion-specific terms in C_n for the CZ-150 aero-propulsive model. The premise adds that propulsion can generate a nonzero yawing moment, which claim_9 needs to justify keeping propulsion terms in the C_n equation.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:177:papers:paper_755906eb::claim_4:papers:paper_53166ac1::claim_5:infer:weakpoints",
@@ -3570,11 +3568,11 @@
    "target_content": "For a 115 kg fixed-wing unmanned aerial vehicle (UAV) trimmed at 1000 m altitude and 80 knots, the open-loop responses to elevator deflection show that the phugoid mode of the linearized longitudinal small-perturbation state-space model dominates, causing low-frequency, lightly damped behaviour in nearly all variables.",
    "step3_expression": "Shared object is the longitudinal aerodynamic derivative set of a linearized UAV model: claim_4 supplies numerical values for AggieAir Minion such as C_X=-0.026, C_Z=-0.403, C_m,α=-1.550, and C_m,q=-10.6883, while claim_5 states that for a 115 kg UAV at 1000 m and 80 knots the linearized longitudinal model's phugoid mode dominates and is low-frequency and lightly damped. The premise adds the coefficient values (C_X, C_Z, C_m, C_m,α, C_m,q) that govern the phugoid; these transfer as the same longitudinal derivatives needed to support the claimed lightly damped phugoid behavior.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "instance",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression uses the claim as an example/instance"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:178:papers:paper_014abc68::claim_22:papers:paper_1438825f::claim_1:infer:weakpoints",
@@ -3591,10 +3589,10 @@
    "step3_expression": "Shared object is force-balance relations in flight-dynamics equations: claim_22 reduces the DAE system in the steady, level, nonrotating special case to two algebraic force-balance relations, while claim_1's closed ODE take-off/landing model includes ground rolling friction μ(W−L), ground-effect scaling, and distinct on-ground and airborne force balances. The premise adds that the general DAE force balances can be reduced to algebraic force balances; claim_1 needs that the force balances embedded in its ODE model are of this kind.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:179:papers:paper_18f90780::claim_36:papers:paper_6a2ef68a::claim_8:infer:weakpoints",
@@ -3611,10 +3609,10 @@
    "step3_expression": "Shared object is propeller thrust and its effect on high-lift propeller blowing: claim_36 states thrust is highest at low advance ratio J_adv=V/(nD), while claim_8 queries force/moment coefficient databases to produce total lift and drag with and without high-lift propeller blowing at C_T=0.037 and 4,548 RPM. The premise adds that low advance ratio gives high thrust, which claim_8 needs to explain why the blowing condition can produce the aerodynamic contributions of the distributed propulsors.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:180:papers:paper_c6f44cb4::claim_25:papers:paper_9c2fb427::claim_27:infer:weakpoints",
@@ -3631,10 +3629,10 @@
    "step3_expression": "Shared object is constrained MDO for conceptual aircraft: claim_25 describes Level 2 of a two-level MDO framework optimizing wing-box layout, wingtip span b_wt, and tip chord c_wt while including Level 1 objectives and constraints, while claim_27 reports that enforcing an 8% static-margin constraint in gross-weight minimization of the NASA lift-plus-cruise vehicle raised gross weight by roughly 6% versus the unconstrained optimum. The premise adds that MDO can incorporate configuration constraints such as Level 1 constraints; claim_27 needs that a static-margin constraint can be enforced inside such an MDO problem.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:181:papers:paper_014abc68::claim_5:papers:paper_7c211832::claim_16:infer:weakpoints",
@@ -3651,10 +3649,10 @@
    "step3_expression": "Shared object is the input/constraint set for inverse flight simulation: claim_5 states that inverse simulation requires the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable for a unique solution, while claim_16 simulates HKG-SIN with a data-enhanced model solving point-mass equations under QAR-derived segment constraints. The premise adds the uniqueness condition—three coordinates plus one extra variable—that claim_16's QAR-derived segment constraints must supply.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:182:papers:paper_7c211832::claim_22:papers:paper_18f90780::claim_14:infer:weakpoints",
@@ -3671,10 +3669,10 @@
    "step3_expression": "Shared object is propulsion terms in response equations: claim_22 attributes cruise overestimation of angle-of-attack and throttle-factor profiles for the Boeing 777-300ER to low fidelity of the aerodynamics and propulsion models (or throttle-setting differences), while claim_14 states that for the CZ-150 propulsion terms appear in every response equation. The premise adds that propulsion-model fidelity affects the response profiles, which claim_14 needs to support keeping propulsion terms in every response equation.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:183:papers:paper_aec49f8f::claim_22:papers:paper_6a2ef68a::claim_2:infer:weakpoints",
@@ -3690,11 +3688,11 @@
    "target_content": "A MATLAB/Simulink-based modeling and simulation framework was developed, allowing modeling of a moving center of gravity (CG).",
    "step3_expression": "Shared object is center-of-gravity computation/modeling: claim_22's CATIA-based CoG module computes the model CoG for the parameterized geometry produced by CACDS, while claim_2's MATLAB/Simulink framework allows modeling of a moving center of gravity. The premise adds a geometry-based static CG computation; the moving-CG framework in claim_2 needs that static CG computation as its foundation.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:184:papers:paper_18f90780::claim_25:papers:paper_014abc68::claim_4:infer:weakpoints",
@@ -3711,10 +3709,10 @@
    "step3_expression": "Both claims concern the thrust input T for a flight-dynamics simulation. papers:paper_014abc68::claim_4 requires the time history of T as one of four forward-simulation inputs (along with δ_l, δ_m, δ_n) to obtain a unique solution. papers:paper_18f90780::claim_25 provides a flight-derived installed-propeller-thrust model C_Tx = C_Tx,a + C_Tx,p for flight-dynamics simulations. What follows is that papers:paper_18f90780::claim_25 supplies an estimate of T, which is the specific input that papers:paper_014abc68::claim_4 requires.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:185:papers:paper_014abc68::claim_14:papers:paper_18f90780::claim_4:infer:weakpoints",
@@ -3731,10 +3729,10 @@
    "step3_expression": "Shared object: air density rho in a thrust-coefficient definition. paper_014abc68::claim_14 states that using the constants, air density can be computed at any altitude up to 20,000 m; paper_18f90780::claim_4 defines C_T = T/(rho n^2 D^4) and its body-x propulsion component C_{T_x,prop} using rho. The premise adds an altitude-dependent rho, which the conclusion needs to evaluate C_T at a given altitude within that range.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:186:papers:paper_066432fe::claim_5:papers:paper_014abc68::claim_8:infer:weakpoints",
@@ -3750,11 +3748,11 @@
    "target_content": "One of the three scalar wind‑axis equations, in the wind axes (velocity‑aligned axes), is $$ \\begin{aligned} mV\\dot{\\beta} &= \\bar{q}S\\!\\left(C_y\\cos\\beta - C_x\\cos\\alpha\\sin\\beta - C_z\\sin\\alpha\\sin\\beta\\right) \\\\ &\\quad + m g_0(\\cos\\theta\\sin\\phi\\cos\\beta + \\sin\\theta\\cos\\alpha\\sin\\beta - \\cos\\theta\\cos\\phi\\sin\\alpha\\sin\\beta) \\\\ &\\quad + T\\cos\\alpha\\sin\\beta + mV(-r\\cos\\alpha + p\\sin\\alpha), \\end{aligned} $$ with $m$ mass, $V$ speed, $\\alpha$ angle of attack, $\\beta$ sideslip, $\\rho$ air density, $\\theta$ pitch …",
    "step3_expression": "Shared object: the body-axis aerodynamic force coefficients C_X and C_Z. paper_066432fe::claim_5 states the delta aerodynamic model reproduces C_X, C_Z, and C_m with good fidelity; paper_014abc68::claim_8 uses C_x, C_y, and C_z in the sideslip wind-axis equation. What follows: the good-fidelity reproduction of C_X and C_Z makes those coefficients reliable for the C_x and C_z terms in claim_8's equation.",
    "step3_type": "infer",
-   "reasoning_type": "reproduces",
-   "residual_reason": null,
+   "reasoning_type": "infer",
+   "residual_reason": "enabling",
    "same_object": false,
    "chainable": false,
-   "reason": "independent reproduction wording"
+   "reason": "The delta model supplies coefficients used by the wind-axis equation; this is enabling, not reproduction."
   },
   {
    "edge_id": "edge:187:papers:paper_066432fe::claim_1:papers:paper_18f90780::claim_23:infer:weakpoints",
@@ -3770,11 +3768,11 @@
    "target_content": "In the decoupled propulsion model identified from flight data in Approach II, the propulsion model parameters had estimates of C_{X\\bar{J}^2} = 0.0427, C_{X\\bar{J}} = 0.114, and C_{Xp0} = 0.0664, with parameter standard errors of 2.5% or lower.",
    "step3_expression": "Shared object: the axial-force coefficient C_X. paper_18f90780::claim_23 reports decoupled propulsion parameters C_X Jbar^2 = 0.0427, C_X Jbar = 0.114, and C_Xp0 = 0.0664 with standard errors <= 2.5%; paper_066432fe::claim_1 supplies a delta aerodynamic model for C_X that adds polynomial terms in alpha, Mach, q, delta_e, and interactions to a prior database. What follows: an aerodynamic C_X model is needed to separate aerodynamic from propulsive contributions when identifying the C_X propulsion parameters in claim_23.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:188:papers:paper_18f90780::claim_2:papers:paper_26dddb44::claim_15:infer:weakpoints",
@@ -3790,11 +3788,11 @@
    "target_content": "The integrated flight control system and propulsion system were judged to operate effectively.",
    "step3_expression": "Shared object: simultaneous excitation of the control surfaces and propulsion system. paper_18f90780::claim_2 states orthogonal, phase-optimized multisine signals applied simultaneously to the control surfaces and propulsion system produced decorrelated coverage of V, n, and J; paper_26dddb44::claim_15 states the integrated flight control system and propulsion system were judged to operate effectively. What follows: the decorrelated coverage of V, n, and J is a specific successful integrated-excitation result that claim_15 needs as evidence that the integrated control/propulsion system operated effectively.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:189:papers:paper_18f90780::claim_4:papers:paper_53166ac1::claim_6:infer:weakpoints",
@@ -3811,10 +3809,10 @@
    "step3_expression": "Shared object: the body x-axis force coefficient C_x/C_Tx. Claim_4 supplies the propulsion component of the body x-axis force coefficient, C_Tx,prop = 2(D^2/S)(C_T0 J^2 + C_T1 J + C_T2), through the thrust coefficient normalization. Claim_6 identifies/reproduces the longitudinal force coefficient C_x from simulated elevator-doublet flight data with residuals. What follows: to identify C_x from flight data, the propulsion contribution from claim_4 must be separated from the aerodynamic x-force, so claim_6's C_x identification needs claim_4's propulsion term.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:190:papers:paper_c6f44cb4::claim_25:papers:paper_aec49f8f::claim_23:infer:weakpoints",
@@ -3831,10 +3829,10 @@
    "step3_expression": "Shared object: wing geometry parameters internal wing box layout, wingtip span b_wt, and tip chord c_wt. Claim_25 states Level 2 optimizes those geometry parameters while including Level 1 objectives/constraints. Claim_23 states configuration and model parameters are passed automatically from the geometry module to weight and CoG calculations. What follows: evaluating weight/CoG for Level 2's optimized geometry parameters requires claim_23's automatic geometry-to-weight/CoG transfer, so claim_25 needs claim_23.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:191:papers:paper_18f90780::claim_34:papers:paper_7c211832::claim_22:infer:weakpoints",
@@ -3850,11 +3848,11 @@
    "target_content": "During cruise, the overestimation of the values of the angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions relative to Quick Access Recorder (QAR) data is attributed to the low fidelity of the aerodynamics and propulsion models or to differences in throttle setting.",
    "step3_expression": "Shared object: prediction error caused by low-fidelity propulsion models. Claim_34 reports that in C_X model validation the wind-tunnel-derived propulsion model had NRMSE 5.2 times higher than Approach I and 3.5 times higher than Approach II. Claim_22 attributes overestimation of angle-of-attack and throttle-factor profiles during cruise to low fidelity of the aerodynamics and propulsion models or to throttle-setting differences. What follows: claim_34 adds quantitative evidence that a low-fidelity propulsion model substantially increases prediction error, which claim_22's attribution to low-fidelity propulsion needs.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:192:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_29:infer:weakpoints",
@@ -3870,11 +3868,11 @@
    "target_content": "Installed propeller performance losses caused by the presence of the airframe are not accounted for in ground-test data",
    "step3_expression": "P2 (papers:paper_6a2ef68a::claim_8) supplies the shared propeller–airframe aerodynamic interaction affecting lift/drag: P1 (papers:paper_18f90780::claim_29) states that installed propeller performance losses caused by the airframe are not accounted for in ground-test data, while P2 states that a force/moment coefficient database produces total airplane lift and drag coefficients with and without high-lift propeller blowing at C_T = 0.037 and 4,548 RPM. What follows is that the with/without blowing difference is an installed-propulsor lift/drag contribution that ground-test data lacking installed propeller losses would miss.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:193:papers:paper_7c211832::claim_5:papers:paper_c6f44cb4::claim_24:infer:weakpoints",
@@ -3890,11 +3888,11 @@
    "target_content": "Level 1 (the Performance Module) of the two nested optimization levels supported by the implementation of a unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design performs single-level optimizations over angle of attack α, engine throttle setting proportional to fuel flow, and the morphing control parameters wingtip toe angle θ_{wt}, cant Γ_{wt}, and sweep Λ_{wt} for a fixed aircraft configuration.",
    "step3_expression": "Shared object: engine throttle setting proportional to fuel flow / specific fuel consumption (SFC). A (paper_7c211832::claim_5) states an RMTC SFC surrogate for Boeing 777 engine data replaces physics-based engine cycle analysis with fast prediction and higher accuracy than empirical formulas; B (paper_c6f44cb4::claim_24) states Level 1 Performance Module optimizes engine throttle setting proportional to fuel flow. What follows: B's optimization over throttle needs fuel-flow predictions, which A's fast SFC surrogate can supply.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:194:papers:paper_7c211832::claim_10:papers:paper_aec49f8f::claim_29:infer:weakpoints",
@@ -3910,11 +3908,11 @@
    "target_content": "STARPerform, a flight performance analysis tool, is based on classical flight‑performance algorithms.",
    "step3_expression": "Shared object: flight-time prediction by classical flight-performance algorithms. A (paper_aec49f8f::claim_29) states STARPerform is based on classical flight-performance algorithms; B (paper_7c211832::claim_10) reports that for HKG-TPE, HKG-SIN, and HKG-LHR the data-enhanced dynamic flight simulation had lower flight-time errors against QAR data than the Breguet endurance equation and OpenAP, except HKG-LHR where it matched OpenAP. What follows: B's finding that classical Breguet/OpenAP models have higher flight-time errors challenges reliance on A's classical-algorithm-based STARPerform.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:195:papers:paper_014abc68::claim_16:papers:paper_7c211832::claim_3:infer:weakpoints",
@@ -3930,11 +3928,11 @@
    "target_content": "In the data-enhanced dynamic flight simulation model, the angular velocity is computed from differences in the specified Euler angles, namely yaw $\\psi$, pitch $\\theta$, and roll $\\phi$, between consecutive time steps rather than by solving the rotational equations of motion, eliminating the requirement of a control model.",
    "step3_expression": "Shared object: Euler-angle attitude representation. A (paper_014abc68::claim_16) states the DAE system avoids the classical Euler-angle gimbal-lock singularity at θ=±π/2 by separating flight-path geometry from attitude representation; B (paper_7c211832::claim_3) computes angular velocity from differences in specified Euler angles ψ, θ, φ between consecutive time steps rather than by solving rotational equations of motion. What follows: because B relies on Euler-angle attitude representation, A's premise implies B inherits the gimbal-lock singularity A avoids.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:196:papers:paper_1438825f::claim_38:papers:paper_c6f44cb4::claim_15:infer:weakpoints",
@@ -3950,11 +3948,11 @@
    "target_content": "The omission of the mass or complexity of morphing actuators and mechanisms from the multidisciplinary sizing and mission optimization reported would, if included, be expected to eliminate or reverse the sub‑1% aerodynamic-only benefit reported in claim 13. [Referenced claim 13: the computed differential fuel-consumption improvement was below 1% overall and about 0.5% in climb for the tested cases;]",
    "step3_expression": "Shared object: mass-breakdown uncertainty of order 1% versus a sub-1% aerodynamic-only benefit. claim_38 gives the value 'weight and mass breakdowns from JPAD differ by about 1% from public A220 figures'; claim_15 gives the condition that omission of morphing actuator mass would be expected to eliminate or reverse the sub-1% aerodynamic-only benefit. What follows: claim_38 adds that a mass breakdown/modeling discrepancy of order 1% is attainable, which is the same order as the sub-1% benefit, so omitted actuator mass of that order could erase the benefit.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:197:papers:paper_066432fe::claim_8:papers:paper_7c211832::claim_14:infer:weakpoints",
@@ -3970,11 +3968,11 @@
    "target_content": "The data-enhanced dynamic flight simulation model is notably superior to the Breguet range equation and the OpenAP open-source aircraft performance model when an aircraft operates away from its design mission.",
    "step3_expression": "Shared object: predictive fidelity of the updated/data-enhanced dynamic flight simulation model. claim_8 gives the condition 'all three independent flight tests' and states the updated simulation model closely matches measured angle of attack, pitch angle, and altitude profiles; claim_14 states the data-enhanced dynamic flight simulation model is notably superior to the Breguet range equation and OpenAP when operating away from the design mission. What follows: claim_8 adds that the updated simulation model matches measured flight profiles, which claim_14 needs to assert the data-enhanced model's high fidelity and superiority.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:198:papers:paper_aec49f8f::claim_17:papers:paper_7c211832::claim_25:infer:weakpoints",
@@ -3991,10 +3989,10 @@
    "step3_expression": "Shared object: wing geometric characteristics and elementary engine parameters. Claim_17 states CACDS supports multi-section wing modeling and engine/equipment layout; claim_25 states the data-enhanced dynamic flight simulation model requires only elementary engine parameters and wing geometric characteristics. What follows: CACDS can supply the required wing geometry and engine parameters to the simulation model.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:199:papers:paper_6a2ef68a::claim_8:papers:paper_18f90780::claim_9:infer:weakpoints",
@@ -4011,10 +4009,10 @@
    "step3_expression": "Shared object: propulsor-induced changes in nondimensional aerodynamic force/moment coefficients. Claim_8 reports total airplane lift and drag coefficients with and without high-lift propeller blowing at C_T=0.037 and 4548 RPM; claim_9 reports propulsion-specific terms retained in all six body-axis force/moment coefficient equations for the CZ-150 based on Jbar=J-2. What follows: claim_8 shows propeller operation measurably changes aerodynamic force coefficients, which claim_9 needs to justify including propulsion-specific terms in those coefficient equations.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:200:papers:paper_066432fe::claim_5:papers:paper_18f90780::claim_25:infer:weakpoints",
@@ -4030,11 +4028,11 @@
    "target_content": "The final model $C_{T_x} = C_{T_x,a} + C_{T_x,p}$, where $C_{T_x,a}$ is the bare airframe body x-axis force coefficient model and $C_{T_x,p}$ is the propulsion model, provides a direct flight-derived estimate of installed propeller thrust while retaining the convenient separate-model formulation for flight dynamics simulations.",
    "step3_expression": "Shared object: nondimensional body x-axis force coefficient for the bare airframe (C_X / C_Tx,a). Claim_5 reports a flight-derived delta aerodynamic model reproducing C_X, C_Z, and C_m with good fidelity for a 450 kg gliding UAV; claim_25 defines C_Tx = C_Tx,a + C_Tx,p, with C_Tx,a the bare-airframe body x-axis force coefficient model. What follows: claim_5 shows the bare-airframe x-force coefficient can be reproduced from flight data, supporting the C_Tx,a component in claim_25.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a representation/capability relation"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:201:papers:paper_014abc68::claim_21:papers:paper_c6f44cb4::claim_21:infer:weakpoints",
@@ -4051,10 +4049,10 @@
    "step3_expression": "Shared object: rolling moment L and roll authority. Claim_21 (paper_014abc68) gives the roll equation p_dot(AC-E^2)=... + C L + E N, with L the aerodynamic moment about x_b; claim_21 (paper_c6f44cb4) reports that replacing outboard ailerons with morphing tip control yielded reduced roll authority at V=30 m/s and sea level. What follows: the roll equation shows roll acceleration is driven by L, which the roll-authority result needs to link reduced roll authority to reduced rolling moment.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:202:papers:paper_014abc68::claim_17:papers:paper_26dddb44::claim_4:infer:weakpoints",
@@ -4071,10 +4069,10 @@
    "step3_expression": "Shared object: aircraft dynamics differential equations. Claim_17 states no tanθ or secθ terms appear in the equations of the DAE system; claim_4 states that in each real-time simulation cycle the ground computer computes the aircraft dynamics differential equations and generates angular velocity and acceleration. What follows: claim_17 adds that the equations avoid tan/sec singularities, which claim_4 needs for stable real-time computation of those equations.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:203:papers:paper_9c2fb427::claim_19:papers:paper_aec49f8f::claim_15:infer:weakpoints",
@@ -4090,11 +4088,11 @@
    "target_content": "The Civil Airplane Conceptual Design System (CACDS) provides a workflow from parametric geometry modeling through analysis to optimization under a unified operating and integration framework.",
    "step3_expression": "Shared object: design derivatives (sensitivities) required for optimization in aircraft design frameworks. claim_19 states CSDL automates reverse-mode adjoint sensitivity analysis, computing vector-Jacobian products with a single linear solve at each implicit operation's fixed point independent of nonlinear solver iterations; claim_15 states CACDS provides a workflow from parametric geometry modeling through analysis to optimization. Using the supplied bridge that CACDS's optimization step needs design derivatives, claim_19 adds that automated adjoint sensitivities can supply those derivatives, so claim_15's optimization workflow can rely on them.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:204:papers:paper_aec49f8f::claim_27:papers:paper_0fc191d1::claim_9:infer:weakpoints",
@@ -4111,10 +4109,10 @@
    "step3_expression": "Shared object: critical lift coefficient C_L. The CACDS claim (paper_aec49f8f::claim_27) states C_L is an aerodynamic target computed as a function of Mach number and altitude, alongside C_D, C_Lalpha, C_Lmax, C_D0, and L/D. The risk-assessment claim (paper_0fc191d1::claim_9) uses a critical lift-coefficient C_L with twenty extreme samples and reports probabilistic risk 0.0386 with fractional error 57.54e-4. The CACDS definition adds the C_L-as-function-of-Mach-and-altitude specification that the risk assessment needs to define the critical C_L it employs.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:205:papers:paper_aec49f8f::claim_27:papers:paper_014abc68::claim_23:infer:weakpoints",
@@ -4131,10 +4129,10 @@
    "step3_expression": "Both claims concern the drag coefficient C_D. Claim paper_aec49f8f::claim_27 defines C_D (along with C_L, C_D0, L/D, etc.) as an aerodynamic target computed as a function of Mach number and altitude in CACDS; claim paper_014abc68::claim_23 uses C_D in the steady, level, nonrotating thrust-drag balance T = \\bar{q} S C_D. The definition/availability of C_D in claim_27 supplies the aerodynamic coefficient C_D that claim_23's balance requires.",
    "step3_type": "infer",
    "reasoning_type": "infer",
-   "residual_reason": "precondition",
+   "residual_reason": "unclear",
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a dependency/precondition"
+   "reason": "Directed cross-paper relation; no stronger type established, kept as weak infer."
   },
   {
    "edge_id": "edge:206:papers:paper_9c2fb427::claim_20:papers:paper_014abc68::claim_1:infer:weakpoints",
@@ -4150,11 +4148,11 @@
    "target_content": "The flight dynamics model is packaged as a single coupled nonlinear differential‑algebraic system consisting of 35 scalar DAE equations, involving 39 flight variables and requiring 30 independent constant parameters to be specified.",
    "step3_expression": "Both claims concern solving implicit residual/DAE equations in flight dynamics. Claim paper_9c2fb427::claim_20 states that CSDL enabled efficient handling of 91 implicit residual equations in the full-scale NASA lift-plus-cruise model, avoiding manual analytic derivatives and finite differences; claim paper_014abc68::claim_1 states that a flight dynamics model is a coupled nonlinear DAE system of 35 scalar equations with 39 variables and 30 parameters. The CSDL capability for 91 implicit residual equations provides a computational framework adequate for the smaller 35-equation DAE system.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "enabling",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 expression states a representation/capability relation"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "edge:207:papers:paper_aec49f8f::claim_37:papers:paper_c6f44cb4::claim_5:infer:weakpoints",
@@ -4170,11 +4168,11 @@
    "target_content": "Level 2 (the Optimization Module) of the two nested optimization levels supported by the implementation of a unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design optimizes configuration geometric design variables while including the objective functions and constraints of Level 1 (the Performance Module) so that configuration-level decisions account for optimized control/morphing strategies.",
    "step3_expression": "Both claims concern design variables, constraints, and objectives in conceptual aircraft design optimization. Claim paper_aec49f8f::claim_37 states that CACDS parses input/output to expose design variables, constraints and objectives to ModelCenter, a simulation integration and design optimization environment; claim paper_c6f44cb4::claim_5 states that Level 2 (Optimization Module) optimizes configuration geometric design variables while including Level 1 objective functions and constraints. Exposing those design variables, constraints and objectives to an optimization environment is a prerequisite for Level 2 to optimize and include them.",
    "step3_type": "infer",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "analogy",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "no specific entailment established by the Step 3 expression"
+   "reason": "Cross-aircraft/framework method transfer; kept as analogy, not support."
   },
   {
    "edge_id": "typed:bounds:papers:paper_18f90780::claim_22:papers:paper_53166ac1::claim_6",
@@ -4194,7 +4192,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as bounds"
+   "reason": "Numeric/scope bound; kept with cross-object caveat."
   },
   {
    "edge_id": "typed:special_case:papers:paper_066432fe::claim_2:papers:paper_53166ac1::claim_6",
@@ -4210,11 +4208,11 @@
    "target_content": "A two-step longitudinal parameter-identification procedure for a fixed-wing unmanned aerial vehicle (UAV), applied to simulated elevator-doublet flight data at 1000 m altitude and 42 m/s nominal airspeed, reproduces the longitudinal force coefficients $C_x$ and $C_z$ and the pitching-moment coefficient $C_m$, with residuals between measured and estimated values.",
    "step3_expression": "The shared object is the longitudinal force coefficient C_X. The evidence claim_2 gives concrete estimated parameters for the delta aerodynamic model of ΔC_X (α^3 term 57.120±1.136 and static term −0.034±0.004) for a 450 kg tail-controlled gliding air vehicle. The target claim_6 describes a two-step parameter-identification procedure that reproduces C_x (and C_z, C_m) with residuals. The evidence is a specific instance of the kind of longitudinal coefficient identification that the target procedure performs, so the relation is special_case.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_aec49f8f::claim_22:papers:paper_c6f44cb4::claim_1",
@@ -4230,11 +4228,11 @@
    "target_content": "A unified, modular Multidisciplinary Design Optimization framework for conceptual aircraft design was implemented that integrates the main aircraft disciplinary modules into a single optimization environment",
    "step3_expression": "The shared object is disciplinary modules integrated into a conceptual aircraft design framework. The evidence claim_22 states that the CoG module computes model CoG for parameterized geometry produced by CACDS. The target claim_1 states that a unified modular MDO framework integrates the main aircraft disciplinary modules into a single optimization environment. The CoG module is a specific instance of the disciplinary modules that the target framework integrates, so the relation is special_case.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:bounds:papers:paper_26dddb44::claim_14:papers:paper_6a2ef68a::claim_31",
@@ -4254,7 +4252,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as bounds"
+   "reason": "Numeric/scope bound; kept with cross-object caveat."
   },
   {
    "edge_id": "typed:special_case:papers:paper_c6f44cb4::claim_5:papers:paper_9c2fb427::claim_30",
@@ -4270,11 +4268,11 @@
    "target_content": "In the full-scale gross-weight minimization of the NASA lift-plus-cruise vehicle, the design constrained by enforcing the 8% static-margin constraint had motor mass 23% higher (279 kg versus 227 kg) compared with the optimized design without the constraint.",
    "step3_expression": "Shared object: the MDO framework's Level 2 optimization with Level 1 constraints. P2 (paper_c6f44cb4::claim_5) states Level 2 optimizes configuration geometric design variables while including Level 1 objective functions and constraints. P1 (paper_9c2fb427::claim_30) reports a full-scale gross-weight minimization of the NASA lift-plus-cruise vehicle constrained by an 8% static margin, with motor mass 279 kg vs 227 kg. The candidate hint identifies this as the same MDO framework, so P1 is a special case (instance) of the Level 2 constrained optimization described in P2; P2 adds that Level 2 includes Level 1 constraints, which P1 needs to be an instance of that framework.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_c6f44cb4::claim_24:papers:paper_aec49f8f::claim_15",
@@ -4290,11 +4288,11 @@
    "target_content": "The Civil Airplane Conceptual Design System (CACDS) provides a workflow from parametric geometry modeling through analysis to optimization under a unified operating and integration framework.",
    "step3_expression": "Shared object: the conceptual-design workflow combining geometry, analysis and optimization under a unified framework. paper_c6f44cb4::claim_24 instantiates this in a specific implementation: the unified modular MDO framework's Level 1 Performance Module, which performs single-level optimization over angle of attack, throttle, and morphing parameters theta_wt, Gamma_wt, Lambda_wt for a fixed configuration. paper_aec49f8f::claim_15 states the general CACDS workflow from parametric geometry modeling through analysis to optimization under a unified framework. The Level 1 optimization step is a concrete instance of the general optimization step in the CACDS workflow, so the specific case supports the general framework claim.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_6a2ef68a::claim_32:papers:paper_014abc68::claim_15",
@@ -4310,11 +4308,11 @@
    "target_content": "This mixed‑axes strategy reduces numerical scale disparity and undesirable coupling in translational EOMs by aligning translational dynamics with the velocity vector.",
    "step3_expression": "Shared object: cross-axis coupling in translational dynamics. paper_014abc68::claim_15 claims that the mixed-axes (velocity-aligned) strategy reduces numerical scale disparity and undesirable coupling in the translational EOMs; paper_6a2ef68a::claim_32 reports that a 3-knot lateral velocity step command produced about 14 m lateral displacement with a very small fore/aft drift of order 10 cm. The near-absent fore/aft drift during a pure lateral maneuver is a concrete instance of the low cross-axis coupling the general mixed-axes claim asserts.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_014abc68::claim_10:papers:paper_6a2ef68a::claim_33",
@@ -4330,11 +4328,11 @@
    "target_content": "Pure yaw rotation during hover was demonstrated on the Hexa-Chakra Personal Air Vehicle version 1 using opposing deflection of front and aft rotor vanes to generate a yawing moment.",
    "step3_expression": "Shared object: yawing moment N and yaw angular acceleration. Target claim_33 demonstrates pure yaw rotation during hover on HCPAV-V1 using opposing front and aft rotor vane deflection to generate a yawing moment; evidence claim_10 gives the general asymmetric-aircraft rotational dynamics equations in which the yawing moment N enters T3 and therefore drives r_dot. What follows: the target's demonstrated yaw rotation from a yawing moment is a special case of the general rotational dynamics in the evidence.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_18f90780::claim_25:papers:paper_7c211832::claim_4",
@@ -4350,11 +4348,11 @@
    "target_content": "The data-enhanced dynamic flight simulation model includes modular atmosphere, gravitation, aerodynamics, propulsion, and mass components, and requires only minimal aircraft information.",
    "step3_expression": "Shared object: modular separate aerodynamics/propulsion formulation for flight dynamics simulation. Target claim_4 states the data-enhanced dynamic flight simulation model includes modular atmosphere, gravitation, aerodynamics, propulsion, and mass components; evidence claim_25 gives C_Tx = C_Tx,a + C_Tx,p, a separate airframe plus propulsion body x-axis force coefficient formulation for flight dynamics simulations. What follows: the evidence's separate airframe/propulsion formulation is a specific instance of the modular aerodynamics/propulsion component in the target's simulation architecture.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_066432fe::claim_2:papers:paper_18f90780::claim_25",
@@ -4370,11 +4368,11 @@
    "target_content": "The final model $C_{T_x} = C_{T_x,a} + C_{T_x,p}$, where $C_{T_x,a}$ is the bare airframe body x-axis force coefficient model and $C_{T_x,p}$ is the propulsion model, provides a direct flight-derived estimate of installed propeller thrust while retaining the convenient separate-model formulation for flight dynamics simulations.",
    "step3_expression": "Shared object: the body x-axis aerodynamic force coefficient. Claim papers:paper_18f90780::claim_25 attaches the decomposition C_Tx = C_Tx,a (bare airframe body x-axis force coefficient model) + C_Tx,p (propulsion model); claim papers:paper_066432fe::claim_2 attaches the estimated longitudinal coefficient model delta C_X = 57.120*alpha^3 - 0.034 (95% bounds +/-1.136 and +/-0.004) for a 450 kg, tail-controlled, gliding (unpowered) autonomous vehicle. What follows: the gliding vehicle carries no propulsion, so its fitted delta C_X is a concrete instance of the bare-airframe coefficient C_Tx,a; the premise (claim_2) is the special case that realizes the airframe term the conclusion (claim_25) separates from C_Tx,p. The quantity transferring is the body x-axis force coefficient, instantiated by claim_2's fitted values for claim_25's C_Tx,a.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_014abc68::claim_24:papers:paper_6a2ef68a::claim_12",
@@ -4390,11 +4388,11 @@
    "target_content": "Repeating, over a range of forward speeds, the procedure by which trim solutions for the Hexa-Chakra Personal Air Vehicle version 1 (HCPAV-V1) were obtained by numerically zeroing the six body-axis translational and angular acceleration components using MATLAB fsolve yielded a performance curve.",
    "step3_expression": "Shared object is the trim force balance: claim_24 gives the steady, level, nonrotating balance m g_0 = \\bar{q} S C_L, while claim_12 obtains HCPAV-V1 trim solutions by numerically zeroing the six body-axis translational and angular acceleration components over forward speeds. claim_24 is the special-case vertical force balance that the zero-acceleration trim condition in claim_12 contains.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_014abc68::claim_5:papers:paper_6a2ef68a::claim_27",
@@ -4410,11 +4408,11 @@
    "target_content": "In a simulation, a lateral velocity step command of 3 knots was applied at t=5 s and removed at t=20 s.",
    "step3_expression": "Shared object: the one additional flight variable required for a unique inverse-simulation solution. paper_014abc68::claim_5 requires the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable as inputs; paper_6a2ef68a::claim_27 supplies a 3-knot lateral velocity step command applied at t=5 s and removed at t=20 s. The target lateral velocity command is a special case of the additional flight variable required by the premise, so it can serve as that input.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_6a2ef68a::claim_28:papers:paper_014abc68::claim_5",
@@ -4430,11 +4428,11 @@
    "target_content": "For the flight dynamics model, in inverse simulation, the three trajectory coordinates $(x_g,y_g,z_g)$ plus one additional flight variable must be specified as inputs to obtain a unique solution.",
    "step3_expression": "P1 (papers:paper_6a2ef68a::claim_28) is a special case of P2 (papers:paper_014abc68::claim_5): P2 states the general inverse-simulation input requirement that the three trajectory coordinates (x_g,y_g,z_g) plus one additional flight variable be specified to obtain a unique solution; P1 instantiates that additional-variable part by commanding a lateral velocity of 3 knots and obtaining vane deflections reaching the 10° allowable limit. The shared object is the inverse-simulation setup for the flight dynamics model; P2 supplies the general input condition, and P1 supplies the concrete commanded lateral velocity/control-deflection instance.",
    "step3_type": "special_case",
-   "reasoning_type": "special_case",
+   "reasoning_type": "analogy",
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Cross-aircraft/framework instance; kept as analogy, not a same-object special case."
   },
   {
    "edge_id": "typed:special_case:papers:paper_7c211832::claim_18:papers:paper_014abc68::claim_23",
@@ -4454,7 +4452,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as special_case"
+   "reason": "Mathematical special case (steady-level point-mass balance); kept with different-data caveat."
   },
   {
    "edge_id": "typed:bounds:papers:paper_c6f44cb4::claim_14:papers:paper_9c2fb427::claim_23",
@@ -4474,7 +4472,7 @@
    "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "Step 3 already typed this as bounds"
+   "reason": "Numeric/scope bound; kept with cross-object caveat."
   }
  ]
 }
