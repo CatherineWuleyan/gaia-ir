@@ -112,7 +112,9 @@ def _spec_needs_lkm(paper_spec: Path | None) -> tuple[bool, int]:
 
 def _retrieval_options(runtime: Runtime, *, max_queries: int | None = None,
                        candidate_limit: int | None = None,
-                       use_query_planner: bool | None = None) -> dict[str, Any]:
+                       use_query_planner: bool | None = None,
+                       use_lkm_extract: bool | None = None,
+                       max_extractions: int | None = None) -> dict[str, Any]:
     config = runtime.config
     return {
         "max_queries": int(
@@ -131,6 +133,14 @@ def _retrieval_options(runtime: Runtime, *, max_queries: int | None = None,
             config.get("retrieval.use_query_planner", True)
             if use_query_planner is None else use_query_planner
         ),
+        "use_lkm_extract": bool(
+            config.get("retrieval.use_lkm_extract", True)
+            if use_lkm_extract is None else use_lkm_extract
+        ),
+        "max_extractions": int(
+            max_extractions if max_extractions is not None
+            else config.get("retrieval.max_extractions", 3)
+        ),
     }
 
 
@@ -141,20 +151,28 @@ def _confirm_spend(runtime: Runtime, top_k: int, needs_lkm: bool,
         return
     if remote:
         calls = remote
+        extraction_calls = 0
         detail = f"{remote} graph call(s)"
     else:
         calls = int(options["max_queries"]) + int(options["candidate_limit"]) * 2
+        extraction_calls = (
+            int(options["max_extractions"]) if options["use_lkm_extract"] else 0
+        )
         detail = (
             f"up to {options['max_queries']} search queries + "
             f"up to {options['candidate_limit']} first-pass graph probes "
             f"(extended only if needed)"
         )
-    cost = calls * 0.05
+        if extraction_calls:
+            detail += f" + up to {extraction_calls} LKM graph extraction(s)"
+    cost = calls * 0.05 + extraction_calls * 1.0
     print(
         "\n[spend] This run makes billable Bohrium LKM calls: "
-        f"up to {calls} x 0.05 CNY (~{cost:.2f} CNY), before the monthly "
-        "1,000-call free quota. " + detail + "."
+        f"up to ~{cost:.2f} CNY, before the monthly 1,000-call free quota. "
+        + detail + "."
     )
+    if extraction_calls:
+        print("[spend] LKM extraction is 1.00 CNY per paper (0.10 CNY on a cache hit).")
     if fulltext:
         print("[spend] PDF parsing, when an arXiv id is available, may add charges.")
     if not sys.stdin.isatty():
@@ -188,7 +206,12 @@ def _print_plan(question: str, runtime: Runtime, top_k: int,
                 f"select {top_k}"
             )
             calls = int(options["max_queries"]) + int(options["candidate_limit"]) * 2
-        print(f"  billable:  up to {calls} x 0.05 CNY (~{calls * 0.05:.2f} CNY)")
+            extraction_calls = (
+                int(options["max_extractions"]) if options["use_lkm_extract"] else 0
+            )
+            cost = calls * 0.05 + extraction_calls * 1.0
+            print(f"  billable:  up to ~{cost:.2f} CNY "
+                  f"({calls} LKM calls + {extraction_calls} extractions)")
     else:
         print(f"  retrieval: offline spec {paper_spec}")
     print(f"  stages:    retrieval -> paper2ir -> single -> merge -> render")
@@ -213,6 +236,8 @@ def run_full(
     max_queries: int | None = None,
     candidate_limit: int | None = None,
     use_query_planner: bool | None = None,
+    use_lkm_extract: bool | None = None,
+    max_extractions: int | None = None,
 ) -> dict[str, Any]:
     if runtime is None:
         runtime = resolve_runtime(Config.load(), yes=yes)
@@ -221,7 +246,8 @@ def run_full(
     domain = domain or "the domain named by the question"
     retrieval_options = _retrieval_options(
         runtime, max_queries=max_queries, candidate_limit=candidate_limit,
-        use_query_planner=use_query_planner,
+        use_query_planner=use_query_planner, use_lkm_extract=use_lkm_extract,
+        max_extractions=max_extractions,
     )
 
     details = _preflight(runtime, paper_spec)
@@ -290,8 +316,10 @@ def run_full(
         # 2. paper2ir: LKM graph -> claims_final.
         claims = stage(
             "02_paper2ir",
-            lambda: paper2ir.run_all(papers, run_dir / "02_paper2ir", run_dir,
-                                     runtime=runtime),
+            lambda: paper2ir.run_all(
+                papers, run_dir / "02_paper2ir", run_dir,
+                runtime=runtime, min_papers=int(retrieval_options["min_papers"]),
+            ),
             papers=0,
         )
         record["stages"]["02_paper2ir"]["papers"] = len(claims)

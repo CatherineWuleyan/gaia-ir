@@ -75,6 +75,8 @@ DEFAULTS: dict[str, Any] = {
         "min_papers": 2,
         "min_graph_nodes": 3,
         "min_relevance": 0.2,
+        "use_lkm_extract": True,
+        "max_extractions": 3,
     },
 }
 
@@ -82,6 +84,7 @@ SECRET_KEYS = frozenset({"model.api_key", "bohr.access_key"})
 BOOL_KEYS = frozenset({
     "bohr.auto_approve_spend",
     "retrieval.use_query_planner",
+    "retrieval.use_lkm_extract",
 })
 INT_KEYS = frozenset({
     "retrieval.queries",
@@ -89,6 +92,7 @@ INT_KEYS = frozenset({
     "retrieval.candidate_limit",
     "retrieval.min_papers",
     "retrieval.min_graph_nodes",
+    "retrieval.max_extractions",
 })
 FLOAT_KEYS = frozenset({"retrieval.min_relevance"})
 INT_RANGES = {
@@ -97,6 +101,7 @@ INT_RANGES = {
     "retrieval.candidate_limit": (2, 40),
     "retrieval.min_papers": (2, 20),
     "retrieval.min_graph_nodes": (1, 100),
+    "retrieval.max_extractions": (0, 10),
 }
 KNOWN_KEYS = frozenset({
     "model.provider",
@@ -117,6 +122,8 @@ KNOWN_KEYS = frozenset({
     "retrieval.min_papers",
     "retrieval.min_graph_nodes",
     "retrieval.min_relevance",
+    "retrieval.use_lkm_extract",
+    "retrieval.max_extractions",
 })
 PROVIDERS = frozenset({"deepseek", "openai-compatible"})
 PAYMENT_SOURCES = frozenset({"", "photon", "balance"})

@@ -250,8 +250,13 @@ full 模式不需要你手动选论文。检索阶段是：
    （探测后的）图规模排序。
 4. **图探测**：逐篇取论文图；空图、没有 conclusion 节点的图、过薄的图直接
    跳过。第一轮不够 `min_papers` 时会继续扩展探测，而不是整次失败。
-5. **选择与审计**：选出有图且相关的论文，把每条查询、候选、探测结果、
-   跳过原因、相关性分数和最终选择写入 `01_retrieval/selection.json`。
+5. **补建缺失图**：论文没有原生 LKM 图、但有 arXiv/DOI PDF 时，可以用
+   `bohr lkm extract` 建图（`--format graph`）。每次成功 1.00 CNY（缓存命中
+   0.10 CNY），由 `retrieval.max_extractions` 限制（默认 3），
+   `--no-lkm-extract` 可关闭。
+6. **选择与审计**：选出有图且相关的论文，并继续用其余候选补足 `--top-k`；
+   把每条查询、候选、探测结果、跳过原因、相关性分数、提取任务和最终选择
+   写入 `01_retrieval/selection.json`。
 
 这条路径专门处理 LKM 的真实情况：很多论文被索引了，但没有可抽取的知识图。
 `--papers ...` 仍会完全绕过自动检索，适合你已经知道语料的情况。
@@ -265,7 +270,9 @@ full 模式不需要你手动选论文。检索阶段是：
 ```
 
 如果选出来的论文不对，先看 `selection.json`：`queries.json` 是查询计划，
-`candidates.json` 是排序后的候选池，`search_raw_*.json` 是每次 LKM 原始响应。
+`candidates.json` 是排序后的候选池，`search_raw_*.json` 是每次 LKM 原始响应，
+`extract/*/submit.json` 和 `result.json` 是补建图的审计。选择会尽量补足
+`--top-k`；相关性只是偏好，不是硬上限。
 
 ## 配置
 
@@ -354,6 +361,8 @@ Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
 | `retrieval.min_papers` | 至少需要几篇有图的论文（默认 2） |
 | `retrieval.min_graph_nodes` | 低于该节点数的图视为过薄（默认 3） |
 | `retrieval.min_relevance` | 优先论文的词面相关性门槛（默认 0.2） |
+| `retrieval.use_lkm_extract` | 是否用 `bohr lkm extract` 补建缺失图（默认 true） |
+| `retrieval.max_extractions` | 每次运行最多补建几篇（默认 3，0 关闭） |
 
 ### 环境变量
 
@@ -445,6 +454,8 @@ venv 不叫 `.venv` 时建议显式指定：
 | `ask ... --queries N` | 自动检索的最大 LKM 查询数 |
 | `ask ... --candidate-limit N` | 第一轮图探测的候选数 |
 | `ask ... --no-query-planner` | 关闭 LLM 查询规划器，只用 fallback 查询 |
+| `ask ... --no-lkm-extract` | 不用 `bohr lkm extract` 补建图 |
+| `ask ... --max-extractions N` | 本次运行最多补建几篇 |
 | `ask ... --yes` | 授权本次计费 LKM 调用 |
 | `ask ... --no-fulltext` | 跳过 PDF 解析，改用图派生文本 |
 | `demo` | 离线飞机示例 |
@@ -482,7 +493,8 @@ full 运行会保留中间阶段：
 
 ```text
 01_retrieval/   queries.json、candidates.json、selection.json、
-                search_raw_*.json、每篇 graph.json + ocr.md
+                search_raw_*.json、extract/<paper>/submit.json|result.json、
+                每篇 graph.json + ocr.md
 02_paper2ir/    run-local clean_claims 副本、每篇 claims_final.json
 03_single/      Gaia IR package、formalization.json、knowledge.index.json
 04_merge/       merge run、view_model.json
@@ -593,9 +605,15 @@ Ariadne 封装的三套维护中 pipeline：
 ## 状态与边界
 
 - `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
-- 已从问题出发完成一次全新的自动 `full`：LLM 查询规划、多查询 LKM 检索、
-  图探测、paper2ir、single、merge 和答案层全部自动跑通，没有手动 spec，也没有
-  手动恢复。它自动选了两篇有图的论文，产出 5 个候选答案。
+- 一次全新的自动检索从问题出发选中了 **5 篇**有图的论文；其中一篇没有原生
+  LKM 图，通过 `bohr lkm extract` 补建（56 节点 / 65 边 / 13 conclusions）。
+- 已完成的 3 篇图验证运行（`Automating AI Discovery`、`Rewarding
+  Explainability`、`knee-osteoarthritis KG`）产出 **5 个候选答案和 21 条链**。
+  5 篇的 paper2ir 阶段受上游模型延迟限制，因此产品现在加入了步骤重试、单篇
+  失败隔离、跨 run claims 缓存和 600s 读超时。
+- LKM 补建图路径也在真实 arXiv 论文（Maestro）上跑通：87 节点 / 88 边 /
+  19 conclusions。空原生图 → 补建图的判定有单元测试覆盖；只有存在 PDF/arXiv
+  源时才会触发。
 - `full` 在花钱前预检配置、Python、pipeline 文件和 Bohr 登录。建议先用
   `--top-k 2 --no-fulltext` 检查质量和成本。
 - full 模式链条质量取决于 paper2ir、single、merge 和问题层。Ariadne 只报告这些
@@ -614,7 +632,9 @@ Ariadne 封装的三套维护中 pipeline：
 
 两篇论文的自动运行最多产生 `retrieval.queries` 次 search 加图探测
 （第一轮最多 `retrieval.candidate_limit` 次，图不够才扩展），然后才进入
-LLM pipeline。用 `--dry-run` 看上限计划，用 `--no-fulltext` 跳过 PDF 解析。
+LLM pipeline。缺图的论文最多补建 `retrieval.max_extractions` 次，每次成功
+1.00 CNY（缓存命中 0.10 CNY）。用 `--dry-run` 看上限计划，用 `--no-fulltext`
+跳过 PDF 解析。
 
 ## License
 

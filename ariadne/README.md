@@ -270,9 +270,15 @@ Live mode does not ask you to choose papers. The retrieval stage is:
    graphs with no conclusion nodes, and very thin graphs are skipped. If the
    first pass does not yield enough usable papers, Ariadne extends the probe
    instead of failing.
-5. **Select and audit** — choose the best graph-backed papers, then write
+5. **Build missing graphs** — when a paper has no native LKM graph but an
+   arXiv/DOI PDF source, `bohr lkm extract` can build one
+   (`--format graph`). Extraction costs 1.00 CNY per paper (0.10 CNY cache
+   hit) and is capped by `retrieval.max_extractions` (default 3); disable it
+   with `--no-lkm-extract`.
+6. **Select and audit** — choose the best graph-backed papers, fill up to
+   `--top-k` from the remaining candidates, then write
    `01_retrieval/selection.json` with every query, candidate, graph probe,
-   skip reason, relevance score, and the final selection.
+   skip reason, relevance score, extraction task, and the final selection.
 
 The result is deterministic enough to audit and robust to LKM's real-world
 gaps: many papers are indexed but have no extractable graph. `--papers ...`
@@ -288,7 +294,9 @@ To tune retrieval without editing code:
 
 `selection.json` is the first file to inspect when the selected corpus looks
 wrong. `queries.json` shows the plan; `candidates.json` shows the ranked pool;
-`search_raw_*.json` keeps each LKM response.
+`search_raw_*.json` keeps each LKM response; `extract/*/submit.json` and
+`result.json` keep the LKM extraction audit. Selection fills up to `--top-k`:
+relevance is a preference, not a hard cap.
 
 ## Configuration
 
@@ -378,6 +386,8 @@ Supported keys:
 | `retrieval.min_papers` | minimum usable graph-backed papers (default 2) |
 | `retrieval.min_graph_nodes` | reject graphs below this node count (default 3) |
 | `retrieval.min_relevance` | lexical topic gate for preferred papers (default 0.2) |
+| `retrieval.use_lkm_extract` | build missing graphs with `bohr lkm extract` (default true) |
+| `retrieval.max_extractions` | max papers to extract per run (default 3, 0 disables) |
 
 ### Environment variables
 
@@ -472,6 +482,8 @@ when your venv is not named `.venv`:
 | `ask ... --queries N` | max LKM queries for automatic retrieval |
 | `ask ... --candidate-limit N` | first-pass graph probes before extended probing |
 | `ask ... --no-query-planner` | disable the LLM planner; use fallback queries |
+| `ask ... --no-lkm-extract` | do not build graphs with `bohr lkm extract` |
+| `ask ... --max-extractions N` | cap LKM graph extractions for this run |
 | `ask ... --yes` | approve billable LKM calls for this run |
 | `ask ... --no-fulltext` | skip PDF parsing; use graph-derived text |
 | `demo` | offline aircraft example |
@@ -509,7 +521,8 @@ For a full run, intermediate stages are kept:
 
 ```text
 01_retrieval/   queries.json, candidates.json, selection.json,
-                search_raw_*.json, per-paper graph.json + ocr.md
+                search_raw_*.json, extract/<paper>/submit.json|result.json,
+                per-paper graph.json + ocr.md
 02_paper2ir/    run-local clean_claims copy, claims_final.json per paper
 03_single/      Gaia IR packages, formalization.json, knowledge.index.json
 04_merge/       merge pipeline run, view_model.json
@@ -625,10 +638,18 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 
 - `demo` is tested offline on the frozen aircraft graph and writes both
   deliverables.
-- A fresh automatic `full` run was completed from the question alone: LLM query
-  planning, multi-query LKM search, graph probing, paper2ir, single, merge, and
-  the answer layer all ran without a manual spec or recovery step. It selected
-  two graph-backed papers and produced 5 candidate answers.
+- A fresh automatic retrieval selected **five** graph-backed papers from the
+  question alone. One of them had no native LKM graph and was built with
+  `bohr lkm extract` (56 nodes / 65 edges / 13 conclusions).
+- A completed 3-paper graph verification (`Automating AI Discovery`, `Rewarding
+  Explainability`, `knee-osteoarthritis KG`) produced **5 candidate answers and
+  21 chains**. The 5-paper paper2ir stage was limited by upstream model
+  latency, which is why step retries, per-paper isolation, a cross-run claims
+  cache, and a 600s read timeout are now part of the product.
+- The LKM extraction path was also exercised on a real arXiv paper (Maestro):
+  87 nodes / 88 edges / 19 conclusions. The empty-native-graph → extraction
+  decision is covered by unit tests; it only triggers when a PDF/arXiv source
+  is available.
 - `full` preflight-checks config, Python, pipeline files, and Bohr login before
   spending. Start with `--top-k 2 --no-fulltext` while checking quality and cost.
 - The quality of full-mode chains depends on paper2ir, single, merge, and the
@@ -649,8 +670,10 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 
 A two-paper automatic run makes up to `retrieval.queries` search calls plus
 graph probes (first pass up to `retrieval.candidate_limit`, extended only if
-too few graphs are usable), before the LLM pipeline. Use `--dry-run` to see
-the upper-bound plan and `--no-fulltext` to skip PDF parsing.
+too few graphs are usable), before the LLM pipeline. Missing graphs add up to
+`retrieval.max_extractions` **1.00 CNY** extraction calls (0.10 CNY on a cache
+hit). Use `--dry-run` to see the upper-bound plan and `--no-fulltext` to skip
+PDF parsing.
 
 ## License
 

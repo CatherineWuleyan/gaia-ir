@@ -21,7 +21,9 @@ import hashlib
 import json
 import re
 import shutil
+import time
 import urllib.request
+from urllib.parse import quote
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -37,6 +39,7 @@ DEFAULT_CANDIDATE_LIMIT = 16
 DEFAULT_MIN_PAPERS = 2
 DEFAULT_MIN_GRAPH_NODES = 3
 DEFAULT_MIN_RELEVANCE = 0.2
+DEFAULT_MAX_EXTRACTIONS = 3
 _RELEVANCE_PHRASES = (
     "knowledge graph", "knowledge graphs", "knowledge model", "knowledge base",
     "graph reasoning", "experiment design", "experimental design",
@@ -65,6 +68,14 @@ class GraphUnavailable(AriadneError):
     """A paper exists in LKM but has no usable graph (not a fatal auth error)."""
 
     def __init__(self, message: str, *, reason: str = "unavailable") -> None:
+        super().__init__(message)
+        self.reason = reason
+
+
+class ExtractUnavailable(AriadneError):
+    """LKM extraction of a local/arXiv PDF could not produce a graph."""
+
+    def __init__(self, message: str, *, reason: str = "extract_failed") -> None:
         super().__init__(message)
         self.reason = reason
 
@@ -141,6 +152,8 @@ def _normalise(record: Mapping[str, Any], key: str = "") -> dict[str, Any]:
         "source": "lkm",
         "graph_path": merged.get("graph_path"),
         "ocr_path": merged.get("ocr_path"),
+        "pdf_path": merged.get("pdf_path"),
+        "pdf_url": merged.get("pdf_url"),
         "search_score": _float(
             merged.get("rerank_score") or merged.get("score")
         ),
@@ -347,6 +360,12 @@ def _candidate_audit(candidate: Mapping[str, Any]) -> dict[str, Any]:
         "node_count": int(candidate.get("node_count") or 0),
         "conclusion_count": int(candidate.get("conclusion_count") or 0),
         "skip_reason": candidate.get("skip_reason") or "",
+        "skip_detail": _one_line(candidate.get("skip_detail") or ""),
+        "extract_attempted": bool(candidate.get("extract_attempted")),
+        "extract_skip_reason": candidate.get("extract_skip_reason") or "",
+        "graph_source": candidate.get("graph_source") or "",
+        "extract_task_id": candidate.get("extract_task_id") or "",
+        "extract_status": candidate.get("extract_status") or "",
         "probe_path": candidate.get("probe_path") or "",
     }
 
@@ -705,6 +724,228 @@ def _graph_stats(graph: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+MAX_PDF_BYTES = 64 * 1024 * 1024
+
+
+def _json_or_none(text: str) -> Any:
+    try:
+        return json.loads(text)
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+
+def _openalex_pdf_urls(doi: str) -> list[str]:
+    """Resolve open-access PDF candidates through the free OpenAlex API."""
+    doi = str(doi or "").strip()
+    if not doi:
+        return []
+    try:
+        request = urllib.request.Request(
+            "https://api.openalex.org/works/doi:" + quote(doi, safe=""),
+            headers={"User-Agent": "ariadne/0.3 (mailto:ariadne@example.org)"},
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+            payload = json.loads(response.read().decode("utf-8", errors="replace"))
+    except Exception:  # noqa: BLE001 - PDF discovery is best-effort
+        return []
+    urls: list[str] = []
+    locations = [payload.get("best_oa_location")]
+    locations.extend(payload.get("locations") or [])
+    for location in locations:
+        if isinstance(location, Mapping) and location.get("pdf_url"):
+            urls.append(str(location["pdf_url"]))
+    oa_url = (payload.get("open_access") or {}).get("oa_url")
+    if oa_url:
+        urls.append(str(oa_url))
+    seen: set[str] = set()
+    return [url for url in urls if not (url in seen or seen.add(url))]
+
+
+def _pdf_urls(record: Mapping[str, Any]) -> list[str]:
+    urls: list[str] = []
+    if record.get("pdf_url"):
+        urls.append(str(record["pdf_url"]))
+    arxiv = record.get("arxiv")
+    if not arxiv:
+        match = re.search(
+            r"10\.48550/arxiv\.([0-9.]+)", str(record.get("doi") or ""), re.I
+        )
+        arxiv = match.group(1) if match else None
+    if arxiv:
+        urls.append(f"https://arxiv.org/pdf/{arxiv}")
+    doi = str(record.get("doi") or "").strip()
+    if doi:
+        urls.extend(_openalex_pdf_urls(doi))
+        urls.append(f"https://doi.org/{doi}")
+    seen: set[str] = set()
+    return [url for url in urls if not (url in seen or seen.add(url))]
+
+
+def _can_extract(record: Mapping[str, Any]) -> bool:
+    return bool(
+        record.get("pdf_path") or record.get("pdf_url")
+        or record.get("arxiv") or record.get("doi")
+    )
+
+
+def _download_pdf(record: Mapping[str, Any], dest: Path) -> Path:
+    local = record.get("pdf_path")
+    if local:
+        source = _resolve_local(local)
+        if not source.is_file():
+            raise ExtractUnavailable(
+                f"pdf_path not found: {source}", reason="no_pdf"
+            )
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, dest)
+        return dest
+    urls = _pdf_urls(record)
+    if not urls:
+        raise ExtractUnavailable(
+            f"paper {record.get('lkm_id')} has no PDF source", reason="no_pdf"
+        )
+    errors: list[str] = []
+    for url in urls:
+        try:
+            request = urllib.request.Request(
+                url, headers={"User-Agent": "ariadne/0.3"}
+            )
+            with urllib.request.urlopen(request, timeout=180) as response:  # noqa: S310
+                payload = response.read(MAX_PDF_BYTES + 1)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{url}: {str(exc)[:120]}")
+            continue
+        if len(payload) > MAX_PDF_BYTES:
+            errors.append(f"{url}: exceeds 64 MiB")
+            continue
+        if not payload.startswith(b"%PDF"):
+            errors.append(f"{url}: not a PDF")
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(payload)
+        return dest
+    raise ExtractUnavailable(
+        f"cannot download PDF for {record.get('lkm_id')}: " + "; ".join(errors[-3:]),
+        reason="download_failed",
+    )
+
+
+def _extract_graph(record: Mapping[str, Any], dest: Path, run_dir: Path,
+                   runtime: Runtime) -> tuple[Path, dict[str, Any], dict[str, Any]]:
+    """Build an LKM graph for a paper with no native graph.
+
+    ``bohr lkm extract`` takes a local PDF; the graph is requested with
+    ``--format graph`` so its nodes/edges match ``bohr lkm graph``.
+    """
+    pid = str(record.get("lkm_id") or "paper")
+    extract_dir = run_dir / "01_retrieval" / "extract" / pid
+    extract_dir.mkdir(parents=True, exist_ok=True)
+    pdf = _download_pdf(record, extract_dir / "source.pdf")
+    submit = run(
+        bohr_command(
+            runtime, "lkm", "extract", "submit", str(pdf),
+            "--wait", "--interval", "5s", "--timeout", "30m",
+        ),
+        log=stage_log(run_dir, f"01_extract_submit_{pid}"),
+        timeout=2400, check=False,
+    )
+    submit_payload = _json_or_none(submit.stdout)
+    write_json(extract_dir / "submit.json", submit_payload or {
+        "returncode": submit.returncode,
+        "stdout": (submit.stdout or "")[-4000:],
+        "stderr": (submit.stderr or "")[-4000:],
+    })
+    if submit.returncode != 0 or not isinstance(submit_payload, Mapping):
+        raise ExtractUnavailable(
+            f"LKM extract submit failed for {pid}: "
+            f"{(submit.stderr or submit.stdout or '').strip()[-400:]}",
+            reason="submit_failed",
+        )
+    if submit_payload.get("ok") is False:
+        error = submit_payload.get("error") or {}
+        raise ExtractUnavailable(
+            f"LKM extract submit rejected for {pid}: {error.get('message')}",
+            reason="submit_rejected",
+        )
+    data = submit_payload.get("data") or {}
+    task_id = data.get("task_id") or data.get("id")
+    status = str(data.get("status") or "")
+    cache_hit = bool(data.get("cache_hit"))
+    if not task_id:
+        raise ExtractUnavailable(
+            f"LKM extract returned no task id for {pid}", reason="submit_failed"
+        )
+    if status and status not in {"succeeded", "success", "completed", "cached"}:
+        raise ExtractUnavailable(
+            f"LKM extract ended with status {status} for {pid}",
+            reason="extract_partial",
+        )
+
+    result_payload = None
+    result_proc = None
+    for attempt in range(3):
+        result_proc = run(
+            bohr_command(
+                runtime, "lkm", "extract", "result", str(task_id),
+                "--format", "graph",
+            ),
+            log=stage_log(run_dir, f"01_extract_result_{pid}"),
+            timeout=600, check=False,
+        )
+        result_payload = _json_or_none(result_proc.stdout)
+        if (result_proc.returncode == 0
+                and isinstance(result_payload, Mapping)
+                and result_payload.get("ok") is not False):
+            break
+        message = str(((result_payload or {}).get("error") or {}).get("message") or "")
+        if "NOT_READY" not in message and result_proc.returncode != 0:
+            break
+        if attempt < 2:
+            time.sleep(5)
+    write_json(extract_dir / "result.json", result_payload or {
+        "returncode": result_proc.returncode if result_proc else None,
+        "stdout": (result_proc.stdout if result_proc else "")[-4000:],
+        "stderr": (result_proc.stderr if result_proc else "")[-4000:],
+    })
+    if (result_proc is None or result_proc.returncode != 0
+            or not isinstance(result_payload, Mapping)
+            or result_payload.get("ok") is False):
+        error = (result_payload or {}).get("error") if isinstance(result_payload, Mapping) else {}
+        raise ExtractUnavailable(
+            f"LKM extract result failed for {pid}: {error or 'no JSON'}",
+            reason="result_failed",
+        )
+    data = result_payload.get("data") or {}
+    graph = data.get("graph") if isinstance(data.get("graph"), Mapping) else {}
+    nodes = graph.get("nodes") or data.get("nodes") or []
+    edges = graph.get("edges") or data.get("edges") or []
+    if not nodes:
+        raise ExtractUnavailable(
+            f"LKM extract returned no graph nodes for {pid}",
+            reason="empty_graph",
+        )
+    item = {
+        "graph": {"nodes": nodes, "edges": edges},
+        "paper": {
+            "id": pid,
+            "en_title": record.get("title") or pid,
+            "doi": record.get("doi") or "",
+            "authors": record.get("authors") or "",
+            "en_abstract": record.get("abstract") or "",
+        },
+        "addressed_problems": data.get("addressed_problems") or [],
+        "open_questions": data.get("open_questions") or [],
+    }
+    envelope = {"code": 0, "data": {"papers": [item]}}
+    write_json(dest, envelope)
+    return dest, envelope, {
+        "graph_source": "lkm_extract",
+        "extract_task_id": str(task_id),
+        "extract_status": status or "succeeded",
+        "extract_cache_hit": cache_hit,
+    }
+
+
 def probe_and_select(
     candidates: list[dict[str, Any]],
     run_dir: Path,
@@ -715,12 +956,16 @@ def probe_and_select(
     min_papers: int = DEFAULT_MIN_PAPERS,
     min_graph_nodes: int = DEFAULT_MIN_GRAPH_NODES,
     min_relevance: float = DEFAULT_MIN_RELEVANCE,
+    use_lkm_extract: bool = True,
+    max_extractions: int = DEFAULT_MAX_EXTRACTIONS,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Fetch candidate graphs, reject empty/thin ones, and select top-k."""
     probe_root = run_dir / "01_retrieval" / "probe"
     probe_root.mkdir(parents=True, exist_ok=True)
     first_limit = max(int(candidate_limit), int(top_k), int(min_papers))
     available: list[dict[str, Any]] = []
+    extraction_attempts = 0
+    extracted = 0
     audit: dict[str, Any] = {"probed": 0, "candidates": [], "selected": []}
 
     # Probe topical candidates first.  A broad paper can hit several queries
@@ -749,6 +994,7 @@ def probe_and_select(
             stats = _graph_stats(graph)
             candidate.update(stats)
             candidate["probe_path"] = str(dest.relative_to(run_dir))
+            candidate["graph_source"] = "native"
             if stats["node_count"] < int(min_graph_nodes):
                 candidate["skip_reason"] = "thin_graph"
             elif stats["conclusion_count"] < 1:
@@ -759,6 +1005,44 @@ def probe_and_select(
         except GraphUnavailable as exc:
             candidate["skip_reason"] = exc.reason
             candidate["skip_detail"] = _one_line(exc)
+            if (use_lkm_extract and extraction_attempts < int(max_extractions)
+                    and _can_extract(record)):
+                extraction_attempts += 1
+                candidate["extract_attempted"] = True
+                try:
+                    _, graph, extract_meta = _extract_graph(
+                        record, dest, run_dir, runtime
+                    )
+                    extracted += 1
+                    candidate.update(extract_meta)
+                    stats = _graph_stats(graph)
+                    candidate.update(stats)
+                    candidate["probe_path"] = str(dest.relative_to(run_dir))
+                    if stats["node_count"] < int(min_graph_nodes):
+                        candidate["skip_reason"] = "thin_graph"
+                        candidate["skip_detail"] = "extracted graph is too thin"
+                    elif stats["conclusion_count"] < 1:
+                        candidate["skip_reason"] = "no_conclusions"
+                        candidate["skip_detail"] = "extracted graph has no conclusions"
+                    else:
+                        candidate["skip_reason"] = ""
+                        available.append(candidate)
+                except ExtractUnavailable as extract_exc:
+                    candidate["extract_skip_reason"] = extract_exc.reason
+                    candidate["skip_detail"] = _one_line(extract_exc)
+                    print(
+                        f"[retrieve] LKM extraction skipped for {pid}: "
+                        f"{_one_line(extract_exc)[:180]}", flush=True,
+                    )
+                except AriadneError as extract_exc:
+                    candidate["extract_skip_reason"] = "extract_failed"
+                    candidate["skip_detail"] = _one_line(extract_exc)
+                    print(
+                        f"[retrieve] LKM extraction failed for {pid}: "
+                        f"{_one_line(extract_exc)[:180]}", flush=True,
+                    )
+            elif use_lkm_extract and not _can_extract(record):
+                candidate["extract_skip_reason"] = "no_pdf"
         audit["candidates"].append(_candidate_audit(candidate))
         if audit["probed"] >= first_limit and len(available) >= int(min_papers):
             break
@@ -771,13 +1055,31 @@ def probe_and_select(
         if _float(candidate.get("relevance")) >= float(min_relevance)
     ]
     pool = preferred if len(preferred) >= int(min_papers) else available
-    selected = pool[:int(top_k)]
+    selected = list(pool[:int(top_k)])
+    if len(selected) < int(top_k):
+        # The relevance gate is a preference, not a hard cap.  Fill the
+        # requested paper count from the remaining graph-backed candidates so
+        # a `--top-k 5` run does not silently stop at 2-3 "preferred" papers.
+        chosen = {
+            (candidate.get("record") or {}).get("lkm_id") or ""
+            for candidate in selected
+        }
+        for candidate in available:
+            pid = (candidate.get("record") or {}).get("lkm_id") or ""
+            if pid in chosen:
+                continue
+            selected.append(candidate)
+            chosen.add(pid)
+            if len(selected) >= int(top_k):
+                break
     audit["selected"] = [
         (candidate.get("record") or {}).get("lkm_id") or "" for candidate in selected
     ]
     audit["available"] = len(available)
     audit["preferred"] = len(preferred)
     audit["min_relevance"] = float(min_relevance)
+    audit["extract_attempts"] = extraction_attempts
+    audit["extracted"] = extracted
     selection_path = run_dir / "01_retrieval" / "selection.json"
     write_json(selection_path, audit)
     if len(selected) < int(min_papers):
@@ -934,11 +1236,15 @@ def materialise_selected(selected: list[dict[str, Any]], run_dir: Path,
         record.update({
             "graph_path": str((out / "graph.json").relative_to(run_dir)),
             "ocr_path": str(text_path.relative_to(run_dir)),
+            "graph_source": candidate.get("graph_source") or "native",
             "selection": {
                 "rank_score": candidate.get("rank_score"),
                 "query_positions": list(candidate.get("query_positions") or []),
                 "node_count": candidate.get("node_count"),
                 "conclusion_count": candidate.get("conclusion_count"),
+                "graph_source": candidate.get("graph_source") or "native",
+                "extract_task_id": candidate.get("extract_task_id") or "",
+                "extract_status": candidate.get("extract_status") or "",
             },
         })
         items = (graph.get("data") or {}).get("papers") or []
@@ -974,6 +1280,8 @@ def retrieve(
     min_graph_nodes: int = DEFAULT_MIN_GRAPH_NODES,
     min_relevance: float = DEFAULT_MIN_RELEVANCE,
     use_query_planner: bool = True,
+    use_lkm_extract: bool = True,
+    max_extractions: int = DEFAULT_MAX_EXTRACTIONS,
 ) -> list[dict[str, Any]]:
     runtime = _runtime_or_resolve(runtime)
     if paper_spec is not None:
@@ -1005,6 +1313,8 @@ def retrieve(
         min_papers=min_papers,
         min_graph_nodes=min_graph_nodes,
         min_relevance=min_relevance,
+        use_lkm_extract=use_lkm_extract,
+        max_extractions=max_extractions,
     )
     selection = {
         "question": question,
@@ -1021,6 +1331,10 @@ def retrieve(
         "probed": selection_audit.get("probed", 0),
         "first_pass": selection_audit.get("first_pass"),
         "max_probe": selection_audit.get("max_probe"),
+        "extract_attempts": selection_audit.get("extract_attempts", 0),
+        "extracted": selection_audit.get("extracted", 0),
+        "use_lkm_extract": use_lkm_extract,
+        "max_extractions": max_extractions,
     }
     write_json(run_dir / "01_retrieval" / "selection.json", selection)
     papers = materialise_selected(selected, run_dir, runtime, fulltext=fulltext)

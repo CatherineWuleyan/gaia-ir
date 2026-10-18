@@ -68,6 +68,8 @@ def _retrieval_config(config: Config) -> dict[str, Any]:
         "min_papers": int(config.get("retrieval.min_papers", 2)),
         "min_graph_nodes": int(config.get("retrieval.min_graph_nodes", 3)),
         "min_relevance": float(config.get("retrieval.min_relevance", 0.2)),
+        "use_lkm_extract": bool(config.get("retrieval.use_lkm_extract", True)),
+        "max_extractions": int(config.get("retrieval.max_extractions", 3)),
     }
 
 
@@ -116,6 +118,9 @@ def _print_config_summary(runtime: Runtime) -> None:
     _print_kv("min papers / min nodes",
               f"{retrieval['min_papers']} / {retrieval['min_graph_nodes']}")
     _print_kv("min relevance", retrieval["min_relevance"])
+    _print_kv("LKM extract fallback",
+              f"on (max {retrieval['max_extractions']})"
+              if retrieval["use_lkm_extract"] else "off")
 
 
 # --------------------------------------------------------------------------- #
@@ -237,6 +242,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     _print_kv("min papers / min nodes",
               f"{retrieval['min_papers']} / {retrieval['min_graph_nodes']}")
     _print_kv("min relevance", retrieval["min_relevance"])
+    _print_kv("LKM extract fallback",
+              f"on (max {retrieval['max_extractions']})"
+              if retrieval["use_lkm_extract"] else "off")
     print("\nBohr")
     _print_kv("cli", checks["bohr"]["cli"] or "not found", ok=bool(checks["bohr"]["cli"]))
     if checks["bohr"]["version"]:
@@ -339,6 +347,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
             max_queries=args.queries,
             candidate_limit=args.candidate_limit,
             use_query_planner=args.use_query_planner,
+            use_lkm_extract=args.use_lkm_extract,
+            max_extractions=args.max_extractions,
         )
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -754,6 +764,11 @@ def build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--no-query-planner", dest="use_query_planner",
                      action="store_false", default=None,
                      help="disable the LLM query planner; use deterministic queries")
+    ask.add_argument("--no-lkm-extract", dest="use_lkm_extract",
+                     action="store_false", default=None,
+                     help="do not build graphs with bohr lkm extract")
+    ask.add_argument("--max-extractions", type=int,
+                     help="max papers to graph via bohr lkm extract")
     _add_model_overrides(ask)
     _add_config_flag(ask)
     ask.add_argument("--json", action="store_true")

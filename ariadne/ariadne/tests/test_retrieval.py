@@ -271,6 +271,77 @@ class RelevanceTest(unittest.TestCase):
         self.assertGreaterEqual(relevant, 0.2)
 
 
+class PdfResolutionTest(unittest.TestCase):
+    def test_arxiv_pdf_url(self) -> None:
+        urls = retrieval._pdf_urls({"arxiv": "2501.00001"})
+        self.assertIn("https://arxiv.org/pdf/2501.00001", urls)
+
+    def test_openalex_finds_repository_pdf(self) -> None:
+        payload = {
+            "best_oa_location": {"pdf_url": "https://repo.example/a.pdf"},
+            "locations": [{"pdf_url": "https://repo.example/b.pdf"}],
+            "open_access": {"oa_url": "https://doi.org/10.1000/x"},
+        }
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self):
+                return json.dumps(payload).encode("utf-8")
+
+        with mock.patch("ariadne.retrieval.urllib.request.urlopen",
+                        return_value=FakeResponse()):
+            urls = retrieval._openalex_pdf_urls("10.1000/x")
+        self.assertEqual(urls[:2], ["https://repo.example/a.pdf",
+                                    "https://repo.example/b.pdf"])
+
+    def test_doi_is_treated_as_extractable_source(self) -> None:
+        self.assertTrue(retrieval._can_extract({"doi": "10.1000/x"}))
+        self.assertFalse(retrieval._can_extract({"lkm_id": "1"}))
+
+
+class ExtractGraphTest(unittest.TestCase):
+    def test_extract_submit_and_result_are_parsed(self) -> None:
+        calls = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append(list(cmd))
+            if "submit" in cmd:
+                payload = {"ok": True, "data": {"task_id": "task-1",
+                                                "status": "succeeded",
+                                                "cache_hit": False}}
+            else:
+                payload = {"ok": True, "data": {
+                    "graph": {"nodes": [{"kind": "conclusion",
+                                         "content": "Extracted conclusion"}],
+                              "edges": []},
+                    "addressed_problems": [], "open_questions": [],
+                }}
+            return subprocess.CompletedProcess(cmd, 0,
+                                               stdout=json.dumps(payload),
+                                               stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime = _runtime(root)
+            dest = root / "probe" / "1.json"
+            record = {"lkm_id": "1", "title": "Paper", "arxiv": "2501.00001"}
+            with mock.patch("ariadne.retrieval._download_pdf",
+                            return_value=root / "source.pdf"), \
+                    mock.patch("ariadne.retrieval.run", side_effect=fake_run):
+                path, graph, meta = retrieval._extract_graph(record, dest, root, runtime)
+                self.assertTrue(path.is_file())
+                self.assertEqual(retrieval._graph_stats(graph)["node_count"], 1)
+        self.assertEqual(meta["graph_source"], "lkm_extract")
+        self.assertEqual(meta["extract_task_id"], "task-1")
+        self.assertTrue(any("submit" in call for call in calls))
+        self.assertTrue(any("result" in call for call in calls))
+
+
 class ProbeSelectionTest(unittest.TestCase):
     def test_skips_empty_and_thin_graphs(self) -> None:
         graphs = {
@@ -322,6 +393,60 @@ class ProbeSelectionTest(unittest.TestCase):
                         [_candidate("only")], root, runtime, top_k=2,
                         candidate_limit=2, min_papers=2, min_graph_nodes=3,
                     )
+
+    def test_empty_native_graph_can_be_built_with_lkm_extract(self) -> None:
+        def fake_fetch(record, dest, run_dir, runtime):
+            raise retrieval.GraphUnavailable("empty", reason="empty_graph")
+
+        def fake_extract(record, dest, run_dir, runtime):
+            graph = _graph(6, 2)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(json.dumps(graph), encoding="utf-8")
+            return dest, graph, {
+                "graph_source": "lkm_extract",
+                "extract_task_id": "task-1",
+                "extract_status": "succeeded",
+            }
+
+        candidate = _candidate("p1")
+        candidate["record"]["arxiv"] = "2501.00001"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime = _runtime(root)
+            with mock.patch("ariadne.retrieval._fetch_graph", side_effect=fake_fetch), \
+                    mock.patch("ariadne.retrieval._extract_graph", side_effect=fake_extract):
+                selected, audit = retrieval.probe_and_select(
+                    [candidate], root, runtime, top_k=1, candidate_limit=1,
+                    min_papers=1, min_graph_nodes=3,
+                    use_lkm_extract=True, max_extractions=1,
+                )
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(selected[0]["graph_source"], "lkm_extract")
+        self.assertEqual(audit["extract_attempts"], 1)
+        self.assertEqual(audit["extracted"], 1)
+
+    def test_fills_top_k_from_remaining_graphs(self) -> None:
+        def fake_fetch(record, dest, run_dir, runtime):
+            graph = _graph(5, 1)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(json.dumps(graph), encoding="utf-8")
+            return dest, graph
+
+        candidates = []
+        for index in range(5):
+            candidate = _candidate(f"p{index}")
+            candidate["relevance"] = 0.4 if index < 3 else 0.1
+            candidates.append(candidate)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime = _runtime(root)
+            with mock.patch("ariadne.retrieval._fetch_graph", side_effect=fake_fetch):
+                selected, audit = retrieval.probe_and_select(
+                    candidates, root, runtime, top_k=5, candidate_limit=5,
+                    min_papers=2, min_graph_nodes=3, min_relevance=0.2,
+                )
+        self.assertEqual(len(selected), 5)
+        self.assertEqual(audit["preferred"], 3)
 
     def test_extends_probe_when_first_pass_has_too_few_graphs(self) -> None:
         def fake_fetch(record, dest, run_dir, runtime):

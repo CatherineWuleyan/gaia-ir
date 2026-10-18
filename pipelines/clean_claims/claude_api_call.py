@@ -329,7 +329,11 @@ def call_claude(
             "Authorization": f"Bearer {key}", "Content-Type": "application/json",
         }, method="POST")
         try:
-            with urlopen(request, timeout=180) as response:
+            try:
+                timeout_seconds = float(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "180"))
+            except ValueError:
+                timeout_seconds = 180.0
+            with urlopen(request, timeout=timeout_seconds) as response:
                 raw = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             raise RuntimeError(f"DeepSeek cleaning request failed with HTTP {exc.code}") from exc

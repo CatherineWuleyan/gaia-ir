@@ -1,8 +1,10 @@
 """The public checkout must contain every file Ariadne's full mode needs."""
 from __future__ import annotations
 
+import subprocess
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from ariadne import paper2ir
@@ -23,6 +25,43 @@ class RunDirectoryTest(unittest.TestCase):
                 os.chdir(previous)
             self.assertTrue(path.is_absolute())
             self.assertEqual(path, (Path(tmp) / "relative" / "run").resolve())
+
+
+class Paper2IRRetryTest(unittest.TestCase):
+    def test_transient_markers(self) -> None:
+        self.assertTrue(paper2ir._is_transient("ConnectionResetError: [Errno 54]"))
+        self.assertTrue(paper2ir._is_transient("HTTP Error 503: Service Unavailable"))
+        self.assertFalse(paper2ir._is_transient("invalid JSON schema"))
+
+    def test_finds_cached_claims_from_previous_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cached = (root / "outputs" / "ariadne_runs" / "run_x"
+                      / "02_paper2ir" / "data" / "paper-1" / "claims_final.json")
+            cached.parent.mkdir(parents=True)
+            cached.write_text('{"claim": []}\n', encoding="utf-8")
+            with mock.patch("ariadne.paper2ir.REPO", root):
+                found = paper2ir._find_cached_claims("paper-1")
+        self.assertEqual(found, cached)
+
+    def test_retries_transient_step_failure(self) -> None:
+        failed = subprocess.CompletedProcess(
+            [], 1, stdout="", stderr="Connection reset by peer"
+        )
+        succeeded = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch("ariadne.paper2ir.run", side_effect=[failed, succeeded]) as runner, \
+                    mock.patch("ariadne.paper2ir.time.sleep") as sleeper:
+                proc = paper2ir._run_step(
+                    root / "step.py", "paper-1", root, "/usr/bin/python",
+                    root / "step.log",
+                )
+        self.assertEqual(proc.returncode, 0)
+        self.assertEqual(runner.call_count, 2)
+        sleeper.assert_called_once()
+        second_env = runner.call_args_list[1].kwargs["env"]
+        self.assertEqual(second_env["DEEPSEEK_MODEL"], "deepseek-v4-flash")
 
 
 class PublicDependenciesTest(unittest.TestCase):
