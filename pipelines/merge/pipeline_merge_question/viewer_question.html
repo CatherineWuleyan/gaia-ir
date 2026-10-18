@@ -109,6 +109,7 @@
   .edge.role-abduction{stroke:#6941c6;stroke-width:1.2;stroke-dasharray:2 3}
   .edge.role-analogy{stroke:#c11574;stroke-width:1.2;stroke-dasharray:2 3}
   .edge.role-infer{stroke:#98a2b3;stroke-width:0.8;stroke-dasharray:1 3;opacity:.6}
+  .edge.role-same_paper{stroke:#175cd3;stroke-width:1.3;stroke-dasharray:4 3;opacity:.85}
   .edge.exploratory-edge{stroke:#98a2b3;stroke-width:0.9;stroke-dasharray:2 5;opacity:.35}
   .edge-badge{display:inline-block;border-radius:4px;padding:0 4px;margin-right:3px;font-size:9.5px;color:#fff}
   .edge-badge.role-deduction{background:#175cd3}
@@ -118,8 +119,10 @@
   .edge-badge.role-abduction{background:#6941c6}
   .edge-badge.role-analogy{background:#c11574}
   .edge-badge.role-infer{background:#98a2b3}
+  .edge-badge.role-same_paper{background:#175cd3}
   .edge-badge.role-support{background:#067647}
   .chainrow.exploratory{color:#98a2b3;font-style:italic}
+  .chainrow.same-paper{color:#344054}
   .chainrow.exploratory:hover{background:#f9fafb}
   .chainsteps{margin-top:2px}
   .edge.answer-support.hot,.edge.answer-bounds.hot,.edge.answer-oppose.hot{stroke-width:3}
@@ -416,10 +419,61 @@ function renderRich(value) {
   const byId = new Map(nodes.map(function(n){ return [n.id, n]; }));
   const nodeIndex = new Map(nodes.map(function(n, i){ return [n.id, i]; }));
 
+  function claimOrdinal(id){
+    const node = byId.get(String(id));
+    const match = String((node && node.code) || '').match(/^P(\d+)/);
+    return match ? Number(match[1]) : 9999;
+  }
+  function samePaperSequences(root){
+    const groups = new Map();
+    (root.support_ids || []).forEach(function(id){
+      const node = byId.get(String(id));
+      if (!node) return;
+      const paper = node.paper || '?';
+      if (!groups.has(paper)) groups.set(paper, []);
+      groups.get(paper).push(String(id));
+    });
+    const result = [];
+    groups.forEach(function(ids, paper){
+      if (ids.length < 2) return;
+      ids.sort(function(a, b){ return claimOrdinal(a) - claimOrdinal(b); });
+      result.push({ paper: paper, ids: ids });
+    });
+    return result;
+  }
+  const samePaperByRoot = new Map();
+  const samePaperEdges = [];
+  answerRoots.forEach(function(root){
+    const rid = String(root.id);
+    const sequences = samePaperSequences(root);
+    samePaperByRoot.set(rid, sequences);
+    sequences.forEach(function(seq){
+      for (let i = 0; i < seq.ids.length - 1; i++) {
+        const source = seq.ids[i], target = seq.ids[i + 1];
+        if (!byId.has(source) || !byId.has(target)) continue;
+        samePaperEdges.push({
+          id: 'same-paper:' + rid + ':' + seq.paper + ':' + source + ':' + target,
+          source: source,
+          target: target,
+          label: 'same paper',
+          semantic_type: 'same_paper',
+          layer: 'same_paper',
+          edge_class: 'sequence',
+          reasoning_type: 'same_paper',
+          residual_reason: null,
+          chainable: false,
+          role_reason: 'Direct support claims from the same paper, ordered by claim number; a reading sequence, not a logical inference.',
+          details: { reasoning_type: 'same_paper', chainable: false, relation: 'same paper' }
+        });
+      }
+    });
+  });
+  rawEdges.push.apply(rawEdges, samePaperEdges);
+
   const edges = rawEdges.map(function(e, i){
     const st = String(e.semantic_type || e.label || '');
     const isAnswer = e.layer === 'answer' || String(e.id || '').startsWith('answer:');
-    const directed = st === 'infer' || st === 'deduction' || isAnswer;
+    const directed = st === 'infer' || st === 'deduction' || st === 'same_paper' || isAnswer;
     const family = isAnswer
       ? 'answer-' + (st === 'support' ? 'support' : st === 'oppose' ? 'oppose' : 'bounds')
       : st === 'conjunction' ? 'joint' : st === 'infer' ? 'entail' : 'definition';
@@ -442,6 +496,28 @@ function renderRich(value) {
       hidden: false
     };
   }).filter(function(e){ return byId.has(e.source) && byId.has(e.target); });
+
+  const edgeById = new Map(edges.map(function(e){ return [e.id, e]; }));
+  const ROLE_LABELS = {
+    deduction: 'deduces', special_case: 'special case', reproduces: 'reproduces',
+    bounds: 'bounds', abduction: 'explains', analogy: 'analogy',
+    infer: 'related', same_paper: 'same paper', conjunction: 'conjunction', support: 'supports'
+  };
+  const RESIDUAL_LABELS = {
+    precondition: 'requires', enabling: 'enables', instance: 'instance', unclear: 'related'
+  };
+  function roleOfEdge(edge){
+    if (!edge || edge.answer) return { type: 'support', label: 'supports' };
+    const type = edge.reasoning_type || 'infer';
+    let label = ROLE_LABELS[type] || type;
+    if (type === 'infer' && edge.residual_reason && RESIDUAL_LABELS[edge.residual_reason]) {
+      label = RESIDUAL_LABELS[edge.residual_reason];
+    }
+    return { type: type, label: label };
+  }
+  function edgeLabel(edge){
+    return roleOfEdge(edge).label;
+  }
 
   const palette = ['#175cd3','#b54708','#067647','#6941c6','#c11574','#0e9384','#b42318','#3538cd','#b93815','#475467','#7f56d9','#0ba5ec','#3b7c0f'];
   const papers = Array.from(new Set(nodes.filter(function(n){ return !n.isRoot && !n.domainConclusion; }).map(function(n){ return n.paper; }))).sort();
@@ -493,6 +569,17 @@ function renderRich(value) {
     });
     rootChainNodes.set(rid, nodeSet);
     rootChainEdges.set(rid, edgeSet);
+  });
+  samePaperByRoot.forEach(function(sequences, rid){
+    const edgeSet = rootChainEdges.get(rid);
+    if (!edgeSet) return;
+    sequences.forEach(function(seq){
+      for (let i = 0; i < seq.ids.length - 1; i++) {
+        const id = 'same-paper:' + rid + ':' + seq.paper + ':' + seq.ids[i] + ':' + seq.ids[i + 1];
+        edgeSet.add(id);
+        answerChainEdges.add(id);
+      }
+    });
   });
 
   const rootExploratoryNodes = new Map();
@@ -636,7 +723,8 @@ function renderRich(value) {
 
     const roleColors = {
       deduction: '#175cd3', special_case: '#0e9384', reproduces: '#067647',
-      bounds: '#b54708', abduction: '#6941c6', analogy: '#c11574', infer: '#98a2b3'
+      bounds: '#b54708', abduction: '#6941c6', analogy: '#c11574',
+      same_paper: '#175cd3', infer: '#98a2b3'
     };
     const reasoningCounts = new Map();
     edges.forEach(function(edge){
@@ -644,14 +732,15 @@ function renderRich(value) {
       const type = edge.reasoning_type || 'infer';
       reasoningCounts.set(type, (reasoningCounts.get(type) || 0) + 1);
     });
-    const reasoningRows = ['deduction', 'special_case', 'reproduces', 'bounds', 'abduction', 'analogy', 'infer']
+    const reasoningRows = ['deduction', 'special_case', 'reproduces', 'bounds', 'abduction', 'analogy', 'same_paper', 'infer']
       .filter(function(name){ return reasoningCounts.get(name); })
       .map(function(name){
         const color = roleColors[name];
         const swatch = name === 'deduction'
           ? '<span class="swatch" style="background:' + color + '"></span>'
           : '<span class="swatch" style="background:none;border-top:3px dashed ' + color + ';height:0"></span>';
-        return '<div class="row">' + swatch + '<span>' + escapeHtml(name) +
+        const label = name === 'same_paper' ? 'same paper' : name;
+        return '<div class="row">' + swatch + '<span>' + escapeHtml(label) +
           '</span><span class="cnt">' + reasoningCounts.get(name) + '</span></div>';
       }).join('');
     const conjunctionCount = relationCounts.get('conjunction') || relationCounts.get('joint') || 0;
@@ -690,7 +779,8 @@ function renderRich(value) {
       (answerRelationRows ? '<div class="legend-title">Answer links</div>' + answerRelationRows : '') +
       '<div class="legend-title">Reasoning types</div>' + reasoningRows +
       '<div class="legend-note" style="margin-top:2px">Only <b>deduction</b> is chainable. <b>infer</b> is the residual class ' +
-      'and is not evidence. Dashed edges are typed but non-chainable.</div>' +
+      'and is not evidence. <b>same paper</b> groups direct support claims by paper, ordered by claim number; ' +
+      'it is a reading sequence, not a logical inference.</div>' +
       (relationRows ? '<div class="legend-title">Relations</div>' + relationRows : '') +
       '<div class="legend-title">Nodes</div>' +
       (answerRows ? '<div class="row"><span class="dot" style="background:#b42318"></span><span>Candidate answer</span><span class="cnt">' + answerCount + '</span></div>' : '') +
@@ -857,48 +947,30 @@ function renderRich(value) {
   function layoutRoots(){
     const roots = nodes.filter(function(n){ return n.isRoot && !n.el.classList.contains('hidden'); });
     if (!roots.length) return;
-    const fullDomain = !!(document.getElementById('toggle-full-domain') &&
-      document.getElementById('toggle-full-domain').checked);
-    // Unpin the previous answer grid; roots are re-pinned below.
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(function(n){
-      if (!n.isRoot) { n.pinned = false; n.pinPos = null; }
+      if (n.isRoot || n.el.classList.contains('hidden')) return;
+      const p = state.positions[n.index];
+      if (!p) return;
+      minX = Math.min(minX, p.x - n.r);
+      maxX = Math.max(maxX, p.x + n.r);
+      minY = Math.min(minY, p.y - n.r);
+      maxY = Math.max(maxY, p.y + n.r);
     });
-    const rootsSpan = Math.max((roots.length - 1) * 230, 720);
-    const cx = viewportRect().left + viewportRect().width / 2;
-    const top = Math.max(92, H() * 0.16);
-    const rootX = new Map();
+    const rootsSpan = Math.max(roots.length * 200, 720);
+    let cx = W() / 2, top;
+    if (!isFinite(minX)) {
+      top = H() * 0.22;
+    } else {
+      cx = (minX + maxX) / 2;
+      top = minY - 165;
+    }
     roots.forEach(function(n, i){
       const t = roots.length === 1 ? 0.5 : i / (roots.length - 1);
       const position = { x: cx - rootsSpan / 2 + rootsSpan * t, y: top };
       n.pinned = true;
       n.pinPos = position;
       state.positions[n.index] = position;
-      rootX.set(String(n.id), position.x);
-    });
-    // Deterministic answer grid: each root's direct support claims sit in a
-    // compact 2-3 column block below the root.  This replaces the old single
-    // horizontal band, which left most of the canvas empty.
-    const assigned = new Set();
-    roots.forEach(function(root){
-      const info = root.root || {};
-      const claims = (info.links || []).map(function(link){ return String(link.claim_id); })
-        .filter(function(id){ return byId.has(id) && !assigned.has(id); });
-      if (!claims.length) return;
-      const cols = claims.length <= 4 ? 2 : 3;
-      const gapX = 82, gapY = 64;
-      const startX = rootX.get(String(root.id)) - (cols - 1) * gapX / 2;
-      const startY = top + 112;
-      claims.forEach(function(id, j){
-        const node = byId.get(id);
-        if (!node) return;
-        const pos = {
-          x: startX + (j % cols) * gapX,
-          y: startY + Math.floor(j / cols) * gapY
-        };
-        state.positions[node.index] = pos;
-        if (!fullDomain) { node.pinned = true; node.pinPos = pos; }
-        assigned.add(id);
-      });
     });
     state.alpha = Math.max(state.alpha, 0.65);
   }
@@ -949,7 +1021,7 @@ function renderRich(value) {
       const incident = selected && !selectedIsRoot && transform.k >= 1.6 &&
         (edge.source === selected || edge.target === selected);
       if (incident) {
-        item.text.textContent = edge.relation;
+        item.text.textContent = edgeLabel(edge);
         item.text.setAttribute('x', geometry.lx);
         item.text.setAttribute('y', geometry.ly);
         item.text.style.display = '';
@@ -1012,7 +1084,9 @@ function renderRich(value) {
     transform = {
       k: k,
       x: rect.left + (rect.width - width * k) / 2 - minX * k,
-      y: rect.top + (rect.height - height * k) / 2 - minY * k
+      y: hasRoots
+        ? rect.top + 6 - minY * k
+        : rect.top + (rect.height - height * k) / 2 - minY * k
     };
     state.fitted = true;
     applyTransform();
@@ -1100,6 +1174,7 @@ function renderRich(value) {
       ['Criteria', root.criteria || '—'],
       ['Support', (stat.support_claim_count || support.length) + ' claims · ' + (stat.support_paper_count || 0) + ' papers'],
       ['Typed chains', (stat.chain_count || 0) + ' · ' + (stat.chain_status || 'no_typed_chain') + ' · max depth ' + (stat.max_depth || 0)],
+      ['Same-paper sequences', String((samePaperByRoot.get(String(root.id)) || []).length)],
       ['Exploratory', (stat.exploratory_path_count || 0) + ' paths · not evidence'],
       ['Boundary', String(stat.boundary_count || bounds.length)],
       ['Oppose', String(stat.oppose_count || oppose.length)],
@@ -1118,14 +1193,17 @@ function renderRich(value) {
     }
     const chains = root.chains || [];
     const exploratory = root.exploratory_paths || [];
+    const samePaper = samePaperByRoot.get(String(root.id)) || [];
     function chainRowsFor(list, exploratoryMode){
       return list.slice(0, 26).map(function(chain){
         const codes = (chain.path || []).map(function(id){ const n = byId.get(id); return n ? n.code : id; });
         const types = (chain.types || []).slice(1);
         const direct = chain.path && chain.path.length > 1 ? chain.path[chain.path.length - 2] : chain.leaf;
-        const badges = types.map(function(type){
-          const label = type === 'support' ? 'answer' : type;
-          return '<span class="edge-badge role-' + escapeHtml(type) + '">' + escapeHtml(label) + '</span>';
+        const badges = types.map(function(type, index){
+          const edgeId = (chain.edge_ids || [])[index];
+          const edge = edgeId ? edgeById.get(edgeId) : null;
+          const role = edge ? roleOfEdge(edge) : { type: 'support', label: type === 'support' ? 'supports' : 'related' };
+          return '<span class="edge-badge role-' + escapeHtml(role.type) + '">' + escapeHtml(role.label) + '</span>';
         }).join('');
         return '<div class="chainrow' + (exploratoryMode ? ' exploratory' : '') + '" data-goto="' + escapeHtml(direct || '') + '">' +
           '<div>' + codes.map(escapeHtml).join(' → ') + '</div>' +
@@ -1152,6 +1230,16 @@ function renderRich(value) {
         ? '<div class="chainbody">' + typedRows + '</div>'
         : '<div class="kv"><span>—</span><span>No chainable deduction path. Direct support above is the only evidence.</span></div>') +
       (chains.length > 26 ? '<div class="hint">Showing first 26 of ' + chains.length + ' typed chains.</div>' : '') +
+      '<div class="section-title">Same-paper evidence sequences (' + samePaper.length + ')</div>' +
+      '<div class="hint">Direct support claims grouped by paper and ordered by claim number. This is a reading sequence, not a logical inference.</div>' +
+      (samePaper.length
+        ? '<div class="chainbody">' + samePaper.map(function(seq){
+            const codes = seq.ids.map(function(id){ const n = byId.get(id); return n ? n.code : id; });
+            return '<div class="chainrow same-paper" data-goto="' + escapeHtml(seq.ids[seq.ids.length - 1] || '') + '">' +
+              '<div>' + codes.map(escapeHtml).join(' → ') + '</div>' +
+              '<div class="chainsteps"><span class="edge-badge role-same_paper">same paper · direct support</span></div></div>';
+          }).join('') + '</div>'
+        : '<div class="kv"><span>—</span><span>No same-paper sequence with two or more direct supports.</span></div>') +
       '<div class="section-title">Exploratory paths (' + exploratory.length + ', not evidence)</div>' +
       '<div class="hint">These are the old infer-based graph paths. They are useful for exploration but are not counted as support.</div>' +
       (exploratory.length
