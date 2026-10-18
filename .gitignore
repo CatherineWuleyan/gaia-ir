@@ -57,6 +57,8 @@ node_modules/
 /archive/
 /bohr/
 /examples/
-/pipelines/clean_claims/
+# paper2ir code is part of the public Ariadne pipeline; only its local corpus
+# and generated runs stay out of Git.
+/pipelines/clean_claims/data/
 /docs/pipelines/
 /docs/validation/

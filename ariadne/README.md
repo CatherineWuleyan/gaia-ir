@@ -1,82 +1,480 @@
 # Ariadne
 
-**Ariadne — question-led domain reasoning graphs.**
+**Question-led domain reasoning graphs.**
 
-Ariadne follows a thread from a research question to papers, claims, candidate
-answers, and inspectable reasoning chains:
+[中文](README.zh-CN.md) · [Examples](#examples) · [Quick start](#quick-start) · [Configuration](#configuration) · [Commands](#commands)
+
+![Aircraft simulation design question graph](docs/images/aircraft-question-graph.png)
+
+Ariadne turns a domain question into a typed, inspectable map of papers,
+claims, candidate answers, and reasoning chains. It does not answer with a
+single paragraph. It returns:
+
+- **candidate answers** (roots R1–R5) generated from the question;
+- the **claims and evidence** that support, bound, or contradict each root;
+- **typed relations** between claims, including cross-paper links;
+- **every multi-step chain** that reaches a root, as Markdown and Mermaid.
+
+The name is deliberate: Ariadne's thread is how you find your way through a
+labyrinth. Here the thread is the answer layer and the reasoning paths that
+lead to it.
 
 ```text
 question
-  → LKM search + paper graphs
-  → paper2ir      (paper graph → claims_final)
-  → single-paper  (claims → Gaia IR package)
-  → merge         (many packages → domain graph)
-  → Step 6        (candidate answer roots + typed links + chains)
-  → HTML question graph + all-chains Markdown
+  -> LKM search + paper knowledge graphs
+  -> paper2ir      (paper graph -> claims_final)
+  -> single-paper  (claims -> Gaia IR package)
+  -> merge         (many packages -> domain graph)
+  -> Step 6        (candidate answer roots + typed links + chains)
+  -> HTML question graph + all-chains Markdown
 ```
 
-The name is deliberate: Ariadne's thread is how you find your way through a
-labyrinth. Here the thread is the answer layer and the reasoning paths that lead
-to it.
+Ariadne is a **thin product layer** over the maintained Gaia IR stages. It does
+not fork the pipelines; it orchestrates them, isolates each run, and adds the
+question-first answer layer and deliverables.
+
+## Examples
+
+### 1. How should aircraft simulation design be carried out?
+
+> **Question:** 怎么完成飞机的仿真设计？
+> **Domain:** conceptual design, flight dynamics, aerodynamic modeling, MDO,
+> hardware-in-the-loop validation.
+
+![Aircraft question graph](docs/images/aircraft-question-graph.png)
+
+The frozen aircraft graph contains **13 papers, 311 claims, 258 relations,
+93 integration deltas, and 5 candidate answers**. The exporter produces
+**107 multi-step chains** to those answers.
+
+| Root | Candidate answer | Chains |
+| --- | --- | ---: |
+| R1 | 集成概念设计环境 · integrated conceptual-design environment | 20 |
+| R2 | 嵌套多学科优化 · nested multidisciplinary optimization | 26 |
+| R3 | 非线性飞行动力学建模 · nonlinear flight-dynamics modeling | 25 |
+| R4 | 飞行数据模型校正 · flight-data model correction | 21 |
+| R5 | 硬件在环验证 · hardware-in-the-loop validation | 15 |
+
+What to look at in the viewer:
+
+- the five large red roots and the green **support** links that reach them;
+- the distinction between **same-paper** claim sequences (reading order, not a
+  logical proof) and cross-paper support;
+- dashed **analogy** and **infer** relations: they are visible context, but
+  they are **not** promoted to deduction and do not form support chains.
+
+Inspect the artifacts:
+
+- [Aircraft question viewer](../outputs/question_domain_aircraft/domain_viewer_question.html)
+- [All chains to R1–R5](../outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md)
+- [Answer layer JSON](../outputs/question_domain_aircraft/answer_layer.json)
+- [Frozen demo dataset](../outputs/question_domain_aircraft/)
+
+Run it offline (no keys, no LKM):
+
+```bash
+./ariadne/run.sh demo
+```
+
+### 2. Which pair-breaking channel sets the in-plane B_c2 in 4H_a-NbSe2?
+
+> **Question:** 在块体 4H_a-NbSe2（非中心对称多型）中，面内上临界场
+> B_c2∥ 由哪条对破缺通道决定：塞曼（经 Ising SOC 抬高）还是轨道
+>（含有限动量/FFLO）？
+
+![Physics question graph](docs/images/physics-question-graph.png)
+
+The reviewed physics graph contains **18 papers, 500 claims, 654 nodes,
+1,298 edges, and 14 theory-layer nodes**. It is an example of a question where
+the answer layer must keep two compatible but competing explanations separate:
+
+- **R1**: Ising protection suppresses the Zeeman channel, leaving the orbital /
+  interlayer channel to set the main scale;
+- **R2**: a purely orbital channel can be numerically sufficient if
+  γ ≈ 31/5.5 ≈ 5.6;
+- the open question is whether Ising SOC is **necessary**, not whether it
+  exists.
+
+The physics case also shows the honesty boundary of the product: the graph
+contains 9 contradiction edges, including cross-symmetry and cross-material
+evidence. The viewer shows them; it does not silently turn them into support.
+
+Inspect the artifacts:
+
+- [Physics reviewed viewer](../outputs/physics_domain/reviewed/domain_graph_full.reviewed.html)
+- [Answer layer JSON](../outputs/physics_domain/reviewed/answer_layer.reviewed.json)
+- [Mentor review notes](../outputs/physics_domain/reviewed/MENTOR_REVIEW.md)
+- [Target question](../outputs/physics_domain/target_question.json)
+
+GitHub shows HTML files as source. To view a graph, open the file locally after
+cloning, or serve the repository with `python3 -m http.server` and open the file
+in a browser.
 
 ## Quick start
 
+### Requirements
+
+| Requirement | Why |
+| --- | --- |
+| Python **3.11+** | the harness and pipeline code |
+| `gaia-lang==0.5.0a7` | the Gaia IR compiler used by the single stage |
+| `bohr` CLI **2.2+** | live LKM search, paper graphs, and optional PDF parsing |
+| DeepSeek or OpenAI-compatible API key | paper2ir, single, merge, and Step 6 |
+| Bohrium account + access key | live LKM calls (not needed for `demo`) |
+
+The public checkout includes the pipeline code Ariadne needs:
+`pipelines/clean_claims`, `pipelines/single_paper`, `pipelines/merge`, and
+`weekly_reports/export_single_artifacts.py`.
+
+### 1. Clone and install
+
 ```bash
-cd /Users/catherinewu/Documents/gaia-ir
+git clone https://github.com/CatherineWuleyan/gaia-ir.git
+cd gaia-ir
 
-# 1. Check prerequisites
-./ariadne/run.sh doctor
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
-# 2. Offline, no LKM or LLM: use the frozen aircraft graph
-./ariadne/run.sh demo
-
-# 3. Full run: question → LKM → paper2ir → single → merge → question layer
-./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --mode full --top-k 8
+pip install --pre -r ariadne/requirements.txt
+pip install -e agent
 ```
 
-Outputs are written to `outputs/ariadne_runs/<timestamp>_<slug>/`:
+`run.sh` prefers, in order: `$ARIADNE_PYTHON`, `.venv-gaia-a7`, `.venv`, then
+`python3`. You can also pin the interpreter in the config (see below).
 
-| File | Meaning |
+### 2. Install the Bohr CLI
+
+```bash
+npm install -g bohr-cli
+bohr version
+```
+
+If `bohr` is already installed and logged in, Ariadne can use the active
+profile. To keep a dedicated Ariadne profile, use `ariadne auth bohr` (next
+step).
+
+### 3. Configure your key and Bohr account
+
+Interactive, recommended:
+
+```bash
+./ariadne/run.sh config init
+```
+
+Non-interactive:
+
+```bash
+export DEEPSEEK_API_KEY="sk-..."
+export BOHR_ACCESS_KEY="..."
+
+./ariadne/run.sh config init --no-input \
+  --api-key "$DEEPSEEK_API_KEY" \
+  --bohr-access-key "$BOHR_ACCESS_KEY"
+```
+
+The config is written to `~/.config/ariadne/config.json` with mode `0600`.
+Ariadne never prints the key; `config show` and `config get` mask it.
+
+Then log in to Bohr with the configured access key:
+
+```bash
+./ariadne/run.sh auth bohr
+```
+
+This creates or updates the Bohr profile `ariadne` and leaves your existing
+default profile untouched. To use the browser/device flow instead:
+
+```bash
+./ariadne/run.sh auth bohr --device
+```
+
+Finally, check everything:
+
+```bash
+./ariadne/run.sh doctor
+```
+
+`doctor` reports the config source, model endpoint, Bohr login, pipeline files,
+and whether demo / offline-full / live-LKM-full are ready. It never prints a
+secret.
+
+### 4. Run the offline demo
+
+```bash
+./ariadne/run.sh demo
+```
+
+This runs the question layer on the frozen aircraft graph: no LKM call and no
+LLM call. It writes a run directory under `outputs/ariadne_runs/`:
+
+```text
+outputs/ariadne_runs/run_<timestamp>_<question>/
+  domain_viewer_question.html   # self-contained question graph
+  ALL_CHAINS_TO_ROOTS.md        # every multi-step chain to each root
+  run.json                      # question, stages, runtime summary
+  04_question/                  # answer_layer.json, view model, evaluation
+```
+
+Open the viewer:
+
+```bash
+open outputs/ariadne_runs/run_*/domain_viewer_question.html   # macOS
+xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
+```
+
+### 5. Run a live question
+
+Start with **two papers** while you check quality and cost:
+
+```bash
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --yes
+```
+
+Preview first without spending anything:
+
+```bash
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --dry-run
+```
+
+Notes:
+
+- `--yes` authorizes billable LKM calls for this run. Without it, Ariadne asks
+  for confirmation in an interactive terminal and fails fast in a batch job.
+- `--top-k 2` keeps paper2ir cost and latency small. Each paper runs **14 LLM
+  steps** in paper2ir, then the single and merge pipelines call models again.
+- `--no-fulltext` skips arXiv PDF download/parsing and uses graph-derived text.
+- `--papers papers.json` replaces LKM search with a local spec (see
+  [Offline paper specs](#offline-paper-specs)).
+
+## Configuration
+
+### File location
+
+| Priority | Source |
+| ---: | --- |
+| 1 | CLI flags (`--api-key`, `--base-url`, `--model`, `--bohr-profile`, …) |
+| 2 | environment variables |
+| 3 | Ariadne config file |
+| 4 | `agent/.env` (legacy, local only) |
+| 5 | built-in defaults |
+
+The config file is resolved in this order:
+
+```text
+$ARIADNE_CONFIG
+$XDG_CONFIG_HOME/ariadne/config.json
+~/.config/ariadne/config.json
+```
+
+On Windows, `%APPDATA%\ariadne\config.json` is used when `APPDATA` is set.
+
+A minimal config looks like this; the full example is
+[`config.example.json`](config.example.json):
+
+```json
+{
+  "version": 1,
+  "model": {
+    "provider": "deepseek",
+    "api_key": "sk-...",
+    "base_url": "https://api.deepseek.com/v1",
+    "model": "deepseek-v4-flash",
+    "merge_model": "deepseek-v4-flash"
+  },
+  "bohr": {
+    "profile": "ariadne",
+    "access_key": "...",
+    "host": "https://open.bohrium.com",
+    "auto_approve_spend": false,
+    "payment_source": ""
+  },
+  "runtime": {
+    "python": ""
+  }
+}
+```
+
+The file is **sparse**: only values you set are written. Unset values keep
+their defaults or fall through to environment / `agent/.env`.
+
+### Config commands
+
+```bash
+./ariadne/run.sh config path                 # print the config path
+./ariadne/run.sh config init                 # interactive setup
+./ariadne/run.sh config init --no-input ...  # scripted setup
+./ariadne/run.sh config show                 # effective config, secrets masked
+./ariadne/run.sh config show --json
+./ariadne/run.sh config get model.model
+./ariadne/run.sh config set model.model deepseek-v4-flash
+./ariadne/run.sh config unset model.model
+./ariadne/run.sh config test --api           # one tiny chat completion
+./ariadne/run.sh config test --bohr          # bohr auth status
+```
+
+Supported keys:
+
+| Key | Meaning |
 | --- | --- |
-| `domain_viewer_question.html` | self-contained question-led domain graph |
-| `ALL_CHAINS_TO_ROOTS.md` | every multi-step chain ending at R1–R5, with Mermaid + content tables |
-| `05_outputs/answer_layer.json` | roots, links, typed edges, exploratory paths |
-| `05_outputs/domain_view_question.json` | view model with the answer layer injected |
-| `run.json` | question, stages, and output paths |
+| `model.provider` | `deepseek` or `openai-compatible` |
+| `model.api_key` | model key (masked in output) |
+| `model.base_url` | OpenAI-compatible base URL, default `https://api.deepseek.com/v1` |
+| `model.model` | paper2ir / single model |
+| `model.merge_model` | merge / Step 6 model |
+| `bohr.profile` | Bohr CLI profile; empty means the active profile |
+| `bohr.access_key` | Bohrium access key (masked in output) |
+| `bohr.host` | default `https://open.bohrium.com` |
+| `bohr.auto_approve_spend` | if true, always pass `--yes` to billable LKM commands |
+| `bohr.payment_source` | empty (gateway default), `photon`, or `balance` |
+| `runtime.python` | Python used for pipeline subprocesses |
+
+### Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `ARIADNE_CONFIG` | config file path |
+| `ARIADNE_MODEL_API_KEY` / `DEEPSEEK_API_KEY` / `OPENAI_API_KEY` | model key |
+| `ARIADNE_MODEL_BASE_URL` / `DEEPSEEK_BASE_URL` / `OPENAI_BASE_URL` | endpoint |
+| `ARIADNE_MODEL` / `DEEPSEEK_MODEL` / `OPENAI_MODEL` | model name |
+| `ARIADNE_MERGE_MODEL` / `DEEPSEEK_MERGE_MODEL` | merge model |
+| `ARIADNE_BOHR_ACCESS_KEY` / `BOHR_ACCESS_KEY` / `LKM_ACCESS_KEY` | Bohr key |
+| `ARIADNE_BOHR_PROFILE` | Bohr profile |
+| `ARIADNE_AUTO_APPROVE_SPEND` | `1` / `true` to approve billable calls |
+| `ARIADNE_PAYMENT_SOURCE` | `photon` or `balance` |
+| `ARIADNE_PYTHON` | interpreter for Ariadne and its subprocesses |
+
+Environment variables win over the config file, so CI does not need a config
+file:
+
+```bash
+DEEPSEEK_API_KEY=... BOHR_ACCESS_KEY=... \
+  ./ariadne/run.sh ask "..." --top-k 2 --yes
+```
+
+### Model compatibility
+
+The bundled paper2ir, single, and merge stages use an **OpenAI-compatible
+chat-completions client**. DeepSeek is the default and the tested path.
+Any endpoint that accepts `POST {base_url}/chat/completions` with
+`Authorization: Bearer <key>` should work; set `model.base_url`,
+`model.model`, and `model.merge_model` accordingly.
+
+`ANTHROPIC_API_KEY` alone is **not** sufficient for a full run: the single and
+merge stages require the OpenAI-compatible client. If you set only an Anthropic
+key, `doctor` says so explicitly.
+
+### Bohr account and billing
+
+`bohr` uses profiles. Ariadne reads `bohr.profile`; when empty, it uses the
+active Bohr profile. `ariadne auth bohr` creates a dedicated `ariadne` profile:
+
+```bash
+# access-key flow (non-interactive)
+./ariadne/run.sh auth bohr --access-key "$BOHR_ACCESS_KEY"
+
+# browser flow
+./ariadne/run.sh auth bohr
+
+# headless/device flow
+./ariadne/run.sh auth bohr --device
+
+# check only
+./ariadne/run.sh auth bohr --check
+./ariadne/run.sh auth status
+```
+
+If you prefer the Bohr CLI directly, the equivalent is:
+
+```bash
+bohr auth login --ak "$BOHR_ACCESS_KEY" --ak-only --profile ariadne
+```
+
+LKM `search`, `graph`, `reasoning`, and related calls are billable
+(**0.05 CNY per call**, with a personal monthly 1,000-call quota at the time of
+writing). PDF parsing is billed separately. Ariadne asks before the first
+billable call; `--yes` or `bohr.auto_approve_spend=true` authorizes the run.
+A `--dry-run` never spends. Check current prices with:
+
+```bash
+bohr billing pricing --resource lkm -o json
+```
+
+### Python interpreter
+
+`run.sh` picks the interpreter before Ariadne starts. Once Ariadne is running,
+`runtime.python` / `ARIADNE_PYTHON` is what pipeline subprocesses use. Pin it
+when your venv is not named `.venv`:
+
+```bash
+./ariadne/run.sh config set runtime.python /opt/venvs/gaia/bin/python
+```
 
 ## Commands
 
-### `doctor`
+| Command | What it does |
+| --- | --- |
+| `ask "<question>"` | full question → LKM → paper2ir → single → merge → render |
+| `ask ... --mode demo` | answer-layer step on the frozen aircraft graph |
+| `ask ... --dry-run` | preflight and plan, no files, no spending |
+| `ask ... --papers spec.json` | offline paper spec instead of LKM search |
+| `ask ... --top-k N` | papers to retrieve (start with 2) |
+| `ask ... --yes` | approve billable LKM calls for this run |
+| `ask ... --no-fulltext` | skip PDF parsing; use graph-derived text |
+| `demo` | offline aircraft example |
+| `doctor` | config, Python, model, Bohr, pipelines, readiness |
+| `config init/show/set/get/unset/path/test` | manage configuration |
+| `auth bohr/status` | Bohr login and auth state |
 
-Checks the repo paths, the Gaia Python environment, the maintained pipeline
-configs, the LKM CLI, and whether a model key is available.
+Global run flags:
 
-### `demo`
+```text
+--config PATH
+--api-key KEY  --base-url URL  --model NAME  --merge-model NAME
+--bohr-profile P  --bohr-access-key AK  --payment-source photon|balance
+--python PATH
+```
 
-Runs the question layer on the frozen aircraft dataset:
+## Outputs
 
-- input: `outputs/question_domain_aircraft/domain_view_typed.json`
-- edge roles: `outputs/question_domain_aircraft/edge_roles_typed.json`
-- answer fixture: `outputs/question_domain_aircraft/answer_fixture.json`
-- no LKM call, no model call
-- output: viewer + all-chains Markdown
+Every full or demo run is isolated under `outputs/ariadne_runs/<timestamp>_<slug>/`:
 
-This is the fastest way to see the final product and to test a change to the
-viewer or the chain exporter.
+| File | Meaning |
+| --- | --- |
+| `domain_viewer_question.html` | self-contained question-led graph; no server needed |
+| `ALL_CHAINS_TO_ROOTS.md` | every multi-step chain ending at R1–R5, with Mermaid and content tables |
+| `05_outputs/answer_layer.json` | roots, links, typed edges, exploratory paths (full) |
+| `05_outputs/domain_view_question.json` | view model with the answer layer injected (full) |
+| `run.json` | question, per-stage timings, config summary (no secrets), output paths |
+| `logs/` | command logs for every stage |
 
-### `ask --mode full`
+The offline demo uses `04_question/` instead of `05_outputs/` for the answer
+layer and view model; the two headline deliverables are still copied to the
+run root.
 
-The real end-to-end path. It has five stages:
+For a full run, intermediate stages are kept:
 
-| Stage | What it does | Main implementation |
+```text
+01_retrieval/   papers.json, search_raw.json, per-paper graph.json + ocr.md
+02_paper2ir/    run-local clean_claims copy, claims_final.json per paper
+03_single/      Gaia IR packages, formalization.json, knowledge.index.json
+04_merge/       merge pipeline run, view_model.json
+05_outputs/     answer layer and deliverables
+```
+
+The run-local `02_paper2ir/pipeline` copy means old data is never reused and a
+failed paper2ir step does not contaminate the next run.
+
+## How it works
+
+| Stage | What it does | Implementation |
 | --- | --- | --- |
-| `01_retrieval` | `bohr lkm search` for the question, then `bohr lkm graph --paper-id`; fetch full text when possible, otherwise build a graph-derived text fallback | `ariadne/retrieval.py` |
-| `02_paper2ir` | 14-step paper2ir pipeline: LKM graph + text → `claims_final.json` | `pipelines/clean_claims` (run from a run-local copy) |
-| `03_single` | maintained single-paper pipeline: claims → `gaia.ir.json`, `formalization.json`, `knowledge.index.json` | `pipelines/single_paper` + harness |
-| `04_merge` | merge the paper packages into one domain graph, with K conclusions and Step 6 answer roots/links | `pipelines/merge/pipeline.question.json` + `pipeline_merge_question` |
-| `05_outputs` | render the question viewer and export all chains | `render_question_viewer.py`, `export_chains_markdown.py` |
+| `01_retrieval` | `bohr lkm search` for the question, then `bohr lkm graph --paper-id`; fetch full text when possible, otherwise build graph-derived text | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
+| `02_paper2ir` | 14-step paper2ir pipeline: LKM graph + text → `claims_final.json` | [`pipelines/clean_claims`](../pipelines/clean_claims/) from a run-local copy |
+| `03_single` | maintained single-paper pipeline: claims → `gaia.ir.json`, `formalization.json`, `knowledge.index.json` | [`pipelines/single_paper`](../pipelines/single_paper/) + harness |
+| `04_merge` | merge paper packages into one domain graph, with K conclusions and Step 6 answer roots/links | [`pipelines/merge/pipeline.question.json`](../pipelines/merge/pipeline.question.json) |
+| `05_render` | render the question viewer and export all chains | [`render_question_viewer.py`](../pipelines/merge/pipeline_merge_question/render_question_viewer.py), [`export_chains_markdown.py`](../pipelines/merge/pipeline_merge_question/export_chains_markdown.py) |
 
-This is the "three pipelines" the product packages:
+The three maintained pipelines Ariadne packages:
 
 1. **paper2ir** — paper → claims;
 2. **single** — claims → per-paper reasoning graph;
@@ -84,22 +482,21 @@ This is the "three pipelines" the product packages:
 
 Retrieval is before the three pipelines; rendering is after them.
 
-## Prerequisites for full mode
+### What “support” means
 
-- `bohr` CLI installed and logged in (`bohr auth login`), or pass a local paper
-  spec instead of using LKM search.
-- A model key in `agent/.env` (`DEEPSEEK_API_KEY` or `ANTHROPIC_API_KEY`).
-- The repo-local `.venv-gaia-a7` environment, or set `ARIADNE_PYTHON` to a
-  compatible Python with Gaia 0.5.0a7.
-- Full mode is expensive: paper2ir is 14 LLM steps per paper, then the single
-  pipeline and merge also call models. Start with `--top-k 2` or `--top-k 3`
-  when testing.
+- Only **deduction** edges are chainable. `infer`, `analogy`, `bounds`,
+  `special_case`, and `same-paper` are retained as visible context but are not
+  promoted to deduction.
+- `same-paper` groups direct support claims by paper and claim number; it is a
+  reading sequence, not a logical proof.
+- The viewer shows all graph paths by default. A path being drawable does not
+  make it evidence; the chain exporter labels the edge type.
+- Roots are **candidate answers**, not truth labels. The graph is a map of the
+  evidence and its gaps, not a verdict.
 
-### Offline paper spec
+## Offline paper specs
 
-`ask --mode full --papers weekly_reports/lkm_papers.json` skips LKM search but
-still fetches each paper's LKM graph (and full text when an arXiv id is present).
-A local spec can also point at existing graph/text files:
+Use `--papers` to skip LKM search. A spec can point at LKM ids or local files:
 
 ```json
 {
@@ -110,38 +507,93 @@ A local spec can also point at existing graph/text files:
       "arxiv": "2501.00001",
       "graph_path": "path/to/graph.json",
       "ocr_path": "path/to/paper.md"
+    },
+    {
+      "title": "Local graph without an LKM id",
+      "graph_path": "path/to/another-graph.json",
+      "ocr_path": "path/to/another-paper.md"
     }
   ]
 }
 ```
 
-Paths are relative to the repo root.
+Paths are relative to the repository root unless absolute. Accepted graph shapes:
 
-## Product vs. repo
+- `{"code": 0, "data": {"papers": [...]}}` (pipeline-native);
+- `{"data": {"items": [...]}}` (Bohr CLI response);
+- a bare `{"nodes": [...], "edges": [...]}` graph;
+- a single paper item with `graph` / `paper`.
 
-Ariadne is a **thin product layer**, not a fork of the pipelines. It orchestrates
-the maintained implementations in `pipelines/clean_claims`,
-`pipelines/single_paper`, and `pipelines/merge`, adding:
+A local graph without an LKM id receives a stable `local_<hash>` id, so the
+rest of the pipeline can still run.
 
-- a question-first entry point;
-- LKM retrieval and materialisation;
-- isolated run directories (the clean_claims copy is per-run; old data is not
-  reused);
-- answer-root generation and typed-link validation via Step 6;
-- the viewer and all-chains Markdown export.
+```bash
+./ariadne/run.sh ask "your question" \
+  --papers my-papers.json --top-k 2 --yes
+```
 
-Keeping the product thin makes each stage independently auditable: a failure in
-paper2ir is not hidden inside a new monolith, and the merge/viewer code remains
-the maintained code.
+Local graph/text entries do not spend LKM calls. Entries with only an
+`lkm_id` still call `bohr lkm graph` and need `--yes`.
 
-## Honest status
+## Troubleshooting
 
-- `demo` is tested offline on the frozen aircraft graph.
-- `full` is wired to the maintained stages, but a complete 2+ paper LKM run was
-  not executed while packaging this product because it needs live LKM
-  authentication and multiple model calls. Use `doctor` and `--top-k 2` for the
-  first real run.
-- The quality of full-mode chains depends on paper2ir/single/merge and the
-  question layer. The viewer does not turn `infer` into `deduction`; only
-  `deduction` is chainable, and cross-paper `analogy`/`infer` are retained as
-  visible non-support relations.
+| Symptom | Fix |
+| --- | --- |
+| `bohr: command not found` | `npm install -g bohr-cli`, or use `--papers` with local files |
+| `profile "ariadne" does not exist` | `./ariadne/run.sh auth bohr`, or set `bohr.profile` to an existing profile |
+| `bohr lkm search failed` / `401` | check the access key, run `ariadne auth bohr --check`, or `bohr auth login` |
+| `CONFIRMATION_REQUIRED` | re-run with `--yes`, or set `bohr.auto_approve_spend=true` |
+| `No model API key is configured` | `config init`, `--api-key`, or `DEEPSEEK_API_KEY` |
+| `ANTHROPIC_API_KEY` is set but full mode fails | use a DeepSeek/OpenAI-compatible key; the bundled single/merge stages need it |
+| `ModuleNotFoundError: gaia` | `pip install --pre -r ariadne/requirements.txt` |
+| `No module named pipeline_harness` | `pip install -e agent`, or run through `./ariadne/run.sh` |
+| `--papers contains no usable entries` | each entry needs `lkm_id` or `graph_path` |
+| `Ariadne needs at least two papers` | increase `--top-k` or add papers to the spec |
+| `paper2ir stopped at ...` | inspect `02_paper2ir/logs/paper2ir_<id>.log`; run-local data is preserved for diagnosis |
+| Demo works but live run is slow | start with `--top-k 2 --no-fulltext`; paper2ir is 14 LLM steps per paper |
+| Windows path errors | use a venv inside the repo and run from the repository root; set `runtime.python` explicitly |
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| [`ariadne/`](.) | this product: CLI, config, retrieval, stage orchestration, render |
+| [`agent/`](../agent/) | pipeline harness, artifact store, checkpoints, validation, viewer source |
+| [`pipelines/clean_claims/`](../pipelines/clean_claims/) | paper2ir: paper graph → claims |
+| [`pipelines/single_paper/`](../pipelines/single_paper/) | claims → per-paper Gaia IR |
+| [`pipelines/merge/`](../pipelines/merge/) | many packages → domain graph + question layer |
+| [`weekly_reports/export_single_artifacts.py`](../weekly_reports/export_single_artifacts.py) | export single-run artifacts for merge |
+| [`outputs/question_domain_aircraft/`](../outputs/question_domain_aircraft/) | frozen aircraft demo dataset |
+| [`outputs/physics_domain/reviewed/`](../outputs/physics_domain/reviewed/) | reviewed physics example graph |
+
+## Status and limits
+
+- `demo` is tested offline on the frozen aircraft graph and writes both
+  deliverables.
+- `full` is wired to the maintained stages and preflight-checks config, Python,
+  pipeline files, and Bohr login before spending. A complete live 2+ paper run
+  needs your keys and LKM quota; start with `--top-k 2 --no-fulltext`.
+- The quality of full-mode chains depends on paper2ir, single, merge, and the
+  question layer. Ariadne reports what those stages produce; it does not invent
+  missing evidence or upgrade `infer` to `deduction`.
+- The viewer shows all graph paths by default. A drawable path is not
+  automatically a support chain.
+- The physics example is a reviewed static graph, not a fresh live run. It
+  demonstrates the shape of the answer layer and the review surface.
+
+## Cost
+
+| Resource | Cost |
+| --- | --- |
+| LKM search / graph / reasoning | 0.05 CNY per call, personal monthly 1,000-call quota |
+| LKM PDF extraction | separate billing; check `bohr billing pricing` |
+| LLM calls | billed by your provider; paper2ir is 14 steps per paper plus single/merge |
+
+A two-paper run makes roughly 1 search + 2 graph calls (plus optional PDF
+parsing) before the LLM pipeline. Use `--dry-run` to see the plan and
+`--no-fulltext` to skip PDF parsing.
+
+## License
+
+This repository currently has no license file. Treat it as a research
+prototype; add a license before redistributing it as a library.

@@ -10,11 +10,11 @@ from __future__ import annotations
 import importlib.util
 import os
 import shutil
-import sys
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from .util import AriadneError, REPO, load_env, run, stage_log, write_json
+from .config import Config, Runtime, resolve_runtime
+from .util import AriadneError, REPO, python_bin, run, stage_log, write_json
 
 EMPTY_INSTANCE_OUTPUTS = frozenset({
     "instance_target_positions.json",
@@ -45,7 +45,7 @@ def _load_module(path: Path):
 
 
 def run_one(paper: Mapping[str, Any], stage_dir: Path, pipeline_dir: Path,
-            module: Any, run_root: Path) -> dict[str, Any]:
+            module: Any, run_root: Path, python: str) -> dict[str, Any]:
     pid = str(paper["lkm_id"])
     paper_dir = stage_dir / "data" / pid
     paper_dir.mkdir(parents=True, exist_ok=True)
@@ -64,7 +64,7 @@ def run_one(paper: Mapping[str, Any], stage_dir: Path, pipeline_dir: Path,
         expected = paper_dir / expected_output
         # Keep the child's output in the product log, not in the terminal.
         proc = run(
-            [sys.executable, str(script), pid],
+            [python, str(script), pid],
             cwd=pipeline_dir, env=dict(os.environ, PYTHONPATH=str(pipeline_dir)),
             log=log, timeout=7200, check=False,
         )
@@ -89,19 +89,20 @@ def run_one(paper: Mapping[str, Any], stage_dir: Path, pipeline_dir: Path,
     }
 
 
-def run_all(papers: Iterable[Mapping[str, Any]], stage_dir: Path, run_root: Path) -> list[dict[str, Any]]:
-    load_env()
+def run_all(papers: Iterable[Mapping[str, Any]], stage_dir: Path, run_root: Path,
+            runtime: Runtime | None = None) -> list[dict[str, Any]]:
+    if runtime is None:
+        runtime = resolve_runtime(Config.load())
+    runtime.apply_env()
     stage_dir.mkdir(parents=True, exist_ok=True)
     pipeline_dir = _copy_pipeline(stage_dir / "pipeline")
-    # Match the repo runner's key/model convention.
-    if not os.environ.get("DEEPSEEK_MODEL") and os.environ.get("DEEPSEEK_API_KEY"):
-        os.environ["DEEPSEEK_MODEL"] = "deepseek-v4-flash"
-    key_name = "DEEPSEEK_API_KEY" if os.environ.get("DEEPSEEK_MODEL") else "ANTHROPIC_API_KEY"
-    if not os.environ.get(key_name):
+    if not os.environ.get("DEEPSEEK_API_KEY"):
         raise AriadneError(
-            f"{key_name} is not set. Add it to agent/.env or the environment, "
-            "or use `ariadne demo` for the offline example."
+            "No OpenAI-compatible model key is configured. Run "
+            "`ariadne config init`, set DEEPSEEK_API_KEY, or use `ariadne demo`."
         )
+    os.environ.setdefault("DEEPSEEK_MODEL", "deepseek-v4-flash")
+    python = runtime.python or python_bin()
     # The 14 step scripts each derive ``PROJECT_ROOT/data`` from their own
     # location.  Keep the run's data in the stage dir but expose it at the
     # pipeline copy's expected ``data/`` path via a symlink, otherwise the
@@ -116,6 +117,6 @@ def run_all(papers: Iterable[Mapping[str, Any]], stage_dir: Path, run_root: Path
     module.DATA_DIR = pipeline_data
     results = []
     for paper in papers:
-        results.append(run_one(paper, stage_dir, pipeline_dir, module, run_root))
+        results.append(run_one(paper, stage_dir, pipeline_dir, module, run_root, python))
     write_json(stage_dir / "papers.json", {"papers": results})
     return results

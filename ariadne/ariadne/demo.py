@@ -1,10 +1,10 @@
 """Offline demo: run the question layer on the frozen aircraft graph."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
+from .config import Config, Runtime, resolve_runtime
 from .render import install_outputs, render_outputs
 from .util import AriadneError, DEFAULT_CONFIG, REPO, new_run_dir, python_bin, read_json, run, stage_log, write_json
 
@@ -14,7 +14,11 @@ def _resolve(value: str) -> Path:
     return path if path.is_absolute() else REPO / path
 
 
-def run_demo(out: Path | None = None, config_path: Path | None = None) -> dict[str, Any]:
+def run_demo(out: Path | None = None, config_path: Path | None = None,
+             runtime: Runtime | None = None) -> dict[str, Any]:
+    if runtime is None:
+        runtime = resolve_runtime(Config.load())
+    runtime.apply_env()
     config_path = config_path or DEFAULT_CONFIG
     config = read_json(config_path)
     question = str(config["question_zh"])
@@ -30,7 +34,7 @@ def run_demo(out: Path | None = None, config_path: Path | None = None) -> dict[s
     log = stage_log(run_dir, "demo_question_layer")
     print(f"[demo] frozen graph: {view.name}", flush=True)
     run(
-        [python_bin(), str(REPO / "pipelines" / "merge" / "pipeline_merge_question" / "run_question_layer.py"),
+        [runtime.python or python_bin(), str(REPO / "pipelines" / "merge" / "pipeline_merge_question" / "run_question_layer.py"),
          "--view", str(view), "--edge-roles", str(roles), "--fixture", str(fixture),
          "--out", str(stage),
          "--question-zh", question, "--question-en", config["question_en"],
@@ -48,6 +52,7 @@ def run_demo(out: Path | None = None, config_path: Path | None = None) -> dict[s
         "mode": "demo",
         "question": {"zh": question, "en": config["question_en"], "domain": config["domain"]},
         "config": str(config_path),
+        "runtime": runtime.summary(),
         "outputs": {
             "viewer": installed["html"],
             "chains": installed["markdown"],

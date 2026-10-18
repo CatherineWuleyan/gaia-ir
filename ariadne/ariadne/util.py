@@ -43,19 +43,34 @@ def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def load_env(path: Path | None = None) -> None:
-    """Load repo-local keys without overwriting an explicit environment."""
-    path = path or (REPO / "agent" / ".env")
-    if not path.is_file():
-        return
+def read_env_file(path: Path | None = None) -> dict[str, str]:
+    """Read a dotenv-style file without mutating the process environment.
+
+    Supports optional ``export`` prefixes and simple single/double quoting.
+    Missing files return an empty mapping; malformed lines are ignored.
+    """
+    values: dict[str, str] = {}
+    if path is None or not path.is_file():
+        return values
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
+        if line.startswith("export "):
+            line = line[len("export "):].lstrip()
         key, _, value = line.partition("=")
         key, value = key.strip(), value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
         if key and value:
-            os.environ.setdefault(key, value)
+            values[key] = value
+    return values
+
+
+def load_env(path: Path | None = None) -> None:
+    """Load repo-local keys without overwriting an explicit environment."""
+    for key, value in read_env_file(path or (REPO / "agent" / ".env")).items():
+        os.environ.setdefault(key, value)
 
 
 def slugify(value: str, limit: int = 42) -> str:
@@ -82,6 +97,29 @@ def harness_env(extra: Mapping[str, str] | None = None) -> dict[str, str]:
     return env
 
 
+SECRET_FLAGS = frozenset({
+    "--ak", "--access-key", "--api-key", "--token", "--password", "--secret",
+})
+
+
+def redact_argv(argv: Iterable[str]) -> list[str]:
+    """Hide values that follow a known secret flag in logs and errors."""
+    redacted: list[str] = []
+    hide_next = False
+    for item in argv:
+        text = str(item)
+        if hide_next:
+            redacted.append("<redacted>")
+            hide_next = False
+            continue
+        redacted.append(text)
+        if text in SECRET_FLAGS:
+            hide_next = True
+        elif "=" in text and text.split("=", 1)[0] in SECRET_FLAGS:
+            redacted[-1] = text.split("=", 1)[0] + "=<redacted>"
+    return redacted
+
+
 def run(
     cmd: Iterable[str],
     *,
@@ -92,21 +130,39 @@ def run(
     check: bool = True,
 ) -> subprocess.CompletedProcess:
     argv = [str(item) for item in cmd]
+    # Child commands must never inherit an interactive stdin.  A missing
+    # confirmation flag then fails fast instead of hanging a batch run.
     proc = subprocess.run(
         argv, cwd=str(cwd) if cwd else None, env=dict(env) if env else None,
         capture_output=True, text=True, timeout=timeout,
+        stdin=subprocess.DEVNULL,
     )
     if log is not None:
         log.parent.mkdir(parents=True, exist_ok=True)
         log.write_text(
-            "$ " + " ".join(argv) + "\n\n[stdout]\n" + proc.stdout +
+            "$ " + " ".join(redact_argv(argv)) + "\n\n[stdout]\n" + proc.stdout +
             "\n[stderr]\n" + proc.stderr,
             encoding="utf-8",
         )
     if check and proc.returncode != 0:
         tail = (proc.stderr or proc.stdout or "").strip()[-1200:]
-        raise AriadneError(f"command failed ({proc.returncode}): {' '.join(argv)}\n{tail}")
+        raise AriadneError(
+            f"command failed ({proc.returncode}): {' '.join(redact_argv(argv))}\n{tail}"
+        )
     return proc
+
+
+def run_interactive(
+    cmd: Iterable[str],
+    *,
+    cwd: Path | None = None,
+    env: Mapping[str, str] | None = None,
+) -> int:
+    """Run a command with inherited stdio, for interactive logins only."""
+    argv = [str(item) for item in cmd]
+    proc = subprocess.run(argv, cwd=str(cwd) if cwd else None,
+                          env=dict(env) if env else None)
+    return int(proc.returncode)
 
 
 def which(name: str) -> str | None:

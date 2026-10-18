@@ -5,12 +5,11 @@ uses the repo's ``export_single_artifacts.py`` instead of copying blobs by hand.
 """
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from .util import AriadneError, REPO, python_bin, run, stage_log, write_json
-from .util import harness_env
+from .config import Config, Runtime, resolve_runtime
+from .util import AriadneError, REPO, harness_env, python_bin, run, stage_log, write_json
 
 
 def _run_dir(stdout: str) -> str:
@@ -20,7 +19,8 @@ def _run_dir(stdout: str) -> str:
     return lines[-1]
 
 
-def run_one(paper: Mapping[str, Any], stage_dir: Path, run_root: Path) -> dict[str, Any]:
+def run_one(paper: Mapping[str, Any], stage_dir: Path, run_root: Path,
+            python: str) -> dict[str, Any]:
     pid = str(paper["lkm_id"])
     claims = (run_root / "02_paper2ir" / paper["claims_final"]).resolve() if not Path(paper["claims_final"]).is_absolute() else Path(paper["claims_final"])
     text = (run_root / "02_paper2ir" / paper["text"]).resolve() if not Path(paper["text"]).is_absolute() else Path(paper["text"])
@@ -31,21 +31,26 @@ def run_one(paper: Mapping[str, Any], stage_dir: Path, run_root: Path) -> dict[s
         {"path": str(text), "kind": "source.paper_text", "media_type": "text/markdown"},
         {"path": str(claims), "kind": "source.claims_final", "media_type": "application/json"},
     ]})
+    exporter = REPO / "weekly_reports" / "export_single_artifacts.py"
+    if not exporter.is_file():
+        raise AriadneError(
+            f"single exporter not found: {exporter}; the public checkout is incomplete"
+        )
     log = stage_log(stage_dir, f"single_{pid}")
     print(f"[single] {paper.get('title', pid)[:70]}", flush=True)
     init = run(
-        [python_bin(), "-m", "pipeline_harness", "init",
+        [python, "-m", "pipeline_harness", "init",
          "--pipeline", str(REPO / "pipelines" / "single_paper" / "pipeline.step1-5.json"),
          "--inputs", str(manifest), "--runs-root", str(stage_dir / "runs")],
         env=harness_env(), log=log, timeout=600,
     )
     run_dir = _run_dir(init.stdout)
     run(
-        [python_bin(), "-m", "pipeline_harness", "run", "--run", run_dir],
+        [python, "-m", "pipeline_harness", "run", "--run", run_dir],
         env=harness_env(), log=log, timeout=7200,
     )
     export = run(
-        [python_bin(), str(REPO / "weekly_reports" / "export_single_artifacts.py"),
+        [python, str(exporter),
          run_dir, pid, "--out", str(stage_dir / "export")],
         log=log, timeout=600,
     )
@@ -65,10 +70,15 @@ def run_one(paper: Mapping[str, Any], stage_dir: Path, run_root: Path) -> dict[s
     }
 
 
-def run_all(papers: Iterable[Mapping[str, Any]], stage_dir: Path, run_root: Path) -> list[dict[str, Any]]:
+def run_all(papers: Iterable[Mapping[str, Any]], stage_dir: Path, run_root: Path,
+            runtime: Runtime | None = None) -> list[dict[str, Any]]:
+    if runtime is None:
+        runtime = resolve_runtime(Config.load())
+    runtime.apply_env()
     stage_dir.mkdir(parents=True, exist_ok=True)
+    python = runtime.python or python_bin()
     results = []
     for paper in papers:
-        results.append(run_one(paper, stage_dir, run_root))
+        results.append(run_one(paper, stage_dir, run_root, python))
     write_json(stage_dir / "packages.json", {"packages": results})
     return results

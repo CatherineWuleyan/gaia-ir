@@ -9,12 +9,34 @@ Gaia IR turns paper evidence into a typed, traceable domain graph. The repositor
 | [`agent/`](agent/) | Harness runtime, artifact store, checkpoints, validation, provenance, and generic Viewer source. |
 | [`pipelines/single_paper/`](pipelines/single_paper/) | Maintained single-paper pipeline, latest checked Step 1–5 configuration. |
 | [`pipelines/merge/`](pipelines/merge/) | Stepwise merge configuration and the checked five-paper v9 configuration. |
+| [`pipelines/clean_claims/`](pipelines/clean_claims/) | paper2ir stage: paper graph → claims, used by Ariadne. |
+| [`ariadne/`](ariadne/) | Question-led product layer: configuration, retrieval, orchestration, answer layer, viewer. |
 | [`docs/gaia-ir/`](docs/gaia-ir/) | Contracts and architecture notes needed to interpret Gaia IR artifacts. |
 | [`example/viewer.html`](example/viewer.html) | Self-contained Viewer for the frozen v9 graph. |
 | [`example/`](example/) | Frozen v9 `view_model.json` and `domain_graph.html`. |
 | [`run_pipeline.sh`](run_pipeline.sh) | Repository entry point. |
 
-`paper2ir` is a separate repository and is intentionally untouched.
+`pipelines/clean_claims/` is the paper2ir stage required by Ariadne. The standalone
+`paper2ir` repository remains a separate, intentionally untouched project.
+
+## Ariadne
+
+[Ariadne](ariadne/) 是问题驱动的端到端产品层：输入一个领域问题，检索 LKM 论文，
+依次跑 paper2ir、single、merge，最后生成候选答案 root、类型化推理链和自包含的
+问题图 HTML。它复用本仓库维护中的 pipeline，不另起一套实现。
+
+![Ariadne aircraft question graph](ariadne/docs/images/aircraft-question-graph.png)
+
+```bash
+./ariadne/run.sh config init     # 配置自己的 API key 和 Bohr 账户
+./ariadne/run.sh doctor
+./ariadne/run.sh demo            # 离线飞机示例，不需要 key
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --yes
+```
+
+文档：[English](ariadne/README.md) · [中文](ariadne/README.zh-CN.md)。
+示例：[Airplane](outputs/question_domain_aircraft/domain_viewer_question.html) ·
+[Physics](outputs/physics_domain/reviewed/domain_graph_full.reviewed.html)。
 
 ## Run the merge pipeline
 

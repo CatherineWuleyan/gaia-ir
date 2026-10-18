@@ -1,0 +1,574 @@
+# Ariadne
+
+**问题驱动的领域推理图。**
+
+[English](README.md) · [示例](#示例) · [快速开始](#快速开始) · [配置](#配置) · [命令](#命令)
+
+![飞机仿真设计问题图](docs/images/aircraft-question-graph.png)
+
+Ariadne 把领域问题变成一张可检查的图：论文、claim、候选答案、推理链都在图
+上。它不直接给一段聊天式答案，而是给出：
+
+- 从问题生成的**候选答案**（root，R1–R5）；
+- 支持、限定或反驳每个答案的 **claim 与证据**；
+- claim 之间的**类型化关系**，包括跨论文关系；
+- 到达每个 root 的**全部多步推理链**（Markdown + Mermaid）。
+
+名字取自 Ariadne 的线团：在迷宫里靠它找路。这里“线”就是答案层和通向答案的
+推理路径。
+
+```text
+问题
+  -> LKM 检索 + 论文知识图
+  -> paper2ir      (论文图 -> claims_final)
+  -> single-paper  (claims -> Gaia IR package)
+  -> merge         (多篇 package -> 领域图)
+  -> Step 6        (候选答案 root + 类型化链接 + 推理链)
+  -> HTML 问题图 + 全部链条 Markdown
+```
+
+Ariadne 是维护中的 Gaia IR 三套 pipeline 之上的**薄产品层**：不复制、不改写
+pipeline 内部实现，只负责编排、隔离每次运行，并补上问题驱动的答案层和交付物。
+
+## 示例
+
+### 1. 怎么完成飞机的仿真设计？
+
+> **问题：** 怎么完成飞机的仿真设计？
+> **领域：** 概念设计、飞行动力学、气动建模、MDO、硬件在环验证。
+
+![飞机问题图](docs/images/aircraft-question-graph.png)
+
+冻结的飞机图包含 **13 篇论文、311 条 claim、258 条关系、93 条 integration
+delta、5 个候选答案**；链条导出器产出 **107 条多步链**。
+
+| Root | 候选答案 | 链条数 |
+| --- | --- | ---: |
+| R1 | 集成概念设计环境 | 20 |
+| R2 | 嵌套多学科优化 | 26 |
+| R3 | 非线性飞行动力学建模 | 25 |
+| R4 | 飞行数据模型校正 | 21 |
+| R5 | 硬件在环验证 | 15 |
+
+看图时重点看：
+
+- 五个红色大 root，以及绿色 **support** 链接；
+- **same-paper** 是按论文和 claim 编号排列的阅读顺序，不是逻辑证明；
+- 虚线 **analogy** / **infer** 是可见的上下文，但**不会**被升级成 deduction，
+  也不构成 support chain。
+
+交付物：
+
+- [飞机问题图 viewer](../outputs/question_domain_aircraft/domain_viewer_question.html)
+- [指向 R1–R5 的全部链条](../outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md)
+- [答案层 JSON](../outputs/question_domain_aircraft/answer_layer.json)
+- [冻结 demo 数据](../outputs/question_domain_aircraft/)
+
+离线运行（不需要 key，不调用 LKM）：
+
+```bash
+./ariadne/run.sh demo
+```
+
+### 2. 4H_a-NbSe2 的面内 B_c2 由哪条对破缺通道决定？
+
+> **问题：** 在块体 4H_a-NbSe2（非中心对称多型）中，面内上临界场
+> B_c2∥ 由哪条对破缺通道决定：塞曼（经 Ising SOC 抬高）还是轨道
+>（含有限动量/FFLO）？
+
+![Physics 问题图](docs/images/physics-question-graph.png)
+
+复核版 Physics 图包含 **18 篇论文、500 条 claim、654 个节点、1298 条边、
+14 个理论层节点**。这个例子说明答案层必须把两个“兼容但竞争”的解释分开：
+
+- **R1**：Ising 保护压制塞曼通道，由轨道/层间通道决定主要量级；
+- **R2**：若 γ ≈ 31/5.5 ≈ 5.6，纯轨道通道在数值上可以自足；
+- 真正未决的是 Ising SOC 是否**必要**，而不是它是否存在。
+
+Physics 例子也展示了产品的诚实边界：图里有 9 条矛盾边，包含跨对称性、
+跨材料的证据。viewer 会显示它们，但不会悄悄改写成 support。
+
+交付物：
+
+- [Physics 复核版 viewer](../outputs/physics_domain/reviewed/domain_graph_full.reviewed.html)
+- [答案层 JSON](../outputs/physics_domain/reviewed/answer_layer.reviewed.json)
+- [Mentor 复核记录](../outputs/physics_domain/reviewed/MENTOR_REVIEW.md)
+- [目标问题](../outputs/physics_domain/target_question.json)
+
+GitHub 会把 HTML 当源码显示。克隆后用浏览器打开，或在仓库根目录运行
+`python3 -m http.server` 再访问。
+
+## 快速开始
+
+### 环境要求
+
+| 依赖 | 用途 |
+| --- | --- |
+| Python **3.11+** | harness 和 pipeline 代码 |
+| `gaia-lang==0.5.0a7` | single 阶段使用的 Gaia IR 编译器 |
+| `bohr` CLI **2.2+** | 实时 LKM 检索、论文图、可选 PDF 解析 |
+| DeepSeek 或 OpenAI-compatible API key | paper2ir、single、merge、Step 6 |
+| Bohrium 账户 + access key | 实时 LKM 调用（`demo` 不需要） |
+
+公开仓库已经包含 Ariadne 需要的 pipeline 代码：
+`pipelines/clean_claims`、`pipelines/single_paper`、`pipelines/merge` 和
+`weekly_reports/export_single_artifacts.py`。
+
+### 1. Clone 并安装
+
+```bash
+git clone https://github.com/CatherineWuleyan/gaia-ir.git
+cd gaia-ir
+
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+
+pip install --pre -r ariadne/requirements.txt
+pip install -e agent
+```
+
+`run.sh` 按以下顺序选择解释器：`$ARIADNE_PYTHON`、`.venv-gaia-a7`、`.venv`、
+`python3`。也可以把解释器写进配置（见下文）。
+
+### 2. 安装 Bohr CLI
+
+```bash
+npm install -g bohr-cli
+bohr version
+```
+
+如果本机已经登录 `bohr`，Ariadne 可以直接用当前 active profile。想给 Ariadne
+单独一个 profile，用下一步的 `ariadne auth bohr`。
+
+### 3. 配置 API key 和 Bohr 账户
+
+交互式（推荐）：
+
+```bash
+./ariadne/run.sh config init
+```
+
+非交互式：
+
+```bash
+export DEEPSEEK_API_KEY="sk-..."
+export BOHR_ACCESS_KEY="..."
+
+./ariadne/run.sh config init --no-input \
+  --api-key "$DEEPSEEK_API_KEY" \
+  --bohr-access-key "$BOHR_ACCESS_KEY"
+```
+
+配置写到 `~/.config/ariadne/config.json`，权限 `0600`。Ariadne 不会打印 key；
+`config show` 和 `config get` 都会打码。
+
+然后登录 Bohr：
+
+```bash
+./ariadne/run.sh auth bohr
+```
+
+它创建/更新 Bohr profile `ariadne`，不改你原来的 default profile。想用浏览器
+或 device flow：
+
+```bash
+./ariadne/run.sh auth bohr --device
+```
+
+最后检查：
+
+```bash
+./ariadne/run.sh doctor
+```
+
+`doctor` 会报告配置来源、模型 endpoint、Bohr 登录、pipeline 文件，以及
+demo / 离线 full / 实时 LKM full 是否就绪，不会输出 secret。
+
+### 4. 跑离线 demo
+
+```bash
+./ariadne/run.sh demo
+```
+
+在冻结的飞机图上只跑问题层：不调用 LKM，也不调用 LLM。输出在
+`outputs/ariadne_runs/`：
+
+```text
+outputs/ariadne_runs/run_<timestamp>_<question>/
+  domain_viewer_question.html   # 自包含的问题图
+  ALL_CHAINS_TO_ROOTS.md        # 每个 root 的全部多步链
+  run.json                      # 问题、阶段耗时、运行时摘要
+  04_question/                  # answer_layer.json、view model、evaluation
+```
+
+打开 viewer：
+
+```bash
+open outputs/ariadne_runs/run_*/domain_viewer_question.html      # macOS
+xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
+```
+
+### 5. 跑实时问题
+
+先用**两篇论文**检查质量和成本：
+
+```bash
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --yes
+```
+
+不花钱先看计划：
+
+```bash
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --dry-run
+```
+
+说明：
+
+- `--yes` 授权本次运行的计费 LKM 调用。不传时，交互终端会询问；批处理环境
+  会直接失败，不会挂住。
+- `--top-k 2` 控制 paper2ir 的成本和延迟。每篇论文 paper2ir 有 **14 个 LLM
+  步骤**，之后 single 和 merge 还会调模型。
+- `--no-fulltext` 跳过 arXiv PDF 下载/解析，改用图派生文本。
+- `--papers papers.json` 用本地 spec 替代 LKM 检索（见
+  [离线论文 spec](#离线论文-spec)）。
+
+## 配置
+
+### 文件位置与优先级
+
+| 优先级 | 来源 |
+| ---: | --- |
+| 1 | CLI flags（`--api-key`、`--base-url`、`--model`、`--bohr-profile` 等） |
+| 2 | 环境变量 |
+| 3 | Ariadne 配置文件 |
+| 4 | `agent/.env`（旧版，本地） |
+| 5 | 内置默认值 |
+
+配置文件按以下顺序解析：
+
+```text
+$ARIADNE_CONFIG
+$XDG_CONFIG_HOME/ariadne/config.json
+~/.config/ariadne/config.json
+```
+
+Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
+
+最小配置如下；完整示例见 [`config.example.json`](config.example.json)：
+
+```json
+{
+  "version": 1,
+  "model": {
+    "provider": "deepseek",
+    "api_key": "sk-...",
+    "base_url": "https://api.deepseek.com/v1",
+    "model": "deepseek-v4-flash",
+    "merge_model": "deepseek-v4-flash"
+  },
+  "bohr": {
+    "profile": "ariadne",
+    "access_key": "...",
+    "host": "https://open.bohrium.com",
+    "auto_approve_spend": false,
+    "payment_source": ""
+  },
+  "runtime": {
+    "python": ""
+  }
+}
+```
+
+配置文件是**稀疏**的：只写你显式设置过的值。未设置的值走默认值，或继续向
+环境变量 / `agent/.env` 回退。
+
+### 配置命令
+
+```bash
+./ariadne/run.sh config path                 # 打印配置路径
+./ariadne/run.sh config init                 # 交互式配置
+./ariadne/run.sh config init --no-input ...  # 脚本化配置
+./ariadne/run.sh config show                 # 生效配置，secret 打码
+./ariadne/run.sh config show --json
+./ariadne/run.sh config get model.model
+./ariadne/run.sh config set model.model deepseek-v4-flash
+./ariadne/run.sh config unset model.model
+./ariadne/run.sh config test --api           # 发一次很小的 chat completion
+./ariadne/run.sh config test --bohr          # bohr auth status
+```
+
+支持的 key：
+
+| Key | 含义 |
+| --- | --- |
+| `model.provider` | `deepseek` 或 `openai-compatible` |
+| `model.api_key` | 模型 key（输出会打码） |
+| `model.base_url` | OpenAI-compatible base URL，默认 `https://api.deepseek.com/v1` |
+| `model.model` | paper2ir / single 使用的模型 |
+| `model.merge_model` | merge / Step 6 使用的模型 |
+| `bohr.profile` | Bohr CLI profile；空表示 active profile |
+| `bohr.access_key` | Bohrium access key（输出会打码） |
+| `bohr.host` | 默认 `https://open.bohrium.com` |
+| `bohr.auto_approve_spend` | true 时总是给计费 LKM 命令加 `--yes` |
+| `bohr.payment_source` | 空（网关默认）、`photon` 或 `balance` |
+| `runtime.python` | pipeline 子进程使用的 Python |
+
+### 环境变量
+
+| 变量 | 用途 |
+| --- | --- |
+| `ARIADNE_CONFIG` | 配置文件路径 |
+| `ARIADNE_MODEL_API_KEY` / `DEEPSEEK_API_KEY` / `OPENAI_API_KEY` | 模型 key |
+| `ARIADNE_MODEL_BASE_URL` / `DEEPSEEK_BASE_URL` / `OPENAI_BASE_URL` | endpoint |
+| `ARIADNE_MODEL` / `DEEPSEEK_MODEL` / `OPENAI_MODEL` | 模型名 |
+| `ARIADNE_MERGE_MODEL` / `DEEPSEEK_MERGE_MODEL` | merge 模型 |
+| `ARIADNE_BOHR_ACCESS_KEY` / `BOHR_ACCESS_KEY` / `LKM_ACCESS_KEY` | Bohr key |
+| `ARIADNE_BOHR_PROFILE` | Bohr profile |
+| `ARIADNE_AUTO_APPROVE_SPEND` | `1` / `true` 表示自动批准计费调用 |
+| `ARIADNE_PAYMENT_SOURCE` | `photon` 或 `balance` |
+| `ARIADNE_PYTHON` | Ariadne 及其子进程使用的解释器 |
+
+环境变量优先于配置文件，所以 CI 可以完全不写配置文件：
+
+```bash
+DEEPSEEK_API_KEY=... BOHR_ACCESS_KEY=... \
+  ./ariadne/run.sh ask "..." --top-k 2 --yes
+```
+
+### 模型兼容性
+
+paper2ir、single、merge 使用 **OpenAI-compatible chat-completions** 客户端。
+DeepSeek 是默认值，也是实际测试过的路径。只要 endpoint 支持
+`POST {base_url}/chat/completions` 和
+`Authorization: Bearer <key>`，就可以通过 `model.base_url`、`model.model`、
+`model.merge_model` 接进来。
+
+只设置 `ANTHROPIC_API_KEY` **不能**跑 full：single 和 merge 阶段需要
+OpenAI-compatible 客户端。`doctor` 会明确提示这一点。
+
+### Bohr 账户与计费
+
+`bohr` 使用 profile。Ariadne 读 `bohr.profile`；为空时使用 active profile。
+`ariadne auth bohr` 会创建专用 profile `ariadne`：
+
+```bash
+# access key（非交互）
+./ariadne/run.sh auth bohr --access-key "$BOHR_ACCESS_KEY"
+
+# 浏览器流程
+./ariadne/run.sh auth bohr
+
+# 无头机器 device flow
+./ariadne/run.sh auth bohr --device
+
+# 只检查
+./ariadne/run.sh auth bohr --check
+./ariadne/run.sh auth status
+```
+
+等价的 Bohr CLI 命令：
+
+```bash
+bohr auth login --ak "$BOHR_ACCESS_KEY" --ak-only --profile ariadne
+```
+
+LKM `search`、`graph`、`reasoning` 等调用按次计费（写作时 **0.05 CNY/次**，
+个人每月 1,000 次免费额度）。PDF 解析单独计费。Ariadne 在第一次计费调用前
+会询问；`--yes` 或 `bohr.auto_approve_spend=true` 表示授权本次运行。
+`--dry-run` 不花钱。查询当前价格：
+
+```bash
+bohr billing pricing --resource lkm -o json
+```
+
+### Python 解释器
+
+`run.sh` 在启动 Ariadne 之前就选好解释器；Ariadne 启动后，
+`runtime.python` / `ARIADNE_PYTHON` 决定 pipeline 子进程用哪个 Python。
+venv 不叫 `.venv` 时建议显式指定：
+
+```bash
+./ariadne/run.sh config set runtime.python /opt/venvs/gaia/bin/python
+```
+
+## 命令
+
+| 命令 | 作用 |
+| --- | --- |
+| `ask "<question>"` | full：问题 → LKM → paper2ir → single → merge → render |
+| `ask ... --mode demo` | 在冻结飞机图上跑答案层 |
+| `ask ... --dry-run` | 预检并打印计划，不写文件、不花钱 |
+| `ask ... --papers spec.json` | 用离线论文 spec 替代 LKM 检索 |
+| `ask ... --top-k N` | 检索论文数（先用 2） |
+| `ask ... --yes` | 授权本次计费 LKM 调用 |
+| `ask ... --no-fulltext` | 跳过 PDF 解析，改用图派生文本 |
+| `demo` | 离线飞机示例 |
+| `doctor` | 检查配置、Python、模型、Bohr、pipeline、就绪状态 |
+| `config init/show/set/get/unset/path/test` | 管理配置 |
+| `auth bohr/status` | Bohr 登录与认证状态 |
+
+运行级 flags：
+
+```text
+--config PATH
+--api-key KEY  --base-url URL  --model NAME  --merge-model NAME
+--bohr-profile P  --bohr-access-key AK  --payment-source photon|balance
+--python PATH
+```
+
+## 输出
+
+每次 full / demo 运行都隔离在
+`outputs/ariadne_runs/<timestamp>_<slug>/`：
+
+| 文件 | 含义 |
+| --- | --- |
+| `domain_viewer_question.html` | 自包含问题图，无需服务器 |
+| `ALL_CHAINS_TO_ROOTS.md` | 到达 R1–R5 的全部多步链，含 Mermaid 和内容表 |
+| `05_outputs/answer_layer.json` | roots、links、类型化边、exploratory paths（full） |
+| `05_outputs/domain_view_question.json` | 注入答案层后的 view model（full） |
+| `run.json` | 问题、各阶段耗时、配置摘要（不含 secret）、输出路径 |
+| `logs/` | 各阶段命令日志 |
+
+离线 demo 的答案层和 view model 在 `04_question/`，不是 `05_outputs/`；两个
+主交付物仍会复制到 run 根目录。
+
+full 运行会保留中间阶段：
+
+```text
+01_retrieval/   papers.json、search_raw.json、每篇 graph.json + ocr.md
+02_paper2ir/    run-local clean_claims 副本、每篇 claims_final.json
+03_single/      Gaia IR package、formalization.json、knowledge.index.json
+04_merge/       merge run、view_model.json
+05_outputs/     答案层与交付物
+```
+
+`02_paper2ir/pipeline` 是每次运行单独复制的，所以不会复用旧数据，也不会让
+上一次失败的 paper2ir 污染下一次运行。
+
+## 工作原理
+
+| 阶段 | 做什么 | 实现 |
+| --- | --- | --- |
+| `01_retrieval` | `bohr lkm search` 搜问题，再 `bohr lkm graph --paper-id`；能取全文就取，否则用图派生文本 | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
+| `02_paper2ir` | 14 步 paper2ir：LKM 图 + 文本 → `claims_final.json` | [`pipelines/clean_claims`](../pipelines/clean_claims/)（run-local 副本） |
+| `03_single` | 维护中的 single pipeline：claims → `gaia.ir.json`、`formalization.json`、`knowledge.index.json` | [`pipelines/single_paper`](../pipelines/single_paper/) + harness |
+| `04_merge` | 把多篇 package 合成一张领域图，含 K conclusions 和 Step 6 答案 root/link | [`pipelines/merge/pipeline.question.json`](../pipelines/merge/pipeline.question.json) |
+| `05_render` | 渲染问题 viewer、导出全部链条 | [`render_question_viewer.py`](../pipelines/merge/pipeline_merge_question/render_question_viewer.py)、[`export_chains_markdown.py`](../pipelines/merge/pipeline_merge_question/export_chains_markdown.py) |
+
+Ariadne 封装的三套维护中 pipeline：
+
+1. **paper2ir** — 论文 → claims；
+2. **single** — claims → 单篇推理图；
+3. **merge** — 多图 → 领域图 + 问题答案层。
+
+检索在三套 pipeline 之前；渲染在之后。
+
+### “support”到底是什么意思
+
+- 只有 **deduction** 边可以成链。`infer`、`analogy`、`bounds`、
+  `special_case`、`same-paper` 会保留为可见上下文，但不会被升级为 deduction。
+- `same-paper` 是按论文和 claim 编号排列的直接支持 claim；它是阅读顺序，
+  不是逻辑证明。
+- viewer 默认显示全部图路径。能画出来不等于有证据；链条导出器会标出边类型。
+- root 是**候选答案**，不是真值标签。这张图是证据与缺口的分布图，不是裁决。
+
+## 离线论文 spec
+
+`--papers` 跳过 LKM 检索。spec 可以指向 LKM id，也可以指向本地文件：
+
+```json
+{
+  "papers": [
+    {
+      "lkm_id": "1234567890123456789",
+      "title": "Paper title",
+      "arxiv": "2501.00001",
+      "graph_path": "path/to/graph.json",
+      "ocr_path": "path/to/paper.md"
+    },
+    {
+      "title": "Local graph without an LKM id",
+      "graph_path": "path/to/another-graph.json",
+      "ocr_path": "path/to/another-paper.md"
+    }
+  ]
+}
+```
+
+路径默认相对仓库根目录，也可以写绝对路径。接受的图结构：
+
+- `{"code": 0, "data": {"papers": [...]}}`（pipeline 原生）；
+- `{"data": {"items": [...]}}`（Bohr CLI 响应）；
+- 裸 `{"nodes": [...], "edges": [...]}` 图；
+- 单个带 `graph` / `paper` 的 paper item。
+
+没有 LKM id 的本地图会得到稳定的 `local_<hash>` id，pipeline 仍可继续。
+
+```bash
+./ariadne/run.sh ask "你的问题" \
+  --papers my-papers.json --top-k 2 --yes
+```
+
+本地 graph/text 条目不会花 LKM 调用；只有 `lkm_id` 的条目仍会调
+`bohr lkm graph`，需要 `--yes`。
+
+## 排障
+
+| 现象 | 处理 |
+| --- | --- |
+| `bohr: command not found` | `npm install -g bohr-cli`，或用 `--papers` 本地文件 |
+| `profile "ariadne" does not exist` | `./ariadne/run.sh auth bohr`，或把 `bohr.profile` 改成已有 profile |
+| `bohr lkm search failed` / `401` | 检查 access key，跑 `ariadne auth bohr --check` 或 `bohr auth login` |
+| `CONFIRMATION_REQUIRED` | 加 `--yes`，或设 `bohr.auto_approve_spend=true` |
+| `No model API key is configured` | `config init`、`--api-key` 或 `DEEPSEEK_API_KEY` |
+| 只设了 `ANTHROPIC_API_KEY` 但 full 失败 | 换 DeepSeek/OpenAI-compatible key；single/merge 需要它 |
+| `ModuleNotFoundError: gaia` | `pip install --pre -r ariadne/requirements.txt` |
+| `No module named pipeline_harness` | `pip install -e agent`，或用 `./ariadne/run.sh` |
+| `--papers contains no usable entries` | 每条至少要有 `lkm_id` 或 `graph_path` |
+| `Ariadne needs at least two papers` | 增大 `--top-k` 或给 spec 加论文 |
+| `paper2ir stopped at ...` | 看 `02_paper2ir/logs/paper2ir_<id>.log`；run-local 数据会保留 |
+| demo 正常但 full 很慢 | 先用 `--top-k 2 --no-fulltext`；paper2ir 每篇 14 个 LLM 步骤 |
+| Windows 路径错误 | 在仓库内建 venv，从仓库根目录运行；显式设 `runtime.python` |
+
+## 目录
+
+| 路径 | 用途 |
+| --- | --- |
+| [`ariadne/`](.) | 本产品：CLI、配置、检索、阶段编排、渲染 |
+| [`agent/`](../agent/) | pipeline harness、artifact store、checkpoint、校验、viewer 源 |
+| [`pipelines/clean_claims/`](../pipelines/clean_claims/) | paper2ir：论文图 → claims |
+| [`pipelines/single_paper/`](../pipelines/single_paper/) | claims → 单篇 Gaia IR |
+| [`pipelines/merge/`](../pipelines/merge/) | 多 package → 领域图 + 问题层 |
+| [`weekly_reports/export_single_artifacts.py`](../weekly_reports/export_single_artifacts.py) | 导出 single 运行产物给 merge |
+| [`outputs/question_domain_aircraft/`](../outputs/question_domain_aircraft/) | 冻结飞机 demo 数据 |
+| [`outputs/physics_domain/reviewed/`](../outputs/physics_domain/reviewed/) | 复核版 Physics 示例图 |
+
+## 状态与边界
+
+- `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
+- `full` 已接到维护中的阶段，并在花钱前预检配置、Python、pipeline 文件和
+  Bohr 登录。完整的 2+ 篇实时运行需要你的 key 和 LKM 额度；建议先用
+  `--top-k 2 --no-fulltext`。
+- full 模式链条质量取决于 paper2ir、single、merge 和问题层。Ariadne 只报告这些
+  阶段产生的东西，不伪造缺失证据，也不把 `infer` 升级成 `deduction`。
+- viewer 默认显示全部图路径。能画出来不代表自动成为 support chain。
+- Physics 示例是复核过的静态图，不是一次新的实时运行；它展示答案层和复核界面
+  的形态。
+
+## 成本
+
+| 资源 | 成本 |
+| --- | --- |
+| LKM search / graph / reasoning | 0.05 CNY/次，个人每月 1,000 次免费额度 |
+| LKM PDF 抽取 | 单独计费；用 `bohr billing pricing` 查 |
+| LLM 调用 | 由你的 provider 计费；paper2ir 每篇 14 步，之后还有 single/merge |
+
+两篇论文的运行大约先产生 1 次 search + 2 次 graph（加上可选 PDF 解析），
+然后才进入 LLM pipeline。用 `--dry-run` 看计划，用 `--no-fulltext` 跳过
+PDF 解析。
+
+## License
+
+仓库目前没有 license 文件。请按研究原型使用；如果要作为库再分发，先补
+license。

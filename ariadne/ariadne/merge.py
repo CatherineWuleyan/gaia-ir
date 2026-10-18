@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from .config import Config, Runtime, resolve_runtime
 from .util import AriadneError, REPO, harness_env, python_bin, read_json, run, stage_log, write_json
 
 KINDS = {
@@ -66,7 +67,12 @@ def run_question_pipeline(
     question_en: str,
     domain: str,
     max_roots: int,
+    runtime: Runtime | None = None,
 ) -> dict[str, Any]:
+    if runtime is None:
+        runtime = resolve_runtime(Config.load())
+    runtime.apply_env()
+    python = runtime.python or python_bin()
     stage_dir.mkdir(parents=True, exist_ok=True)
     artifacts, selection = _selection(packages)
     if len(selection) < 2:
@@ -77,7 +83,7 @@ def run_question_pipeline(
     log = stage_log(stage_dir, "merge")
     print(f"[merge] {len(selection)} packages", flush=True)
     init = run(
-        [python_bin(), "-m", "pipeline_harness", "init", "--pipeline", str(config),
+        [python, "-m", "pipeline_harness", "init", "--pipeline", str(config),
          "--inputs", str(manifest), "--runs-root", str(stage_dir / "runs")],
         env=harness_env(), log=log, timeout=600,
     )
@@ -86,11 +92,11 @@ def run_question_pipeline(
         raise AriadneError("pipeline_harness init returned no run directory")
     run_dir = Path(lines[-1])
     run(
-        [python_bin(), "-m", "pipeline_harness", "run", "--run", str(run_dir)],
+        [python, "-m", "pipeline_harness", "run", "--run", str(run_dir)],
         env=harness_env(), log=log, timeout=14400,
     )
     view = run(
-        [python_bin(), "-m", "pipeline_harness", "view", "--run", str(run_dir)],
+        [python, "-m", "pipeline_harness", "view", "--run", str(run_dir)],
         env=harness_env(), log=log, timeout=1200,
     )
     view_path = run_dir / "views" / "view_model.json"
