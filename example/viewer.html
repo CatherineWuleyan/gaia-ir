@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Gaia Formalization Viewer v2</title>
+  <title>Gaia Formalization Viewer</title>
   <style>
     :root { color-scheme:light; --ink:#172033; --muted:#667085; --line:#d0d5dd; --paper:#f7f8fa; --accent:#175cd3; --error:#d92d20; --warning:#dc6803; --passed:#067647; }
     * { box-sizing:border-box; }
@@ -23,9 +23,7 @@
     #left { border-right:1px solid var(--line); }
     #detail { position:sticky; top:59px; height:calc(100vh - 59px); border-left:1px solid var(--line); }
     #canvas-wrap { overflow:auto; padding:16px; }
-    svg { background:white; border:1px solid var(--line); border-radius:10px; width:100%; height:min(78vh,900px); min-width:100%; min-height:620px; aspect-ratio:1 / 1; touch-action:none; cursor:grab; }
-    svg.panning { cursor:grabbing; }
-    .zoom-note { margin:8px 0 0; color:var(--muted); font-size:11px; }
+    svg { background:white; border:1px solid var(--line); border-radius:10px; min-width:100%; touch-action:none; }
     .edge { fill:none; stroke:#667085; stroke-width:1.7; marker-end:url(#arrow); cursor:pointer; }
     .edge.non-reasoning { stroke:#98a2b3; stroke-dasharray:7 5; }
     .edge.reasoning-candidate { stroke:#b54708; stroke-dasharray:2 5; }
@@ -37,14 +35,7 @@
     .edge.validation-warning { stroke:var(--warning); stroke-width:3; }
     .edge-label { fill:var(--muted); font-size:10px; cursor:pointer; user-select:none; paint-order:stroke; stroke:white; stroke-width:4px; }
     .edge-label.selected { fill:var(--accent); font-weight:700; }
-    /* v2 hierarchy: domain anchors are bubbles; claim area follows visible degree. */
-    .node .node-shape { stroke-width:1.6; cursor:grab; vector-effect:non-scaling-stroke; }
-    .node.domain-bubble .node-shape { fill:#dbeafe; stroke:#1d4ed8; stroke-width:2.8; filter:drop-shadow(0 3px 4px rgba(29,78,216,.18)); }
-    .node.domain-bubble .node-title { font-size:14px; font-weight:800; text-anchor:middle; dominant-baseline:middle; }
-    .node.domain-bubble .node-summary { font-size:11px; text-anchor:middle; }
-    .tone-observation .node-shape { fill:#dcfce7; stroke:#16a34a; }
-    .node.low-degree .node-title { font-size:12px; text-anchor:middle; dominant-baseline:middle; }
-    .node.low-degree .node-summary { display:none; }
+    .node .node-shape { stroke-width:1.6; cursor:grab; }
     .node.dragging .node-shape { cursor:grabbing; stroke:var(--accent); stroke-width:3; }
     .node.selected .node-shape { stroke:var(--accent); stroke-width:3.5; }
     .node text { pointer-events:none; fill:var(--ink); }
@@ -104,7 +95,7 @@
 </head>
 <body>
   <header>
-    <h1 id="title">Gaia Formalization Viewer v2</h1>
+    <h1 id="title">Gaia Formalization Viewer</h1>
     <span id="developer-badge" hidden>开发者模式</span>
     <input id="search" type="search" placeholder="搜索 claim ID 或正文…">
     <input id="file-input" type="file" accept=".json,application/json">
@@ -112,7 +103,7 @@
     <span id="validation-status"></span>
     <select id="stage" aria-label="图版本" hidden></select>
     <select id="view-mode" aria-label="查看模式" hidden><option value="standard" selected>Standard</option></select>
-    <button id="zoom-out" class="toolbar" type="button" aria-label="缩小">−</button><button id="zoom-in" class="toolbar" type="button" aria-label="放大">＋</button><button id="fit-layout" class="toolbar" type="button">适合画布</button><button id="reset-layout" class="toolbar" type="button">重置布局</button>
+    <button id="reset-layout" class="toolbar" type="button">重置布局</button>
   </header>
   <main>
     <aside id="left">
@@ -124,11 +115,11 @@
       <div class="legend-item"><span class="legend-line non-reasoning"></span>非推理关系 / weakpoint</div>
       <div class="legend-item"><span class="legend-line candidate"></span>待确认推理</div>
       <div class="section-title">Interaction</div>
-      <div class="muted">v2：K 领域气泡为核心；非核心孤立分量自动隐藏。节点大小按当前图中的度数变化，低度数节点只显示编号。滚轮缩放、拖动画布平移。</div>
+      <div class="muted">单击 weakpoint 块可在大图展开／折叠局部推理；单击其他节点或边查看属性；节点可拖动。</div>
       <div class="section-title">Search results</div>
       <div id="results" class="muted">输入关键词进行搜索</div>
     </aside>
-    <section id="canvas-wrap"><svg id="graph" role="img"></svg><div class="zoom-note">滚轮缩放 · 拖动画布平移 · 节点可单独拖动</div></section>
+    <section id="canvas-wrap"><svg id="graph" role="img"></svg></section>
     <aside id="detail"><div class="muted">单击节点或边，在这里查看属性。</div></aside>
   </main>
   <script>/* @license
@@ -198,7 +189,7 @@ THE SOFTWARE.
     const view=JSON.parse(rawViewData);
     const devMode=new URLSearchParams(location.search).get('dev') === '1';
     const latestStep=String(view.metadata?.latest_step ?? 'all');
-    const state={mode:'standard',step:devMode?latestStep:availableStep('4'),query:'',visibleLayers:new Set(),hits:new Set(),expandedWeakpoints:new Set(),manualPositions:new Map(),positions:new Map(),routes:new Map(),nodeMap:new Map(),degrees:new Map(),edgeMap:new Map(),selectedId:null,drag:null,pan:null,viewport:null};
+    const state={mode:'standard',step:devMode?latestStep:availableStep('4'),query:'',visibleLayers:new Set(),hits:new Set(),expandedWeakpoints:new Set(),manualPositions:new Map(),positions:new Map(),routes:new Map(),nodeMap:new Map(),edgeMap:new Map(),selectedId:null,drag:null};
     const byId=new Map(view.nodes.map(node => [node.id,node]));
     const sourceByKey=new Map((view.source_targets || []).map(target => [`${target.step}:${target.anchor_id}`,target]));
     const esc=value => String(value ?? '').replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -239,15 +230,10 @@ THE SOFTWARE.
         : payload.reasoning_type || details.type || classification || 'weakpoint';
       return String(type).replaceAll('_',' ');
     }
-    function isObservationNode(node) {
-      const value=String(node?.entity_id || node?.display_label || node?.label || '');
-      return /(?:^|:)O(?:\d+|[_:])/i.test(value) || /^O\d+/i.test(value);
-    }
     function nodeTone(node) {
       if (node.kind === 'operator') return `operator op-${operatorType(node)}`;
       if (node.kind === 'strategy' || node.kind === 'weakpoint') return 'tone-weakpoint';
       const kind=String(node.kind || ''), id=String(node.entity_id || '');
-      if (isObservationNode(node)) return 'tone-observation';
       if (id==='AltExp'||id.startsWith('AltExp_')) return 'tone-alternative';
       if (node.kind === 'source_anchor') return 'tone-source';
       if (node.layer === 'registry') return 'tone-registry';
@@ -491,18 +477,9 @@ THE SOFTWARE.
       const edges=graph.edges.filter(edge => ids.has(edge.source) && ids.has(edge.target) && (!effectiveLayer(edge) || state.visibleLayers.has(effectiveLayer(edge))));
       return {nodes,edges};
     }
-    function filterIsolatedComponents(graph) {
-      const coreIds=new Set(graph.nodes.filter(isDomainBubble).map(node=>node.id));
-      if (!coreIds.size) return graph;
-      const ids=new Set(graph.nodes.map(node=>node.id)), adjacency=new Map(graph.nodes.map(node=>[node.id,new Set()]));
-      graph.edges.forEach(edge=>{if(ids.has(edge.source)&&ids.has(edge.target)){adjacency.get(edge.source).add(edge.target);adjacency.get(edge.target).add(edge.source);}});
-      const seen=new Set(), keep=new Set();
-      graph.nodes.forEach(seed=>{if(seen.has(seed.id))return;const stack=[seed.id],component=[];seen.add(seed.id);while(stack.length){const id=stack.pop();component.push(id);adjacency.get(id).forEach(next=>{if(!seen.has(next)){seen.add(next);stack.push(next);}});}if(component.some(id=>coreIds.has(id)))component.forEach(id=>keep.add(id));});
-      return {nodes:graph.nodes.filter(node=>keep.has(node.id)),edges:graph.edges.filter(edge=>keep.has(edge.source)&&keep.has(edge.target))};
-    }
     function displayGraph() {
       let graph=devMode ? developerProjection() : state.mode === 'overview' ? overviewProjection() : standardProjection();
-      return filterIsolatedComponents(filterVisibleLayers(graph));
+      return filterVisibleLayers(graph);
     }
 
     function expandableStrategyId(item) {
@@ -527,29 +504,7 @@ THE SOFTWARE.
     }
 
     function isAlternativePlaceholder(node){const id=String(node?.entity_id||'');return node?.kind==='alternative_placeholder'||((id==='AltExp'||id.startsWith('AltExp_'))&&node?.summary==='Unknown alternative explanation (content=null)');}
-    function isDomainBubble(node) {
-      const details=node?.details || {}, role=String(node?.role || details.role || details.level || details.scope || '').toLowerCase();
-      const layer=String(node?.layer || '').toLowerCase(), kind=String(node?.kind || '').toLowerCase(), entity=String(node?.entity_id || node?.display_label || node?.label || '').trim();
-      // Merge v9 stores cross-paper conclusions as K:* labels backed by
-      // candidate_K_* knowledge IDs. Treat both representations as domain-level.
-      const isKConclusion=/^(?:K(?:[:·]|$)|candidate_K[_:])/i.test(entity);
-      return isKConclusion || layer === 'domain' || layer === 'domains' || kind === 'domain' || kind === 'domain_root' || kind === 'domain_anchor' || role === 'domain' || role === 'domain_root' || role === 'root';
-    }
-    function degreeMap(nodes,edges) {
-      const degrees=new Map(nodes.map(node=>[node.id,0]));
-      edges.forEach(edge=>{if(degrees.has(edge.source))degrees.set(edge.source,degrees.get(edge.source)+1);if(degrees.has(edge.target))degrees.set(edge.target,degrees.get(edge.target)+1);});
-      return degrees;
-    }
-    function nodeDegree(node) { return Number(state.degrees.get(node?.id) || 0); }
-    function isLowDegree(node) { return node.kind !== 'operator' && !isDomainBubble(node) && nodeDegree(node) <= 1; }
-    function nodeSize(node,mini=false) {
-      if(node.kind==='operator')return mini?{w:34,h:28}:{w:58,h:42};
-      if(isDomainBubble(node)){const d=nodeDegree(node),diameter=(mini?58:88)+Math.min(d,14)*(mini?4:10);return {w:diameter,h:diameter};}
-      if(isAlternativePlaceholder(node))return mini?{w:62,h:26}:{w:104,h:38};
-      if(node.kind==='strategy'||node.kind==='weakpoint')return mini?{w:112,h:48}:{w:156,h:62};
-      const d=nodeDegree(node),scale=Math.max(.68,Math.min(1.4,.68+Math.log2(d+1)*.20)),base=mini?{w:98,h:45}:{w:192,h:70};
-      return {w:Math.round(base.w*scale),h:Math.round(base.h*scale)};
-    }
+    function nodeSize(node,mini=false) {if(node.kind==='operator')return mini?{w:34,h:28}:{w:58,h:42};if(isAlternativePlaceholder(node))return mini?{w:62,h:26}:{w:104,h:38};if(node.kind==='strategy'||node.kind==='weakpoint')return mini?{w:112,h:48}:{w:156,h:62};return mini?{w:118,h:54}:{w:240,h:86};}
     function rankedLayout(nodes,edges,mini=false,useManual=true) {
       const ids=new Set(nodes.map(node=>node.id)),ranks=new Map(nodes.map(node=>[node.id,0])),indegree=new Map(nodes.map(node=>[node.id,0])),outgoing=new Map();
       edges.forEach(edge=>{if(!ids.has(edge.source)||!ids.has(edge.target))return;indegree.set(edge.target,(indegree.get(edge.target)||0)+1);if(!outgoing.has(edge.source))outgoing.set(edge.source,[]);outgoing.get(edge.source).push(edge.target);});
@@ -586,7 +541,7 @@ THE SOFTWARE.
     function dagreLayout(nodes,edges,mini=false,useManual=true) {
       if(!globalThis.dagre?.graphlib?.Graph||!globalThis.dagre?.layout)throw new Error('Dagre is unavailable');
       const nodeMap=new Map(nodes.map(node=>[node.id,node])),units=nodes.map(node=>{const size=nodeSize(node,mini);return {id:node.id,width:size.w,height:size.h};}),constraints=layoutConstraintEdges(nodes,edges);
-      const graph=new dagre.graphlib.Graph({multigraph:true});graph.setGraph({rankdir:'TB',ranker:'network-simplex',acyclicer:'greedy',nodesep:mini?22:68,edgesep:mini?10:24,ranksep:mini?46:112,marginx:mini?16:72,marginy:mini?16:72});graph.setDefaultEdgeLabel(()=>({}));units.sort((a,b)=>a.id.localeCompare(b.id)).forEach(unit=>graph.setNode(unit.id,{width:unit.width,height:unit.height}));
+      const graph=new dagre.graphlib.Graph({multigraph:true});graph.setGraph({rankdir:'TB',ranker:'network-simplex',acyclicer:'greedy',nodesep:mini?18:46,edgesep:mini?8:18,ranksep:mini?38:82,marginx:mini?12:50,marginy:mini?12:50});graph.setDefaultEdgeLabel(()=>({}));units.sort((a,b)=>a.id.localeCompare(b.id)).forEach(unit=>graph.setNode(unit.id,{width:unit.width,height:unit.height}));
       const routeRecords=[];
       constraints.sort((a,b)=>a.id.localeCompare(b.id)).forEach(edge=>{if(edge.source===edge.target||!graph.hasNode(edge.source)||!graph.hasNode(edge.target))return;const source=nodeMap.get(edge.source),target=nodeMap.get(edge.target),eoPair=edge.semantic_type==='equivalence'&&String(source?.entity_id||'').startsWith('claim_E')&&String(target?.entity_id||'').startsWith('claim_O'),weight=eoPair?14:groupsFor(edge).length?8:1;graph.setEdge(edge.source,edge.target,{minlen:1,weight},edge.id);if(edge.semantic_type!=='layout_constraint')routeRecords.push({edge,source:edge.source,target:edge.target});});
       dagre.layout(graph,{useDynamic:false});
@@ -609,26 +564,10 @@ THE SOFTWARE.
       const pad=mini?10:24,nodeMap=new Map(nodes.map(node=>[node.id,node])),bounds=[...layout.positions.entries()].reduce((value,[id,position])=>{const size=nodeSize(nodeMap.get(id),mini);return {minX:Math.min(value.minX,position.x),minY:Math.min(value.minY,position.y),maxX:Math.max(value.maxX,position.x+size.w),maxY:Math.max(value.maxY,position.y+size.h)};},{minX:Infinity,minY:Infinity,maxX:-Infinity,maxY:-Infinity}),dx=pad-bounds.minX,dy=pad-bounds.minY,positions=new Map([...layout.positions].map(([id,position])=>[id,{x:position.x+dx,y:position.y+dy}])),routes=new Map([...layout.routes].map(([id,points])=>[id,points.map(point=>({x:point.x+dx,y:point.y+dy}))]));
       return {positions,routes,width:bounds.maxX-bounds.minX+pad*2,height:bounds.maxY-bounds.minY+pad*2};
     }
-    function coreRadialLayout(nodes,edges,mini=false,useManual=true) {
-      const core=nodes.filter(isDomainBubble), ids=new Set(nodes.map(node=>node.id)), adjacency=new Map(nodes.map(node=>[node.id,new Set()]));
-      edges.forEach(edge=>{if(ids.has(edge.source)&&ids.has(edge.target)){adjacency.get(edge.source).add(edge.target);adjacency.get(edge.target).add(edge.source);}});
-      const distances=new Map(core.map(node=>[node.id,0])), queue=core.map(node=>node.id);
-      for(let cursor=0;cursor<queue.length;cursor++){const id=queue[cursor],distance=distances.get(id);adjacency.get(id).forEach(next=>{if(!distances.has(next)){distances.set(next,distance+1);queue.push(next);}});}
-      const others=nodes.filter(node=>!isDomainBubble(node)).sort((a,b)=>(distances.get(a.id)||99)-(distances.get(b.id)||99)||nodeIdentifier(a).localeCompare(nodeIdentifier(b)));
-      const positions=new Map(), center={x:0,y:0}, coreSize=Math.max(...core.map(node=>nodeSize(node,mini).w),mini?58:88), coreRadius=core.length<=1?0:Math.max(coreSize*1.9,core.length*(mini?28:42));
-      core.forEach((node,index)=>{const angle=-Math.PI/2+(index/Math.max(core.length,1))*Math.PI*2,size=nodeSize(node,mini);positions.set(node.id,{x:center.x+Math.cos(angle)*coreRadius-size.w/2,y:center.y+Math.sin(angle)*coreRadius-size.h/2});});
-      const ringCount=Math.max(2,Math.ceil(others.length/(mini?14:34))), perRing=Math.ceil(others.length/ringCount), ringGap=mini?160:280, firstRadius=Math.max(coreRadius+coreSize*1.9,mini?230:450);
-      for(let ring=0;ring<ringCount;ring++){const group=others.slice(ring*perRing,(ring+1)*perRing),radius=firstRadius+ring*ringGap;group.forEach((node,index)=>{const angle=-Math.PI/2+(index/Math.max(group.length,1))*Math.PI*2+(ring%2)*0.08,size=nodeSize(node,mini);positions.set(node.id,{x:center.x+Math.cos(angle)*radius-size.w/2,y:center.y+Math.sin(angle)*radius-size.h/2});});}
-      const outerRadius=firstRadius+Math.max(0,ringCount-1)*ringGap, padding=mini?40:120, width=outerRadius*2+padding*2, height=width, dx=width/2, dy=height/2;
-      const normalized=new Map([...positions].map(([id,position])=>[id,{x:position.x+dx,y:position.y+dy}]));
-      if(useManual&&!mini)nodes.forEach(node=>{const manual=state.manualPositions.get(node.id);if(manual)normalized.set(node.id,{...manual});});
-      return {positions:normalized,routes:new Map(),width,height,engine:'core-ring'};
-    }
-
     function componentLayout(nodes,edges,mini=false,useManual=true) {
       const components=connectedComponents(nodes,edges);
-      if(mini || (components.length<=1 && !nodes.some(isDomainBubble)))return dagreLayout(nodes,edges,mini,useManual);
-      const layouts=components.map(component=>({component,layout:(!mini&&component.nodes.some(isDomainBubble)) ? coreRadialLayout(component.nodes,component.edges,false,false) : normalizedLayout(component.nodes,dagreLayout(component.nodes,component.edges,mini,false),mini)})),positions=new Map(),routes=new Map(),outer=52,gap=88,smallGap=42,smallLimit=5,smallColumns=4;let y=outer,maxWidth=980,smallRow=[];
+      if(mini||components.length<=1)return dagreLayout(nodes,edges,mini,useManual);
+      const layouts=components.map(component=>({component,layout:normalizedLayout(component.nodes,dagreLayout(component.nodes,component.edges,false,false),false)})),positions=new Map(),routes=new Map(),outer=36,gap=72,smallGap=36,smallLimit=5,smallColumns=3;let y=outer,maxWidth=980,smallRow=[];
       const place=(entry,x,top)=>{entry.layout.positions.forEach((position,id)=>positions.set(id,{x:position.x+x,y:position.y+top}));entry.layout.routes.forEach((points,id)=>routes.set(id,points.map(point=>({x:point.x+x,y:point.y+top}))));maxWidth=Math.max(maxWidth,x+entry.layout.width+outer);};
       const flushSmall=()=>{if(!smallRow.length)return;let x=outer,rowHeight=0;smallRow.forEach(entry=>{place(entry,x,y);x+=entry.layout.width+smallGap;rowHeight=Math.max(rowHeight,entry.layout.height);});y+=rowHeight+gap;smallRow=[];};
       layouts.forEach(entry=>{if(entry.component.nodes.length<=smallLimit){smallRow.push(entry);if(smallRow.length===smallColumns)flushSmall();return;}flushSmall();place(entry,outer,y);y+=entry.layout.height+gap;});flushSmall();
@@ -643,44 +582,14 @@ THE SOFTWARE.
       const as=nodeSize(source,mini),bs=nodeSize(target,mini);if(Math.abs(a.y-b.y)<Math.max(as.h,bs.h)*.55){const forward=b.x>=a.x,x1=forward?a.x+as.w:a.x,x2=forward?b.x:b.x+bs.w,y1=a.y+as.h/2,y2=b.y+bs.h/2;return {d:`M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`,lx:(x1+x2)/2,ly:y1-6};}const downward=b.y>a.y,x1=a.x+as.w/2,y1=downward?a.y+as.h:a.y,x2=b.x+bs.w/2,y2=downward?b.y:b.y+bs.h,mid=(y1+y2)/2;return {d:`M ${x1} ${y1} C ${x1} ${mid}, ${x2} ${mid}, ${x2} ${y2}`,lx:(x1+x2)/2+4,ly:mid-4};
     }
     function splitText(value,limit=36,maxLines=2){let rest=String(value||'').replace(/\s+/g,' ').trim();const lines=[];while(rest&&lines.length<maxLines){if(rest.length<=limit){lines.push(rest);rest='';break;}const sample=rest.slice(0,limit+1),space=sample.lastIndexOf(' '),cut=space>=Math.floor(limit*.55)?space:limit;lines.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim();}if(rest&&lines.length)lines[lines.length-1]=`${lines.at(-1).replace(/[.…]+$/,'')}…`;return lines;}
-    function shapeMarkup(node,size){const type=operatorType(node),w=size.w,h=size.h;if(isDomainBubble(node))return `<circle class="node-shape" cx="${w/2}" cy="${h/2}" r="${Math.max(1,w/2-2)}"></circle>`;if(node.kind!=='operator')return `<rect class="node-shape" width="${w}" height="${h}" rx="${node.kind==='strategy'||node.kind==='weakpoint'?26:9}"></rect>`;if(type==='conjunction')return `<polygon class="node-shape" points="${w/2},0 ${w},${h/2} ${w/2},${h} 0,${h/2}"></polygon>`;if(type==='disjunction')return `<polygon class="node-shape" points="${w*.22},0 ${w*.78},0 ${w},${h/2} ${w*.78},${h} ${w*.22},${h} 0,${h/2}"></polygon>`;if(type==='contradiction')return `<polygon class="node-shape" points="${w*.22},0 ${w*.78},0 ${w},${h*.25} ${w},${h*.75} ${w*.78},${h} ${w*.22},${h} 0,${h*.75} 0,${h*.25}"></polygon>`;return `<rect class="node-shape" width="${w}" height="${h}" rx="${h/2}"></rect>`;}
-    function nodeMarkup(node,position,mini=false,interactive=true){const size=nodeSize(node,mini),tone=nodeTone(node),domain=isDomainBubble(node),low=isLowDegree(node),proposal=node.kind==='observation_proposal'?' observation-proposal':'',relationDisplay=node.kind==='relation_display'?' relation-display':'',hit=state.hits.has(node.id)?' hit':'',selected=state.selectedId===node.id?' selected':'',validation=node.validation_status==='failed'?' validation-failed':node.validation_status==='warning'?' validation-warning':'',classes=`node ${tone}${domain?' domain-bubble':''}${low?' low-degree':''}${proposal}${relationDisplay}${hit}${selected}${validation}`,data=interactive?` data-node=\"${esc(node.id)}\"`:'';const titleLimit=Math.max(8,Math.floor(size.w/(mini?5.8:7.2))),summaryLimit=Math.max(10,Math.floor(size.w/(mini?5.4:6.6)));let text='';if(node.kind==='operator')text=`<text class=\"node-title\" x=\"${size.w/2}\" y=\"${size.h/2+1}\">${esc(operatorSymbol(operatorType(node)))}</text>`;else if(domain){const title=splitText(nodeIdentifier(node),titleLimit,1)[0]||nodeIdentifier(node),lines=splitText(node.summary,summaryLimit,mini?2:3),lineHeight=mini?9:14,startY=size.h/2-(lines.length*lineHeight)/2+8;text=`<text class=\"node-title\" x=\"${size.w/2}\" y=\"${Math.max(16,startY-lineHeight)}\">${esc(title)}</text>${lines.map((line,index)=>`<text class=\"node-summary\" x=\"${size.w/2}\" y=\"${startY+index*lineHeight}\">${esc(line)}</text>`).join('')}`;}else if(isAlternativePlaceholder(node)||low)text=`<text class=\"node-title\" x=\"${size.w/2}\" y=\"${size.h/2+1}\">${esc(splitText(nodeIdentifier(node),titleLimit,1)[0]||nodeIdentifier(node))}</text>`;else if(node.kind==='strategy'||node.kind==='weakpoint'){const title=splitText(node.kind==='weakpoint'?'weakpoint':nodeIdentifier(node),titleLimit,1)[0],lines=splitText(node.kind==='weakpoint'?'evidence / example':weakpointType(node),summaryLimit,1);text=`<text class=\"node-title\" x=\"12\" y=\"23\">↝ ${esc(title)}</text><text class=\"node-summary\" x=\"12\" y=\"44\">${esc(lines[0]||'')}</text>`;}else{const title=splitText(nodeIdentifier(node),titleLimit,1)[0]||nodeIdentifier(node),lines=splitText(node.summary,summaryLimit,mini?2:2);text=`<text class=\"node-title\" x=\"${mini?7:12}\" y=\"${mini?17:24}\">${esc(title)}</text>${lines.map((line,index)=>`<text class=\"node-summary\" x=\"${mini?7:12}\" y=\"${(mini?33:51)+index*(mini?11:17)}\">${esc(line)}</text>`).join('')}`;}return `<g class=\"${classes}\"${data} transform=\"translate(${position.x},${position.y})\"><title>${esc([node.entity_id,node.summary].filter(Boolean).join('\\n'))}</title>${shapeMarkup(node,size)}${text}</g>`;}
+    function shapeMarkup(node,size){const type=operatorType(node),w=size.w,h=size.h;if(node.kind!=='operator')return `<rect class="node-shape" width="${w}" height="${h}" rx="${node.kind==='strategy'||node.kind==='weakpoint'?26:9}"></rect>`;if(type==='conjunction')return `<polygon class="node-shape" points="${w/2},0 ${w},${h/2} ${w/2},${h} 0,${h/2}"></polygon>`;if(type==='disjunction')return `<polygon class="node-shape" points="${w*.22},0 ${w*.78},0 ${w},${h/2} ${w*.78},${h} ${w*.22},${h} 0,${h/2}"></polygon>`;if(type==='contradiction')return `<polygon class="node-shape" points="${w*.22},0 ${w*.78},0 ${w},${h*.25} ${w},${h*.75} ${w*.78},${h} ${w*.22},${h} 0,${h*.75} 0,${h*.25}"></polygon>`;return `<rect class="node-shape" width="${w}" height="${h}" rx="${h/2}"></rect>`;}
+    function nodeMarkup(node,position,mini=false,interactive=true){const size=nodeSize(node,mini),tone=nodeTone(node),proposal=node.kind==='observation_proposal'?' observation-proposal':'',relationDisplay=node.kind==='relation_display'?' relation-display':'',hit=state.hits.has(node.id)?' hit':'',selected=state.selectedId===node.id?' selected':'',validation=node.validation_status==='failed'?' validation-failed':node.validation_status==='warning'?' validation-warning':'',data=interactive?` data-node="${esc(node.id)}"`:'';let text='';if(node.kind==='operator')text=`<text class="node-title" x="${size.w/2}" y="${size.h/2+1}">${esc(operatorSymbol(operatorType(node)))}</text>`;else if(isAlternativePlaceholder(node))text=`<text class="node-title" x="${size.w/2}" y="${size.h/2+1}" text-anchor="middle" dominant-baseline="middle">${esc(nodeIdentifier(node))}</text>`;else if(node.kind==='strategy'||node.kind==='weakpoint')text=`<text class="node-title" x="12" y="23">↝ ${esc(node.kind==='weakpoint'?'weakpoint':nodeIdentifier(node))}</text><text class="node-summary" x="12" y="44">${esc(node.kind==='weakpoint'?'evidence / example':weakpointType(node))}</text>`;else{const lines=splitText(node.summary,mini?21:38,2),title=esc(nodeIdentifier(node));text=`<text class="node-title" x="${mini?7:12}" y="${mini?17:24}">${title}</text>${lines.map((line,index)=>`<text class="node-summary" x="${mini?7:12}" y="${(mini?33:51)+index*(mini?11:17)}">${esc(line)}</text>`).join('')}`;}return `<g class="node ${tone}${proposal}${relationDisplay}${hit}${selected}${validation}"${data} transform="translate(${position.x},${position.y})"><title>${esc([node.entity_id,node.summary].filter(Boolean).join('\n'))}</title>${shapeMarkup(node,size)}${text}</g>`;}
     function edgeMarkup(edge,positions,nodeMap,mini=false,interactive=true,routes=new Map()){const source=nodeMap.get(edge.source),target=nodeMap.get(edge.target),a=positions.get(edge.source),b=positions.get(edge.target);if(!source||!target||!a||!b)return '';const geometry=edgeGeometry(a,b,source,target,mini,routes.get(edge.id)),non=edge.edge_class==='non_reasoning'?' non-reasoning':'',candidate=edge.edge_class==='reasoning'&&edge.reasoning_state==='candidate'?' reasoning-candidate':'',infer=edge.semantic_type==='infer'?' infer':'',relational=['contradiction','complement'].includes(edge.semantic_type)?' relational':'',equivalence=edge.semantic_type==='equivalence'?' equivalence':'',arrows=edge.semantic_type==='equivalence'?` marker-start="url(#${mini?'mini-':''}arrow-start)" marker-end="url(#${mini?'mini-':''}arrow)"`:` marker-end="url(#${mini?'mini-':''}arrow)"`,validation=edge.validation_status==='failed'?' validation-failed':edge.validation_status==='warning'?' validation-warning':'',selected=state.selectedId===edge.id?' selected':'',data=interactive?` data-edge="${esc(edge.id)}" data-source="${esc(edge.source)}" data-target="${esc(edge.target)}"`:'',showAuditLabel=devMode&&['1','2'].includes(state.step),label=showAuditLabel?(edge.details?.metadata?.relation_id||edge.label):edge.semantic_type==='background'||edge.semantic_type==='infer'?edge.label:'';return `<path class="edge${non}${candidate}${infer}${relational}${equivalence}${validation}${selected}"${arrows}${data} d="${geometry.d}"></path>${label?`<text class="edge-label${selected}"${data} x="${geometry.lx}" y="${geometry.ly}">${esc(label)}</text>`:''}`;}
     function updateConnectedEdges(nodeId){document.querySelectorAll('#graph [data-edge]').forEach(element=>{if(element.dataset.source!==nodeId&&element.dataset.target!==nodeId)return;const source=state.nodeMap.get(element.dataset.source),target=state.nodeMap.get(element.dataset.target),a=state.positions.get(element.dataset.source),b=state.positions.get(element.dataset.target);if(!source||!target||!a||!b)return;const geometry=edgeGeometry(a,b,source,target,false);if(element.tagName.toLowerCase()==='path')element.setAttribute('d',geometry.d);else{element.setAttribute('x',geometry.lx);element.setAttribute('y',geometry.ly);}});}
     function svgPoint(event,svg){const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;return point.matrixTransform(svg.getScreenCTM().inverse());}
     function bindDragging(svg){svg.querySelectorAll('.node[data-node]').forEach(element=>{element.addEventListener('pointerdown',event=>{const id=element.dataset.node,origin=state.positions.get(id),point=svgPoint(event,svg);state.drag={id,element,dx:point.x-origin.x,dy:point.y-origin.y};element.classList.add('dragging');element.setPointerCapture(event.pointerId);event.preventDefault();});element.addEventListener('pointermove',event=>{if(!state.drag||state.drag.id!==element.dataset.node)return;const point=svgPoint(event,svg),next={x:Math.max(10,point.x-state.drag.dx),y:Math.max(10,point.y-state.drag.dy)};state.positions.set(state.drag.id,next);state.manualPositions.set(state.drag.id,next);element.setAttribute('transform',`translate(${next.x},${next.y})`);updateConnectedEdges(state.drag.id);});const finish=()=>{if(state.drag?.element===element){element.classList.remove('dragging');state.drag=null;}};element.addEventListener('pointerup',finish);element.addEventListener('pointercancel',finish);});}
     function selectItem(item){if(!item)return;state.selectedId=item.id||null;showDetail(item);if((item.kind==='weakpoint'||(item.kind==='strategy'&&item.details?.form==='coarse'))&&toggleWeakpoint(item))return;renderGraph();}
-    function applyViewport(svg) {
-      const viewport=state.viewport;
-      if (!viewport) return;
-      svg.setAttribute('viewBox',`${viewport.x} ${viewport.y} ${viewport.w} ${viewport.h}`);svg.setAttribute('preserveAspectRatio','xMidYMid meet');
-    }
-    function fitViewport() {
-      const svg=document.getElementById('graph');
-      if (!svg?.dataset.baseWidth) return;
-      state.viewport={x:0,y:0,w:Number(svg.dataset.baseWidth),h:Number(svg.dataset.baseHeight),baseWidth:Number(svg.dataset.baseWidth),baseHeight:Number(svg.dataset.baseHeight)};
-      applyViewport(svg);
-    }
-    function zoomViewport(factor,cx=null,cy=null) {
-      const svg=document.getElementById('graph'),v=state.viewport;
-      if (!svg||!v) return;
-      const centerX=cx==null?v.x+v.w/2:cx,centerY=cy==null?v.y+v.h/2:cy,scale=1/factor;
-      const width=Math.max(Number(svg.dataset.baseWidth)/6,Math.min(Number(svg.dataset.baseWidth),v.w*scale)),height=Math.max(Number(svg.dataset.baseHeight)/6,Math.min(Number(svg.dataset.baseHeight),v.h*scale));
-      state.viewport={x:centerX-(centerX-v.x)*(width/v.w),y:centerY-(centerY-v.y)*(height/v.h),w:width,h:height};
-      state.viewport.x=Math.max(0,Math.min(Number(svg.dataset.baseWidth)-width,state.viewport.x));
-      state.viewport.y=Math.max(0,Math.min(Number(svg.dataset.baseHeight)-height,state.viewport.y));
-      applyViewport(svg);
-    }
-    function bindViewportInteractions(svg) {
-      if (svg.dataset.viewportBound) return;
-      svg.dataset.viewportBound='1';
-      svg.addEventListener('wheel',event=>{event.preventDefault();const point=svgPoint(event,svg),factor=event.deltaY<0?1.18:1/1.18;zoomViewport(factor,point.x,point.y);},{passive:false});
-      svg.addEventListener('pointerdown',event=>{if(event.target!==svg)return;const point=svgPoint(event,svg);state.pan={point,x:state.viewport.x,y:state.viewport.y};svg.classList.add('panning');svg.setPointerCapture(event.pointerId);});
-      svg.addEventListener('pointermove',event=>{if(!state.pan)return;const point=svgPoint(event,svg),dx=point.x-state.pan.point.x,dy=point.y-state.pan.point.y;state.viewport.x=Math.max(0,Math.min(Number(svg.dataset.baseWidth)-state.viewport.w,state.pan.x-dx));state.viewport.y=Math.max(0,Math.min(Number(svg.dataset.baseHeight)-state.viewport.h,state.pan.y-dy));applyViewport(svg);});
-      const finish=()=>{state.pan=null;svg.classList.remove('panning');};
-      svg.addEventListener('pointerup',finish);svg.addEventListener('pointercancel',finish);
-    }
-    function renderGraph(){const svg=document.getElementById('graph'),graph=displayGraph();state.degrees=degreeMap(graph.nodes,graph.edges);const layout=automaticLayout(graph.nodes,graph.edges,false,true);state.positions=layout.positions;state.routes=layout.routes||new Map();state.nodeMap=new Map(graph.nodes.map(node=>[node.id,node]));state.edgeMap=new Map(graph.edges.map(edge=>[edge.id,edge]));svg.dataset.layoutEngine=layout.engine;svg.dataset.baseWidth=layout.width;svg.dataset.baseHeight=layout.height;const viewportChanged=!state.viewport||state.viewport.baseWidth!==layout.width||state.viewport.baseHeight!==layout.height;if(viewportChanged){state.viewport={x:0,y:0,w:layout.width,h:layout.height,baseWidth:layout.width,baseHeight:layout.height};}else{state.viewport.baseWidth=layout.width;state.viewport.baseHeight=layout.height;}svg.setAttribute('height',Math.min(layout.height,Math.max(620,window.innerHeight-130)));applyViewport(svg);const defs='<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#667085"></path></marker><marker id="arrow-start" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto-start-reverse"><path d="M0,0 L0,6 L8,3 z" fill="#667085"></path></marker></defs>';svg.innerHTML=defs+graph.edges.map(edge=>edgeMarkup(edge,layout.positions,state.nodeMap,false,true,state.routes)).join('')+graph.nodes.map(node=>nodeMarkup(node,layout.positions.get(node.id))).join('');if(!graph.nodes.length)svg.innerHTML=defs+'<text x="24" y="40" class="muted">当前模式和图层下没有节点</text>';svg.dataset.baseWidth=layout.width;svg.dataset.baseHeight=layout.height;applyViewport(svg);svg.querySelectorAll('[data-node]').forEach(element=>{element.addEventListener('click',()=>selectItem(state.nodeMap.get(element.dataset.node)));});svg.querySelectorAll('[data-edge]').forEach(element=>{element.addEventListener('click',()=>selectItem(state.edgeMap.get(element.dataset.edge)));});bindViewportInteractions(svg);bindDragging(svg);}
+    function renderGraph(){const svg=document.getElementById('graph'),graph=displayGraph(),layout=automaticLayout(graph.nodes,graph.edges,false,true);state.positions=layout.positions;state.routes=layout.routes||new Map();state.nodeMap=new Map(graph.nodes.map(node=>[node.id,node]));state.edgeMap=new Map(graph.edges.map(edge=>[edge.id,edge]));svg.dataset.layoutEngine=layout.engine;svg.setAttribute('viewBox',`0 0 ${layout.width} ${layout.height}`);svg.setAttribute('height',layout.height);const defs='<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#667085"></path></marker><marker id="arrow-start" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto-start-reverse"><path d="M0,0 L0,6 L8,3 z" fill="#667085"></path></marker></defs>';svg.innerHTML=defs+graph.edges.map(edge=>edgeMarkup(edge,layout.positions,state.nodeMap,false,true,state.routes)).join('')+graph.nodes.map(node=>nodeMarkup(node,layout.positions.get(node.id))).join('');if(!graph.nodes.length)svg.innerHTML=defs+'<text x="24" y="40" class="muted">当前模式和图层下没有节点</text>';svg.querySelectorAll('[data-node]').forEach(element=>{element.addEventListener('click',()=>selectItem(state.nodeMap.get(element.dataset.node)));});svg.querySelectorAll('[data-edge]').forEach(element=>{element.addEventListener('click',()=>selectItem(state.edgeMap.get(element.dataset.edge)));});bindDragging(svg);}
 
     function propertyRow(key,value){if(value==null||value===''||(Array.isArray(value)&&!value.length))return '';const rendered=typeof value==='object'?JSON.stringify(value):String(value);return `<div class="property-row"><div class="property-key">${esc(key)}</div><div>${esc(rendered)}</div></div>`;}
     function clearDetail(){document.getElementById('detail').innerHTML='<div class="muted">单击节点或边，在这里查看属性。</div>';}
@@ -690,7 +599,7 @@ THE SOFTWARE.
 
     document.getElementById('view-mode').addEventListener('change',event=>{state.mode=event.target.value;state.step=modeStep();state.expandedWeakpoints.clear();state.manualPositions.clear();state.selectedId=null;clearDetail();updateModeNote();updateValidationStatus();buildLayers(true);runSearch();});
     document.getElementById('search').addEventListener('input',event=>{state.query=event.target.value;runSearch();});
-    document.getElementById('zoom-in').addEventListener('click',()=>zoomViewport(1.25));document.getElementById('zoom-out').addEventListener('click',()=>zoomViewport(1/1.25));document.getElementById('fit-layout').addEventListener('click',fitViewport);document.getElementById('reset-layout').addEventListener('click',()=>{state.manualPositions.clear();renderGraph();fitViewport();});
+    document.getElementById('reset-layout').addEventListener('click',()=>{state.manualPositions.clear();renderGraph();});
     configureModeControls();updateValidationStatus();buildLayers(true);renderGraph();
     }
   </script>
