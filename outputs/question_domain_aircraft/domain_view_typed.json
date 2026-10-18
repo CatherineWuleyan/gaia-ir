@@ -3543,10 +3543,10 @@
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_6",
     "target": "papers:paper_7c211832::claim_3",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:122:papers:paper_014abc68::claim_6:papers:paper_7c211832::claim_3:conjunction:weakpoints",
@@ -3562,20 +3562,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_066432fe::claim_1",
     "target": "papers:paper_53166ac1::claim_6",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:123:papers:paper_066432fe::claim_1:papers:paper_53166ac1::claim_6:conjunction:weakpoints",
@@ -3591,20 +3591,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_53166ac1::claim_1",
     "target": "papers:paper_755906eb::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:124:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -3620,20 +3620,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_26dddb44::claim_4",
     "target": "papers:paper_014abc68::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:125:papers:paper_26dddb44::claim_4:papers:paper_014abc68::claim_1:conjunction:weakpoints",
@@ -3649,20 +3649,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_755906eb::claim_2",
     "target": "papers:paper_066432fe::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:126:papers:paper_755906eb::claim_2:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -3678,20 +3678,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_53166ac1::claim_1",
     "target": "papers:paper_755906eb::claim_12",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:127:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_12:conjunction:weakpoints",
@@ -3707,20 +3707,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_1",
     "target": "papers:paper_7c211832::claim_23",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:128:papers:paper_014abc68::claim_1:papers:paper_7c211832::claim_23:conjunction:weakpoints",
@@ -3736,20 +3736,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_13",
     "target": "papers:paper_26dddb44::claim_4",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:129:papers:paper_014abc68::claim_13:papers:paper_26dddb44::claim_4:conjunction:weakpoints",
@@ -3765,20 +3765,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_8",
     "target": "papers:paper_18f90780::claim_4",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:130:papers:paper_014abc68::claim_8:papers:paper_18f90780::claim_4:conjunction:weakpoints",
@@ -3794,20 +3794,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_755906eb::claim_4",
     "target": "papers:paper_066432fe::claim_5",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:131:papers:paper_755906eb::claim_4:papers:paper_066432fe::claim_5:conjunction:weakpoints",
@@ -3823,20 +3823,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_26dddb44::claim_1",
     "target": "papers:paper_7c211832::claim_4",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:132:papers:paper_26dddb44::claim_1:papers:paper_7c211832::claim_4:conjunction:weakpoints",
@@ -3852,20 +3852,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_755906eb::claim_10",
     "target": "papers:paper_7c211832::claim_22",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:133:papers:paper_755906eb::claim_10:papers:paper_7c211832::claim_22:conjunction:weakpoints",
@@ -3881,20 +3881,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_6",
     "target": "papers:paper_755906eb::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:134:papers:paper_014abc68::claim_6:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -3910,20 +3910,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_8",
     "target": "papers:paper_066432fe::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:135:papers:paper_014abc68::claim_8:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -3939,20 +3939,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_18f90780::claim_25",
     "target": "papers:paper_755906eb::claim_4",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:136:papers:paper_18f90780::claim_25:papers:paper_755906eb::claim_4:conjunction:weakpoints",
@@ -3968,20 +3968,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_21",
     "target": "papers:paper_53166ac1::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:137:papers:paper_014abc68::claim_21:papers:paper_53166ac1::claim_1:conjunction:weakpoints",
@@ -3997,20 +3997,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_5",
     "target": "papers:paper_7c211832::claim_3",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:138:papers:paper_014abc68::claim_5:papers:paper_7c211832::claim_3:conjunction:weakpoints",
@@ -4026,20 +4026,20 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
     "relation": "conjunction",
     "source": "papers:paper_014abc68::claim_4",
     "target": "papers:paper_755906eb::claim_1",
-    "reasoning_type": "infer",
-    "residual_reason": "unclear",
+    "reasoning_type": "conjunction",
+    "residual_reason": null,
     "chainable": false,
-    "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+    "role_reason": "symmetric conjunction operator; not a reasoning type"
    },
    "edge_class": "reasoning",
    "id": "edge:139:papers:paper_014abc68::claim_4:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -4055,10 +4055,10 @@
     "overview",
     "standard"
    ],
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "chainable": false,
-   "role_reason": "paper-internal edge; no Step 3 justification in the final view"
+   "role_reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "details": {
@@ -6507,7 +6507,8 @@
   "unused_context_conclusions_dropped": 0,
   "edge_role_counts": {
    "bounds": 5,
-   "infer": 202,
+   "conjunction": 18,
+   "infer": 184,
    "reproduces": 3,
    "special_case": 13
   },

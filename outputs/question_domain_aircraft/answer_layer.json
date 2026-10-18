@@ -5301,11 +5301,11 @@
    "target_content": "In the data-enhanced dynamic flight simulation model, the angular velocity is computed from differences in the specified Euler angles, namely yaw $\\psi$, pitch $\\theta$, and roll $\\phi$, between consecutive time steps rather than by solving the rotational equations of motion, eliminating the requirement of a control model.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:123:papers:paper_066432fe::claim_1:papers:paper_53166ac1::claim_6:conjunction:weakpoints",
@@ -5321,11 +5321,11 @@
    "target_content": "A two-step longitudinal parameter-identification procedure for a fixed-wing unmanned aerial vehicle (UAV), applied to simulated elevator-doublet flight data at 1000 m altitude and 42 m/s nominal airspeed, reproduces the longitudinal force coefficients $C_x$ and $C_z$ and the pitching-moment coefficient $C_m$, with residuals between measured and estimated values.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:124:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -5341,11 +5341,11 @@
    "target_content": "A linearized six-degree-of-freedom (6-DOF) state-space flight dynamics model of the AggieAir Minion is represented in state-derivative form $\\dot{x}=a\\,x+b\\,u$, where x is the vector of 12 rigid-body states (three positions, three velocities, three Euler angles, three angular rates), u is the vector of control inputs (aileron, elevator, rudder, throttle), and a and b are real-valued matrices.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:125:papers:paper_26dddb44::claim_4:papers:paper_014abc68::claim_1:conjunction:weakpoints",
@@ -5361,11 +5361,11 @@
    "target_content": "The flight dynamics model is packaged as a single coupled nonlinear differential‑algebraic system consisting of 35 scalar DAE equations, involving 39 flight variables and requiring 30 independent constant parameters to be specified.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:126:papers:paper_755906eb::claim_2:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -5381,11 +5381,11 @@
    "target_content": "The delta aerodynamic model for the longitudinal coefficients \\(C_X\\) (force coefficient in the \\(x\\)-direction), \\(C_Z\\) (force coefficient in the \\(z\\)-direction), and \\(C_m\\) (moment coefficient about the \\(y\\)-axis), which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, corrects the prior aerodynamic database by adding polynomial functions of angle of attack (\\(\\alpha\\)), Mach number, pitch rate (\\(q\\)), elevator defl…",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:127:papers:paper_53166ac1::claim_1:papers:paper_755906eb::claim_12:conjunction:weakpoints",
@@ -5401,11 +5401,11 @@
    "target_content": "Individual aerodynamic force terms in the linearized six-degree-of-freedom (6-DOF) state-space flight dynamics model of the AggieAir Minion are formed from (1/2) ρ V^2 S_w C_Z.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:128:papers:paper_014abc68::claim_1:papers:paper_7c211832::claim_23:conjunction:weakpoints",
@@ -5421,11 +5421,11 @@
    "target_content": "The accuracy of the state variables not computed from residual equations was not significantly affected by the overestimation of the values of the angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions during cruise relative to Quick Access Recorder (QAR) data.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:129:papers:paper_014abc68::claim_13:papers:paper_26dddb44::claim_4:conjunction:weakpoints",
@@ -5441,11 +5441,11 @@
    "target_content": "In each cycle of the real-time simulation, the ground simulation computer of the joint real-time hardware-in-the-loop simulation system for an aircraft computes the aircraft dynamics differential equations and generates aircraft angular velocity and acceleration.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:12:papers:paper_aec49f8f::claim_55:papers:paper_aec49f8f::claim_32:infer:operators",
@@ -5481,11 +5481,11 @@
    "target_content": "The thrust coefficient definition $C_T = T/(\\rho n^2 D^4)$, with $T$ the thrust and $\\rho$ the air density, with the body-axis force coefficient normalization, in which the thrust force is divided by the freestream dynamic pressure $\\bar{q} = \\frac{1}{2}\\rho V^2$ and the wing reference area $S$, yields the propulsion component of the body x-axis force coefficient $C_{T_x,\\mathrm{prop}} = 2(D^2/S)(C_{T0}J^2 + C_{T1}J + C_{T2})$, where $C_T = C_{T0} + C_{T1}J_{adv} + C_{T2}J_{adv}^2$, $J_{adv} = V/(nD)$ is the advanc…",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:131:papers:paper_755906eb::claim_4:papers:paper_066432fe::claim_5:conjunction:weakpoints",
@@ -5501,11 +5501,11 @@
    "target_content": "The delta aerodynamic model for the longitudinal coefficients \\(C_X\\) (force coefficient in the \\(x\\)-direction), \\(C_Z\\) (force coefficient in the \\(z\\)-direction), and \\(C_m\\) (moment coefficient about the \\(y\\)-axis), which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, reproduces the aerodynamic coefficients \\(C_X\\), \\(C_Z\\), and \\(C_m\\) calculated from the four estimation maneuvers with good fidelity.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:132:papers:paper_26dddb44::claim_1:papers:paper_7c211832::claim_4:conjunction:weakpoints",
@@ -5521,11 +5521,11 @@
    "target_content": "The data-enhanced dynamic flight simulation model includes modular atmosphere, gravitation, aerodynamics, propulsion, and mass components, and requires only minimal aircraft information.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:133:papers:paper_755906eb::claim_10:papers:paper_7c211832::claim_22:conjunction:weakpoints",
@@ -5541,11 +5541,11 @@
    "target_content": "During cruise, the overestimation of the values of the angle-of-attack and throttle-factor profiles produced by the data-enhanced dynamic flight simulation model for the simulated Boeing 777-300ER missions relative to Quick Access Recorder (QAR) data is attributed to the low fidelity of the aerodynamics and propulsion models or to differences in throttle setting.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:134:papers:paper_014abc68::claim_6:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -5561,11 +5561,11 @@
    "target_content": "A linearized six-degree-of-freedom (6-DOF) state-space flight dynamics model of the AggieAir Minion is represented in state-derivative form $\\dot{x}=a\\,x+b\\,u$, where x is the vector of 12 rigid-body states (three positions, three velocities, three Euler angles, three angular rates), u is the vector of control inputs (aileron, elevator, rudder, throttle), and a and b are real-valued matrices.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:135:papers:paper_014abc68::claim_8:papers:paper_066432fe::claim_1:conjunction:weakpoints",
@@ -5581,11 +5581,11 @@
    "target_content": "The delta aerodynamic model for the longitudinal coefficients \\(C_X\\) (force coefficient in the \\(x\\)-direction), \\(C_Z\\) (force coefficient in the \\(z\\)-direction), and \\(C_m\\) (moment coefficient about the \\(y\\)-axis), which was estimated for a 450 kg, tail-controlled, gliding autonomous air vehicle using stepwise regression on flight test data from four maneuvers, corrects the prior aerodynamic database by adding polynomial functions of angle of attack (\\(\\alpha\\)), Mach number, pitch rate (\\(q\\)), elevator defl…",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:136:papers:paper_18f90780::claim_25:papers:paper_755906eb::claim_4:conjunction:weakpoints",
@@ -5601,11 +5601,11 @@
    "target_content": "The numerical coefficient set used in the simulation of the linearized six-degree-of-freedom (6-DOF) state-space flight dynamics model of the AggieAir Minion includes, for example, C_X = −0.026, C_Y = 0, C_Z = −0.403, C_{X,α} = −0.139, C_{Z,α} = −5.619, C_{m,α} = −1.550, C_{Y,β} = −1.575, C_{ℓ,p} = −0.6490, C_{m,q} = −10.6883, and the other linear aerodynamic derivatives listed as point estimates in the simulation configuration.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:137:papers:paper_014abc68::claim_21:papers:paper_53166ac1::claim_1:conjunction:weakpoints",
@@ -5621,11 +5621,11 @@
    "target_content": "For a hypothetical fixed-wing unmanned aerial vehicle (UAV) with maximum take-off weight 115 kg, wing area 4.0 m^2, mean aerodynamic chord 0.63 m, span 6.34 m, engine power 20 hp, and propeller diameter 34 in, trimmed at an altitude of 1000 m and an airspeed of 80 knots, the unified six-degree-of-freedom model and its linearized longitudinal state-space representation are used to simulate the response to a prescribed elevator-deflection input, with longitudinal aerodynamic coefficients obtained from the USAF Stabil…",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:138:papers:paper_014abc68::claim_5:papers:paper_7c211832::claim_3:conjunction:weakpoints",
@@ -5641,11 +5641,11 @@
    "target_content": "In the data-enhanced dynamic flight simulation model, the angular velocity is computed from differences in the specified Euler angles, namely yaw $\\psi$, pitch $\\theta$, and roll $\\phi$, between consecutive time steps rather than by solving the rotational equations of motion, eliminating the requirement of a control model.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:139:papers:paper_014abc68::claim_4:papers:paper_755906eb::claim_1:conjunction:weakpoints",
@@ -5661,11 +5661,11 @@
    "target_content": "A linearized six-degree-of-freedom (6-DOF) state-space flight dynamics model of the AggieAir Minion is represented in state-derivative form $\\dot{x}=a\\,x+b\\,u$, where x is the vector of 12 rigid-body states (three positions, three velocities, three Euler angles, three angular rates), u is the vector of control inputs (aileron, elevator, rudder, throttle), and a and b are real-valued matrices.",
    "step3_expression": "",
    "step3_type": "",
-   "reasoning_type": "infer",
-   "residual_reason": "unclear",
+   "reasoning_type": "conjunction",
+   "residual_reason": null,
    "same_object": false,
    "chainable": false,
-   "reason": "paper-internal edge; no Step 3 justification in the final view"
+   "reason": "symmetric conjunction operator; not a reasoning type"
   },
   {
    "edge_id": "edge:13:papers:paper_aec49f8f::claim_56:papers:paper_aec49f8f::claim_33:infer:operators",
@@ -9055,7 +9055,8 @@
  ],
  "edge_role_counts": {
   "bounds": 5,
-  "infer": 202,
+  "conjunction": 18,
+  "infer": 184,
   "reproduces": 3,
   "special_case": 13
  },
@@ -9063,7 +9064,7 @@
  "generation": {
   "prompt_version": "question-answer-v1",
   "model": "deepseek-v4-flash",
-  "generated_at": "2026-10-18T05:56:36.482300+00:00",
+  "generated_at": "2026-10-18T05:58:42.844949+00:00",
   "root_count": 5,
   "answer_edge_count": 50,
   "chain_count": 0,

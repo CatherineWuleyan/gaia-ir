@@ -30,8 +30,9 @@
 - **46 claims 直接连接**；typed support chains **0**；
 - exploratory paths：R1 18 / R2 24 / R3 24 / R4 20 / R5 14；
 - 直接+exploratory 覆盖 86 claims，占 connected claims 的 **35.8%**；
-- 边角色分布：`infer 202 / special_case 13 / bounds 5 / reproduces 3`，
-  chainable 0；没有 deduction。
+- 边角色分布：`infer 184 / conjunction 18 / special_case 13 / bounds 5 /
+  reproduces 3`，chainable 0；没有 deduction。`conjunction` 是对称算子，
+  不是 reasoning type，单独计数。
 - 这不是 bug：冻结图的 **68 条 cross-paper weakpoint 全是 `infer`**，
   原因是 Step 3 把它们用于 “needs/requires/can represent/instance” 等关系；
   当前规则下没有一条被证明为 deduction，因此没有 typed support chain。

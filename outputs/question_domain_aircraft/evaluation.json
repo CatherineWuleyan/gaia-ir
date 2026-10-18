@@ -36,7 +36,8 @@
   },
   "edge_role_counts": {
    "bounds": 5,
-   "infer": 202,
+   "conjunction": 18,
+   "infer": 184,
    "reproduces": 3,
    "special_case": 13
   },

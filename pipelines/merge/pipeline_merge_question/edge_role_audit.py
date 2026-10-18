@@ -165,6 +165,8 @@ def classify_rule(edge: Mapping[str, Any]) -> tuple[str, str | None, bool, str]:
     unless the claim text states a specific relation; a missing justification is
     not evidence, so they are non-chainable.
     """
+    if str(edge.get("semantic_type") or "") == "conjunction":
+        return "conjunction", None, False, "symmetric conjunction operator; not a reasoning type"
     step3_type = str(edge.get("step3_type") or "")
     if step3_type in {"special_case", "reproduces", "bounds", "abduction", "analogy", "deduction"}:
         return step3_type, None, step3_type == "deduction", f"Step 3 already typed this as {step3_type}"

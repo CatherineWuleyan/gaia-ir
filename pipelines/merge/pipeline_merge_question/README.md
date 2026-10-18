@@ -159,7 +159,7 @@ python3 pipelines/merge/pipeline_merge_question/render_question_viewer.py \
 - 46 条 claim 被直接连接；**typed support chains = 0**；
 - exploratory paths：R1 18 / R2 24 / R3 24 / R4 20 / R5 14；直接+exploratory
   覆盖 86 claims（connected 的 35.8%），但 exploratory 不计入 evidence；
-- 边角色：`infer 202 / special_case 13 / bounds 5 / reproduces 3`，deduction 0；
+- 边角色：`infer 184 / conjunction 18 / special_case 13 / bounds 5 / reproduces 3`，deduction 0；
 - 8 篇论文被直接支持触及；
 - 本轮回答层复用 fixture，未新增根/连接 LLM 调用；edge role 为规则分类。
 

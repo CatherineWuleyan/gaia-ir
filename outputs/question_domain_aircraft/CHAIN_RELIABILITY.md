@@ -9,7 +9,7 @@
 > **2026-10-18 typed-edge update（当前图）**
 > 本报告的 R1–R5 深链现已被明确归类为 `exploratory_paths`，不再计入 support。
 > 当前图有 311 claims / 223 edges，补回 15 条 Step 3 `special_case`/`bounds`
-> display links；边角色为 `infer 202 / special_case 13 / bounds 5 / reproduces 3`，
+> display links；边角色为 `infer 184 / conjunction 18 / special_case 13 / bounds 5 / reproduces 3`，
 > **deduction 0**，因此 typed support chains 为 **0**。R1–R5 的 direct support
 > 仍为 10/8/8/10/9；exploratory paths 为 18/24/24/20/14。下面的链分析仍然成立：
 > 它们说明这些路径为什么不能当证据，而不是说它们现在是证据。
