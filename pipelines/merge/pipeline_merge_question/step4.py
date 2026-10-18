@@ -27,6 +27,16 @@ STEP_NAME = "step4_formalize_integration"
 _BRACKET_ID = re.compile(r"\[([^\]]+)\]")
 
 
+def _package_name(domain: str) -> str:
+    """Return a QID-safe integration package name.
+
+    Gaia QIDs require lowercase identifiers; domains often contain uppercase
+    acronyms such as AI/LLM, so lowercasing is part of the contract, not
+    cosmetic normalization.
+    """
+    return re.sub(r"[^a-z0-9_]+", "_", str(domain).lower()).strip("_") or "domain"
+
+
 def _load_records(context: StageContext) -> tuple[dict[str, JSONDict], dict[str, JSONDict]]:
     records: dict[str, JSONDict] = {}
     anchors: dict[str, JSONDict] = {}
@@ -372,7 +382,7 @@ def _build_document(
             strategies.append(bound)
 
     options = validate_step0_options(_step0_options(context))
-    domain_name = re.sub(r"[^A-Za-z0-9_]+", "_", options["scope"]["domain"]).strip("_") or "domain"
+    domain_name = _package_name(options["scope"]["domain"])
     document: JSONDict = {
         "schema_version": "1.1.0",
         "revision": {"revision_id": f"revision_{context.run_id}_step_4", "supersedes": None,
