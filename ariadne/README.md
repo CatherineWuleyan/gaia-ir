@@ -37,9 +37,9 @@ question-first answer layer and deliverables.
 
 Prebuilt self-contained bundle (no clone needed):
 
-[ariadne-0.4.1-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/ariadne-0.4.1-bundle.tar.gz) ·
-[ariadne-0.4.1-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/ariadne-0.4.1-bundle.zip) ·
-[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/SHA256SUMS)
+[ariadne-0.4.2-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/ariadne-0.4.2-bundle.tar.gz) ·
+[ariadne-0.4.2-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/ariadne-0.4.2-bundle.zip) ·
+[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/SHA256SUMS)
 
 The bundle includes Ariadne, the three pipelines, the offline aircraft demo,
 and `install.sh`. To build it yourself:
@@ -653,15 +653,17 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 
 - `demo` is tested offline on the frozen aircraft graph and writes both
   deliverables.
-- A 5-paper automatic aircraft run from the 0.4.1 release bundle completed
-  end-to-end: **71 claims, 55 relations, 5 candidate answers, 32 answer links,
-  and 12 chains**. All five selected papers were on-topic.
-- Automatic retrieval also selected a paper with no native LKM graph and built
-  it with `bohr lkm extract` (56 nodes / 65 edges / 13 conclusions).
-- On broad questions, 10 of 16 probed candidates had empty native graphs; graph
-  availability, not the query planner, is the practical coverage limit. Step
-  retries, per-paper isolation, a cross-run claims cache, and a 600s read
-  timeout remain part of the product.
+- An 8-paper automatic aircraft run completed end-to-end: **184 claims, 105
+  relations, 5 candidate answers, 33 answer links, and 17 chains**. It used
+  `--top-k 8`; k is a runtime option, not a hard-coded paper count.
+- Three of the eight graphs were built automatically by `bohr lkm extract`:
+  Interactive Cockpit (62 nodes / 15 conclusions), Cybermatrix (46 / 10), and
+  Flying-V (56 / 12). Native-graph papers and built graphs go through the same
+  selection/materialisation path.
+- On broad questions, many high-relevance candidates still have empty native
+  graphs. Closed-access publishers (IEEE/AIAA) and PDFs over 50 pages are
+  skipped with an explicit `extract_skip_reason` in `selection.json`; no
+  synthetic graph is invented.
 - The LKM extraction path was also exercised on a real arXiv paper (Maestro):
   87 nodes / 88 edges / 19 conclusions. The empty-native-graph → extraction
   decision is covered by unit tests; it only triggers when a PDF/arXiv source

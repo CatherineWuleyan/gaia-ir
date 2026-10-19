@@ -1,4 +1,4 @@
-# Ariadne 0.4.1 快速开始
+# Ariadne 0.4.2 快速开始
 
 Ariadne 是问题驱动的知识图谱研究运行时：输入一个领域问题，自动检索 LKM 论文，
 构建或读取论文图，跑 paper2ir / single / merge，最后生成候选答案 root、类型化
@@ -17,8 +17,8 @@ Ariadne 是问题驱动的知识图谱研究运行时：输入一个领域问题
 ## 1. 安装
 
 ```bash
-tar -xzf ariadne-0.4.1-bundle.tar.gz
-cd ariadne-0.4.1
+tar -xzf ariadne-0.4.2-bundle.tar.gz
+cd ariadne-0.4.2
 ./install.sh
 ```
 

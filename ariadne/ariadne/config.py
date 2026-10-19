@@ -76,7 +76,7 @@ DEFAULTS: dict[str, Any] = {
         "min_graph_nodes": 3,
         "min_relevance": 0.2,
         "use_lkm_extract": True,
-        "max_extractions": 3,
+        "max_extractions": 5,
     },
 }
 

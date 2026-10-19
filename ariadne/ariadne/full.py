@@ -139,7 +139,7 @@ def _retrieval_options(runtime: Runtime, *, max_queries: int | None = None,
         ),
         "max_extractions": int(
             max_extractions if max_extractions is not None
-            else config.get("retrieval.max_extractions", 3)
+            else config.get("retrieval.max_extractions", 5)
         ),
     }
 

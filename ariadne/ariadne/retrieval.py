@@ -21,9 +21,12 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import time
 import urllib.request
-from urllib.parse import quote
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import quote, urljoin
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -39,7 +42,7 @@ DEFAULT_CANDIDATE_LIMIT = 16
 DEFAULT_MIN_PAPERS = 2
 DEFAULT_MIN_GRAPH_NODES = 3
 DEFAULT_MIN_RELEVANCE = 0.2
-DEFAULT_MAX_EXTRACTIONS = 3
+DEFAULT_MAX_EXTRACTIONS = 5
 _RELEVANCE_PHRASES = (
     "knowledge graph", "knowledge graphs", "knowledge model", "knowledge base",
     "graph reasoning", "experiment design", "experimental design",
@@ -327,6 +330,17 @@ def _candidate_rank(candidate: Mapping[str, Any]) -> float:
     )
 
 
+def _dedupe_key(record: Mapping[str, Any]) -> str:
+    """Collapse DOI/title duplicates (LKM often has several paper records)."""
+    doi = re.sub(r"\.v\d+$", "", str(record.get("doi") or "").strip().lower())
+    if doi:
+        return "doi:" + doi
+    title = re.sub(r"[^a-z0-9]+", " ", str(record.get("title") or "").lower()).strip()
+    if title:
+        return "title:" + title
+    return "id:" + str(record.get("lkm_id") or "")
+
+
 def _relevance(record: Mapping[str, Any], queries: list[dict[str, Any]]) -> float:
     """Cheap lexical relevance used before/alongside graph probing.
 
@@ -397,8 +411,8 @@ def search_many(queries: list[dict[str, Any]], per_query: int, run_dir: Path,
             print(f"[retrieve] query {index + 1} failed: {_one_line(error)[:180]}",
                   flush=True)
         for rank, record in enumerate(records):
-            pid = record.get("lkm_id") or record.get("title") or f"q{index}r{rank}"
-            entry = candidates.get(str(pid))
+            key = _dedupe_key(record)
+            entry = candidates.get(key)
             if entry is None:
                 entry = {
                     "record": record,
@@ -406,7 +420,13 @@ def search_many(queries: list[dict[str, Any]], per_query: int, run_dir: Path,
                     "best_rank": rank,
                     "search_score": _float(record.get("search_score")),
                 }
-                candidates[str(pid)] = entry
+                candidates[key] = entry
+            else:
+                # Keep the richer record when the same DOI appears twice.
+                old = entry.get("record") or {}
+                for field in ("pdf_url", "pdf_path", "arxiv", "ocr_path", "graph_path"):
+                    if record.get(field) and not old.get(field):
+                        old[field] = record[field]
             entry["query_positions"].append(index)
             entry["best_rank"] = min(entry["best_rank"], rank)
             entry["search_score"] = max(
@@ -737,31 +757,168 @@ def _json_or_none(text: str) -> Any:
         return None
 
 
-def _openalex_pdf_urls(doi: str) -> list[str]:
-    """Resolve open-access PDF candidates through the free OpenAlex API."""
-    doi = str(doi or "").strip()
-    if not doi:
-        return []
+PDF_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+)
+PDF_TIMEOUT = 45
+
+
+def _norm_title(text: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).strip()
+
+
+def _http_json(url: str, timeout: int = 10) -> Mapping[str, Any] | None:
     try:
-        request = urllib.request.Request(
-            "https://api.openalex.org/works/doi:" + quote(doi, safe=""),
-            headers={"User-Agent": "ariadne/0.3 (mailto:ariadne@example.org)"},
-        )
-        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+        request = urllib.request.Request(url, headers={"User-Agent": PDF_UA})
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
             payload = json.loads(response.read().decode("utf-8", errors="replace"))
+        return payload if isinstance(payload, Mapping) else None
     except Exception:  # noqa: BLE001 - PDF discovery is best-effort
+        return None
+
+
+def _http_page(url: str, timeout: int = 15) -> tuple[bytes, str]:
+    try:
+        request = urllib.request.Request(url, headers={"User-Agent": PDF_UA})
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
+            return response.read(2_000_000), response.geturl()
+    except Exception:  # noqa: BLE001
+        return b"", url
+
+
+def _landing_pdf_urls(url: str) -> list[str]:
+    """Read a publisher landing page and extract its PDF / download links."""
+    if not url:
+        return []
+    body, final = _http_page(url)
+    if not body:
+        return []
+    text = body.decode("utf-8", errors="replace")
+    found: list[str] = []
+    for pattern in (
+        r'<meta[^>]+name=["\']citation_pdf_url["\'][^>]+content=["\']([^"\']+)',
+        r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']citation_pdf_url["\']',
+    ):
+        found.extend(re.findall(pattern, text, re.I))
+    for link in re.findall(r'href=["\']([^"\']+)["\']', text, re.I):
+        low = link.lower()
+        if ("pdf" in low or "download" in low) and not low.startswith(("#", "mailto:", "javascript:")):
+            found.append(link)
+    urls: list[str] = []
+    for link in found:
+        absolute = urljoin(final or url, link)
+        if absolute not in urls:
+            urls.append(absolute)
+    return urls
+
+
+def _mdpi_pdf_urls(doi: str) -> list[str]:
+    match = re.match(r"10\.3390/([a-z]+)(\d)(\d{2})(\d{4})", doi or "", re.I)
+    if not match:
+        return []
+    journal, volume, issue, article = match.groups()
+    slug = f"{journal}-{int(volume):02d}-{article}"
+    return [
+        f"https://mdpi-res.com/d_attachment/{journal}/{slug}/"
+        f"article_deploy/{slug}.pdf"
+    ]
+
+
+def _openalex_work_urls(doi: str = "", title: str = "") -> list[str]:
+    payload = None
+    if doi:
+        payload = _http_json(
+            "https://api.openalex.org/works/doi:" + quote(doi, safe="")
+        )
+    if payload is None and title:
+        search = _http_json(
+            "https://api.openalex.org/works?search="
+            + quote(title, safe="") + "&per-page=5"
+        )
+        if search:
+            wanted = _norm_title(title)
+            for work in search.get("results") or []:
+                if _norm_title(work.get("title")) == wanted:
+                    payload = work
+                    break
+    if not isinstance(payload, Mapping):
         return []
     urls: list[str] = []
+    landings: list[str] = []
     locations = [payload.get("best_oa_location")]
     locations.extend(payload.get("locations") or [])
     for location in locations:
-        if isinstance(location, Mapping) and location.get("pdf_url"):
+        if not isinstance(location, Mapping):
+            continue
+        if location.get("pdf_url"):
             urls.append(str(location["pdf_url"]))
+        landing = str(location.get("landing_page_url") or "")
+        if landing:
+            if landing.lower().split("?", 1)[0].endswith(".pdf"):
+                urls.append(landing)
+            else:
+                landings.append(landing)
+    # A publisher "pdf_url" can be a stale 401/403 link; the repository
+    # landing page often exposes a working sibling PDF.  Parse one landing
+    # even when OpenAlex already returned a PDF URL.
+    for landing in list(dict.fromkeys(landings))[:1]:
+        urls.extend(_landing_pdf_urls(landing))
     oa_url = (payload.get("open_access") or {}).get("oa_url")
     if oa_url:
         urls.append(str(oa_url))
-    seen: set[str] = set()
-    return [url for url in urls if not (url in seen or seen.add(url))]
+    return urls
+
+
+def _unpaywall_pdf_urls(doi: str) -> list[str]:
+    payload = _http_json(
+        "https://api.unpaywall.org/v2/" + quote(doi, safe="")
+        + "?email=ariadne@example.org"
+    )
+    if not payload:
+        return []
+    urls: list[str] = []
+    locations = [payload.get("best_oa_location")]
+    locations.extend(payload.get("oa_locations") or [])
+    for location in locations:
+        if not isinstance(location, Mapping):
+            continue
+        if location.get("url_for_pdf"):
+            urls.append(str(location["url_for_pdf"]))
+    return urls
+
+
+def _s2_pdf_urls(doi: str) -> list[str]:
+    for attempt in range(2):
+        payload = _http_json(
+            "https://api.semanticscholar.org/graph/v1/paper/DOI:"
+            + quote(doi, safe="") + "?fields=openAccessPdf",
+            timeout=8,
+        )
+        if payload:
+            pdf = (payload.get("openAccessPdf") or {}).get("url")
+            return [str(pdf)] if pdf else []
+        if attempt == 0:
+            time.sleep(1)
+    return []
+
+
+def _crossref_pdf_urls(doi: str) -> list[str]:
+    payload = _http_json(
+        "https://api.crossref.org/works/" + quote(doi, safe="")
+    )
+    if not payload:
+        return []
+    message = payload.get("message") or {}
+    return [
+        str(link["URL"])
+        for link in (message.get("link") or [])
+        if isinstance(link, Mapping) and link.get("URL")
+    ]
+
+
+def _doi_landing_pdf_urls(doi: str) -> list[str]:
+    return _landing_pdf_urls("https://doi.org/" + quote(doi, safe="/"))
 
 
 def _pdf_urls(record: Mapping[str, Any]) -> list[str]:
@@ -777,8 +934,20 @@ def _pdf_urls(record: Mapping[str, Any]) -> list[str]:
     if arxiv:
         urls.append(f"https://arxiv.org/pdf/{arxiv}")
     doi = str(record.get("doi") or "").strip()
+    title = str(record.get("title") or "").strip()
+    mdpi = _mdpi_pdf_urls(doi)
+    if mdpi:
+        return list(dict.fromkeys(urls + mdpi))
     if doi:
-        urls.extend(_openalex_pdf_urls(doi))
+        urls.extend(_mdpi_pdf_urls(doi))
+        urls.extend(_doi_landing_pdf_urls(doi))
+        urls.extend(_openalex_work_urls(doi=doi))
+        urls.extend(_unpaywall_pdf_urls(doi))
+        urls.extend(_s2_pdf_urls(doi))
+        urls.extend(_crossref_pdf_urls(doi))
+    if title:
+        urls.extend(_openalex_work_urls(title=title))
+    if doi:
         urls.append(f"https://doi.org/{doi}")
     seen: set[str] = set()
     return [url for url in urls if not (url in seen or seen.add(url))]
@@ -789,6 +958,70 @@ def _can_extract(record: Mapping[str, Any]) -> bool:
         record.get("pdf_path") or record.get("pdf_url")
         or record.get("arxiv") or record.get("doi")
     )
+
+
+def _pdf_url_groups(record: Mapping[str, Any]) -> Iterator[list[str]]:
+    """Lazy URL groups: stop asking other services once a PDF downloads."""
+    explicit = []
+    if record.get("pdf_url"):
+        explicit.append(str(record["pdf_url"]))
+    arxiv = record.get("arxiv")
+    if not arxiv:
+        match = re.search(
+            r"10\.48550/arxiv\.([0-9.]+)", str(record.get("doi") or ""), re.I
+        )
+        arxiv = match.group(1) if match else None
+    if arxiv:
+        explicit.append(f"https://arxiv.org/pdf/{arxiv}")
+    if explicit:
+        yield explicit
+    doi = str(record.get("doi") or "").strip()
+    title = str(record.get("title") or "").strip()
+    if doi:
+        mdpi = _mdpi_pdf_urls(doi)
+        if mdpi:
+            yield mdpi
+        yield _doi_landing_pdf_urls(doi)
+        yield _openalex_work_urls(doi=doi)
+        yield _unpaywall_pdf_urls(doi)
+        yield _s2_pdf_urls(doi)
+        yield _crossref_pdf_urls(doi)
+    if title:
+        yield _openalex_work_urls(title=title)
+    if doi:
+        yield [f"https://doi.org/{doi}"]
+
+
+def _download_with_curl(url: str, dest: Path) -> bool:
+    """Publisher PDFs often need curl's TLS/redirect handling, not urllib."""
+    curl = shutil.which("curl")
+    if not curl:
+        return False
+    tmp = dest.with_suffix(".curl.tmp")
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        proc = subprocess.run(
+            [
+                curl, "-sS", "-L", "--max-time", str(PDF_TIMEOUT),
+                "-A", PDF_UA, "-e", "https://www.google.com/",
+                "-o", str(tmp), "-w", "%{http_code}", url,
+            ],
+            capture_output=True, text=True, timeout=PDF_TIMEOUT + 10,
+        )
+        if proc.returncode != 0 or not tmp.is_file():
+            return False
+        data = tmp.read_bytes()
+        if not data.startswith(b"%PDF") or len(data) > MAX_PDF_BYTES:
+            return False
+        shutil.move(str(tmp), str(dest))
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+    finally:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
 
 
 def _download_pdf(record: Mapping[str, Any], dest: Path) -> Path:
@@ -802,31 +1035,57 @@ def _download_pdf(record: Mapping[str, Any], dest: Path) -> Path:
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, dest)
         return dest
-    urls = _pdf_urls(record)
-    if not urls:
+    errors: list[str] = []
+    seen: set[str] = set()
+    found_group = False
+    for group in _pdf_url_groups(record):
+        if not group:
+            continue
+        found_group = True
+        for url in group:
+            if url in seen:
+                continue
+            seen.add(url)
+            if _download_with_curl(url, dest):
+                return dest
+            payload = None
+            last_error = ""
+            for attempt in range(2):
+                try:
+                    request = urllib.request.Request(
+                        url,
+                        headers={"User-Agent": PDF_UA,
+                                 "Referer": "https://www.google.com/"},
+                    )
+                    with urllib.request.urlopen(request, timeout=PDF_TIMEOUT) as response:  # noqa: S310
+                        payload = response.read(MAX_PDF_BYTES + 1)
+                    break
+                except Exception as exc:  # noqa: BLE001
+                    last_error = str(exc)
+                    retryable = any(
+                        marker in last_error
+                        for marker in ("404", "429", "timed out", "Timeout", "Connection")
+                    )
+                    if attempt == 0 and retryable:
+                        time.sleep(1)
+                        continue
+                    break
+            if payload is None:
+                errors.append(f"{url}: {last_error[:120]}")
+                continue
+            if len(payload) > MAX_PDF_BYTES:
+                errors.append(f"{url}: exceeds 64 MiB")
+                continue
+            if not payload.startswith(b"%PDF"):
+                errors.append(f"{url}: not a PDF")
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(payload)
+            return dest
+    if not found_group:
         raise ExtractUnavailable(
             f"paper {record.get('lkm_id')} has no PDF source", reason="no_pdf"
         )
-    errors: list[str] = []
-    for url in urls:
-        try:
-            request = urllib.request.Request(
-                url, headers={"User-Agent": "ariadne/0.3"}
-            )
-            with urllib.request.urlopen(request, timeout=180) as response:  # noqa: S310
-                payload = response.read(MAX_PDF_BYTES + 1)
-        except Exception as exc:  # noqa: BLE001
-            errors.append(f"{url}: {str(exc)[:120]}")
-            continue
-        if len(payload) > MAX_PDF_BYTES:
-            errors.append(f"{url}: exceeds 64 MiB")
-            continue
-        if not payload.startswith(b"%PDF"):
-            errors.append(f"{url}: not a PDF")
-            continue
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_bytes(payload)
-        return dest
     raise ExtractUnavailable(
         f"cannot download PDF for {record.get('lkm_id')}: " + "; ".join(errors[-3:]),
         reason="download_failed",
@@ -834,7 +1093,8 @@ def _download_pdf(record: Mapping[str, Any], dest: Path) -> Path:
 
 
 def _extract_graph(record: Mapping[str, Any], dest: Path, run_dir: Path,
-                   runtime: Runtime) -> tuple[Path, dict[str, Any], dict[str, Any]]:
+                   runtime: Runtime, pdf: Path | None = None
+                   ) -> tuple[Path, dict[str, Any], dict[str, Any]]:
     """Build an LKM graph for a paper with no native graph.
 
     ``bohr lkm extract`` takes a local PDF; the graph is requested with
@@ -843,7 +1103,10 @@ def _extract_graph(record: Mapping[str, Any], dest: Path, run_dir: Path,
     pid = str(record.get("lkm_id") or "paper")
     extract_dir = run_dir / "01_retrieval" / "extract" / pid
     extract_dir.mkdir(parents=True, exist_ok=True)
-    pdf = _download_pdf(record, extract_dir / "source.pdf")
+    if pdf is None:
+        pdf = _download_pdf(record, extract_dir / "source.pdf")
+    elif not Path(pdf).is_file():
+        raise ExtractUnavailable(f"PDF missing: {pdf}", reason="no_pdf")
     submit = run(
         bohr_command(
             runtime, "lkm", "extract", "submit", str(pdf),
@@ -949,6 +1212,9 @@ def _extract_graph(record: Mapping[str, Any], dest: Path, run_dir: Path,
     }
 
 
+EXTRACTION_WORKERS = 3
+
+
 def probe_and_select(
     candidates: list[dict[str, Any]],
     run_dir: Path,
@@ -962,17 +1228,19 @@ def probe_and_select(
     use_lkm_extract: bool = True,
     max_extractions: int = DEFAULT_MAX_EXTRACTIONS,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Fetch candidate graphs, reject empty/thin ones, and select top-k."""
+    """Fetch native graphs, build missing ones in parallel, then select."""
     probe_root = run_dir / "01_retrieval" / "probe"
     probe_root.mkdir(parents=True, exist_ok=True)
     first_limit = max(int(candidate_limit), int(top_k), int(min_papers))
     available: list[dict[str, Any]] = []
+    all_candidates: list[dict[str, Any]] = []
+    pending: list[dict[str, Any]] = []
     extraction_attempts = 0
     extracted = 0
     audit: dict[str, Any] = {"probed": 0, "candidates": [], "selected": []}
 
     # Probe topical candidates first.  A broad paper can hit several queries
-    # without being about knowledge graphs; relevance decides the probe order.
+    # without being about the requested topic; relevance decides probe order.
     probe_order = sorted(
         candidates,
         key=lambda item: (_float(item.get("relevance")), _candidate_rank(item)),
@@ -1008,19 +1276,78 @@ def probe_and_select(
         except GraphUnavailable as exc:
             candidate["skip_reason"] = exc.reason
             candidate["skip_detail"] = _one_line(exc)
-            if (use_lkm_extract and extraction_attempts < int(max_extractions)
-                    and _can_extract(record)):
-                extraction_attempts += 1
-                candidate["extract_attempted"] = True
+            if use_lkm_extract and _can_extract(record):
+                pending.append(candidate)
+            elif use_lkm_extract:
+                candidate["extract_skip_reason"] = "no_pdf"
+        all_candidates.append(candidate)
+        if audit["probed"] >= first_limit and len(available) >= int(min_papers):
+            # Native graphs are enough only when they already cover top-k.
+            # Otherwise keep probing because empty graphs may be buildable.
+            if not use_lkm_extract or len(available) >= int(top_k):
+                break
+
+    # Download PDFs before spending an extraction call.  A closed-access
+    # paper frequently has a DOI but no usable PDF; do not let it consume the
+    # extraction budget.
+    ready: list[tuple[dict[str, Any], Path, str]] = []
+    pending.sort(
+        key=lambda item: (_float(item.get("relevance")), _candidate_rank(item)),
+        reverse=True,
+    )
+    for candidate in pending:
+        if extraction_attempts >= int(max_extractions):
+            candidate["extract_skip_reason"] = "budget"
+            continue
+        record = candidate.get("record") or {}
+        pid = record.get("lkm_id") or _local_paper_id(record)
+        extract_dir = run_dir / "01_retrieval" / "extract" / str(pid)
+        try:
+            pdf = _download_pdf(record, extract_dir / "source.pdf")
+        except ExtractUnavailable as exc:
+            candidate["extract_skip_reason"] = exc.reason
+            candidate["skip_detail"] = _one_line(exc)
+            print(
+                f"[retrieve] no usable PDF for {pid}: {_one_line(exc)[:160]}",
+                flush=True,
+            )
+            continue
+        extraction_attempts += 1
+        candidate["extract_attempted"] = True
+        ready.append((candidate, pdf, pid))
+
+    if ready:
+        print(
+            f"[retrieve] building {len(ready)} missing graph(s) with "
+            f"bohr lkm extract ({min(EXTRACTION_WORKERS, len(ready))} workers)",
+            flush=True,
+        )
+        with ThreadPoolExecutor(
+            max_workers=min(EXTRACTION_WORKERS, len(ready))
+        ) as pool:
+            futures = {}
+            for candidate, pdf, pid in ready:
+                futures[pool.submit(
+                    _extract_graph,
+                    candidate.get("record") or {},
+                    probe_root / f"{pid}.json",
+                    run_dir,
+                    runtime,
+                    pdf,
+                )] = candidate
+            for future in as_completed(futures):
+                candidate = futures[future]
+                record = candidate.get("record") or {}
+                pid = str(record.get("lkm_id") or "")
                 try:
-                    _, graph, extract_meta = _extract_graph(
-                        record, dest, run_dir, runtime
-                    )
+                    _, graph, extract_meta = future.result()
                     extracted += 1
                     candidate.update(extract_meta)
                     stats = _graph_stats(graph)
                     candidate.update(stats)
-                    candidate["probe_path"] = str(dest.relative_to(run_dir))
+                    candidate["probe_path"] = str(
+                        (probe_root / f"{pid}.json").relative_to(run_dir)
+                    )
                     if stats["node_count"] < int(min_graph_nodes):
                         candidate["skip_reason"] = "thin_graph"
                         candidate["skip_detail"] = "extracted graph is too thin"
@@ -1030,26 +1357,29 @@ def probe_and_select(
                     else:
                         candidate["skip_reason"] = ""
                         available.append(candidate)
-                except ExtractUnavailable as extract_exc:
-                    candidate["extract_skip_reason"] = extract_exc.reason
-                    candidate["skip_detail"] = _one_line(extract_exc)
+                except ExtractUnavailable as exc:
+                    candidate["extract_skip_reason"] = exc.reason
+                    candidate["skip_detail"] = _one_line(exc)
                     print(
                         f"[retrieve] LKM extraction skipped for {pid}: "
-                        f"{_one_line(extract_exc)[:180]}", flush=True,
+                        f"{_one_line(exc)[:180]}", flush=True,
                     )
-                except AriadneError as extract_exc:
+                except AriadneError as exc:
                     candidate["extract_skip_reason"] = "extract_failed"
-                    candidate["skip_detail"] = _one_line(extract_exc)
+                    candidate["skip_detail"] = _one_line(exc)
                     print(
                         f"[retrieve] LKM extraction failed for {pid}: "
-                        f"{_one_line(extract_exc)[:180]}", flush=True,
+                        f"{_one_line(exc)[:180]}", flush=True,
                     )
-            elif use_lkm_extract and not _can_extract(record):
-                candidate["extract_skip_reason"] = "no_pdf"
-        audit["candidates"].append(_candidate_audit(candidate))
-        if audit["probed"] >= first_limit and len(available) >= int(min_papers):
-            break
+                except Exception as exc:  # noqa: BLE001 - isolate one paper
+                    candidate["extract_skip_reason"] = "extract_failed"
+                    candidate["skip_detail"] = _one_line(exc)
+                    print(
+                        f"[retrieve] LKM extraction crashed for {pid}: "
+                        f"{_one_line(exc)[:180]}", flush=True,
+                    )
 
+    audit["candidates"] = [_candidate_audit(item) for item in all_candidates]
     available.sort(key=_candidate_rank, reverse=True)
     for candidate in available:
         candidate["rank_score"] = round(_candidate_rank(candidate), 4)
@@ -1062,10 +1392,7 @@ def probe_and_select(
     fill_floor = max(0.05, float(min_relevance) * 0.5)
     filled = 0
     if len(selected) < int(top_k):
-        # The relevance gate is a preference, not a hard cap.  Fill the
-        # requested paper count from the remaining graph-backed candidates so
-        # a `--top-k 5` run does not silently stop at 2-3 "preferred" papers.
-        # Do not fill with clearly off-topic papers just to hit the number.
+        # Fill to top-k, but never with clearly off-topic papers.
         chosen = {
             (candidate.get("record") or {}).get("lkm_id") or ""
             for candidate in selected
@@ -1091,6 +1418,7 @@ def probe_and_select(
     audit["filled"] = filled
     audit["extract_attempts"] = extraction_attempts
     audit["extracted"] = extracted
+    audit["extraction_workers"] = EXTRACTION_WORKERS
     selection_path = run_dir / "01_retrieval" / "selection.json"
     write_json(selection_path, audit)
     if len(selected) < int(min_papers):
@@ -1346,8 +1674,11 @@ def retrieve(
         "max_probe": selection_audit.get("max_probe"),
         "extract_attempts": selection_audit.get("extract_attempts", 0),
         "extracted": selection_audit.get("extracted", 0),
+        "extraction_workers": selection_audit.get("extraction_workers", 0),
         "use_lkm_extract": use_lkm_extract,
         "max_extractions": max_extractions,
+        "top_k": int(top_k),
+        "min_papers": int(min_papers),
     }
     write_json(run_dir / "01_retrieval" / "selection.json", selection)
     papers = materialise_selected(selected, run_dir, runtime, fulltext=fulltext)
@@ -1358,6 +1689,7 @@ def retrieve(
             "fulltext": fulltext,
             "mode": "auto",
             "selection": str(run_dir / "01_retrieval" / "selection.json"),
+            "top_k": int(top_k),
             "queries": queries,
             "planner": planner,
         },

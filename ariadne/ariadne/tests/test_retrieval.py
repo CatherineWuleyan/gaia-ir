@@ -258,6 +258,18 @@ def _candidate(pid: str) -> dict:
             "search_score": 0.5}
 
 
+class DedupeTest(unittest.TestCase):
+    def test_doi_versions_collapse(self) -> None:
+        a = retrieval._dedupe_key({"doi": "10.32920/ryerson.14652537"})
+        b = retrieval._dedupe_key({"doi": "10.32920/ryerson.14652537.v1"})
+        self.assertEqual(a, b)
+
+    def test_titles_collapse(self) -> None:
+        a = retrieval._dedupe_key({"title": "Aircraft Design: A Survey"})
+        b = retrieval._dedupe_key({"title": "aircraft design - a survey"})
+        self.assertEqual(a, b)
+
+
 class RelevanceTest(unittest.TestCase):
     def test_topic_phrases_beat_generic_hits(self) -> None:
         queries = [{"query": "knowledge graph experiment design decision support"}]
@@ -269,6 +281,18 @@ class RelevanceTest(unittest.TestCase):
              "abstract": "deployment pipelines and monitoring"}, queries)
         self.assertGreater(relevant, generic)
         self.assertGreaterEqual(relevant, 0.2)
+
+
+class DedupeTest(unittest.TestCase):
+    def test_doi_versions_collapse(self) -> None:
+        a = retrieval._dedupe_key({"doi": "10.32920/ryerson.14652537"})
+        b = retrieval._dedupe_key({"doi": "10.32920/ryerson.14652537.v1"})
+        self.assertEqual(a, b)
+
+    def test_titles_collapse(self) -> None:
+        a = retrieval._dedupe_key({"title": "Aircraft Design: A Survey"})
+        b = retrieval._dedupe_key({"title": "aircraft design - a survey"})
+        self.assertEqual(a, b)
 
 
 class RelevanceTest(unittest.TestCase):
@@ -298,19 +322,9 @@ class PdfResolutionTest(unittest.TestCase):
             "open_access": {"oa_url": "https://doi.org/10.1000/x"},
         }
 
-        class FakeResponse:
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                return False
-
-            def read(self):
-                return json.dumps(payload).encode("utf-8")
-
-        with mock.patch("ariadne.retrieval.urllib.request.urlopen",
-                        return_value=FakeResponse()):
-            urls = retrieval._openalex_pdf_urls("10.1000/x")
+        with mock.patch("ariadne.retrieval._http_json", return_value=payload), \
+                mock.patch("ariadne.retrieval._landing_pdf_urls", return_value=[]):
+            urls = retrieval._openalex_work_urls(doi="10.1000/x")
         self.assertEqual(urls[:2], ["https://repo.example/a.pdf",
                                     "https://repo.example/b.pdf"])
 
@@ -413,7 +427,7 @@ class ProbeSelectionTest(unittest.TestCase):
         def fake_fetch(record, dest, run_dir, runtime):
             raise retrieval.GraphUnavailable("empty", reason="empty_graph")
 
-        def fake_extract(record, dest, run_dir, runtime):
+        def fake_extract(record, dest, run_dir, runtime, pdf=None):
             graph = _graph(6, 2)
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(json.dumps(graph), encoding="utf-8")
@@ -429,6 +443,8 @@ class ProbeSelectionTest(unittest.TestCase):
             root = Path(tmp)
             runtime = _runtime(root)
             with mock.patch("ariadne.retrieval._fetch_graph", side_effect=fake_fetch), \
+                    mock.patch("ariadne.retrieval._download_pdf",
+                               return_value=root / "source.pdf"), \
                     mock.patch("ariadne.retrieval._extract_graph", side_effect=fake_extract):
                 selected, audit = retrieval.probe_and_select(
                     [candidate], root, runtime, top_k=1, candidate_limit=1,
@@ -439,6 +455,41 @@ class ProbeSelectionTest(unittest.TestCase):
         self.assertEqual(selected[0]["graph_source"], "lkm_extract")
         self.assertEqual(audit["extract_attempts"], 1)
         self.assertEqual(audit["extracted"], 1)
+
+    def test_batch_builds_multiple_missing_graphs(self) -> None:
+        def fake_fetch(record, dest, run_dir, runtime):
+            raise retrieval.GraphUnavailable("empty", reason="empty_graph")
+
+        def fake_extract(record, dest, run_dir, runtime, pdf=None):
+            graph = _graph(6, 2)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(json.dumps(graph), encoding="utf-8")
+            return dest, graph, {
+                "graph_source": "lkm_extract",
+                "extract_task_id": "task-" + str(record["lkm_id"]),
+                "extract_status": "succeeded",
+            }
+
+        candidates = []
+        for pid in ("p1", "p2"):
+            candidate = _candidate(pid)
+            candidate["record"]["arxiv"] = "2501.00001"
+            candidates.append(candidate)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime = _runtime(root)
+            with mock.patch("ariadne.retrieval._fetch_graph", side_effect=fake_fetch), \
+                    mock.patch("ariadne.retrieval._download_pdf",
+                               return_value=root / "source.pdf"), \
+                    mock.patch("ariadne.retrieval._extract_graph", side_effect=fake_extract):
+                selected, audit = retrieval.probe_and_select(
+                    candidates, root, runtime, top_k=2, candidate_limit=2,
+                    min_papers=2, min_graph_nodes=3,
+                    use_lkm_extract=True, max_extractions=2,
+                )
+        self.assertEqual(len(selected), 2)
+        self.assertEqual(audit["extract_attempts"], 2)
+        self.assertEqual(audit["extracted"], 2)
 
     def test_does_not_fill_with_off_topic_papers(self) -> None:
         def fake_fetch(record, dest, run_dir, runtime):

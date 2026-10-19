@@ -30,11 +30,11 @@ The script:
 ## Publish
 
 ```bash
-gh release create v0.4.1 \
-  dist/ariadne-0.4.1-bundle.tar.gz \
-  dist/ariadne-0.4.1-bundle.zip \
+gh release create v0.4.2 \
+  dist/ariadne-0.4.2-bundle.tar.gz \
+  dist/ariadne-0.4.2-bundle.zip \
   dist/SHA256SUMS \
-  --title "Ariadne 0.4.1" \
+  --title "Ariadne 0.4.2" \
   --notes-file packaging/RELEASE_NOTES.md
 ```
 
@@ -43,8 +43,8 @@ gh release create v0.4.1 \
 ```bash
 rm -rf /tmp/ariadne-bundle-test
 mkdir -p /tmp/ariadne-bundle-test
-tar -xzf dist/ariadne-0.4.1-bundle.tar.gz -C /tmp/ariadne-bundle-test
-cd /tmp/ariadne-bundle-test/ariadne-0.4.1
+tar -xzf dist/ariadne-0.4.2-bundle.tar.gz -C /tmp/ariadne-bundle-test
+cd /tmp/ariadne-bundle-test/ariadne-0.4.2
 ./install.sh
 ./ariadne/run.sh doctor
 ./ariadne/run.sh demo

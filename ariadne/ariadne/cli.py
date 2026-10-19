@@ -746,7 +746,8 @@ def build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--mode", choices=["full", "demo"], default="full",
                      help="full: LKM -> paper2ir -> single -> merge; demo: frozen aircraft graph")
     ask.add_argument("--out", help="output run directory")
-    ask.add_argument("--top-k", type=int, default=8, help="papers to retrieve from LKM")
+    ask.add_argument("--top-k", type=int, default=8,
+                     help="number of papers to select; not answer roots (default 8)")
     ask.add_argument("--papers", help="offline paper spec (JSON) instead of LKM search")
     ask.add_argument("--question-en", help="English question for the answer layer")
     ask.add_argument("--domain", help="domain label for root generation")

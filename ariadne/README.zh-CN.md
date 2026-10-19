@@ -34,9 +34,9 @@ pipeline 内部实现，只负责编排、隔离每次运行，并补上问题�
 
 不用 clone，直接下载自包含安装包：
 
-[ariadne-0.4.1-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/ariadne-0.4.1-bundle.tar.gz) ·
-[ariadne-0.4.1-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/ariadne-0.4.1-bundle.zip) ·
-[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/SHA256SUMS)
+[ariadne-0.4.2-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/ariadne-0.4.2-bundle.tar.gz) ·
+[ariadne-0.4.2-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/ariadne-0.4.2-bundle.zip) ·
+[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/SHA256SUMS)
 
 包内含 Ariadne、三套 pipeline、离线飞机示例和 `install.sh`。自己构建：
 
@@ -619,14 +619,14 @@ Ariadne 封装的三套维护中 pipeline：
 ## 状态与边界
 
 - `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
-- 从 0.4.1 release 包出发的 5 篇飞机自动运行已端到端完成：**71 条 claim、
-  55 条关系、5 个候选答案、32 条 answer links、12 条多步链**；5 篇选文全部
-  与飞机/飞行动力学/仿真相关。
-- 自动检索也选中过一篇没有原生 LKM 图的论文，并用 `bohr lkm extract` 补建
-  （56 节点 / 65 边 / 13 conclusions）。
-- 宽问题上，16 个探测候选中 10 个是空原生图；可用图数量、而不是查询规划，
-  才是实际覆盖上限。步骤重试、单篇失败隔离、跨 run claims 缓存和 600s 读超时
-  仍在产品里。
+- 一次 8 篇飞机自动运行已端到端完成：**184 条 claim、105 条关系、5 个候选
+  答案、33 条 answer links、17 条多步链**。这次用 `--top-k 8`；k 是调用时
+  参数，不是硬编码的论文数。
+- 8 篇里有 3 篇的图是 `bohr lkm extract` 自动补出来的：Interactive Cockpit
+  （62 节点 / 15 conclusions）、Cybermatrix（46 / 10）、Flying-V（56 / 12）。
+  原生图和补建图走同一套 selection/materialise 流程。
+- 宽问题上仍有很多高相关候选是空原生图。IEEE/AIAA 等闭源 PDF、以及超过 50 页
+  的 PDF 会在 `selection.json` 里记录 `extract_skip_reason` 后跳过，不伪造图。
 - LKM 补建图路径也在真实 arXiv 论文（Maestro）上跑通：87 节点 / 88 边 /
   19 conclusions。空原生图 → 补建图的判定有单元测试覆盖；只有存在 PDF/arXiv
   源时才会触发。
