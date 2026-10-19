@@ -62,3 +62,8 @@ node_modules/
 /pipelines/clean_claims/data/
 /docs/pipelines/
 /docs/validation/
+
+# Ariadne release artifacts (archives are GitHub release assets)
+/dist/ariadne-*/
+/dist/*.tar.gz
+/dist/*.zip

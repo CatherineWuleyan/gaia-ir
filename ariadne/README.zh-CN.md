@@ -30,6 +30,20 @@ Ariadne 把领域问题变成一张可检查的图：论文、claim、候选答�
 Ariadne 是维护中的 Gaia IR 三套 pipeline 之上的**薄产品层**：不复制、不改写
 pipeline 内部实现，只负责编排、隔离每次运行，并补上问题驱动的答案层和交付物。
 
+## 下载
+
+不用 clone，直接下载自包含安装包：
+
+[ariadne-0.4.0-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/ariadne-0.4.0-bundle.tar.gz) ·
+[ariadne-0.4.0-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/ariadne-0.4.0-bundle.zip) ·
+[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/SHA256SUMS)
+
+包内含 Ariadne、三套 pipeline、离线飞机示例和 `install.sh`。自己构建：
+
+```bash
+./packaging/build_release.sh
+```
+
 ## 示例
 
 ### 1. 怎么完成飞机的仿真设计？

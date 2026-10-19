@@ -33,6 +33,21 @@ Ariadne is a **thin product layer** over the maintained Gaia IR stages. It does
 not fork the pipelines; it orchestrates them, isolates each run, and adds the
 question-first answer layer and deliverables.
 
+## Download
+
+Prebuilt self-contained bundle (no clone needed):
+
+[ariadne-0.4.0-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/ariadne-0.4.0-bundle.tar.gz) ·
+[ariadne-0.4.0-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/ariadne-0.4.0-bundle.zip) ·
+[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/SHA256SUMS)
+
+The bundle includes Ariadne, the three pipelines, the offline aircraft demo,
+and `install.sh`. To build it yourself:
+
+```bash
+./packaging/build_release.sh
+```
+
 ## Examples
 
 ### 1. How should aircraft simulation design be carried out?
