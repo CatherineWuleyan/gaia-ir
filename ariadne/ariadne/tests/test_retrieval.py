@@ -271,6 +271,21 @@ class RelevanceTest(unittest.TestCase):
         self.assertGreaterEqual(relevant, 0.2)
 
 
+class RelevanceTest(unittest.TestCase):
+    def test_aircraft_paper_scores_above_gearshift(self) -> None:
+        queries = [{"query": "How can aircraft simulation design be carried out?"}]
+        aircraft = retrieval._relevance(
+            {"title": "A Simulation-Based Performance Analysis Tool for Aircraft Design Workflows"},
+            queries,
+        )
+        off_topic = retrieval._relevance(
+            {"title": "Multi-Objective Optimal Gearshift Control for Multispeed Transmission Electric Vehicles"},
+            queries,
+        )
+        self.assertGreater(aircraft, 0.2)
+        self.assertLess(off_topic, 0.1)
+
+
 class PdfResolutionTest(unittest.TestCase):
     def test_arxiv_pdf_url(self) -> None:
         urls = retrieval._pdf_urls({"arxiv": "2501.00001"})
@@ -424,6 +439,30 @@ class ProbeSelectionTest(unittest.TestCase):
         self.assertEqual(selected[0]["graph_source"], "lkm_extract")
         self.assertEqual(audit["extract_attempts"], 1)
         self.assertEqual(audit["extracted"], 1)
+
+    def test_does_not_fill_with_off_topic_papers(self) -> None:
+        def fake_fetch(record, dest, run_dir, runtime):
+            graph = _graph(5, 1)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(json.dumps(graph), encoding="utf-8")
+            return dest, graph
+
+        candidates = []
+        for index in range(5):
+            candidate = _candidate(f"p{index}")
+            candidate["relevance"] = 0.4 if index < 3 else 0.0
+            candidates.append(candidate)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime = _runtime(root)
+            with mock.patch("ariadne.retrieval._fetch_graph", side_effect=fake_fetch):
+                selected, audit = retrieval.probe_and_select(
+                    candidates, root, runtime, top_k=5, candidate_limit=5,
+                    min_papers=2, min_graph_nodes=3, min_relevance=0.2,
+                )
+        self.assertEqual(len(selected), 3)
+        self.assertEqual(audit["fill_floor"], 0.1)
+        self.assertEqual(audit["filled"], 0)
 
     def test_fills_top_k_from_remaining_graphs(self) -> None:
         def fake_fetch(record, dest, run_dir, runtime):

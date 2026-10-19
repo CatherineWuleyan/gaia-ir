@@ -47,6 +47,9 @@ _RELEVANCE_PHRASES = (
     "decision support", "scientific discovery", "scientific experiment",
     "llm agent", "llm agents", "ai agent", "ai agents", "automated discovery",
     "research agent", "scientific agent",
+    "aircraft design", "aircraft simulation", "flight simulation",
+    "flight dynamics", "aerodynamic", "multidisciplinary design optimization",
+    "hardware-in-the-loop",
 )
 _RELEVANCE_STOPWORDS = frozenset({
     "the", "and", "for", "with", "how", "can", "what", "why", "does", "into",
@@ -341,7 +344,7 @@ def _relevance(record: Mapping[str, Any], queries: list[dict[str, Any]]) -> floa
                 terms.add(token)
     if not terms:
         return 0.0
-    coverage = sum(1 for term in terms if re.search(rf"\\b{re.escape(term)}\\b", text)) / max(1, min(len(terms), 12))
+    coverage = sum(1 for term in terms if re.search(rf"\b{re.escape(term)}\b", text)) / max(1, min(len(terms), 12))
     phrase_hits = sum(1 for phrase in _RELEVANCE_PHRASES if phrase in text)
     phrase = min(phrase_hits / 3.0, 1.0)
     return round(0.55 * coverage + 0.45 * phrase, 4)
@@ -1056,10 +1059,13 @@ def probe_and_select(
     ]
     pool = preferred if len(preferred) >= int(min_papers) else available
     selected = list(pool[:int(top_k)])
+    fill_floor = max(0.05, float(min_relevance) * 0.5)
+    filled = 0
     if len(selected) < int(top_k):
         # The relevance gate is a preference, not a hard cap.  Fill the
         # requested paper count from the remaining graph-backed candidates so
         # a `--top-k 5` run does not silently stop at 2-3 "preferred" papers.
+        # Do not fill with clearly off-topic papers just to hit the number.
         chosen = {
             (candidate.get("record") or {}).get("lkm_id") or ""
             for candidate in selected
@@ -1068,8 +1074,11 @@ def probe_and_select(
             pid = (candidate.get("record") or {}).get("lkm_id") or ""
             if pid in chosen:
                 continue
+            if _float(candidate.get("relevance")) < fill_floor:
+                continue
             selected.append(candidate)
             chosen.add(pid)
+            filled += 1
             if len(selected) >= int(top_k):
                 break
     audit["selected"] = [
@@ -1078,6 +1087,8 @@ def probe_and_select(
     audit["available"] = len(available)
     audit["preferred"] = len(preferred)
     audit["min_relevance"] = float(min_relevance)
+    audit["fill_floor"] = fill_floor
+    audit["filled"] = filled
     audit["extract_attempts"] = extraction_attempts
     audit["extracted"] = extracted
     selection_path = run_dir / "01_retrieval" / "selection.json"
@@ -1327,6 +1338,8 @@ def retrieve(
         "selected": selection_audit.get("selected") or [],
         "available": selection_audit.get("available", 0),
         "preferred": selection_audit.get("preferred", 0),
+        "filled": selection_audit.get("filled", 0),
+        "fill_floor": selection_audit.get("fill_floor", 0.0),
         "min_relevance": selection_audit.get("min_relevance", min_relevance),
         "probed": selection_audit.get("probed", 0),
         "first_pass": selection_audit.get("first_pass"),

@@ -1,13 +1,15 @@
-# Ariadne 0.4.0
+# Ariadne 0.4.1
 
 Ariadne turns a domain question into a graph-backed set of candidate answers:
 LKM retrieval → paper2ir → single → merge → answer layer → self-contained
 question graph.
 
+This release is a **relevance and packaging fix** for 0.4.0.
+
 ## Download
 
-- `ariadne-0.4.0-bundle.tar.gz` — macOS/Linux
-- `ariadne-0.4.0-bundle.zip` — macOS/Linux/Windows (WSL)
+- `ariadne-0.4.1-bundle.tar.gz` — macOS/Linux
+- `ariadne-0.4.1-bundle.zip` — macOS/Linux/Windows (WSL)
 - `SHA256SUMS` — archive checksums
 
 The bundle is self-contained: Ariadne, the three pipelines, the offline aircraft
@@ -17,24 +19,35 @@ keys, Bohr credentials, local corpora, or generated runs.
 ## Quick start
 
 ```bash
-tar -xzf ariadne-0.4.0-bundle.tar.gz
-cd ariadne-0.4.0
+tar -xzf ariadne-0.4.1-bundle.tar.gz
+cd ariadne-0.4.1
 ./install.sh
 ./ariadne/run.sh config init
 ./ariadne/run.sh doctor
 ./ariadne/run.sh demo
 ```
 
-## Highlights
+## What changed
 
-- Automatic multi-query LKM retrieval with auditable paper selection.
-- `--top-k` is filled from graph-backed candidates; relevance is a preference,
-  not a hard cap.
-- Papers without a native LKM graph can be built with `bohr lkm extract`
-  (arXiv/OpenAlex/DOI PDF resolution), with `--max-extractions` and
-  `--no-lkm-extract` controls.
-- paper2ir retries transient failures, isolates a failed paper, reuses cached
-  claims across runs, and uses a 600s read timeout.
+- Fixed `_relevance()` word-boundary escaping; relevance scores were always
+  zero, so `--top-k` could fill with off-topic LKM papers.
+- Added aircraft/flight-simulation phrases to the relevance vocabulary.
+- Added a fill floor (`min_relevance * 0.5`) so Ariadne does not pad `--top-k`
+  with clearly off-topic papers.
+- Selection audit now records `fill_floor` and `filled`.
+- Rebuilt the release bundle and download links for 0.4.1.
+
+## Live aircraft trial
+
+A 5-paper aircraft-design run now selects five on-topic papers and produces:
+
+- 59 claims, 45 relations, 5 integration deltas
+- 5 candidate roots
+- 37 answer links (30 support, 7 bounds)
+- 17 chains (5 same-paper, 12 graph paths)
+
+The graph is a focused 5-paper map, not a complete 13-paper domain review. Empty
+native LKM graphs remain the main coverage bottleneck.
 
 ## Requirements
 

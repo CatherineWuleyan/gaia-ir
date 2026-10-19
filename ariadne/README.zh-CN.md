@@ -34,9 +34,9 @@ pipeline 内部实现，只负责编排、隔离每次运行，并补上问题�
 
 不用 clone，直接下载自包含安装包：
 
-[ariadne-0.4.0-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/ariadne-0.4.0-bundle.tar.gz) ·
-[ariadne-0.4.0-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/ariadne-0.4.0-bundle.zip) ·
-[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.0/SHA256SUMS)
+[ariadne-0.4.1-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/ariadne-0.4.1-bundle.tar.gz) ·
+[ariadne-0.4.1-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/ariadne-0.4.1-bundle.zip) ·
+[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.1/SHA256SUMS)
 
 包内含 Ariadne、三套 pipeline、离线飞机示例和 `install.sh`。自己构建：
 
