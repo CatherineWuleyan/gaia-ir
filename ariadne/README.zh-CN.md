@@ -619,12 +619,14 @@ Ariadne 封装的三套维护中 pipeline：
 ## 状态与边界
 
 - `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
-- 一次全新的自动检索从问题出发选中了 **5 篇**有图的论文；其中一篇没有原生
-  LKM 图，通过 `bohr lkm extract` 补建（56 节点 / 65 边 / 13 conclusions）。
-- 已完成的 3 篇图验证运行（`Automating AI Discovery`、`Rewarding
-  Explainability`、`knee-osteoarthritis KG`）产出 **5 个候选答案和 21 条链**。
-  5 篇的 paper2ir 阶段受上游模型延迟限制，因此产品现在加入了步骤重试、单篇
-  失败隔离、跨 run claims 缓存和 600s 读超时。
+- 从 0.4.1 release 包出发的 5 篇飞机自动运行已端到端完成：**71 条 claim、
+  55 条关系、5 个候选答案、32 条 answer links、12 条多步链**；5 篇选文全部
+  与飞机/飞行动力学/仿真相关。
+- 自动检索也选中过一篇没有原生 LKM 图的论文，并用 `bohr lkm extract` 补建
+  （56 节点 / 65 边 / 13 conclusions）。
+- 宽问题上，16 个探测候选中 10 个是空原生图；可用图数量、而不是查询规划，
+  才是实际覆盖上限。步骤重试、单篇失败隔离、跨 run claims 缓存和 600s 读超时
+  仍在产品里。
 - LKM 补建图路径也在真实 arXiv 论文（Maestro）上跑通：87 节点 / 88 边 /
   19 conclusions。空原生图 → 补建图的判定有单元测试覆盖；只有存在 PDF/arXiv
   源时才会触发。

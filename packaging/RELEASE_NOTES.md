@@ -39,12 +39,13 @@ cd ariadne-0.4.1
 
 ## Live aircraft trial
 
-A 5-paper aircraft-design run now selects five on-topic papers and produces:
+A 5-paper aircraft-design run from the bundle selects five on-topic papers and
+produces:
 
-- 59 claims, 45 relations, 5 integration deltas
+- 71 claims, 55 relations, 12 integration deltas
 - 5 candidate roots
-- 37 answer links (30 support, 7 bounds)
-- 17 chains (5 same-paper, 12 graph paths)
+- 32 answer links (24 support, 8 bounds)
+- 12 chains (5 same-paper, 7 graph paths)
 
 The graph is a focused 5-paper map, not a complete 13-paper domain review. Empty
 native LKM graphs remain the main coverage bottleneck.

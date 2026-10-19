@@ -653,14 +653,15 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 
 - `demo` is tested offline on the frozen aircraft graph and writes both
   deliverables.
-- A fresh automatic retrieval selected **five** graph-backed papers from the
-  question alone. One of them had no native LKM graph and was built with
-  `bohr lkm extract` (56 nodes / 65 edges / 13 conclusions).
-- A completed 3-paper graph verification (`Automating AI Discovery`, `Rewarding
-  Explainability`, `knee-osteoarthritis KG`) produced **5 candidate answers and
-  21 chains**. The 5-paper paper2ir stage was limited by upstream model
-  latency, which is why step retries, per-paper isolation, a cross-run claims
-  cache, and a 600s read timeout are now part of the product.
+- A 5-paper automatic aircraft run from the 0.4.1 release bundle completed
+  end-to-end: **71 claims, 55 relations, 5 candidate answers, 32 answer links,
+  and 12 chains**. All five selected papers were on-topic.
+- Automatic retrieval also selected a paper with no native LKM graph and built
+  it with `bohr lkm extract` (56 nodes / 65 edges / 13 conclusions).
+- On broad questions, 10 of 16 probed candidates had empty native graphs; graph
+  availability, not the query planner, is the practical coverage limit. Step
+  retries, per-paper isolation, a cross-run claims cache, and a 600s read
+  timeout remain part of the product.
 - The LKM extraction path was also exercised on a real arXiv paper (Maestro):
   87 nodes / 88 edges / 19 conclusions. The empty-native-graph → extraction
   decision is covered by unit tests; it only triggers when a PDF/arXiv source
