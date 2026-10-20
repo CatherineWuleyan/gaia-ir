@@ -418,6 +418,22 @@ def _catalogue_paper(paper: dict, package: dict, code: str, run_dir: Path) -> di
     return item
 
 
+def _limits_sources(*questions: str) -> bool:
+    """Recognize leading, explicit restrictions to already supplied evidence."""
+    chinese = (
+        r"^\s*(?:请\s*)?(?:仅|只|只能)(?:依据|根据|基于|使用)\s*"
+        r"(?:这|上述|以上|已上传|上传的|所选|已选|提供的|现有|当前|本)"
+        r"[^，。？！\n]{0,20}(?:论文|文献|材料|文档|文件|知识库)"
+    )
+    english = (
+        r"^\s*(?:please\s+)?"
+        r"(?:(?:using|use)\s+(?:only|solely)|based\s+(?:only|solely)\s+on|based\s+on\s+only)\s+"
+        r"(?:these|this|the\s+(?:two|selected|provided|uploaded|existing|current)|existing|current)\b"
+        r"[^.!?\n]{0,50}\b(?:papers?|documents?|materials?|sources?|library)\b"
+    )
+    return any(re.search(chinese, q) or re.search(english, q, re.I) for q in questions)
+
+
 def run_library(question: str, *, library: Path | None = None,
                 documents: list[Path] | None = None, out: Path | None = None,
                 top_k: int = 8, paper_spec: Path | None = None,
@@ -432,6 +448,7 @@ def run_library(question: str, *, library: Path | None = None,
             sys.path.insert(0, str(extra))
     from pipeline_merge_question.step3 import _post_json
     question_en = question_en or question
+    limited_sources = _limits_sources(question, question_en)
     domain = domain or "the domain named by the question"
     if not question.strip() or top_k < 1 or max_roots < 1:
         raise AriadneError("question, top-k and max-roots must be nonempty/positive")
@@ -506,7 +523,7 @@ def run_library(question: str, *, library: Path | None = None,
         local, seeds = local_context(base, recall_text)
         judgment = stage("00_coverage", lambda: assess(question, local, _post_json))
         record["library"].update(coverage=judgment, seed_ids=seeds)
-        if not incoming and not judgment["sufficient"] and judgment["gaps"]:
+        if not limited_sources and not incoming and not judgment["sufficient"] and judgment["gaps"]:
             live_preflight()
             gap_question = question + "\nEvidence gaps: " + "; ".join(judgment["gaps"])
             incoming = stage("01_retrieval", lambda: retrieval.retrieve(
@@ -601,7 +618,7 @@ def run_library(question: str, *, library: Path | None = None,
             raise AriadneError("no relevant evidence after retrieval/import; original library was preserved")
         final_coverage = stage("04_coverage", lambda: assess(question, local, _post_json,
                               freshness_verified=live_retrieved)) if incoming or modified or judgment["reconcile_ids"] else judgment
-        if (documents and paper_spec is None and not live_retrieved
+        if (not limited_sources and documents and paper_spec is None and not live_retrieved
                 and not final_coverage["sufficient"] and final_coverage["gaps"]):
             # Imported files enter the evidence graph before deciding what to
             # search. Supplement only their concrete gaps, once per question.
