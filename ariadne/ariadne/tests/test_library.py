@@ -120,6 +120,61 @@ class LocalEvidenceTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(AriadneError):
                 lib.assess("aircraft", view, lambda _: answer)
 
+    def test_coverage_retries_invalid_ids_once_with_explicit_allowed_ids(self):
+        invalid = sufficient()
+        invalid["evidence_ids"] = ["claim_999"]
+        call = mock.Mock(side_effect=[invalid, sufficient()])
+        result = lib.assess("aircraft", graph(), call)
+        self.assertEqual(result["evidence_ids"], sufficient()["evidence_ids"])
+        self.assertEqual(call.call_count, 2)
+        correction = call.call_args_list[1].args[0]
+        self.assertIn('"invalid_ids": ["claim_999"]', correction)
+        self.assertIn('"allowed_ids":', correction)
+        for node in graph()["nodes"]:
+            self.assertIn(node["id"], correction)
+
+    def test_coverage_valid_response_needs_only_one_call(self):
+        call = mock.Mock(return_value=sufficient())
+        self.assertTrue(lib.assess("aircraft", graph(), call)["sufficient"])
+        call.assert_called_once()
+        self.assertIn("top-level nodes[].id", call.call_args.args[0])
+
+    def test_coverage_second_unknown_id_fails_with_the_invalid_id(self):
+        invalid = sufficient()
+        invalid["evidence_ids"] = ["invented:claim_999"]
+        call = mock.Mock(return_value=invalid)
+        with self.assertRaisesRegex(AriadneError, "unknown evidence: invented:claim_999"):
+            lib.assess("aircraft", graph(), call)
+        self.assertEqual(call.call_count, 2)
+
+    def test_coverage_retry_does_not_guess_ambiguous_or_short_ids(self):
+        view = graph()
+        duplicate = copy.deepcopy(view["nodes"][0])
+        duplicate["id"] = "another-node"
+        view["nodes"].append(duplicate)
+        for value in ("papers:alpha::a", "a", "papers:alpha::invented"):
+            invalid = sufficient()
+            invalid["evidence_ids"] = [value]
+            call = mock.Mock(return_value=invalid)
+            with self.subTest(value=value), self.assertRaisesRegex(AriadneError, "unknown evidence"):
+                lib.assess("aircraft", view, call)
+            self.assertEqual(call.call_count, 2)
+
+    def test_coverage_correction_is_fully_revalidated(self):
+        invalid = sufficient()
+        invalid["evidence_ids"] = ["wrong-format"]
+        changes = ({"sufficient": "true"}, {"reason": ""}, {"gaps": "none"},
+                   {"evidence_ids": [""]}, {"reconcile_ids": None},
+                   {"gaps": ["still missing"]}, {"evidence_ids": []},
+                   {"sufficient": False})
+        for change in changes:
+            corrected = sufficient()
+            corrected.update(change)
+            call = mock.Mock(side_effect=[invalid, corrected])
+            with self.subTest(change=change), self.assertRaises(AriadneError):
+                lib.assess("aircraft", graph(), call)
+            self.assertEqual(call.call_count, 2)
+
     def test_conflicting_versions_never_silently_merge(self):
         changed = graph()
         changed["nodes"][0]["summary"] = "changed condition"

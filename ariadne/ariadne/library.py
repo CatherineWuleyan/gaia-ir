@@ -323,39 +323,53 @@ def assess(question: str, view: dict, call_json, *, freshness_verified: bool = F
         "infer/analogy/same-paper edges are not deductive support. Insufficient evidence must stay insufficient. "
         "Return exactly a JSON object with sufficient:boolean, gaps:list[str], evidence_ids:list[str], "
         "reconcile_ids:list[str], reason:str. Cite only supplied IDs; a sufficient judgment needs evidence IDs, "
-        "no gaps and no reconcile_ids. Do not cite a previous candidate answer as evidence.\n"
+        "no gaps and no reconcile_ids. In evidence_ids and reconcile_ids, copy exact top-level nodes[].id values, "
+        "not display labels, claim numbers, or details.qid. Do not cite a previous candidate answer as evidence.\n"
         + json.dumps({"question": question, "nodes": view["nodes"], "edges": view["edges"],
                       "fresh_retrieval_performed": freshness_verified}, ensure_ascii=False)
     )
-    result = call_json(prompt)
-    if (not isinstance(result, dict) or type(result.get("sufficient")) is not bool
-            or not isinstance(result.get("reason"), str) or not result["reason"].strip()):
-        raise AriadneError("invalid library coverage judgment")
-    for field in ("gaps", "evidence_ids", "reconcile_ids"):
-        if not isinstance(result.get(field), list) or any(not isinstance(s, str) or not s.strip() for s in result[field]):
-            raise AriadneError(f"invalid library judgment {field}")
     # Both IDs are visible in the supplied graph. Resolve a qualified claim ID
     # only when it identifies exactly one node; never guess from a short label.
     aliases: dict[str, set[str]] = {}
     for node in view["nodes"]:
         aliases.setdefault(node_qid(node), set()).add(str(node["id"]))
-    for field in ("evidence_ids", "reconcile_ids"):
-        resolved = []
-        for value in result[field]:
-            matches = aliases.get(value, set())
-            if value not in known and len(matches) == 1:
-                value = next(iter(matches))
-            resolved.append(value)
-        result[field] = list(dict.fromkeys(resolved))
-    if not set(result["evidence_ids"] + result["reconcile_ids"]) <= known:
-        raise AriadneError("library judgment cites unknown evidence")
-    if result["sufficient"] and (not result["evidence_ids"] or result["gaps"] or result["reconcile_ids"]):
-        raise AriadneError("inconsistent sufficient-evidence judgment")
-    if not result["sufficient"] and not result["gaps"] and not result["reconcile_ids"]:
-        raise AriadneError("insufficient-evidence judgment has no actionable gap")
-    if not freshness_verified and re.search(r"最新|最近|截至目前|\blatest\b|\bcurrent\b|\brecent\b", question, re.I):
-        result.update(sufficient=False, gaps=[question], reason="Freshness requested; verify with live retrieval.")
-    return result
+    for attempt in range(2):
+        result = call_json(prompt)
+        if (not isinstance(result, dict) or type(result.get("sufficient")) is not bool
+                or not isinstance(result.get("reason"), str) or not result["reason"].strip()):
+            raise AriadneError("invalid library coverage judgment")
+        result = dict(result)
+        for field in ("gaps", "evidence_ids", "reconcile_ids"):
+            if not isinstance(result.get(field), list) or any(not isinstance(s, str) or not s.strip() for s in result[field]):
+                raise AriadneError(f"invalid library judgment {field}")
+        for field in ("evidence_ids", "reconcile_ids"):
+            resolved = []
+            for value in result[field]:
+                matches = aliases.get(value, set())
+                if value not in known and len(matches) == 1:
+                    value = next(iter(matches))
+                resolved.append(value)
+            result[field] = list(dict.fromkeys(resolved))
+        unknown = sorted(set(result["evidence_ids"] + result["reconcile_ids"]) - known)
+        if unknown:
+            if attempt == 0:
+                prompt += (
+                    "\nThe previous response used invalid evidence references. Correct their format once, "
+                    "using only exact top-level nodes[].id values from allowed_ids below. Return the complete "
+                    "judgment object with all five fields; preserve the evidence limits and do not invent "
+                    "claims or strengthen the judgment just to repair an ID. All fields will be revalidated.\n"
+                    + json.dumps({"allowed_ids": sorted(known), "invalid_ids": unknown,
+                                  "previous_judgment": result}, ensure_ascii=False)
+                )
+                continue
+            raise AriadneError("library judgment cites unknown evidence: " + ", ".join(unknown))
+        if result["sufficient"] and (not result["evidence_ids"] or result["gaps"] or result["reconcile_ids"]):
+            raise AriadneError("inconsistent sufficient-evidence judgment")
+        if not result["sufficient"] and not result["gaps"] and not result["reconcile_ids"]:
+            raise AriadneError("insufficient-evidence judgment has no actionable gap")
+        if not freshness_verified and re.search(r"最新|最近|截至目前|\blatest\b|\bcurrent\b|\brecent\b", question, re.I):
+            result.update(sufficient=False, gaps=[question], reason="Freshness requested; verify with live retrieval.")
+        return result
 
 
 def answer_view(view: dict, question: str, question_en: str, domain: str,
