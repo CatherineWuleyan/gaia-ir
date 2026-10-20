@@ -1890,8 +1890,12 @@ def markdown_pdf(source: Path, destination: Path) -> Path:
     Keep Markdown/math source verbatim and use a CJK font for Chinese text.
     The original Markdown, rather than this transport, feeds paper2ir.
     """
+    from itertools import groupby
     from xml.sax.saxutils import escape
+    import reportlab
+    from pypdf import PdfReader
     from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.pdfbase.cidfonts import UnicodeCIDFont
     from reportlab.lib.styles import ParagraphStyle
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -1899,15 +1903,39 @@ def markdown_pdf(source: Path, destination: Path) -> Path:
     font = "STSong-Light"
     if font not in pdfmetrics.getRegisteredFontNames():
         pdfmetrics.registerFont(UnicodeCIDFont(font))
-    style = ParagraphStyle("source", fontName=font, fontSize=10, leading=15,
+    latin = "AriadneVera"
+    if latin not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(latin, str(Path(reportlab.__file__).parent / "fonts" / "Vera.ttf")))
+    latin_glyphs = pdfmetrics.getFont(latin).face.charToGlyph
+
+    def font_for(char: str) -> str:
+        if char.isspace() or ord(char) in latin_glyphs:
+            return latin
+        try:
+            char.encode("gb2312")
+        except UnicodeEncodeError as exc:
+            raise AriadneError(
+                f"Markdown contains an unsupported PDF character U+{ord(char):04X}: {source}"
+            ) from exc
+        return font
+
+    style = ParagraphStyle("source", fontName=latin, fontSize=10, leading=15,
                            wordWrap="CJK", splitLongWords=True)
     text = source.read_text(encoding="utf-8")
+    for char in set(text):
+        font_for(char)  # Reject unsupported glyphs before creating a transport.
     story = []
     for line in text.splitlines():
         if line.strip():
             # Chunk very long lines to keep ReportLab paragraphs splittable.
             for start in range(0, len(line), 2000):
-                story.append(Paragraph(escape(line[start:start + 2000]), style))
+                # Embed Latin/scientific glyphs; the CID font alone silently
+                # changes characters such as Å, ² and ³ in PDF text extraction.
+                markup = "".join(
+                    f'<font name="{name}">{escape("".join(chars))}</font>'
+                    for name, chars in groupby(line[start:start + 2000], key=font_for)
+                )
+                story.append(Paragraph(markup, style))
         else:
             story.append(Spacer(1, 7))
     if not any(line.strip() for line in text.splitlines()):
@@ -1916,6 +1944,10 @@ def markdown_pdf(source: Path, destination: Path) -> Path:
     SimpleDocTemplate(str(destination), pagesize=A4, leftMargin=40, rightMargin=40,
                       topMargin=40, bottomMargin=40).build(story)
     validate_documents([destination])
+    extracted = "".join(page.extract_text() or "" for page in PdfReader(destination).pages)
+    if re.sub(r"\s+", "", extracted) != re.sub(r"\s+", "", text):
+        destination.unlink(missing_ok=True)
+        raise AriadneError(f"Markdown PDF conversion changed text; document was not uploaded: {source}")
     return destination
 
 

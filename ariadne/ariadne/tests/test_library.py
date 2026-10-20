@@ -100,6 +100,26 @@ class LocalEvidenceTest(unittest.TestCase):
         result = lib.assess("latest aircraft methods", graph(), lambda _: sufficient(), freshness_verified=True)
         self.assertTrue(result["sufficient"])
 
+    def test_coverage_accepts_unique_qualified_ids_from_supplied_nodes(self):
+        answer = sufficient()
+        answer["evidence_ids"] = ["papers:alpha::a", graph()["nodes"][0]["id"]]
+        result = lib.assess("aircraft", graph(), lambda _: answer)
+        self.assertEqual(result["evidence_ids"], [graph()["nodes"][0]["id"]])
+        answer.update(sufficient=False, reconcile_ids=["papers:beta::b"])
+        result = lib.assess("aircraft", graph(), lambda _: answer)
+        self.assertEqual(result["reconcile_ids"], [graph()["nodes"][1]["id"]])
+
+    def test_coverage_rejects_ambiguous_aliases_and_short_labels(self):
+        view = graph()
+        duplicate = copy.deepcopy(view["nodes"][0])
+        duplicate["id"] = "another-node"
+        view["nodes"].append(duplicate)
+        for value in ("papers:alpha::a", "a", "papers:alpha::invented"):
+            answer = sufficient()
+            answer["evidence_ids"] = [value]
+            with self.subTest(value=value), self.assertRaises(AriadneError):
+                lib.assess("aircraft", view, lambda _: answer)
+
     def test_conflicting_versions_never_silently_merge(self):
         changed = graph()
         changed["nodes"][0]["summary"] = "changed condition"
@@ -348,6 +368,39 @@ class DocumentImportTest(unittest.TestCase):
             self.assertIn("飞机仿真", text)
             self.assertIn("F=ma", text)
             self.assertIn("中文证据与边界条件", text)
+
+    def test_markdown_transport_preserves_scientific_unicode(self):
+        from pypdf import PdfReader
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "science.md"
+            expected = "中文铌硒 Å é ó ö ü ć á m² m³ μm β λ κ ξ Φ ⊥ ∑ ∫ ≠ ≤ ≥ 25°C"
+            source.write_text(expected)
+            pdf = retrieval.markdown_pdf(source, root / "science.pdf")
+            actual = "".join(page.extract_text() or "" for page in PdfReader(pdf).pages)
+            self.assertEqual("".join(actual.split()), "".join(expected.split()))
+
+    def test_unsupported_markdown_character_blocks_batch_before_upload(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(retrieval, "_extract_graph") as extract:
+            root = Path(tmp)
+            (root / "valid.md").write_text("Valid source m²")
+            (root / "unsupported.md").write_text("Unsupported character: 😀")
+            with self.assertRaisesRegex(AriadneError, r"unsupported PDF character U\+1F600"):
+                retrieval.import_documents([root / "valid.md", root / "unsupported.md"], root / "run", runtime(root))
+            extract.assert_not_called()
+
+    def test_changed_pdf_text_is_rejected_before_upload(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(retrieval, "_extract_graph") as extract:
+            root = Path(tmp)
+            source = root / "science.md"
+            source.write_text("Preserve Å and m²")
+            corrupt = SimpleNamespace(is_encrypted=False, pages=[SimpleNamespace(extract_text=lambda: "lost text")])
+            with mock.patch("pypdf.PdfReader", return_value=corrupt), \
+                    self.assertRaisesRegex(AriadneError, "conversion changed text"):
+                retrieval.import_documents([source], root / "run", runtime(root))
+            extract.assert_not_called()
+            self.assertFalse(list((root / "run").rglob("source.pdf")))
 
     def test_all_inputs_are_validated_before_first_upload(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(retrieval, "_extract_graph") as extract:

@@ -313,7 +313,11 @@ def assess(question: str, view: dict, call_json, *, freshness_verified: bool = F
         "Judge evidence coverage for this question using ONLY the supplied graph. "
         "Do not answer from general knowledge, invent facts, or treat retrieval scores as confidence. "
         "Check the requested objects, conditions, comparisons, all necessary premises, and counterevidence. "
-        "A documented unresolved disagreement can be a sufficient answer. Distinguish missing materials "
+        "A documented unresolved disagreement can be a sufficient answer. "
+        "When a question asks which conclusions the supplied materials do not establish, "
+        "respect its explicitly limited source scope and allow a bounded answer stating the evidence gaps "
+        "when that is what the question requests, without demanding proof of the unsupported claim. "
+        "Distinguish missing materials "
         "(gaps: precise search queries) from missing cross-paper relations between existing materials "
         "(reconcile_ids: the existing claim IDs needing local relation analysis). "
         "infer/analogy/same-paper edges are not deductive support. Insufficient evidence must stay insufficient. "
@@ -330,6 +334,19 @@ def assess(question: str, view: dict, call_json, *, freshness_verified: bool = F
     for field in ("gaps", "evidence_ids", "reconcile_ids"):
         if not isinstance(result.get(field), list) or any(not isinstance(s, str) or not s.strip() for s in result[field]):
             raise AriadneError(f"invalid library judgment {field}")
+    # Both IDs are visible in the supplied graph. Resolve a qualified claim ID
+    # only when it identifies exactly one node; never guess from a short label.
+    aliases: dict[str, set[str]] = {}
+    for node in view["nodes"]:
+        aliases.setdefault(node_qid(node), set()).add(str(node["id"]))
+    for field in ("evidence_ids", "reconcile_ids"):
+        resolved = []
+        for value in result[field]:
+            matches = aliases.get(value, set())
+            if value not in known and len(matches) == 1:
+                value = next(iter(matches))
+            resolved.append(value)
+        result[field] = list(dict.fromkeys(resolved))
     if not set(result["evidence_ids"] + result["reconcile_ids"]) <= known:
         raise AriadneError("library judgment cites unknown evidence")
     if result["sufficient"] and (not result["evidence_ids"] or result["gaps"] or result["reconcile_ids"]):
