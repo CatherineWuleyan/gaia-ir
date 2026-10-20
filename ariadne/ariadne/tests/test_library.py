@@ -370,6 +370,8 @@ class DocumentImportTest(unittest.TestCase):
             self.assertIn("中文证据与边界条件", text)
 
     def test_markdown_transport_preserves_scientific_unicode(self):
+        import shutil
+        import subprocess
         from pypdf import PdfReader
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -379,6 +381,13 @@ class DocumentImportTest(unittest.TestCase):
             pdf = retrieval.markdown_pdf(source, root / "science.pdf")
             actual = "".join(page.extract_text() or "" for page in PdfReader(pdf).pages)
             self.assertEqual("".join(actual.split()), "".join(expected.split()))
+            if shutil.which("pdftotext"):
+                # pypdf can echo CID codepoints even when PDF renderers lose
+                # their glyphs; an independent extractor catches that failure.
+                rendered_text = subprocess.check_output(
+                    ["pdftotext", "-layout", str(pdf), "-"], text=True,
+                )
+                self.assertEqual("".join(rendered_text.split()), "".join(expected.split()))
 
     def test_unsupported_markdown_character_blocks_batch_before_upload(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(retrieval, "_extract_graph") as extract:
