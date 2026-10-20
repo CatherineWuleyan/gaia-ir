@@ -1430,6 +1430,38 @@ function renderRich(value) {
         item.text.textContent = '';
       }
     });
+    // Root focus must remain connected through the edges actually displayed.
+    // Cross-paper endpoints and filtered-out bridge nodes can otherwise leave islands.
+    if (hasAnswerLayer && !showFullDomain) {
+      const visibleNeighbors = new Map(nodes.map(function(node){ return [node.id, []]; }));
+      edgeEls.forEach(function(item){
+        if (item.edge.hidden) return;
+        visibleNeighbors.get(item.edge.source).push(item.edge.target);
+        visibleNeighbors.get(item.edge.target).push(item.edge.source);
+      });
+      const reachable = new Set(nodes.filter(function(node){ return node.isRoot; }).map(function(node){ return node.id; }));
+      const queue = Array.from(reachable);
+      for (let i = 0; i < queue.length; i++) {
+        visibleNeighbors.get(queue[i]).forEach(function(id){
+          if (reachable.has(id)) return;
+          reachable.add(id);
+          queue.push(id);
+        });
+      }
+      nodes.forEach(function(node){
+        if (reachable.has(node.id)) return;
+        node.el.classList.add('hidden');
+        node.el.style.display = 'none';
+      });
+      edgeEls.forEach(function(item){
+        if (reachable.has(item.edge.source) && reachable.has(item.edge.target)) return;
+        item.edge.hidden = true;
+        item.path.style.display = 'none';
+        item.path.setAttribute('d', '');
+        item.text.style.display = 'none';
+        item.text.textContent = '';
+      });
+    }
     paint();
   }
 
