@@ -1074,13 +1074,10 @@ function renderRich(value) {
     const width = Math.max(1, maxX - minX), height = Math.max(1, maxY - minY);
     const rect = viewportRect();
     const k = Math.min(Math.max(Math.min(rect.width / width, rect.height / height), 0.12), 3.2);
-    const hasRoots = nodes.some(function(n){ return n.isRoot && !n.el.classList.contains('hidden'); });
     transform = {
       k: k,
       x: rect.left + (rect.width - width * k) / 2 - minX * k,
-      y: hasRoots
-        ? rect.top + 6 - minY * k
-        : rect.top + (rect.height - height * k) / 2 - minY * k
+      y: rect.top + (rect.height - height * k) / 2 - minY * k
     };
     state.fitted = true;
     applyTransform();

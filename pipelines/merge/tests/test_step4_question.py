@@ -74,5 +74,36 @@ assert.deepEqual(visible(), nodes.map(n => n.id));
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for viewer regression tests")
+    def test_viewer_centers_root_graph_in_available_canvas(self):
+        template = (Path(__file__).parents[1] / "pipeline_merge_question" / "viewer_question.html").read_text()
+        start = template.index("  function viewportRect(){")
+        end = template.index("  function runLayout(", start)
+        script = r"""
+const assert = require('node:assert/strict');
+const W = () => 1600, H = () => 1048;
+const document = {getElementById() { return {classList: {contains() { return false; }}}; }};
+const nodes = [
+  {index: 0, r: 40, isRoot: true, el: {classList: {contains() {return false;}}}},
+  {index: 1, r: 10, isRoot: false, el: {classList: {contains() {return false;}}}},
+  {index: 2, r: 50, isRoot: false, el: {classList: {contains() {return true;}}}}
+];
+const state = {positions: [{x: 100, y: 100}, {x: 1000, y: 300}, {x: -9000, y: -9000}]};
+let transform;
+function applyTransform() {}
+function paint() {}
+""" + template[start:end] + r"""
+fit();
+const rect = viewportRect();
+// Bounds include the viewer's node and text padding; hidden nodes do not affect fit.
+const centerX = ((100 - 40 - 10) + (1000 + 10 + 10)) / 2;
+const centerY = ((100 - 40 - 4) + (300 + 10 + 24)) / 2;
+assert.ok(Math.abs(transform.x + centerX * transform.k - (rect.left + rect.width / 2)) < 1e-8);
+assert.ok(Math.abs(transform.y + centerY * transform.k - (rect.top + rect.height / 2)) < 1e-8);
+"""
+        result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 if __name__ == "__main__":
     unittest.main()
