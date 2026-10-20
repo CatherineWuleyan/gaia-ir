@@ -1,5 +1,33 @@
 # Ariadne
 
+Personal-library mode reuses validated paper packages and domain relations before
+searching LKM. Select your own PDF/Markdown documents with `--documents`:
+
+```bash
+./ariadne/run.sh ask "How can aircraft simulation be calibrated?" \
+  --library outputs/my_library --top-k 2 --yes
+./ariadne/run.sh ask "What do these documents establish?" \
+  --library outputs/my_library --documents /path/paper.pdf /path/notes.md --yes
+```
+
+Warm questions run only the answer layer when local evidence covers the question.
+Missing relations trigger bounded local reconciliation; missing materials trigger
+one gap-directed retrieval round, processing only new or changed papers. Remaining
+gaps are visible in answer caveats and `run.json`; freshness requests force retrieval.
+Prior candidate answers are excluded from evidence. The library's atomic manifest
+references immutable runs and compiled integration packages with content/version
+checks. Keep those run directories; failed runs and concurrent update conflicts do
+not overwrite the library. Existing runs are not automatically migrated.
+
+Document import requires the `reportlab` and `pypdf` dependencies listed in
+`ariadne/requirements.txt`. LKM accepts unencrypted PDFs up to 64 MiB / 50 pages.
+Markdown is transported as a text-preserving PDF (including formula source), while
+the original Markdown feeds paper processing. Remote document links/images are not
+fetched. Extraction uploads do not imply publication in LKM's global search index.
+Identical validated imports are reused without another upload. Omit `--library`
+and `--documents` to retain the original full pipeline; `--dry-run` never uploads,
+calls a model, or writes a run or library.
+
 **Question-led domain reasoning graphs.**
 
 [中文](README.zh-CN.md) · [Examples](#examples) · [Quick start](#quick-start) · [Configuration](#configuration) · [Commands](#commands)

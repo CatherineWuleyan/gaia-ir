@@ -257,6 +257,44 @@ xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
 
 ## 自动检索
 
+### 个人知识库与用户文档
+
+指定 `--library PATH` 后，Ariadne 会先召回库内相关命题，补齐前提、条件和反证，
+检查证据覆盖度。证据足够时只运行问题答案层；已有材料缺少关系时局部重整；
+材料不足时围绕缺口补检索，只处理新增或内容变化的论文，再增量接入相关局部。
+用户文档先导入，再检查是否需要补检索；`--papers` 仍保持显式指定的语料范围。
+每次最多补检索一轮，仍未解决的缺口会显示在答案 caveat 和 `run.json` 中。
+明确要求“最新”的问题会重新检索核验。
+
+```bash
+# 首次建立个人库；以后沿用同一路径，连续追问可复用已验证的包与关系
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --library outputs/my_library --top-k 2 --yes
+./ariadne/run.sh ask "如何利用风洞数据校准模型？" --library outputs/my_library --yes
+
+# 选择自己的文件；可重复指定 --documents，也可一次列出多个文件
+./ariadne/run.sh ask "这些材料支持什么结论？" --library outputs/my_library \
+  --documents /absolute/path/paper.pdf /absolute/path/notes.md --yes
+
+# 只看计划；不写库、不上传、不调用模型
+./ariadne/run.sh ask "这些材料支持什么结论？" --library outputs/my_library \
+  --documents /absolute/path/notes.md --dry-run
+```
+
+导入依赖 `reportlab` 和 `pypdf`，已列入 `ariadne/requirements.txt`。PDF 必须未加密、
+不超过 64 MiB／50 页。Markdown 使用保留原始文本与公式源码的 PDF 作为 LKM 传输
+格式，原始 Markdown 继续用于单篇处理；不会读取文档中的远程链接或图片。
+PDF 上传后走现有 `bohr lkm extract`，不是把文件发布到全局可搜索论文库；本地
+知识库可立即使用抽取结果。相同内容的已验证文档可复用，不重复上传。
+
+库的 `manifest.json` 只记录既有运行产物的引用、hash、处理版本和编译后的集成包。
+论文事实仍由 Gaia 包保存，索引和 viewer 不成为第二份事实源。输入、代码、提示模板、
+模型或编译器版本变化时，相应缓存不再复用；旧问题的候选答案不会进入新问题的证据。
+并发更新会检测冲突，不覆盖另一轮更新；失败保留旧库和失败运行记录。
+
+请保留 manifest 引用的运行目录；删除这些目录会使对应缓存失效。不同用户使用不同的
+库目录。既有运行不会自动迁移或覆盖；省略 `--library`／`--documents` 就继续使用原来的
+完整流程。`--papers` 仍可与 `--library` 配合，用明确选择的本地图／文本构建知识库。
+
 full 模式不需要你手动选论文。检索阶段是：
 
 1. **查询规划**：让模型把问题扩成多条简短英文 LKM 查询，覆盖核心概念、

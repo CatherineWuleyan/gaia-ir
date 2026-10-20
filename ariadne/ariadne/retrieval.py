@@ -1855,6 +1855,117 @@ def materialise_selected(selected: list[dict[str, Any]], run_dir: Path,
 # public entry point
 # --------------------------------------------------------------------------- #
 
+def validate_documents(paths: Iterable[Path]) -> list[Path]:
+    """Validate every selected file before uploading any of them."""
+    selected = []
+    for value in paths:
+        path = Path(value).expanduser().resolve()
+        if not path.is_file() or path.suffix.lower() not in {".pdf", ".md", ".markdown"}:
+            raise AriadneError(f"document must be a readable PDF or Markdown file: {path}")
+        if not path.stat().st_size or path.stat().st_size > 64 * 1024 * 1024:
+            raise AriadneError(f"document must be nonempty and at most 64 MiB: {path}")
+        try:
+            if path.suffix.lower() == ".pdf":
+                from pypdf import PdfReader
+                reader = PdfReader(path)
+                if reader.is_encrypted or not 0 < len(reader.pages) <= 50:
+                    raise AriadneError(f"LKM needs an unencrypted PDF of at most 50 pages: {path}")
+            else:
+                path.read_text(encoding="utf-8")
+                import reportlab  # noqa: F401 - fail before upload if converter is absent
+        except ImportError as exc:
+            raise AriadneError("Document import needs `pip install -r ariadne/requirements.txt`.") from exc
+        except AriadneError:
+            raise
+        except Exception as exc:
+            raise AriadneError(f"cannot read document {path}: {exc}") from exc
+        if path not in selected:
+            selected.append(path)
+    return selected
+
+
+def markdown_pdf(source: Path, destination: Path) -> Path:
+    """A text-preserving PDF transport for LKM, never a rendered HTML fetch.
+
+    Keep Markdown/math source verbatim and use a CJK font for Chinese text.
+    The original Markdown, rather than this transport, feeds paper2ir.
+    """
+    from xml.sax.saxutils import escape
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.pagesizes import A4
+    font = "STSong-Light"
+    if font not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(UnicodeCIDFont(font))
+    style = ParagraphStyle("source", fontName=font, fontSize=10, leading=15,
+                           wordWrap="CJK", splitLongWords=True)
+    text = source.read_text(encoding="utf-8")
+    story = []
+    for line in text.splitlines():
+        if line.strip():
+            # Chunk very long lines to keep ReportLab paragraphs splittable.
+            for start in range(0, len(line), 2000):
+                story.append(Paragraph(escape(line[start:start + 2000]), style))
+        else:
+            story.append(Spacer(1, 7))
+    if not any(line.strip() for line in text.splitlines()):
+        raise AriadneError(f"Markdown document has no text: {source}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    SimpleDocTemplate(str(destination), pagesize=A4, leftMargin=40, rightMargin=40,
+                      topMargin=40, bottomMargin=40).build(story)
+    validate_documents([destination])
+    return destination
+
+
+def import_documents(paths: Iterable[Path], run_dir: Path, runtime: Runtime,
+                     *, cached: Iterable[Mapping[str, Any]] = ()) -> list[dict[str, Any]]:
+    """Upload only explicitly selected files using the existing LKM extractor."""
+    selected = validate_documents(paths)
+    result = []
+    by_id = {str(item["lkm_id"]): item for item in cached}
+    # Convert/check all transports first so a bad later document cannot cause
+    # earlier documents to be uploaded in a partially invalid batch.
+    prepared = []
+    for source in selected:
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        pid = "local_" + digest[:24]
+        out = run_dir / "01_retrieval" / "papers" / pid
+        previous = by_id.get(pid)
+        if previous and Path(str(previous.get("graph_path", ""))).is_file():
+            result.append(dict(previous))
+            continue
+        out.mkdir(parents=True, exist_ok=True)
+        transport = out / "source.pdf"
+        snapshot = transport if source.suffix.lower() == ".pdf" else out / "source.md"
+        shutil.copyfile(source, snapshot)
+        if hashlib.sha256(snapshot.read_bytes()).hexdigest() != digest:
+            raise AriadneError(f"selected document changed while being prepared: {source}; retry")
+        if source.suffix.lower() != ".pdf":
+            markdown_pdf(snapshot, transport)
+        prepared.append((source, snapshot, transport, out, pid, digest))
+    for source, snapshot, transport, out, pid, source_digest in prepared:
+        record = {"lkm_id": pid, "title": source.stem, "pdf_path": str(transport),
+                  "source": "document", "source_path": str(source),
+                  "document_sha256": source_digest}
+        path, graph, metadata = _extract_graph(record, out / "graph.json", run_dir,
+                                               runtime, pdf=transport)
+        if source.suffix.lower() != ".pdf":
+            (out / "ocr.md").write_text(snapshot.read_text(encoding="utf-8"), encoding="utf-8")
+        else:
+            from pypdf import PdfReader
+            text = "\n\n".join(page.extract_text() or "" for page in PdfReader(transport).pages)
+            if text.strip():
+                (out / "ocr.md").write_text(text, encoding="utf-8")
+            else:
+                _fetch_text(record, graph, out / "ocr.md", run_dir, runtime, fulltext=False)
+        record.update(metadata)
+        record.update(graph_path=str(path), ocr_path=str(out / "ocr.md"))
+        result.append(record)
+    return result
+
+
 def retrieve(
     question: str,
     run_dir: Path,

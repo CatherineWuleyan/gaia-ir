@@ -363,6 +363,8 @@ def cmd_ask(args: argparse.Namespace) -> int:
     )
     runtime.apply_env()
     if args.mode == "demo":
+        if args.library or args.documents:
+            raise AriadneError("--library and --documents require --mode full")
         demo = read_json(DEFAULT_CONFIG)
         if args.question.strip() != demo["question_zh"]:
             print("demo uses the frozen aircraft graph; the configured question is: "
@@ -370,7 +372,16 @@ def cmd_ask(args: argparse.Namespace) -> int:
             print("Use --mode full for a new question.", file=sys.stderr)
         result = run_demo(Path(args.out) if args.out else None, runtime=runtime)
     else:
-        result = run_full(
+        library_options = {}
+        runner = run_full
+        if args.library or args.documents:
+            from .library import run_library
+            runner = run_library
+            library_options = {
+                "library": Path(args.library).expanduser() if args.library else None,
+                "documents": [Path(p).expanduser() for p in (args.documents or [])],
+            }
+        result = runner(
             args.question,
             out=Path(args.out) if args.out else None,
             top_k=args.top_k,
@@ -390,6 +401,7 @@ def cmd_ask(args: argparse.Namespace) -> int:
             cross_check=args.cross_check,
             min_corroboration=args.min_corroboration,
             external_discovery=args.external_discovery,
+            **library_options,
         )
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -790,6 +802,9 @@ def build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--top-k", type=int, default=8,
                      help="number of papers to select; not answer roots (default 8)")
     ask.add_argument("--papers", help="offline paper spec (JSON) instead of LKM search")
+    ask.add_argument("--library", help="personal knowledge library directory; reuse evidence before LKM search")
+    ask.add_argument("--documents", nargs="+", metavar="PATH", action="extend",
+                     help="selected PDF/Markdown files to upload to LKM (Markdown is converted to PDF)")
     ask.add_argument("--question-en", help="English question for the answer layer")
     ask.add_argument("--domain", help="domain label for root generation")
     ask.add_argument("--max-roots", type=int, default=5, help="candidate answers")
