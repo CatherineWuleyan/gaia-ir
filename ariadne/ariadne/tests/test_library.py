@@ -357,6 +357,18 @@ class LibraryRunTest(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec("reportlab") and importlib.util.find_spec("pypdf"), "document dependencies not installed")
 class DocumentImportTest(unittest.TestCase):
+    def test_uploaded_content_id_survives_paper_spec_round_trip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pid = "local_84fb6d3f5adc4e9a5e506483"
+            write_json(root / "papers.json", {"papers": [{
+                "lkm_id": pid, "title": "Uploaded PDF",
+                "graph_path": "graph.json", "ocr_path": "ocr.md",
+            }]})
+            self.assertEqual(retrieval.read_spec(root / "papers.json")[0]["lkm_id"], pid)
+            self.assertEqual(retrieval._paper_id("paper:" + pid), pid)
+            self.assertEqual(retrieval._paper_id("paper:812768401289117696"), "812768401289117696")
+
     def test_markdown_transport_preserves_chinese_and_formula_source(self):
         from pypdf import PdfReader
         with tempfile.TemporaryDirectory() as tmp:

@@ -118,6 +118,8 @@ def _paper_id(value: Any, key: str = "") -> str:
     raw = str(value or key or "")
     if raw.startswith("paper:"):
         raw = raw.split(":", 1)[1]
+    if re.fullmatch(r"local_[0-9a-f]{24}", raw):
+        return raw
     match = re.search(r"(\d{6,})", raw)
     return match.group(1) if match else raw
 
