@@ -92,12 +92,20 @@ def papers_of_node(node: Mapping[str, Any]) -> list[str]:
     details = node.get("details") if isinstance(node.get("details"), Mapping) else {}
     metadata = details.get("metadata") if isinstance(details.get("metadata"), Mapping) else {}
     provenance = metadata.get("package_provenance") or []
+    if not isinstance(provenance, list):
+        provenance = []
     papers = sorted({
-        str(item).replace("papers:", "")
+        match.group(1)
         for item in provenance
-        if isinstance(item, str) and item.startswith("papers:")
+        if isinstance(item, str)
+        and (match := re.fullmatch(r"papers:([^:]+)", item))
+        and match.group(1) != "other"
     })
-    return papers or [paper_of(str(node.get("id")))]
+    if papers:
+        return papers
+    # "other" is a grouping fallback, never an independently sourced paper.
+    match = re.match(r"^(?:knowledge:)?papers:([^:]+)::", str(node.get("id")))
+    return [match.group(1)] if match and match.group(1) != "other" else []
 
 
 def primary_paper_of_node(node: Mapping[str, Any]) -> str:
@@ -749,7 +757,7 @@ def build_answer_layer(
             verdict_class = "contested"
         elif len(support_papers) >= 2 and len(supported) >= 3:
             verdict_class = "primary"
-        elif supported:
+        elif supported and support_papers:
             verdict_class = "partial"
         else:
             verdict_class = "exploratory"
@@ -1010,7 +1018,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
         if node_id in by_id:
             papers = papers_of_node(by_id[node_id])
             touched_papers.update(papers)
-            count_by_paper[papers[0]] += 1
+            count_by_paper.update(papers)
     multi_root = Counter()
     for root in answer_layer.get("roots") or []:
         for node_id in set(root.get("support_ids") or []):
@@ -1021,7 +1029,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "node_count": len(nodes),
             "edge_count": len(edges),
             "connected_claim_count": len(connected),
-            "paper_count": len({papers_of_node(node)[0] for node in nodes}),
+            "paper_count": len({paper for node in nodes for paper in papers_of_node(node)}),
         },
         "answer_layer": {
             "root_count": len(answer_layer.get("roots") or []),
