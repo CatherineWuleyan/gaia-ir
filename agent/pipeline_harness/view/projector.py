@@ -54,7 +54,27 @@ class ArtifactListViewAdapter:
         )
 
 
+def _render_force_html(view: ViewDocument) -> bytes:
+    """Render the spring-electrical (force-directed) domain-graph viewer.
+
+    ``metadata.renderer == "force"`` selects this template.  It carries no
+    third-party dependency: the layout is the Fruchterman-Reingold
+    spring-electrical model -- the same forces ``d3-force`` exposes as
+    ``forceManyBody`` (repulsion between unconnected nodes), ``forceLink``
+    (attraction along edges), ``forceCenter`` and ``forceCollide``.  Node radius
+    scales with degree.
+    """
+    template_path = Path(__file__).with_name("force_viewer.html")
+    template = template_path.read_text(encoding="utf-8")
+    payload = json.dumps(view.to_dict(), ensure_ascii=False, sort_keys=True).replace(
+        "</script", "<\\/script"
+    )
+    return template.replace("__VIEW_DATA__", payload).encode("utf-8")
+
+
 def _render_html(view: ViewDocument) -> bytes:
+    if str((view.metadata or {}).get("renderer") or "") == "force":
+        return _render_force_html(view)
     template_path = Path(__file__).with_name("viewer.html")
     template = template_path.read_text(encoding="utf-8")
     dagre_bytes = base64.b64decode(

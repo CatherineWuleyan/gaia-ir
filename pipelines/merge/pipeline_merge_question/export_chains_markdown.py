@@ -20,9 +20,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Mapping
 
-DEFAULT_ANSWER = Path("outputs/question_domain_aircraft/answer_layer.json")
-DEFAULT_VIEW = Path("outputs/question_domain_aircraft/domain_view_question.json")
-DEFAULT_OUT = Path("outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md")
+DEFAULT_ANSWER = Path("outputs/aircraft/final/answer_layer.json")
+DEFAULT_VIEW = Path("outputs/aircraft/final/domain_view_question.json")
+DEFAULT_OUT = Path("outputs/aircraft/final/ALL_CHAINS_TO_ROOTS.md")
 
 ROLE_LABELS = {
     "deduction": "deduces", "special_case": "special case", "reproduces": "reproduces",

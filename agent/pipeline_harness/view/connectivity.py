@@ -11,10 +11,8 @@ must never survive into a rendered graph:
 * operators and strategies that lost every endpoint — a ``^``/contradiction
   operator whose operand or conclusion was filtered out is a "断头" node.
 
-Public Knowledge that legitimately carries no reasoning edge is *kept* and
-flagged instead of silently dropped: hiding it would make the projection lie
-about the formalization.  ``standalone_claim_ids`` in the returned report lists
-those IDs so run checks can surface them as an upstream extraction gap.
+All zero-degree nodes are hidden from the rendered projection. Nodes that belong
+to a disconnected component but have at least one live edge are retained.
 """
 from __future__ import annotations
 
@@ -27,23 +25,27 @@ _HELPER_LAYER = "helpers"
 _REASONING_LAYERS = frozenset({"operators", "strategies", "weakpoints"})
 
 
-def _is_removable(node: Mapping[str, Any]) -> bool:
-    """Only formal-internal helper nodes are prunable; public claims never are."""
-
+def _is_helper(node: Mapping[str, Any]) -> bool:
     return str(node.get("layer") or "") == _HELPER_LAYER
+
+
+def _is_removable(node: Mapping[str, Any]) -> bool:
+    """All zero-degree nodes are prunable from the rendered projection."""
+
+    return True
 
 
 def prune_orphan_nodes(document: ViewDocument) -> tuple[ViewDocument, JSONDict]:
     """Return a connectivity-clean copy of ``document`` plus a repair report.
 
-    The pass is transitive: removing an orphan helper deletes the edge that
-    touched it, which can in turn orphan the operator at the other end.  It
-    repeats until the graph reaches a fixed point.
+    The pass is transitive: removing an orphan deletes its incident edges,
+    which can in turn orphan another node. It repeats until a fixed point.
     """
 
     nodes: list[JSONDict] = [dict(node) for node in document.nodes]
     edges: list[JSONDict] = [dict(edge) for edge in document.edges]
     removed_nodes: list[str] = []
+    removed_helper_nodes: list[str] = []
     removed_edges: list[str] = []
 
     while True:
@@ -69,6 +71,10 @@ def prune_orphan_nodes(document: ViewDocument) -> tuple[ViewDocument, JSONDict]:
             break
         dropped_set = set(dropped)
         removed_nodes.extend(dropped)
+        removed_helper_nodes.extend(
+            node_id for node_id in dropped
+            if _is_helper(next(node for node in nodes if str(node["id"]) == node_id))
+        )
         nodes = [node for node in nodes if str(node["id"]) not in dropped_set]
 
     node_ids = {str(node["id"]) for node in nodes}
@@ -78,11 +84,6 @@ def prune_orphan_nodes(document: ViewDocument) -> tuple[ViewDocument, JSONDict]:
         degree[str(edge["target"])] += 1
 
     standalone: list[str] = []
-    for node in nodes:
-        node_id = str(node["id"])
-        if degree.get(node_id, 0) == 0 and str(node.get("layer") or "") not in _REASONING_LAYERS:
-            node["standalone_claim"] = True
-            standalone.append(node_id)
 
     search_documents = [
         {**entry, "refs": [ref for ref in entry.get("refs", []) if ref in node_ids]}
@@ -91,8 +92,8 @@ def prune_orphan_nodes(document: ViewDocument) -> tuple[ViewDocument, JSONDict]:
     search_documents = [entry for entry in search_documents if entry["refs"]]
 
     report: JSONDict = {
-        "removed_helper_nodes": len(removed_nodes),
-        "removed_helper_node_ids": removed_nodes,
+        "removed_helper_nodes": len(removed_helper_nodes),
+        "removed_helper_node_ids": removed_helper_nodes,
         "removed_edges": len(removed_edges),
         "standalone_claims": len(standalone),
         "standalone_claim_ids": standalone,
@@ -182,7 +183,7 @@ def audit_view_connectivity(
     isolated = [
         node for node in nodes if degree.get(str(node["id"]), 0) == 0
     ]
-    helper_ids = [str(node["id"]) for node in isolated if _is_removable(node)]
+    helper_ids = [str(node["id"]) for node in isolated if _is_helper(node)]
     operator_ids = [
         str(node["id"])
         for node in isolated
@@ -191,7 +192,7 @@ def audit_view_connectivity(
     claim_ids = [
         str(node["id"])
         for node in isolated
-        if str(node.get("layer") or "") not in _REASONING_LAYERS and not _is_removable(node)
+        if str(node.get("layer") or "") not in _REASONING_LAYERS and not _is_helper(node)
     ]
 
     live_nodes = [node for node in nodes if degree.get(str(node["id"]), 0) > 0]

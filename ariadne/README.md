@@ -21,7 +21,7 @@ lead to it.
 
 ```text
 question
-  -> LKM query planning + multi-query search + graph-backed paper selection
+  -> LKM query planning + multi-query search + independent-source checks + graph-backed paper selection
   -> paper2ir      (paper graph -> claims_final)
   -> single-paper  (claims -> Gaia IR package)
   -> merge         (many packages -> domain graph)
@@ -80,10 +80,10 @@ What to look at in the viewer:
 
 Inspect the artifacts:
 
-- [Aircraft question viewer](../outputs/question_domain_aircraft/domain_viewer_question.html)
-- [All chains to R1–R5](../outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md)
-- [Answer layer JSON](../outputs/question_domain_aircraft/answer_layer.json)
-- [Frozen demo dataset](../outputs/question_domain_aircraft/)
+- [Aircraft question viewer](../outputs/aircraft/final/domain_viewer_question.html)
+- [All chains to R1–R5](../outputs/aircraft/final/ALL_CHAINS_TO_ROOTS.md)
+- [Answer layer JSON](../outputs/aircraft/final/answer_layer.json)
+- [Frozen demo dataset](../outputs/aircraft/final/)
 
 Run it offline (no keys, no LKM):
 
@@ -116,10 +116,10 @@ evidence. The viewer shows them; it does not silently turn them into support.
 
 Inspect the artifacts:
 
-- [Physics reviewed viewer](../outputs/physics_domain/reviewed/domain_graph_full.reviewed.html)
-- [Answer layer JSON](../outputs/physics_domain/reviewed/answer_layer.reviewed.json)
-- [Mentor review notes](../outputs/physics_domain/reviewed/MENTOR_REVIEW.md)
-- [Target question](../outputs/physics_domain/target_question.json)
+- [Physics reviewed viewer](../outputs/physics/final/domain_graph_full.reviewed.html)
+- [Answer layer JSON](../outputs/physics/final/answer_layer.reviewed.json)
+- [Mentor review notes](../outputs/physics/final/MENTOR_REVIEW.md)
+- [Target question](../outputs/physics/build/target_question.json)
 
 GitHub shows HTML files as source. To view a graph, open the file locally after
 cloning, or serve the repository with `python3 -m http.server` and open the file
@@ -246,9 +246,9 @@ Start with **two papers** while you check quality and cost:
 ```
 
 Ariadne now chooses the papers itself: an LLM query planner expands the
-question into several LKM queries, the candidate papers are merged and ranked,
-and each candidate graph is probed. Empty or conclusion-less graphs are skipped
-before `paper2ir` starts. The full audit is written to
+question into several LKM queries, independent indexes cross-check the
+candidate papers, and each candidate graph is probed. Empty or conclusion-less
+graphs are skipped before `paper2ir` starts. The full audit is written to
 `01_retrieval/selection.json`.
 
 Preview first without spending anything:
@@ -266,6 +266,8 @@ Notes:
 - `--no-fulltext` skips arXiv PDF download/parsing and uses graph-derived text.
 - `--no-query-planner` uses only deterministic fallback queries.
 - `--queries N` / `--candidate-limit N` tune search breadth and graph probing.
+- `--no-cross-check` skips the independent-source verification; `--external-discovery`
+  lets papers that several sources agree on but LKM missed enter the pool.
 - `--papers papers.json` replaces automatic retrieval with a local spec (see
   [Offline paper specs](#offline-paper-specs)).
 
@@ -279,39 +281,77 @@ Live mode does not ask you to choose papers. The retrieval stage is:
    included as fallbacks.
 2. **Search broadly** — run up to `retrieval.queries` hybrid LKM searches
    (`conclusion,abstract` scopes) and merge papers by LKM id.
-3. **Rank candidates** — combine multi-query hits, LKM rerank scores, a cheap
-   lexical topic relevance score, and (after probing) graph size.
-4. **Probe graphs** — fetch each candidate's paper graph. Empty graphs,
+3. **Cross-check sources** — send the first two planned queries to OpenAlex,
+   Crossref, arXiv, and Semantic Scholar, then record which independent indexes
+   resolve each candidate by DOI, arXiv id, or near-identical title
+   (`corroboration`). Candidates missing from the search results get a direct
+   DOI lookup (at most four). A 429, timeout, or malformed payload from one
+   source is recorded as "unavailable" and never stops retrieval.
+4. **Rank candidates** — combine multi-query hits, LKM rerank scores, a cheap
+   lexical topic relevance score, independent-source agreement, and (after
+   probing) graph size.
+5. **Probe graphs** — fetch each candidate's paper graph. Empty graphs,
    graphs with no conclusion nodes, and very thin graphs are skipped. If the
    first pass does not yield enough usable papers, Ariadne extends the probe
    instead of failing.
-5. **Build missing graphs** — when a paper has no native LKM graph but an
-   arXiv/DOI PDF source, `bohr lkm extract` can build one
-   (`--format graph`). Extraction costs 1.00 CNY per paper (0.10 CNY cache
-   hit) and is capped by `retrieval.max_extractions` (default 3); disable it
-   with `--no-lkm-extract`.
-6. **Select and audit** — choose the best graph-backed papers, fill up to
-   `--top-k` from the remaining candidates, then write
-   `01_retrieval/selection.json` with every query, candidate, graph probe,
-   skip reason, relevance score, extraction task, and the final selection.
+6. **Build missing graphs** — when a paper has no native LKM graph, Ariadne
+   resolves a PDF through arXiv, DOI landing pages (`citation_pdf_url`),
+   OpenAlex, Unpaywall, Semantic Scholar, Crossref, and MDPI's CDN. It
+   downloads the PDF first, then runs up to `retrieval.max_extractions`
+   `bohr lkm extract` jobs in parallel (3 workers). Closed-access PDFs and
+   PDFs over LKM's 50-page limit are recorded as skipped instead of consuming
+   the budget. Extraction costs 1.00 CNY per paper (0.10 CNY cache hit);
+   `--no-lkm-extract` disables the step.
+7. **Select and audit** — prefer graph-backed, relevant papers confirmed by
+   `retrieval.min_corroboration` independent sources; fall back to
+   relevance-only, then to all graph-backed papers if too few are confirmed.
+   Then write `01_retrieval/selection.json` with every query, candidate,
+   cross-check result, graph probe, skip reason, relevance score, extraction
+   task, and the final selection.
 
-The result is deterministic enough to audit and robust to LKM's real-world
-gaps: many papers are indexed but have no extractable graph. `--papers ...`
-still bypasses this entire path when you already know the corpus.
+### Multi-source cross-validation
+
+LKM is the only source of paper graphs, but a single index both misses papers
+and occasionally misattributes metadata. Ariadne therefore treats LKM as the
+**primary index** and OpenAlex, Crossref, arXiv, and Semantic Scholar as
+**independent witnesses**: confirmed candidates rank and select higher. The
+default `retrieval.min_corroboration = 1` means "LKM plus at least one
+independent source"; set it to 2 to require two independent confirmations.
+
+- Per-candidate agreement is written to `selection.json` under
+  `cross_check`, summarised in `01_retrieval/sources.json`, and kept raw per
+  source in `01_retrieval/sources/<source>.json`.
+- `--no-cross-check` or `retrieval.cross_check=false` disables the step for
+  offline or restricted networks. `retrieval.cross_check_sources` selects the
+  participating sources, e.g. `openalex,crossref`.
+- `--external-discovery` (`retrieval.external_discovery`) adds papers that at
+  least two independent sources agree on but LKM missed. They have no native
+  LKM graph, so they follow the same PDF → `bohr lkm extract` path and count
+  against `retrieval.max_extractions`, which can add extraction cost.
+- These metadata APIs are free and read-only, so cross-checking adds no LKM
+  or model charges. Semantic Scholar rate-limits anonymous traffic; set
+  `S2_API_KEY` to raise its quota. Ariadne only sends the first two queries.
+
+`--papers ...` still bypasses both automatic retrieval and cross-validation
+when you already know the corpus.
 
 To tune retrieval without editing code:
 
 ```bash
 ./ariadne/run.sh ask "..." --queries 5 --candidate-limit 16
 ./ariadne/run.sh ask "..." --no-query-planner   # deterministic queries only
+./ariadne/run.sh ask "..." --no-cross-check     # disable independent checks
+./ariadne/run.sh ask "..." --external-discovery # recover papers LKM missed
 ./ariadne/run.sh config set retrieval.min_relevance 0.2
+./ariadne/run.sh config set retrieval.min_corroboration 2
 ```
 
 `selection.json` is the first file to inspect when the selected corpus looks
 wrong. `queries.json` shows the plan; `candidates.json` shows the ranked pool;
-`search_raw_*.json` keeps each LKM response; `extract/*/submit.json` and
+`search_raw_*.json` keeps each LKM response; `sources.json` records what each
+independent source returned and confirmed; `extract/*/submit.json` and
 `result.json` keep the LKM extraction audit. Selection fills up to `--top-k`:
-relevance is a preference, not a hard cap.
+relevance and independent confirmation are preferences, not hard caps.
 
 ## Configuration
 
@@ -402,7 +442,12 @@ Supported keys:
 | `retrieval.min_graph_nodes` | reject graphs below this node count (default 3) |
 | `retrieval.min_relevance` | lexical topic gate for preferred papers (default 0.2) |
 | `retrieval.use_lkm_extract` | build missing graphs with `bohr lkm extract` (default true) |
-| `retrieval.max_extractions` | max papers to extract per run (default 3, 0 disables) |
+| `retrieval.max_extractions` | max papers to extract per run (default 5, 0 disables) |
+| `retrieval.cross_check` | verify candidates against independent indexes (default true) |
+| `retrieval.cross_check_sources` | comma-separated sources (default all four) |
+| `retrieval.min_corroboration` | independent sources needed to prefer a paper (default 1, 0 disables the gate) |
+| `retrieval.external_discovery` | add multi-source papers missed by LKM (default false) |
+| `retrieval.external_candidates` | max external papers added per run (default 4) |
 
 ### Environment variables
 
@@ -418,6 +463,7 @@ Supported keys:
 | `ARIADNE_AUTO_APPROVE_SPEND` | `1` / `true` to approve billable calls |
 | `ARIADNE_PAYMENT_SOURCE` | `photon` or `balance` |
 | `ARIADNE_PYTHON` | interpreter for Ariadne and its subprocesses |
+| `S2_API_KEY` | optional Semantic Scholar key for higher cross-check rate limits |
 
 Environment variables win over the config file, so CI does not need a config
 file:
@@ -499,6 +545,9 @@ when your venv is not named `.venv`:
 | `ask ... --no-query-planner` | disable the LLM planner; use fallback queries |
 | `ask ... --no-lkm-extract` | do not build graphs with `bohr lkm extract` |
 | `ask ... --max-extractions N` | cap LKM graph extractions for this run |
+| `ask ... --no-cross-check` | skip independent-source verification |
+| `ask ... --min-corroboration N` | independent sources needed to prefer a paper |
+| `ask ... --external-discovery` | add papers multiple sources found but LKM missed |
 | `ask ... --yes` | approve billable LKM calls for this run |
 | `ask ... --no-fulltext` | skip PDF parsing; use graph-derived text |
 | `demo` | offline aircraft example |
@@ -535,8 +584,9 @@ run root.
 For a full run, intermediate stages are kept:
 
 ```text
-01_retrieval/   queries.json, candidates.json, selection.json,
-                search_raw_*.json, extract/<paper>/submit.json|result.json,
+01_retrieval/   queries.json, candidates.json, selection.json, sources.json,
+                sources/<source>.json, search_raw_*.json,
+                extract/<paper>/submit.json|result.json,
                 per-paper graph.json + ocr.md
 02_paper2ir/    run-local clean_claims copy, claims_final.json per paper
 03_single/      Gaia IR packages, formalization.json, knowledge.index.json
@@ -551,7 +601,7 @@ failed paper2ir step does not contaminate the next run.
 
 | Stage | What it does | Implementation |
 | --- | --- | --- |
-| `01_retrieval` | plan multiple LKM queries, merge/rank candidates, probe graphs, skip empty or conclusion-less papers, then fetch full text when possible | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
+| `01_retrieval` | plan multiple LKM queries, merge/rank candidates, cross-check them against independent indexes, probe graphs, skip empty or conclusion-less papers, then fetch full text when possible | [`ariadne/retrieval.py`](ariadne/retrieval.py), [`ariadne/sources.py`](ariadne/sources.py) |
 | `02_paper2ir` | 14-step paper2ir pipeline: LKM graph + text → `claims_final.json` | [`pipelines/clean_claims`](../pipelines/clean_claims/) from a run-local copy |
 | `03_single` | maintained single-paper pipeline: claims → `gaia.ir.json`, `formalization.json`, `knowledge.index.json` | [`pipelines/single_paper`](../pipelines/single_paper/) + harness |
 | `04_merge` | merge paper packages into one domain graph, with K conclusions and Step 6 answer roots/links | [`pipelines/merge/pipeline.question.json`](../pipelines/merge/pipeline.question.json) |
@@ -646,8 +696,8 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 | [`pipelines/single_paper/`](../pipelines/single_paper/) | claims → per-paper Gaia IR |
 | [`pipelines/merge/`](../pipelines/merge/) | many packages → domain graph + question layer |
 | [`weekly_reports/export_single_artifacts.py`](../weekly_reports/export_single_artifacts.py) | export single-run artifacts for merge |
-| [`outputs/question_domain_aircraft/`](../outputs/question_domain_aircraft/) | frozen aircraft demo dataset |
-| [`outputs/physics_domain/reviewed/`](../outputs/physics_domain/reviewed/) | reviewed physics example graph |
+| [`outputs/aircraft/final/`](../outputs/aircraft/final/) | frozen aircraft demo dataset |
+| [`outputs/physics/final/`](../outputs/physics/final/) | reviewed physics example graph |
 
 ## Status and limits
 
@@ -690,8 +740,9 @@ A two-paper automatic run makes up to `retrieval.queries` search calls plus
 graph probes (first pass up to `retrieval.candidate_limit`, extended only if
 too few graphs are usable), before the LLM pipeline. Missing graphs add up to
 `retrieval.max_extractions` **1.00 CNY** extraction calls (0.10 CNY on a cache
-hit). Use `--dry-run` to see the upper-bound plan and `--no-fulltext` to skip
-PDF parsing.
+hit). Cross-checking calls only free metadata APIs and adds no LKM or model
+charges; external-discovery papers count against the extraction budget. Use
+`--dry-run` to see the upper-bound plan and `--no-fulltext` to skip PDF parsing.
 
 ## License
 

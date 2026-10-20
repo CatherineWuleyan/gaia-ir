@@ -70,22 +70,22 @@ cd /Users/catherinewu/Documents/gaia-ir
 # 1) 对已有图做 edge-role 分类；--rules-only 不调用 LLM
 python3 pipelines/merge/pipeline_merge_question/edge_role_audit.py \
   --rules-only \
-  --out outputs/question_domain_aircraft/edge_roles.json
+  --out outputs/aircraft/final/edge_roles.json
 
 # 2) 补回 Step 4 丢弃的 typed display links（本次 15 条）
 python3 pipelines/merge/pipeline_merge_question/build_typed_view.py \
-  --view weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json \
-  --step3 outputs/aircraft_domain_merge/run_20261013T093612Z_c7fc9087/artifacts/blobs/artifact_42958528016f4cbe972f8675b327ee44.json \
-  --roles outputs/question_domain_aircraft/edge_roles.json \
-  --out-view outputs/question_domain_aircraft/domain_view_typed.json \
-  --out-roles outputs/question_domain_aircraft/edge_roles_typed.json
+  --view outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json \
+  --step3 outputs/aircraft/versions/02-native-311-2026-10-13/artifacts/blobs/artifact_42958528016f4cbe972f8675b327ee44.json \
+  --roles outputs/aircraft/final/edge_roles.json \
+  --out-view outputs/aircraft/final/domain_view_typed.json \
+  --out-roles outputs/aircraft/final/edge_roles_typed.json
 
 # 3) 跑回答层（fixture 可离线重放；真实 LLM 时去掉 --fixture）
 python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
-  --view outputs/question_domain_aircraft/domain_view_typed.json \
-  --edge-roles outputs/question_domain_aircraft/edge_roles_typed.json \
-  --fixture outputs/question_domain_aircraft/answer_fixture.json \
-  --out outputs/question_domain_aircraft
+  --view outputs/aircraft/final/domain_view_typed.json \
+  --edge-roles outputs/aircraft/final/edge_roles_typed.json \
+  --fixture outputs/aircraft/final/answer_fixture.json \
+  --out outputs/aircraft/final
 ```
 
 默认问题：
@@ -101,15 +101,15 @@ LLM key 从 `agent/.env` 读取（与 Step 3 相同的 `_post_json`），可通�
 
 ```bash
 python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
-  --view weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json \
-  --fixture outputs/question_domain_aircraft/answer_fixture.json \
-  --out outputs/question_domain_aircraft_replay
+  --view outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json \
+  --fixture outputs/aircraft/final/answer_fixture.json \
+  --out outputs/aircraft/final_replay
 ```
 
 输出：
 
 ```text
-outputs/question_domain_aircraft/
+outputs/aircraft/final/
   answer_layer.json           # roots / answer edges / typed chains / exploratory paths
   domain_view_question.json   # 原 view + roots + answer edges + top-level answer_layer
   domain_viewer_question.html # 自包含 viewer
@@ -165,10 +165,10 @@ python3 pipelines/merge/pipeline_merge_question/render_question_viewer.py \
 - 8 篇论文被直接支持触及；
 - 本轮回答层复用 fixture，未新增根/连接 LLM 调用；edge role 为规则分类。
 
-详细评估见 `outputs/question_domain_aircraft/PIPELINE_EVALUATION.md` 和
+详细评估见 `outputs/aircraft/final/PIPELINE_EVALUATION.md` 和
 `evaluation.md`；逐根典型链与可靠性分级见
-`outputs/question_domain_aircraft/CHAIN_RELIABILITY.md`；全部多步链见
-`outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md`。
+`outputs/aircraft/final/CHAIN_RELIABILITY.md`；全部多步链见
+`outputs/aircraft/final/ALL_CHAINS_TO_ROOTS.md`。
 
 ## 6. 已知限制
 
