@@ -1,78 +1,116 @@
 # Gaia IR
 
-Gaia IR turns paper evidence into a typed, traceable domain graph. The repository is frozen around the verified five-paper **`pipeline_merge_v9`** result.
+[English](README.md) · [简体中文](README.zh-CN.md)
 
-## Final repository surface
+Turn paper claims into Gaia IR packages, then merge those packages into a cross-paper reasoning graph. This repository contains the runtime, extraction stages, pipeline configurations, and their tests. For question-led retrieval and the end-to-end CLI, use [Ariadne](https://github.com/CatherineWuleyan/ariadne).
 
-| Path | Purpose |
-|---|---|
-| [`agent/`](agent/) | Harness runtime, artifact store, checkpoints, validation, provenance, and generic Viewer source. |
-| [`pipelines/single_paper/`](pipelines/single_paper/) | Maintained single-paper pipeline, latest checked Step 1–5 configuration. |
-| [`pipelines/merge/`](pipelines/merge/) | Stepwise merge configuration and the checked five-paper v9 configuration. |
-| [`pipelines/clean_claims/`](pipelines/clean_claims/) | paper2ir stage: paper graph → claims, used by Ariadne. |
-| [`ariadne/`](ariadne/) | Question-led product layer: configuration, retrieval, orchestration, answer layer, viewer. |
-| [`docs/gaia-ir/`](docs/gaia-ir/) | Contracts and architecture notes needed to interpret Gaia IR artifacts. |
-| [`example/viewer.html`](example/viewer.html) | Self-contained Viewer for the frozen v9 graph. |
-| [`example/`](example/) | Frozen v9 `view_model.json` and `domain_graph.html`. |
-| [`run_pipeline.sh`](run_pipeline.sh) | Repository entry point. |
+## Install
 
-`pipelines/clean_claims/` is the paper2ir stage required by Ariadne. The standalone
-`paper2ir` repository remains a separate, intentionally untouched project.
-
-## Ariadne
-
-[Ariadne](ariadne/) 是问题驱动的端到端产品层：输入一个领域问题，检索 LKM 论文，
-依次跑 paper2ir、single、merge，最后生成候选答案 root、类型化推理链和自包含的
-问题图 HTML。它复用本仓库维护中的 pipeline，不另起一套实现。
-
-![Ariadne aircraft question graph](ariadne/docs/images/aircraft-question-graph.png)
+Python 3.11 or later is required. The compiler dependency is pinned to `gaia-lang==0.5.0a7`.
 
 ```bash
-./ariadne/run.sh config init     # 配置自己的 API key 和 Bohr 账户
-./ariadne/run.sh doctor
-./ariadne/run.sh demo            # 离线飞机示例，不需要 key
-./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --top-k 2 --yes
+git clone https://github.com/CatherineWuleyan/gaia-ir.git
+cd gaia-ir
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e agent
+
+export PYTHONPATH="$PWD/agent:$PWD/pipelines/single_paper:$PWD/pipelines/merge"
 ```
 
-文档：[English](ariadne/README.md) · [中文](ariadne/README.zh-CN.md)。
-示例：[Airplane](outputs/question_domain_aircraft/domain_viewer_question.html) ·
-[Physics](outputs/physics_domain/reviewed/domain_graph_full.reviewed.html)。
-
-## Run the merge pipeline
-
-The launcher reports the selected configuration, Git revision, worktree state, and imported module path:
+Live extraction and reasoning stages need a model key. The tested client uses an OpenAI-compatible endpoint:
 
 ```bash
-./run_pipeline.sh list
-./run_pipeline.sh single-v2 /absolute/path/to/pipelines/single_paper/pipeline.step1-5.json
-./run_pipeline.sh merge /absolute/path/to/pipelines/merge/pipeline.test1-5.json
+export DEEPSEEK_API_KEY="your-key"
+export DEEPSEEK_BASE_URL="https://api.deepseek.com/v1"
+export DEEPSEEK_MODEL="deepseek-v4-flash"
 ```
 
-The published v9 artifacts are already available for inspection:
+## Run
 
-- [Open the v9 Viewer](example/viewer.html)
-- [Inspect the projected view model](example/view_model.json)
-- [Inspect the generated domain graph](example/domain_graph.html)
+The supported pipeline configurations are `pipelines/single_paper/pipeline.json`, `pipelines/merge/pipeline.json`, and `pipelines/merge/pipeline.question.json`. Stage-only configurations live under test fixtures.
 
-The generic Viewer template is [`agent/pipeline_harness/view/viewer.html`](agent/pipeline_harness/view/viewer.html). The Viewer only projects stored artifacts; it is not a second source of truth.
+### Single paper
 
-## Verified `pipeline_merge_v9`
+Prepare an input manifest with paths relative to the manifest itself:
 
-| Metric | Result |
-|---|---:|
-| Graph nodes | 318 |
-| Graph edges | 257 |
-| Integration-delta edges | 74 |
-| Delta composition | 62 deduction · 10 abduction · 2 contradiction |
-| Conclusion structure | 1 tree covering 8 L1 conclusions + 3 independent L1 conclusions |
-
-The result is a verified forest and retains the expected `GRAPH_DISCONNECTED` warning for three independent conclusions.
-
-## Validation
+```json
+{
+  "artifacts": [
+    {"path": "paper.md", "kind": "source.paper_text", "media_type": "text/markdown"},
+    {"path": "claims_final.json", "kind": "source.claims_final", "media_type": "application/json"}
+  ]
+}
+```
 
 ```bash
-PYTHONPATH=agent .venv-gaia-a7/bin/python \
-  -m unittest discover -s agent/tests -p 'test_*.py'
+./run_pipeline.sh single-v2 /absolute/path/to/inputs.json
 ```
 
-Generated runs, caches, intermediate datasets, and local secrets remain outside the committed final surface. The two maintained workflow sources are the single-paper pipeline and `pipeline_merge_v9`; older compatibility and batch-run wrappers are excluded.
+To extract claims from a paper graph first, place it at `pipelines/clean_claims/data/<paper-id>/graph.json` and run:
+
+```bash
+python pipelines/clean_claims/run_full_pipeline.py <paper-id>
+```
+
+### Merge papers
+
+Export each completed single-paper run:
+
+```bash
+python pipelines/single_paper/export_artifacts.py /path/to/run paper-id --out /path/to/packages
+```
+
+The exporter writes `gaia.ir.json`, `formalization.json`, and `knowledge.index.json` under `graph_single/<paper-id>/`. Create a merge input manifest listing these files for each paper, with artifact kinds `gaia.ir`, `formalization`, and `knowledge.index`.
+
+Set `scope.domain` and `scope.selection` in the first stage of `pipelines/merge/pipeline.json`; selection entries must match the packages' `namespace:name` identities. Then run:
+
+```bash
+./run_pipeline.sh merge /absolute/path/to/merge-inputs.json
+```
+
+For the question answer layer, configure the scope and question in `pipeline.question.json`, then pass that configuration to `pipeline_harness init --pipeline`.
+
+### Inspect or resume a run
+
+```bash
+python -m pipeline_harness status --run /path/to/run
+python -m pipeline_harness run --run /path/to/run
+python -m pipeline_harness view --run /path/to/run
+python -m pipeline_harness check --run /path/to/run
+```
+
+Open the generated `views/viewer.html` in a browser. Generated runs and local inputs are ignored by Git.
+
+## Offline check
+
+The built-in synthetic workflow checks the harness without model calls:
+
+```bash
+run_dir=$(python -m pipeline_harness init --pipeline synthetic --runs-root outputs/smoke)
+python -m pipeline_harness run --run "$run_dir"
+python -m pipeline_harness view --run "$run_dir"
+python -m pipeline_harness check --run "$run_dir"
+```
+
+## Tests
+
+With the environment and `PYTHONPATH` set as above:
+
+```bash
+python -m unittest discover -s agent/tests -p 'test_*.py'
+python -m unittest discover -s pipelines/single_paper/tests -p 'test_*.py'
+python -m unittest discover -s pipelines/merge/tests -p 'test_*.py'
+```
+
+## Layout
+
+```text
+agent/                         Harness, artifact store, compiler integration, viewer, tests
+pipelines/clean_claims/         Paper graph → extracted claims
+pipelines/single_paper/         Claims → Gaia IR package; package exporter
+pipelines/merge/                Cross-paper merge and optional answer layer
+requirements.txt               Runtime dependencies
+run_pipeline.sh                Single-paper and merge entry point
+```

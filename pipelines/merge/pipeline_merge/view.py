@@ -42,6 +42,8 @@ from pipeline_harness.models import ArtifactRef, JSONDict
 from pipeline_harness.store import RunStore
 from pipeline_harness.view.model import ViewDocument
 
+from .relations import reconcile_operator_types, reconcile_rendered_arms
+
 _INTEGRATION_STAGE = "step4_formalize_integration"
 _STEP = 4
 _DELTA_LAYER = "weakpoints"
@@ -286,6 +288,8 @@ class MergeViewAdapter:
                     relation_edge(premise, conclusion, strategy_type, _PAPER_EDGE_LAYER)
 
         # 4. Integration delta: candidate nodes + new cross-paper edges.
+        type_conflicts: list[JSONDict] = []
+        arm_conflicts: list[JSONDict] = []
         if integration_doc is not None:
             for ref in artifacts:
                 if ref.kind == "formalization" and ref.producer_stage == _INTEGRATION_STAGE:
@@ -310,7 +314,15 @@ class MergeViewAdapter:
                 add_node(f"knowledge:{knowledge_id}", node_kind, content,
                          knowledge.get("type", "claim"), _DELTA_LAYER, knowledge_id,
                          original=knowledge_id.split("::")[-1], level=level, metadata=metadata)
-            for operator in integration_doc.get("graph", {}).get("operators", []):
+            # An operand set the gate typed more than once has no decided relation,
+            # so it is not drawn at all.  This also protects a stale artifact that
+            # was produced before Step 3/4 reconciled the types: rendering it must
+            # not turn two conflicting verdicts into two parallel edges with
+            # mutually exclusive `semantic_type` values.
+            integration_operators, type_conflicts = reconcile_operator_types(
+                integration_doc.get("graph", {}).get("operators", []))
+            arms: list[tuple[str, str, str]] = []
+            for operator in integration_operators:
                 variables = [str(v) for v in operator.get("variables") or []]
                 op_type = str(operator.get("type") or "")
                 if len(variables) < 2 or not op_type:
@@ -320,7 +332,13 @@ class MergeViewAdapter:
                 # all, so they looked floating).  A k-ary operator is drawn as a
                 # star from its first operand, the only shape this viewer has.
                 for operand in variables[1:]:
-                    relation_edge(variables[0], operand, op_type, _DELTA_LAYER)
+                    arms.append((variables[0], operand, op_type))
+            # The star rendering collapses a k-ary operand set onto pairwise arms,
+            # so two *different* operand sets can land on one drawn pair with
+            # mutually exclusive labels; that pair is dropped for the same reason.
+            arms, arm_conflicts = reconcile_rendered_arms(arms)
+            for source, target, label in arms:
+                relation_edge(source, target, label, _DELTA_LAYER)
             for strategy in integration_doc.get("graph", {}).get("strategies", []):
                 conclusion = strategy.get("conclusion")
                 premises = [str(p) for p in strategy.get("premises") or []]
@@ -363,6 +381,10 @@ class MergeViewAdapter:
                 "delta_node_count": sum(1 for node in nodes if node["layer"] == _DELTA_LAYER),
                 "integration_edge_count": sum(1 for edge in edges if edge["layer"] == _DELTA_LAYER),
                 "unused_context_conclusions_dropped": len(dropped),
+                "operator_type_conflict_count": len(type_conflicts),
+                "operator_type_conflicts": type_conflicts[:20],
+                "rendered_edge_conflict_count": len(arm_conflicts),
+                "rendered_edge_conflicts": arm_conflicts[:20],
                 "label_scheme": scheme.legend(),
             },
             stages=[{"number": _STEP, "name": "integration", "validation_status": "passed"}],

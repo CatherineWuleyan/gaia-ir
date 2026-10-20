@@ -31,9 +31,7 @@ for extra in (REPO, REPO / "agent", REPO / "pipelines" / "single_paper", REPO / 
 from pipeline_merge_question import question_layer as ql  # noqa: E402
 from pipeline_merge_question.step3 import _post_json  # noqa: E402
 
-DEFAULT_VIEW = REPO / "weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json"
-DEFAULT_OUT = REPO / "outputs/question_domain_aircraft"
-DEFAULT_EDGE_ROLES = REPO / "outputs/question_domain_aircraft/edge_roles.json"
+DEFAULT_OUT = REPO / "outputs/question"
 DEFAULT_QUESTION_ZH = "怎么完成飞机的仿真设计？"
 DEFAULT_QUESTION_EN = "How can aircraft simulation design be carried out?"
 DEFAULT_DOMAIN = "aircraft simulation design (conceptual design, flight dynamics, aerodynamic modeling, MDO, HIL validation)"
@@ -75,22 +73,22 @@ def render_viewer(template: Path, view: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--view", type=Path, default=DEFAULT_VIEW)
+    parser.add_argument("--view", type=Path, required=True)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--question-zh", default=DEFAULT_QUESTION_ZH)
     parser.add_argument("--question-en", default=DEFAULT_QUESTION_EN)
     parser.add_argument("--domain", default=DEFAULT_DOMAIN)
     parser.add_argument("--max-roots", type=int, default=5)
     parser.add_argument("--fixture", type=Path, help="offline roots/links fixture; skips LLM calls")
-    parser.add_argument("--edge-roles", type=Path, default=DEFAULT_EDGE_ROLES,
-                        help="edge_role_audit output; only chainable/deduction roles form support chains")
+    parser.add_argument("--edge-roles", type=Path,
+                        help="typed edge roles; only chainable/deduction roles form support chains")
     parser.add_argument("--template", type=Path, default=HERE / "viewer_question.html")
     parser.add_argument("--no-viewer", action="store_true")
     args = parser.parse_args()
 
     view = read_json(args.view)
     edge_roles = None
-    if args.edge_roles.is_file():
+    if args.edge_roles and args.edge_roles.is_file():
         payload = read_json(args.edge_roles)
         edge_roles = payload.get("edges") if isinstance(payload.get("edges"), list) else payload
         print(f"edge roles: {len(edge_roles)} from {args.edge_roles}")

@@ -1,69 +1,22 @@
-# macOS metadata
-.DS_Store
-**/.DS_Store
-
-# Local secrets and environment overrides
+# Credentials and local configuration
 .env
 .env.*
-!.env.example
 *.pem
 *.key
-
-# Python caches and virtual environments
+config.local.json
+# Runtime data and generated outputs
+/outputs/
+/data/
+/dist/
+**/claim_cleaner/data/
+pipelines/clean_claims/data/
+# Environments, build products, and caches
+.venv*/
+venv/
 __pycache__/
 *.py[cod]
-.venv/
-venv/
+*.egg-info/
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-**/generated/
-**/temp/
-*.bak_*
-
-# JavaScript dependencies and build caches
+.DS_Store
 node_modules/
-.npm/
-.yarn/
-.pnpm-store/
-
-# Editor and temporary files
-.idea/
-.vscode/
-*.swp
-*.tmp
-*~
-
-# Generated research runs and local datasets
-/data/
-/outputs/
-/rerun_inputs/
-/converted_viewers/
-/report_assets/
-/merge_domain_graph/
-/bohr/**/runs/
-**/claim_cleaner/data/
-*.ndjson
-
-# Local workspace metadata and editorial scratch files
-/.obsidian/
-/archive/working-notes/
-/archive/assets/
-/archive/editor-metadata/
-/archive/runs/
-/archive/working-outputs/
-
-# Historical and generated material excluded from the frozen repository surface
-/archive/
-/bohr/
-/examples/
-# paper2ir code is part of the public Ariadne pipeline; only its local corpus
-# and generated runs stay out of Git.
-/pipelines/clean_claims/data/
-/docs/pipelines/
-/docs/validation/
-
-# Ariadne release artifacts (archives are GitHub release assets)
-/dist/ariadne-*/
-/dist/*.tar.gz
-/dist/*.zip
+*.log

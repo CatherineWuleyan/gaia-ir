@@ -42,7 +42,7 @@ class ViewTests(unittest.TestCase):
             / "view"
             / "viewer.html"
         ).read_text(encoding="utf-8")
-        self.assertIn("这是 Viewer 模板", template)
+        self.assertIn("This is the Viewer template", template)
         self.assertIn("pipeline_harness view", template)
         self.assertIn('<option value="standard" selected>Standard</option>', template)
         self.assertNotIn('<option value="audit">', template)
@@ -110,10 +110,10 @@ class ViewTests(unittest.TestCase):
         self.assertNotIn("k:__equivalence_result_deadbeef", surviving)
         self.assertEqual(["edge:a:op"], [edge["id"] for edge in repaired.edges])
         self.assertEqual(["search:a"], [entry["id"] for entry in repaired.search_documents])
-        # A public claim with no reasoning edge is kept and flagged, never hidden.
-        self.assertIn("k:b", surviving)
-        self.assertIn("k:b", report["standalone_claim_ids"])
-        self.assertTrue(next(node for node in repaired.nodes if node["id"] == "k:b")["standalone_claim"])
+        # Every isolated node, including a public claim, is hidden from the
+        # rendered projection.
+        self.assertNotIn("k:b", surviving)
+        self.assertEqual([], report["standalone_claim_ids"])
         ids = {node["id"] for node in repaired.nodes}
         self.assertTrue(all(edge["source"] in ids and edge["target"] in ids for edge in repaired.edges))
 

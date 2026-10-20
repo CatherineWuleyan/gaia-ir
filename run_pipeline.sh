@@ -9,7 +9,14 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 # The official compiler contract is tied to Gaia 0.5.0a7. Prefer the
 # repository-local environment so an activated/older Gaia checkout cannot
 # silently change compiler semantics.
-PYTHON_BIN="${PYTHON_BIN:-$ROOT/.venv-gaia-a7/bin/python}"
+PYTHON_BIN="${PYTHON_BIN:-$ROOT/.venv/bin/python}"
+# Both pipeline packages must be importable for both subcommands.  `merge` was
+# missing `pipelines/merge`, so the documented `./run_pipeline.sh merge ...`
+# entry point died in the preflight with
+# `ModuleNotFoundError: No module named 'pipeline_merge'` -- the merge plugin
+# spec is `pipeline_merge.step0:...`, which only resolves with that directory on
+# the path.  Keeping one variable means the two subcommands cannot drift again.
+HARNESS_PYTHONPATH="$ROOT/agent:$ROOT/pipelines/single_paper:$ROOT/pipelines/merge"
 
 usage() {
   cat <<'EOF'
@@ -22,9 +29,7 @@ Pipelines:
   single-v2  Pipeline Harness single-paper V2, canonical step1-5 config
   merge      Pipeline Merge step0-5, canonical integration config
 
-The step1/step2/step3/step4 JSON files are not top-level workflows here.
-They are partial/developer configurations and must not be initialized as a
-fresh run when the intention is to continue an existing run.
+Use pipeline_harness run --run <run-dir> to resume an existing run.
 EOF
 }
 
@@ -44,10 +49,10 @@ identity() {
 module_preflight() {
   [[ -x "$PYTHON_BIN" ]] || {
     echo "Gaia Python environment not found: $PYTHON_BIN" >&2
-    echo "Use $ROOT/.venv-gaia-a7 (Gaia 0.5.0a7), or set PYTHON_BIN explicitly to that environment." >&2
+    echo "Install requirements.txt into $ROOT/.venv (Gaia 0.5.0a7), or set PYTHON_BIN explicitly to that environment." >&2
     exit 2
   }
-  PYTHONPATH="$ROOT/agent:$ROOT/pipelines/single_paper" "$PYTHON_BIN" - <<'PY'
+  PYTHONPATH="$HARNESS_PYTHONPATH" "$PYTHON_BIN" - <<'PY'
 import sys
 import pipeline_harness
 import agent_pipeline_v2
@@ -68,10 +73,10 @@ run_harness() {
   identity "$name" "$config"
   module_preflight
   local run_dir
-  run_dir="$(PYTHONPATH="$ROOT/agent:$ROOT/pipelines/single_paper" "$PYTHON_BIN" -m pipeline_harness init \
+  run_dir="$(PYTHONPATH="$HARNESS_PYTHONPATH" "$PYTHON_BIN" -m pipeline_harness init \
     --pipeline "$config" --inputs "$manifest" --runs-root "$runs_root")"
   echo "run_dir=$run_dir"
-  PYTHONPATH="$ROOT/agent:$ROOT/pipelines/single_paper" "$PYTHON_BIN" -m pipeline_harness run --run "$run_dir"
+  PYTHONPATH="$HARNESS_PYTHONPATH" "$PYTHON_BIN" -m pipeline_harness run --run "$run_dir"
 }
 
 main() {
@@ -82,11 +87,11 @@ main() {
       ;;
     single-v2)
       [[ $# -ge 2 && $# -le 3 ]] || { usage >&2; exit 2; }
-      run_harness "single-v2" "$ROOT/pipelines/single_paper/pipeline.step1-5.json" "$2" "${3:-$ROOT/outputs/harness_runs}"
+      run_harness "single-v2" "$ROOT/pipelines/single_paper/pipeline.json" "$2" "${3:-$ROOT/outputs/harness_runs}"
       ;;
     merge)
       [[ $# -ge 2 && $# -le 3 ]] || { usage >&2; exit 2; }
-      run_harness "merge" "$ROOT/pipelines/merge/pipeline.step5.json" "$2" "${3:-$ROOT/outputs/merge_runs}"
+      run_harness "merge" "$ROOT/pipelines/merge/pipeline.json" "$2" "${3:-$ROOT/outputs/merge_runs}"
       ;;
     *)
       echo "unknown pipeline: $1" >&2
