@@ -19,6 +19,9 @@ from pipeline_harness.models import Finding, JSONDict
 from pipeline_harness.plugins import ArtifactDraft, StageContext, StageResult
 from pipeline_harness.store import atomic_write_json
 
+from .citation_seeds import CITATION_KIND, citation_pairs, seed_candidates
+from .claim_hygiene import apply_hygiene, shares_anchor
+from .relations import reconcile_operator_types
 from .step1 import Step1InputError, _read_json, validate_step1_inputs
 from pipelines.single_paper.agent_pipeline_v2.step2 import _load_deepseek_env, _response_content
 
@@ -31,10 +34,27 @@ OPERATOR_TYPES = {"equivalence", "contradiction", "negation", "conjunction", "di
 # `infer` is deliberately excluded here (it is the generic catch-all and was
 # dominating the delta); the domain-conclusion synthesis still emits one.
 WEAKPOINT_TYPES = {"deduction", "abduction", "analogy"}
+#: Cross-paper relation families for a graph built on faithful, condition-carrying
+#: claims.  ``infer`` is the generic directed relation; ``reproduces`` records an
+#: independent measurement of the same quantity (the strongest evidence a
+#: cross-paper graph can carry); ``bounds`` records a premise that constrains the
+#: range the conclusion may hold over; ``special_case`` records one proposition
+#: being an instance of the other.  They are opt-in because on abstracted claims
+#: the generic families dominate and say little.
+CROSS_PAPER_EXTRA_TYPES = frozenset({"infer", "reproduces", "bounds", "special_case"})
+#: A relation has to name what is shared and what follows.  These phrases mark an
+#: expression that only asserts topical relevance: measured on real claims, the
+#: judge produced "supports relevance of ..." links between a monolayer-on-graphene
+#: superlattice and a bulk polytype, which is vocabulary overlap, not an inference.
 _NON_RELATION_MARKERS = (
     "does not support", "do not support", "unrelated", "no logical connection",
     "no inferential relation", "relation is invalid", "not inferential",
     "inference is weak", "weak because", "not universally",
+    "supports relevance", "support relevance", "is relevant to", "are relevant to",
+    "relevant to", "relevance of", "sheds light", "provides context", "provide context",
+    "supports treating", "directional support", "supports the importance",
+    "is consistent with and supports", "broadly consistent with", "is in line with",
+    "same topic", "topical", "both concern", "both are about",
 )
 GATE_BATCH_SIZE = 20
 # A hypothesis with at least this many observations is compressed into one
@@ -292,6 +312,73 @@ def _retrieval_prompt(anchor: JSONDict, candidates: list[JSONDict]) -> str:
     )
 
 
+def _citation_seed_candidates(context: StageContext, records: Mapping[str, JSONDict]) -> list[JSONDict]:
+    """Claim pairs nominated by inter-paper citations in the frozen corpus."""
+    payloads: list[Any] = []
+    for ref in context.find_all(kind=CITATION_KIND):
+        try:
+            payloads.append(_read_json(context, ref))
+        except (OSError, json.JSONDecodeError, Step1InputError):
+            continue
+    pairs = citation_pairs(payloads)
+    if not pairs:
+        return []
+    out: list[JSONDict] = []
+    for item in seed_candidates(records, pairs):
+        left, right = item["source_qids"]
+        out.append({
+            "candidate_id": _stable_id("candidate", [str(left), str(right)]),
+            "source_qids": [str(left), str(right)],
+            "propositions": item["propositions"],
+            "hint": item["hint"],
+        })
+    return out
+
+
+#: Per-anchor cap on candidates sent in one retrieval prompt.  Without it the
+#: prompt carries every other-package claim: measured on an 18-paper corpus that
+#: is 479 candidates and 151,761 characters (~38k tokens) in a single call, 500
+#: such calls per run, which risks the context window and costs ~19M input
+#: tokens for retrieval alone.  Ranking by shared vocabulary and keeping the best
+#: few per package bounds the prompt while still covering every other paper.
+RETRIEVAL_CANDIDATE_CAP = int(os.environ.get("GAIA_MERGE_RETRIEVAL_CANDIDATES", "40"))
+
+
+def _rank_candidates(
+    anchor: Mapping[str, Any],
+    by_package: Mapping[str, list[str]],
+    records: Mapping[str, JSONDict],
+    *,
+    cap: int = RETRIEVAL_CANDIDATE_CAP,
+) -> list[str]:
+    """The anchor's best candidates, with every other package represented.
+
+    Each other package contributes its best few claims by shared vocabulary, so a
+    small or lexically distant paper is not crowded out by a large one.  The order
+    is deterministic: overlap descending, then qid.
+    """
+    from .claim_hygiene import content_tokens
+
+    anchor_tokens = content_tokens(anchor["content"])
+    others = [p for p in sorted(by_package) if p != str(anchor["package"])]
+    if not others:
+        return []
+    per_package = max(1, cap // len(others))
+    picked: list[str] = []
+    for package in others:
+        ranked = sorted(
+            by_package[package],
+            key=lambda qid: (-len(anchor_tokens & content_tokens(records[qid]["content"])), qid),
+        )
+        picked.extend(ranked[:per_package])
+    # If the cap still has room (few packages), fill with the next-best overall.
+    if len(picked) < cap:
+        rest = [q for p in others for q in by_package[p] if q not in set(picked)]
+        rest.sort(key=lambda qid: (-len(anchor_tokens & content_tokens(records[qid]["content"])), qid))
+        picked.extend(rest[: cap - len(picked)])
+    return picked
+
+
 def _retrieve_related(records: Mapping[str, JSONDict], max_workers: int | None = None) -> list[JSONDict]:
     """Retrieve plausible cross-Package claim pairs with the LLM.
 
@@ -355,8 +442,8 @@ def _retrieve_related(records: Mapping[str, JSONDict], max_workers: int | None =
 
     jobs: list[tuple[str, list[str]]] = []
     for anchor_package in packages:
-        candidate_qids = [q for other in packages if other != anchor_package for q in by_package[other]]
-        jobs.extend((anchor_qid, candidate_qids) for anchor_qid in by_package[anchor_package])
+        for anchor_qid in by_package[anchor_package]:
+            jobs.append((anchor_qid, _rank_candidates(records[anchor_qid], by_package, records)))
     progress = _Progress("bootstrap retrieval anchors", len(jobs), every=50)
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         list(pool.map(lambda job: (retrieve(*job), progress.tick()), jobs))
@@ -373,6 +460,33 @@ def _retry_delay(exc: Exception, attempt: int) -> float:
         except (TypeError, ValueError):
             return min(_RATE_LIMIT_BASE_DELAY * (2 ** attempt), _RATE_LIMIT_MAX_DELAY)
     return float(2 ** attempt)
+
+
+def _record_usage(envelope: Mapping[str, Any], model: str) -> None:
+    """Append this call's token usage to GAIA_USAGE_LOG when the env var is set.
+
+    The repository does not persist usage, so cost could only be estimated from
+    prompt sizes.  With ``GAIA_USAGE_LOG`` pointed at a file, every call appends
+    one JSON line and the bill can be computed directly from the official prices.
+    """
+    path = os.environ.get("GAIA_USAGE_LOG")
+    if not path:
+        return
+    usage = envelope.get("usage") if isinstance(envelope, Mapping) else None
+    if not isinstance(usage, Mapping):
+        return
+    detail = usage.get("prompt_tokens_details")
+    cached = detail.get("cached_tokens") if isinstance(detail, Mapping) else None
+    try:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps({
+                "stage": "merge_step3", "model": model,
+                "prompt_tokens": usage.get("prompt_tokens"),
+                "completion_tokens": usage.get("completion_tokens"),
+                "cached_tokens": cached,
+            }, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 def _post_json(prompt: str) -> Any:
@@ -397,6 +511,7 @@ def _post_json(prompt: str) -> Any:
                 envelope = json.loads(raw)
             except json.JSONDecodeError as exc:
                 raise ValueError(f"DeepSeek returned non-JSON response: {raw[:200]!r}") from exc
+            _record_usage(envelope, model)
             return json.loads(_response_content(envelope))
         except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError,
                 IncompleteRead, ConnectionError) as exc:
@@ -458,23 +573,71 @@ def _prompt(kind: str, group_id: str, candidates: list[JSONDict]) -> str:
                        "it. A statement that qualifies, narrows or explains another is NOT a contradiction. A wording "
                        "difference is equivalence, never contradiction, and never both. If you cannot write the X / not-X "
                        "pair, it is not a contradiction: use conjunction when both simply hold, equivalence when they say "
-                       "the same thing.")
-        shape = '{"decisions":[{"candidate_id":"...","type":"...","variables":["qid"],"expression":"..."}]}'
+                       "the same thing.\n"
+                       "For every decision, \"variables\" must list that candidate's OWN source_qids, copied exactly "
+                       "from CANDIDATES. Never emit a placeholder such as \"qid\" or \"...\", and never emit an id that "
+                       "does not appear in CANDIDATES.")
+        shape = ('{"decisions":[{"candidate_id":"<the candidate_id being classified>",'
+                 '"type":"equivalence|contradiction|negation|conjunction|disjunction",'
+                 '"variables":["<that candidate\'s two source_qids, copied verbatim>"],'
+                 '"expression":"..."}]}')
     else:
-        instruction = ("Classify non-operator relations between the supplied candidates as deduction, abduction, analogy, or "
-                       "infer. Use only supplied IDs/content. Deduction needs every premise; analogy needs a supplied bridge "
+        instruction = ("Classify non-operator relations between the supplied candidates as deduction, abduction, analogy, "
+                       "infer, reproduces, bounds, or special_case.\n"
+                       "  reproduces: an INDEPENDENT measurement of the same quantity in a compatible setting, with a "
+                       "              stated value that agrees (name both values);\n"
+                       "  bounds:     the premise constrains the range the conclusion may hold over (say which range);\n"
+                       "  special_case: the premise is an instance of the conclusion, or vice versa (say which);\n"
+                       "  infer:      a directed relation that is clear and specific but is none of the above;\n"
+                       "  deduction / abduction / analogy as defined below. Use only supplied IDs/content. Deduction needs every premise; analogy needs a supplied bridge "
                        "claim; abduction must identify observation and hypothesis. Abduction may use several observation "
                        "premises, but at most one explicit alternative explanation; multiple alternatives must already be "
                        "represented by one supplied disjunction claim. Make the expression show which IDs are observations "
-                       "and which is the alternative. Emit a relation only when it is specific and defensible from the "
-                       "supplied content; being about the same topic or sharing vocabulary is NOT a relation -- omit it. Use "
-                       "infer only when the direction is clear but no stronger family fits; do not default to infer. Never "
-                       "propose a new conclusion here.")
+                       "and which is the alternative.\n"
+                       "An emitted relation must pass BOTH tests:\n"
+                       "  (a) NAME THE SHARED OBJECT: state the specific quantity, material, sample or mechanism that both "
+                       "      claims are about, and quote the value or condition each one attaches to it;\n"
+                       "  (b) NAME WHAT FOLLOWS: state the one assertion the premise adds about that shared object that the "
+                       "      conclusion needs.\n"
+                       "If the only thing the two claims share is a subject area, a material family or a method, there is no "
+                       "relation: omit it. Phrases such as 'supports relevance', 'is relevant to', 'is consistent with', "
+                       "'provides context' or 'agrees with the importance of' assert nothing and are rejected. A relation "
+                       "between results from DIFFERENT samples or polymorphs may still hold, but then the expression must "
+                       "say which quantity transfers and why. Use infer only when the direction is clear, the two claims "
+                       "share a named quantity or value, and no stronger family fits; do not default to infer, and never "
+                       "emit an infer whose expression does not satisfy (a) and (b). Never propose a new conclusion here.")
         shape = ('{"weakpoints":[{"candidate_id":"...","evidence_claim_ids":["..."],"target_claim_id":["..."],'
                  '"reasoning_type":"...","evidence_anchor_ids":[],"expression":"..."}]}')
     return ("You are a constrained scientific relation judge. Use ONLY this frozen Step 2 group; do not retrieve, read paper "
             "text, use outside knowledge, invent facts or IDs, or treat similarity as proof. Return JSON only. " + instruction +
             f" Output shape: {shape}\nGROUP={group_id}\nCANDIDATES={json.dumps(candidates, ensure_ascii=False, sort_keys=True)}")
+
+
+def _repair_operator_variables(
+    item: Mapping[str, Any],
+    by_candidate: Mapping[str, JSONDict],
+    records: Mapping[str, JSONDict],
+) -> JSONDict:
+    """Replace placeholder operands with the judged candidate's own qids.
+
+    Measured failure this repairs: the operator-type prompt showed
+    ``"variables":["qid"]`` as its output shape and the model copied the literal
+    string ``"qid"`` back, so every operator failed ``_validate_operator`` with
+    ``variables=["qid"]`` while the model had in fact typed the relation.  The
+    candidate id is still trustworthy -- it is checked against the allowed set --
+    so the operands can be recovered from the candidate that was judged.
+    """
+    repaired = dict(item)
+    variables = repaired.get("variables")
+    candidate = by_candidate.get(str(repaired.get("candidate_id")))
+    if candidate is None:
+        return repaired
+    source_qids = [str(q) for q in candidate.get("source_qids") or []]
+    if not source_qids:
+        return repaired
+    if not isinstance(variables, list) or any(str(v) not in records for v in variables):
+        repaired["variables"] = source_qids
+    return repaired
 
 
 def _validate_operator(item: Mapping[str, Any], records: Mapping[str, JSONDict], allowed: set[str]) -> JSONDict | None:
@@ -786,24 +949,41 @@ class Step3IdentifyStructuresPlugin:
     def _judge_candidates(
         candidates: list[JSONDict], group_id: str, records: Mapping[str, JSONDict],
         gate_kind: str = "group_gate",
+        weakpoint_types: frozenset[str] | set[str] | None = None,
     ) -> tuple[list[JSONDict], list[JSONDict], list[JSONDict]]:
         """Run the gate/type/weakpoint sequence over one candidate batch."""
         if not candidates:
             return [], [], []
+        allowed_weakpoints = WEAKPOINT_TYPES if weakpoint_types is None else set(weakpoint_types)
         operators: list[JSONDict] = []
         weakpoints: list[JSONDict] = []
         candidate_knowledges: list[JSONDict] = []
+        vacuous_conjunctions: list[str] = []
         gate = _decode(_prompt(gate_kind, group_id, candidates), "decisions")
         decisions = {str(x.get("candidate_id")): x.get("decision") for x in gate}
         operator_ids = {cid for cid, decision in decisions.items() if decision == "operator_candidate"}
         weakpoint_ids = {cid for cid, decision in decisions.items() if decision == "not_operator"}
         operator_candidates = [x for x in candidates if x["candidate_id"] in operator_ids]
         if operator_candidates:
+            by_candidate = {x["candidate_id"]: x for x in operator_candidates}
             typed = _decode(_prompt("operator_type", group_id, operator_candidates), "decisions")
             for item in typed:
-                op = _validate_operator(item, records, {x["candidate_id"] for x in operator_candidates})
-                if op is not None:
-                    operators.append(op)
+                item = _repair_operator_variables(item, by_candidate, records)
+                op = _validate_operator(item, records, set(by_candidate))
+                if op is None:
+                    continue
+                # "Both simply hold" is vacuous unless the operands are about the
+                # same named thing: measured failure was B_c2^perp ~ 5.5 T
+                # conjoined with T_c^zero ~ 2.40 K, which asserts nothing.  The
+                # infer/deduction family is not gated here -- it carries its
+                # content in the expression, which _NON_RELATION_MARKERS screens.
+                if op["type"] in {"conjunction", "disjunction"} and not all(
+                    shares_anchor(records[a]["content"], records[b]["content"])
+                    for a, b in combinations(op["variables"], 2)
+                ):
+                    vacuous_conjunctions.append(op["id"])
+                    continue
+                operators.append(op)
         non_operator = [x for x in candidates if x["candidate_id"] in weakpoint_ids]
         if non_operator:
             judged = _decode(_prompt("weakpoint", group_id, non_operator), "weakpoints")
@@ -828,7 +1008,7 @@ class Step3IdentifyStructuresPlugin:
                 if set(evidence) & set(targets):
                     continue
                 reasoning_type = item.get("reasoning_type")
-                if reasoning_type not in WEAKPOINT_TYPES:
+                if reasoning_type not in allowed_weakpoints:
                     continue
                 expression = str(item.get("expression") or "").strip()
                 if not expression or any(marker in expression.lower() for marker in _NON_RELATION_MARKERS):
@@ -861,19 +1041,26 @@ class Step3IdentifyStructuresPlugin:
                                                "reasoning_type": reasoning_type,
                                                "evidence_anchor_ids": list(item.get("evidence_anchor_ids") or []),
                                                "expression": expression}})
+        if vacuous_conjunctions:
+            _Progress("step3", 0).note(
+                f"dropped {len(vacuous_conjunctions)} conjunction/disjunction operators whose "
+                f"operands share no named quantity or value")
         return operators, weakpoints, candidate_knowledges
 
     @staticmethod
-    def _process_group(group: Mapping[str, Any], records: Mapping[str, JSONDict]):
+    def _process_group(group: Mapping[str, Any], records: Mapping[str, JSONDict],
+                       weakpoint_types: frozenset[str] | set[str] | None = None):
         """Judge the cross-Package candidate pairs inside one Step 2 group."""
         if not isinstance(group, Mapping) or not isinstance(group.get("group_id"), str):
             raise ValueError("invalid Step 2 group")
         return Step3IdentifyStructuresPlugin._judge_candidates(
             _group_candidates(group, records), str(group["group_id"]), records,
+            weakpoint_types=weakpoint_types,
         )
 
     @staticmethod
-    def _judge_jobs(jobs, records, progress, gate_kind="group_gate"):
+    def _judge_jobs(jobs, records, progress, gate_kind="group_gate",
+                    weakpoint_types: frozenset[str] | set[str] | None = None):
         """Judge every job in parallel, reporting progress as each one lands.
 
         A group whose calls never succeed is dropped rather than raised: Step 3
@@ -887,7 +1074,8 @@ class Step3IdentifyStructuresPlugin:
         def run(job):
             try:
                 result = Step3IdentifyStructuresPlugin._judge_candidates(
-                    job[0], job[1], records, gate_kind=gate_kind)
+                    job[0], job[1], records, gate_kind=gate_kind,
+                    weakpoint_types=weakpoint_types)
             except RuntimeError as exc:
                 unjudged.append(f"{job[1]}: {exc}")
                 result = ([], [], [])
@@ -913,6 +1101,15 @@ class Step3IdentifyStructuresPlugin:
             if local.get("schema_name") != LOCAL_CONTEXT_SCHEMA:
                 raise ValueError("unexpected local-context schema")
             records = _load_records(context)
+            # Drop predicate-less fragments, strip leaked pipeline pointers, and
+            # collapse a proposition that a package materialized under two ids.
+            # The judge must not be asked to relate a fragment, and one claim
+            # counted twice makes any support count meaningless.
+            records, hygiene_merges = apply_hygiene(records)
+            if hygiene_merges:
+                _Progress("step3", 0).note(
+                    f"claim hygiene: {len(hygiene_merges)} duplicate claims collapsed "
+                    f"inside their own package")
             groups = local.get("groups")
             if not isinstance(groups, list):
                 raise ValueError("Step 3 requires Step 2 groups")
@@ -925,11 +1122,34 @@ class Step3IdentifyStructuresPlugin:
             # Incremental/reconcile keep the bounded Step 2 groups.
             if local.get("mode") == "bootstrap":
                 all_candidates = _retrieve_related(records)
+                # A reference-list citation between two of the frozen papers is a
+                # high-precision prior that semantic retrieval can still miss, so
+                # its claim pairs are added to the judged set unconditionally.
+                # The seed only nominates; the judge still decides the relation.
+                cited = _citation_seed_candidates(context, records)
+                if cited:
+                    known = {tuple(sorted(item["source_qids"])) for item in all_candidates}
+                    fresh = [item for item in cited
+                             if tuple(sorted(item["source_qids"])) not in known]
+                    all_candidates = all_candidates + fresh
+                    _Progress("step3", 0).note(
+                        f"citation seeds: {len(cited)} claim pairs from reference-list matches, "
+                        f"{len(fresh)} not already proposed by retrieval")
                 batches = [all_candidates[i:i + GATE_BATCH_SIZE]
                            for i in range(0, len(all_candidates), GATE_BATCH_SIZE)]
                 jobs = [(batch, "bootstrap") for batch in batches]
             else:
                 jobs = [(_group_candidates(group, records), str(group["group_id"])) for group in groups]
+            # `infer` is the generic catch-all and was excluded because it
+            # dominated the delta on abstracted claims.  On faithful claims that
+            # carry their conditions it is the honest label for most genuine
+            # cross-paper relations, and excluding it yields an empty graph, so
+            # the caller can opt it back in.  The relation still has to name a
+            # specific structure in its expression or it is dropped below.
+            weakpoint_types = set(WEAKPOINT_TYPES)
+            if context.options.get("allow_infer", False) is not False:
+                weakpoint_types |= CROSS_PAPER_EXTRA_TYPES
+            weakpoint_types = frozenset(weakpoint_types)
             round_one = _Progress("step3 round-1 groups", len(jobs), every=25)
             round_one.note(f"{len(jobs)} groups, {sum(len(job[0]) for job in jobs)} candidate pairs, "
                            f"directed framing")
@@ -944,7 +1164,8 @@ class Step3IdentifyStructuresPlugin:
             if empty_jobs:
                 round_one.note(f"{empty_jobs} groups have no candidate pair at all "
                                f"(a Step 2 retrieval gap, not a judgement)")
-            results, unjudged = self._judge_jobs(jobs, records, round_one)
+            results, unjudged = self._judge_jobs(jobs, records, round_one,
+                                                 weakpoint_types=weakpoint_types)
             round_one_relations = self._relation_count(results)
             round_one.note(f"{round_one_relations} relations from the directed round")
             for group_operators, group_weakpoints, group_candidates in results:
@@ -972,26 +1193,45 @@ class Step3IdentifyStructuresPlugin:
                 round_two.note(f"{len(retry_jobs)} of {len(jobs)} groups produced no relation in "
                                f"round 1 (directed); retrying with the neutral framing")
                 retried, unjudged_two = self._judge_jobs(
-                    retry_jobs, records, round_two, gate_kind=retry_gate_kind)
+                    retry_jobs, records, round_two, gate_kind=retry_gate_kind,
+                    weakpoint_types=weakpoint_types)
                 unjudged.extend(unjudged_two)
                 round_two.note(f"{self._relation_count(retried)} relations from the neutral retry")
                 for group_operators, group_weakpoints, _ in retried:
                     retried_relations += len(group_operators) + len(group_weakpoints)
                     operators.extend(group_operators)
                     weakpoints.extend(group_weakpoints)
-            # Collapse a hypothesis supported by many observations into one
-            # summarized observation premise before the domain conclusion is
-            # synthesized from the surviving relations.
-            weakpoints, summary_candidates, summary_stats = _summarize_abduction_stars(weakpoints, records)
-            candidate_knowledges.extend(summary_candidates)
-            # Synthesize the multi-level domain conclusion tree from the cross-paper
-            # relations: bounded summaries upward, `premises -> K` (doc §3.3).
-            if weakpoints:
-                tree_candidates, tree_weakpoints, tree_stats = _synthesize_conclusion_tree(weakpoints, records)
-                candidate_knowledges.extend(tree_candidates)
-                weakpoints.extend(tree_weakpoints)
+            # Domain-conclusion synthesis is a *different product* from the
+            # cross-paper relation set.  It manufactures abstract premise and
+            # conclusion nodes and, by construction, strips the conditions that
+            # make a relation checkable: `_observation_summary_prompt` requires
+            # the summary to "name no dataset, model, method or metric, and
+            # contain no number".  A run whose deliverable is the cross-paper
+            # reasoning relations therefore turns it off and keeps
+            # `candidate_knowledges` empty, so every node in the emitted graph is
+            # a claim that exists in one of the frozen Paper Packages.
+            summarize_conclusions = context.options.get("summarize_conclusions", True) is not False
+            if summarize_conclusions:
+                # Collapse a hypothesis supported by many observations into one
+                # summarized observation premise before the domain conclusion is
+                # synthesized from the surviving relations.
+                weakpoints, summary_candidates, summary_stats = _summarize_abduction_stars(weakpoints, records)
+                candidate_knowledges.extend(summary_candidates)
+                # Synthesize the multi-level domain conclusion tree from the cross-paper
+                # relations: bounded summaries upward, `premises -> K` (doc §3.3).
+                if weakpoints:
+                    tree_candidates, tree_weakpoints, tree_stats = _synthesize_conclusion_tree(weakpoints, records)
+                    candidate_knowledges.extend(tree_candidates)
+                    weakpoints.extend(tree_weakpoints)
+                else:
+                    tree_stats = {"conclusion_levels": 0, "conclusion_count": 0, "conclusion_orphans": 0}
             else:
+                summary_stats = {"star_count": 0, "summarized_count": 0, "rejected_summaries": []}
                 tree_stats = {"conclusion_levels": 0, "conclusion_count": 0, "conclusion_orphans": 0}
+                _Progress("step3", 0).note(
+                    "summarize_conclusions=false: skipped observation summaries and the "
+                    "domain conclusion tree; the graph keeps only cross-paper relations "
+                    "between frozen Paper Package claims")
             # Reuse/deduplication and graph-safety are invariants applied globally.
             operators = list({json.dumps(x, sort_keys=True): x for x in operators}.values())
             weakpoints = list({json.dumps(x, sort_keys=True): x for x in weakpoints}.values())
@@ -1012,12 +1252,24 @@ class Step3IdentifyStructuresPlugin:
                     f"equivalence merge: {len(equivalence_merges)} classes, {len(absorbed)} nodes "
                     f"absorbed, relations {before_operators}+{before_weakpoints} -> "
                     f"{len(operators)}+{len(weakpoints)}")
+            # The gate judges a pair inside every overlapping Step 2 group that
+            # contains it, so one operand set can carry several mutually exclusive
+            # verdicts (conjunction from one group, disjunction from another) and
+            # the type is part of the operator id, so nothing upstream collapses
+            # them.  An operand set typed more than once has no decided relation,
+            # so it is dropped here rather than resolved by precedence.
+            operators, operator_type_conflicts = reconcile_operator_types(operators)
+            if operator_type_conflicts:
+                _Progress("step3", 0).note(
+                    f"operator type conflict: {len(operator_type_conflicts)} operand sets "
+                    f"carried more than one mutually exclusive type and were dropped")
             artifact = {"schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                         "source_context_artifact": {"artifact_id": local_ref.artifact_id, "kind": local_ref.kind, "sha256": local_ref.sha256},
                         "groups": [{"group_id": g["group_id"]} for g in groups if isinstance(g, Mapping) and isinstance(g.get("group_id"), str)],
                         "operators": operators, "weakpoints": weakpoints, "candidate_knowledges": candidate_knowledges,
                         "equivalence_merges": equivalence_merges,
-                        "package_set": sorted(set(local.get("package_set") or []))}
+                        "package_set": sorted(set(local.get("package_set") or [])),
+                        "claim_hygiene_merges": hygiene_merges}
             output = context.work_dir / "integration_step3_proposals.json"
             atomic_write_json(output, artifact)
             findings = [Finding("STEP3_GROUP_UNJUDGED", "warning",
@@ -1029,16 +1281,30 @@ class Step3IdentifyStructuresPlugin:
                     f"{empty_jobs} of {len(jobs)} Step 2 groups contain no cross-Package candidate "
                     f"pair, so no relation could be judged for them: this is a Step 2 retrieval gap "
                     f"(global TOP_K cap plus lexical cosine), not a model verdict"))
+            if operator_type_conflicts:
+                findings.append(Finding(
+                    "STEP3_OPERATOR_TYPE_CONFLICT", "warning",
+                    f"{len(operator_type_conflicts)} operand sets were typed with more than one "
+                    f"mutually exclusive operator type (equivalence/contradiction/conjunction/"
+                    f"disjunction) and were dropped: a pair is judged inside every overlapping Step 2 "
+                    f"group that contains it, so the gate can return conjunction for one group and "
+                    f"disjunction for another. The merge does not pick a winner, because that would "
+                    f"assert a relation no single judgement decided"))
             return StageResult("succeeded", artifacts=[ArtifactDraft(output, "integration.step3_proposals", "application/json", {
                 "schema_name": PROPOSAL_SCHEMA, "schema_version": SCHEMA_VERSION, "step": 3,
                 "operator_count": len(operators), "weakpoint_count": len(weakpoints), "candidate_knowledge_count": len(candidate_knowledges),
                 "unjudged_group_count": len(unjudged),
                 "equivalence_merge_count": len(equivalence_merges),
+                "operator_type_conflict_count": len(operator_type_conflicts),
             })], findings=findings,
                 metadata={"step": 3, "operator_count": len(operators), "weakpoint_count": len(weakpoints),
                           "candidate_knowledge_count": len(candidate_knowledges),
                           "equivalence_merge_count": len(equivalence_merges),
                           "equivalence_merged_node_count": sum(len(m["merged_qids"]) - 1 for m in equivalence_merges),
+                          "operator_type_conflict_count": len(operator_type_conflicts),
+                          "operator_type_conflicts": operator_type_conflicts[:20],
+                          "claim_hygiene_merge_count": len(hygiene_merges),
+                          "weakpoint_types": sorted(weakpoint_types),
                           "round_one_group_count": len(jobs), "round_one_relation_count": round_one_relations,
                           "empty_group_count": empty_jobs,
                           "retry_group_count": len(retry_jobs), "retry_relation_count": retried_relations,

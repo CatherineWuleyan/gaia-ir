@@ -5,6 +5,7 @@ import subprocess
 import unittest
 
 from pipeline_merge_question.step4 import _package_name
+from pipeline_merge_question.question_layer import build_answer_layer, evaluate, papers_of_node
 
 
 class QuestionStep4Tests(unittest.TestCase):
@@ -104,6 +105,73 @@ assert.ok(Math.abs(transform.y + centerY * transform.k - (rect.top + rect.height
 """
         result = subprocess.run([shutil.which("node"), "-e", script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class QuestionPaperProvenanceTests(unittest.TestCase):
+    @staticmethod
+    def node(node_id, provenance=None):
+        metadata = {} if provenance is None else {"package_provenance": provenance}
+        return {"id": node_id, "kind": "claim", "details": {"metadata": metadata}}
+
+    def layer(self, nodes):
+        view = {"nodes": nodes, "edges": []}
+        roots = [{"id": "answer:r1", "code": "R1", "statement": "candidate"}]
+        links = {"R1": [{"claim_id": n["id"], "relation": "support", "reason": "linked"}
+                        for n in nodes]}
+        return view, build_answer_layer(view, {"zh": "问题", "en": "question"}, roots, links)
+
+    def test_unknown_k_cannot_supply_a_second_paper(self):
+        nodes = [self.node("knowledge:papers:paper_a::claim_1"),
+                 self.node("knowledge:papers:paper_a::claim_2"),
+                 self.node("knowledge:candidate_K_1")]
+        view, layer = self.layer(nodes)
+        root = layer["roots"][0]
+        self.assertEqual(root["stats"]["support_claim_count"], 3)
+        self.assertEqual(root["stats"]["support_papers"], ["paper_a"])
+        self.assertEqual(root["stats"]["support_paper_count"], 1)
+        self.assertEqual(root["verdict_class"], "partial")
+        result = evaluate(view, layer)
+        self.assertEqual(result["base"]["paper_count"], 1)
+        self.assertEqual(result["answer_layer"]["papers_touched"], 1)
+        self.assertEqual(result["answer_layer"]["claims_per_paper"], {"paper_a": 2})
+
+    def test_unknown_only_is_exploratory_and_zero_papers(self):
+        view, layer = self.layer([self.node("knowledge:candidate_K_1")])
+        root = layer["roots"][0]
+        self.assertEqual(root["support_ids"], ["knowledge:candidate_K_1"])
+        self.assertEqual(root["stats"]["support_papers"], [])
+        self.assertEqual(root["verdict_class"], "exploratory")
+        result = evaluate(view, layer)
+        self.assertEqual(result["base"]["paper_count"], 0)
+        self.assertEqual(result["answer_layer"]["papers_touched"], 0)
+        self.assertEqual(result["answer_layer"]["claims_per_paper"], {})
+
+    def test_known_k_provenance_counts_real_papers_once(self):
+        k = self.node("knowledge:candidate_K_1", ["papers:paper_b", "papers:paper_a", "papers:paper_a"])
+        self.assertEqual(papers_of_node(k), ["paper_a", "paper_b"])
+        nodes = [k, self.node("knowledge:papers:paper_a::claim_1"),
+                 self.node("knowledge:papers:paper_b::claim_1")]
+        view, layer = self.layer(nodes)
+        self.assertEqual(layer["roots"][0]["stats"]["support_papers"], ["paper_a", "paper_b"])
+        self.assertEqual(layer["roots"][0]["verdict_class"], "primary")
+        result = evaluate(view, layer)
+        self.assertEqual(result["base"]["paper_count"], 2)
+        self.assertEqual(result["answer_layer"]["claims_per_paper"], {"paper_a": 2, "paper_b": 2})
+
+    def test_unknown_or_malformed_provenance_is_not_a_paper(self):
+        for provenance in (None, [], ["other", "papers:other", "papers:", "candidate_K_1", 4],
+                           "papers:paper_a", {"papers:paper_a": True}):
+            with self.subTest(provenance=provenance):
+                self.assertEqual(papers_of_node(self.node("knowledge:candidate_K_1", provenance)), [])
+        for node_id in ("knowledge:other::claim_1", "knowledge:papers:other::claim_1",
+                        "candidate_K_1::claim_1", "claim_1"):
+            with self.subTest(node_id=node_id):
+                self.assertEqual(papers_of_node(self.node(node_id)), [])
+
+    def test_direct_paper_namespace_still_resolves_without_metadata(self):
+        for node_id in ("knowledge:papers:paper_a::claim_1", "papers:paper_a::claim_1"):
+            with self.subTest(node_id=node_id):
+                self.assertEqual(papers_of_node(self.node(node_id)), ["paper_a"])
 
 if __name__ == "__main__":
     unittest.main()

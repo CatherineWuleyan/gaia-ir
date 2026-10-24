@@ -17,6 +17,7 @@ from pipelines.single_paper.agent_pipeline_v2.authoring import (
     emit_formalization,
 )
 
+from .relations import reconcile_operator_types
 from .step0 import validate_step0_options
 from .step1 import Step1InputError, _read_json, _step0_options, validate_step1_inputs
 from .step3 import PROPOSAL_SCHEMA, SCHEMA_VERSION, _category, _post_json
@@ -421,6 +422,11 @@ class Step4FormalizeIntegrationPlugin:
                          if item.get("type") != "equivalence"
                          and (rewritten := _rewrite_operator(item, aliases)) is not None]
             operators = list({json.dumps(item, sort_keys=True): item for item in operators}.values())
+            # Rewriting endpoints through the equivalence aliases can collapse two
+            # operand sets onto one, so Step 4 can create a type conflict that Step
+            # 3 could not see.  Reconcile on the final operands, before the document
+            # is built, so nothing downstream receives a doubly-typed operand set.
+            operators, operator_type_conflicts = reconcile_operator_types(operators)
             weakpoints = [rewritten for item in proposals.get("weakpoints") or []
                           if isinstance(item, dict) and (rewritten := _rewrite_weakpoint(item, aliases)) is not None]
             candidates = [copy.deepcopy(item) for item in proposals.get("candidate_knowledges") or [] if isinstance(item, dict)]
@@ -435,9 +441,17 @@ class Step4FormalizeIntegrationPlugin:
                 "spine_cluster_link_count": spine.get("cluster_link_count"),
                 "spine_unlinked_conclusion_count": spine.get("unlinked_conclusion_count"),
             }
+            if operator_type_conflicts:
+                findings.append(Finding(
+                    "STEP4_OPERATOR_TYPE_CONFLICT", "warning",
+                    f"{len(operator_type_conflicts)} operand sets carried more than one mutually "
+                    f"exclusive operator type after equivalence rewriting and were dropped: the "
+                    f"relation for those operands is undecided, so none is asserted"))
             return StageResult(emitted.status, emitted.artifacts, [*findings, *emitted.findings], {
                 **emitted.metadata, "equivalence_merge_count": len(merges),
-                "materialized_candidate_count": len(candidate_contents), **spine_metadata,
+                "materialized_candidate_count": len(candidate_contents),
+                "operator_type_conflict_count": len(operator_type_conflicts),
+                "operator_type_conflicts": operator_type_conflicts[:20], **spine_metadata,
             })
         except (Step1InputError, ValueError, KeyError, RuntimeError, OSError, json.JSONDecodeError) as exc:
             return StageResult("failed", findings=[Finding("STEP4_FORMALIZATION_FAILED", "error", str(exc))])

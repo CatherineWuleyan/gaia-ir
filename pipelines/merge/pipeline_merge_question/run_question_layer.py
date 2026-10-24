@@ -31,9 +31,9 @@ for extra in (REPO, REPO / "agent", REPO / "pipelines" / "single_paper", REPO / 
 from pipeline_merge_question import question_layer as ql  # noqa: E402
 from pipeline_merge_question.step3 import _post_json  # noqa: E402
 
-DEFAULT_VIEW = REPO / "weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json"
-DEFAULT_OUT = REPO / "outputs/question_domain_aircraft"
-DEFAULT_EDGE_ROLES = REPO / "outputs/question_domain_aircraft/edge_roles.json"
+DEFAULT_VIEW = REPO / "outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json"
+DEFAULT_OUT = REPO / "outputs/aircraft/final"
+DEFAULT_EDGE_ROLES = REPO / "outputs/aircraft/final/edge_roles.json"
 DEFAULT_QUESTION_ZH = "怎么完成飞机的仿真设计？"
 DEFAULT_QUESTION_EN = "How can aircraft simulation design be carried out?"
 DEFAULT_DOMAIN = "aircraft simulation design (conceptual design, flight dynamics, aerodynamic modeling, MDO, HIL validation)"

@@ -30,14 +30,14 @@ for _extra in (_REPO, _REPO / "agent", _REPO / "pipelines" / "single_paper", _RE
     if str(_extra) not in sys.path:
         sys.path.insert(0, str(_extra))
 
-DEFAULT_BASE = Path("weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json")
+DEFAULT_BASE = Path("outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json")
 DEFAULT_STEP3 = Path(
-    "outputs/aircraft_domain_merge/run_20261013T093612Z_c7fc9087/"
+    "outputs/aircraft/versions/02-native-311-2026-10-13/"
     "artifacts/blobs/artifact_42958528016f4cbe972f8675b327ee44.json"
 )
-DEFAULT_ROLES = Path("outputs/question_domain_aircraft/edge_roles.json")
-DEFAULT_OUT_VIEW = Path("outputs/question_domain_aircraft/domain_view_typed.json")
-DEFAULT_OUT_ROLES = Path("outputs/question_domain_aircraft/edge_roles_typed.json")
+DEFAULT_ROLES = Path("outputs/aircraft/final/edge_roles.json")
+DEFAULT_OUT_VIEW = Path("outputs/aircraft/final/domain_view_typed.json")
+DEFAULT_OUT_ROLES = Path("outputs/aircraft/final/edge_roles_typed.json")
 # Step 4 cannot compile these into Gaia strategies; keep them as typed links.
 DISPLAY_ONLY_TYPES = {"special_case", "reproduces", "bounds"}
 

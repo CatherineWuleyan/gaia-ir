@@ -35,12 +35,12 @@ from pipeline_merge_question.step3 import _post_json
 TYPES = ["deduction", "special_case", "reproduces", "bounds", "abduction", "analogy", "infer"]
 RESIDUAL_REASONS = {"precondition", "enabling", "instance", "unclear"}
 CHAINABLE_TYPES = {"deduction"}
-DEFAULT_VIEW = Path("outputs/question_domain_aircraft/domain_view_question.json")
+DEFAULT_VIEW = Path("outputs/aircraft/final/domain_view_question.json")
 DEFAULT_STEP3 = Path(
-    "outputs/aircraft_domain_merge/run_20261013T093612Z_c7fc9087/"
+    "outputs/aircraft/versions/02-native-311-2026-10-13/"
     "artifacts/blobs/artifact_42958528016f4cbe972f8675b327ee44.json"
 )
-DEFAULT_OUT = Path("outputs/question_domain_aircraft/edge_roles.json")
+DEFAULT_OUT = Path("outputs/aircraft/final/edge_roles.json")
 
 
 def read_json(path: Path) -> dict:
