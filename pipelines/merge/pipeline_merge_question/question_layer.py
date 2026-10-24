@@ -51,7 +51,7 @@ VERDICT_COLORS = {
 }
 VERDICT_LABELS = {
     "primary": "multi-paper direct support",
-    "partial": "single-paper direct support",
+    "partial": "single-paper core",
     "contested": "opposed in the graph",
     "exploratory": "exploratory",
 }
@@ -735,11 +735,16 @@ def build_answer_layer(
         total_chains += len(chains)
         total_exploratory += len(exploratory)
 
-        support_papers = sorted({
-            paper
-            for link in supported
-            for paper in papers_of_node(nodes_by_id.get(str(link["claim_id"]), {}))
-        })
+        paper_support: Counter[str] = Counter()
+        for link in supported:
+            for paper in papers_of_node(nodes_by_id.get(str(link["claim_id"]), {})):
+                paper_support[paper] += 1
+        support_papers = sorted(paper_support)
+        # How much the second-largest supporting paper contributes.  A second
+        # paper that supplies one claim out of ten does not corroborate the
+        # root; labelling that "multi-paper direct support" overstates it.
+        ranked_support = sorted(paper_support.values(), reverse=True)
+        second_paper_support = ranked_support[1] if len(ranked_support) > 1 else 0
         support_claims = [str(link["claim_id"]) for link in supported]
         leaves = {chain["leaf"] for chain in chains}
         depth = max((chain["depth"] for chain in chains), default=0)
@@ -747,7 +752,8 @@ def build_answer_layer(
         exploratory_depth = max((chain["depth"] for chain in exploratory), default=0)
         if opposes:
             verdict_class = "contested"
-        elif len(support_papers) >= 2 and len(supported) >= 3:
+        elif (len(support_papers) >= 2 and len(supported) >= 3
+              and second_paper_support >= 2):
             verdict_class = "primary"
         elif supported:
             verdict_class = "partial"
@@ -765,6 +771,13 @@ def build_answer_layer(
                 "support_claim_count": len(supported),
                 "support_paper_count": len(support_papers),
                 "support_papers": support_papers,
+                "support_paper_counts": dict(sorted(
+                    paper_support.items(), key=lambda item: item[1], reverse=True
+                )),
+                "second_paper_support": second_paper_support,
+                "multi_paper_corroborated": (
+                    len(support_papers) >= 2 and second_paper_support >= 2
+                ),
                 "chain_count": len(chains),
                 "leaf_count": len(leaves),
                 "max_depth": depth,
@@ -984,9 +997,12 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "title_zh": root.get("title_zh"),
             "title_en": root.get("title_en"),
             "verdict_class": root.get("verdict_class"),
+            "verdict": root.get("verdict"),
             "support_claim_count": len(support),
             "support_paper_count": len(root.get("stats", {}).get("support_papers") or []),
             "support_papers": root.get("stats", {}).get("support_papers") or [],
+            "support_paper_counts": root.get("stats", {}).get("support_paper_counts") or {},
+            "second_paper_support": root.get("stats", {}).get("second_paper_support", 0),
             "boundary_count": len(boundaries),
             "oppose_count": len(opposes),
             "chain_count": len(chains),
@@ -1079,9 +1095,13 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
         lines.extend([
             f"### {root.get('code')} · {root.get('title_zh')} / {root.get('title_en')}",
             "",
-            f"- Verdict: {root.get('verdict_class')}",
+            f"- Verdict: {root.get('verdict_class')} — {root.get('verdict')}",
             f"- Support: {root.get('support_claim_count')} claims from "
-            f"{root.get('support_paper_count')} papers; typed chains: {root.get('chain_count')} "
+            f"{root.get('support_paper_count')} papers"
+            + (f" ({' / '.join(str(v) for v in (root.get('support_paper_counts') or {}).values())}, "
+               f"so the second paper contributes {root.get('second_paper_support', 0)})"
+               if root.get("support_paper_counts") else "")
+            + f"; typed chains: {root.get('chain_count')} "
             f"({root.get('chain_status')}; leaves {root.get('leaf_count')}, max depth {root.get('max_depth')})",
             f"- Exploratory (non-evidential) paths: {root.get('exploratory_path_count')} "
             f"({root.get('exploratory_node_count')} nodes)",

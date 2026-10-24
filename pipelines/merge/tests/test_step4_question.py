@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import unittest
 
+from pipeline_merge_question.question_layer import build_answer_layer
 from pipeline_merge_question.step4 import _package_name
 
 
@@ -107,3 +108,41 @@ assert.ok(Math.abs(transform.y + centerY * transform.k - (rect.top + rect.height
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QuestionVerdictTests(unittest.TestCase):
+    """A root is only multi-paper when a second paper really contributes."""
+
+    @staticmethod
+    def layer(counts):
+        nodes, links = [], []
+        for paper, count in counts.items():
+            for index in range(1, count + 1):
+                node_id = f"knowledge:papers:{paper}::claim_{index}"
+                nodes.append({"id": node_id, "kind": "claim", "details": {"metadata": {}}})
+                links.append({"claim_id": node_id, "relation": "support", "reason": "linked"})
+        view = {"nodes": nodes, "edges": []}
+        roots = [{"id": "answer:r1", "code": "R1", "statement": "candidate"}]
+        return build_answer_layer(
+            view, {"zh": "问题", "en": "question"}, roots, {"R1": links}
+        )["roots"][0]
+
+    def test_marginal_second_paper_is_single_paper_core(self):
+        root = self.layer({"paper_a": 9, "paper_b": 1})
+        self.assertEqual(root["stats"]["support_paper_count"], 2)
+        self.assertEqual(root["stats"]["support_paper_counts"], {"paper_a": 9, "paper_b": 1})
+        self.assertEqual(root["stats"]["second_paper_support"], 1)
+        self.assertFalse(root["stats"]["multi_paper_corroborated"])
+        self.assertEqual(root["verdict_class"], "partial")
+        self.assertEqual(root["verdict"], "single-paper core")
+
+    def test_two_second_paper_claims_are_multi_paper(self):
+        root = self.layer({"paper_a": 5, "paper_b": 2})
+        self.assertEqual(root["stats"]["second_paper_support"], 2)
+        self.assertTrue(root["stats"]["multi_paper_corroborated"])
+        self.assertEqual(root["verdict_class"], "primary")
+
+    def test_one_paper_is_never_primary(self):
+        root = self.layer({"paper_a": 4})
+        self.assertEqual(root["stats"]["support_paper_count"], 1)
+        self.assertEqual(root["verdict_class"], "partial")
