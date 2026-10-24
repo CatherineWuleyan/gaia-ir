@@ -174,7 +174,10 @@ class RequestJsonTests(unittest.TestCase):
                 patch("agent_pipeline_v2.step2.instantiate", return_value=DeepSeekV4FlashObservationTool()), \
                 patch("agent_pipeline_v2.step2.urlopen", side_effect=[io.BytesIO(b'{'), io.BytesIO(json.dumps(raw).encode())]) as send:
             normalized, _ = _tool_call(context, [], call_number=1, operation="rewrite_observations",
-                                      selected_claims=[{"id": "claim_1", "content": "Measured improvement."}])
+                                      selected_claims=[{"id": "claim_1", "content": "Measured improvement.",
+                                                        "source_excerpts": ["[anchor_1] Measured improvement."]}])
+        repair_prompt = json.loads(send.call_args_list[1].args[0].data)["messages"][0]["content"]
+        self.assertIn("Correct the previous validation failure", repair_prompt)
         self.assertEqual(2, send.call_count)
         self.assertEqual("claim_1", normalized["claims"][0]["id"])
         self.sleep.assert_not_called()
@@ -434,6 +437,37 @@ class Step2Tests(unittest.TestCase):
             _best_paragraph_anchor("The method has measured accuracy effects.", paragraphs)["anchor_id"],
         )
         self.assertIsNone(_best_paragraph_anchor("Completely unrelated statement.", paragraphs))
+
+    def test_short_table_results_match_rows_and_preserve_numeric_values(self) -> None:
+        paragraphs = [
+            {"anchor_id": "wrong", "text": "| SciBERT | 0.74 |"},
+            {"anchor_id": "table", "text": "\n".join([
+                "| Model | F1 |", "| SciBERT | 0.75 |",
+                *[f"| OtherModel{i} | 0.90 |" for i in range(60)],
+            ])},
+            {"anchor_id": "appendix", "text": "| SciBERT | 0.75 |"},
+        ]
+        self.assertEqual("table", _best_paragraph_anchor("SciBERT 0.75,", paragraphs)["anchor_id"])
+        self.assertIsNone(_best_paragraph_anchor("SciBERT 0.76,", paragraphs))
+        self.assertIsNone(_best_paragraph_anchor("SciBERT", paragraphs))
+
+    def test_short_error_percentage_matches_source_row(self) -> None:
+        paragraphs = [
+            {"anchor_id": "wrong", "text": "Implicit stance is discussed in the guidelines."},
+            {"anchor_id": "errors", "text": "| Implicit stance | indirect comparison | ~20% |\n"
+             "| Evidence mismatch | wrong claim | ~15% |"},
+        ]
+        self.assertEqual("errors", _best_paragraph_anchor("implicit stance about 20%,", paragraphs)["anchor_id"])
+
+    def test_missing_source_anchor_fails_before_sending_rewrite(self) -> None:
+        (self.root / "paper_text.md").write_text("Completely unrelated source.\n", encoding="utf-8")
+        with patch("agent_pipeline_v2.step2._tool_call") as call:
+            store = RunStore.create(self.root / "runs", self.pipeline(), input_manifest=self.root / "manifest.json")
+            run = run_pipeline(store.run_dir, max_stages=3)
+        self.assertEqual("failed", run.status)
+        self.assertEqual("step2_extract_observations", run.current_stage)
+        self.assertTrue(any(f["code"] == "STEP2_EXTRACTION_FAILED" for f in run.findings))
+        call.assert_not_called()
 
     def pipeline(self, tool: str = f"{__name__}:FakeObservationTool") -> dict:
         value = json.loads(
@@ -701,7 +735,8 @@ class Step2Tests(unittest.TestCase):
         self.assertEqual(["claim_O01"], response.normalized["clusters"][0]["weakpoints"][0]["target_claim_id"])
 
     def test_rewritten_observations_normalize_refined_components(self) -> None:
-        selected = [{"id": "claim_1", "content": "Observed one."}]
+        selected = [{"id": "claim_1", "content": "Observed one.",
+                     "source_excerpts": ["[anchor_1] Observed one."]}]
         payload = {"claims": [{
             "id": "claim_1",
             "S": "the stated setting",
@@ -717,6 +752,11 @@ class Step2Tests(unittest.TestCase):
         self.assertEqual("the stated setting", normalized[0]["S"])
         self.assertEqual("improved", normalized[0]["R"])
         self.assertEqual(["anchor_1"], normalized[0]["paragraph_anchor_ids"])
+        for anchors in ([], ["anchor_claim_1"], ["anchor_other"]):
+            with self.subTest(anchors=anchors), self.assertRaisesRegex(ValueError, "anchors"):
+                invalid = copy.deepcopy(payload)
+                invalid["claims"][0]["paragraph_anchor_ids"] = anchors
+                DeepSeekV4FlashObservationTool._normalize_rewritten_observations(json.dumps(invalid), selected)
         payload["claims"].append(dict(payload["claims"][0]))
         with self.assertRaisesRegex(ValueError, "exactly one rewritten claim per selected id"):
             DeepSeekV4FlashObservationTool._normalize_rewritten_observations(
@@ -823,7 +863,9 @@ class Step2Tests(unittest.TestCase):
         tool = f"{__name__}:FailingObservationTool"
         store = RunStore.create(self.root / "runs", self.pipeline(tool), input_manifest=self.root / "manifest.json")
         run = run_pipeline(store.run_dir, max_stages=3)
-        self.assertEqual("succeeded", run.status)
+        self.assertEqual("failed", run.status)
+        self.assertEqual("step2_extract_observations", run.current_stage)
+        self.assertEqual(2, run.next_stage_index)
         audits = [ref for ref in store.load_artifacts() if ref.kind == "tool.semantic_review.response"]
         self.assertGreaterEqual(len(audits), 1)
         audit = read_json(store.artifact_path(audits[0]))

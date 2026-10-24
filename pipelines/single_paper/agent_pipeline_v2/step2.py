@@ -164,21 +164,43 @@ _TABLE_CAPTION_PATTERN = re.compile(r"^\s*table\s*([0-9]+[a-z]?)\s*[.:]", re.IGN
 
 def _best_paragraph_anchor(content: str, paragraphs: list[JSONDict]) -> JSONDict | None:
     """Apply Pipeline 7.0's deterministic anchoring threshold."""
-    query = _tokens(content)
+    def anchor_tokens(text: str) -> list[str]:
+        # Scores and percentages distinguish short table observations. Keep
+        # decimals whole instead of treating their digits as independent hits.
+        text = text.replace("–", "-").replace("−", "-")
+        return [*_tokens(text), *re.findall(r"(?<![\w.-])\d+\.\d+(?![\w.])|(?<![\w.-])\d+(?:\.\d+)?%", text)]
+
+    query = anchor_tokens(content)
     if not query:
         return None
-    eligible: list[tuple[float, int, JSONDict]] = []
+    query_set = set(query)
+    words = set(_tokens(content))
+    numbers = query_set - words
+    eligible: list[tuple[bool, float, int, JSONDict]] = []
     for index, paragraph in enumerate(paragraphs):
         text = str(paragraph.get("text", ""))
         nonempty_lines = [line.strip() for line in text.splitlines() if line.strip()]
         if nonempty_lines and all(line.startswith("#") for line in nonempty_lines):
             continue
-        paragraph_tokens = _tokens(text)
-        shared = set(query) & set(paragraph_tokens)
-        score = _cosine(query, paragraph_tokens)
-        if len(shared) >= 2 and score >= 0.2:
-            eligible.append((score, index, paragraph))
-    return max(eligible, default=(0.0, 0, None), key=lambda item: (item[0], -item[1]))[2]
+        full_tokens = set(anchor_tokens(text))
+        if not numbers <= full_tokens:
+            continue
+        # A long table or paragraph dilutes a two-token claim. Score its
+        # existing rows/sentences, while retaining the original paragraph ID.
+        spans = [text, *nonempty_lines, *re.split(r"(?<=[.!?])\s+(?=[A-Z])", text)]
+        score = 0.0
+        for span in spans:
+            paragraph_tokens = anchor_tokens(span)
+            shared = query_set & set(paragraph_tokens)
+            if len(shared) >= 2 and shared & words and numbers <= set(paragraph_tokens):
+                score = max(score, _cosine(query, paragraph_tokens))
+        if score >= 0.2:
+            complete = query_set <= full_tokens
+            eligible.append((complete, score, index, paragraph))
+    # Prefer the first fully matching source over a shorter repetition in an
+    # appendix; otherwise retain the original best-cosine ranking.
+    return max(eligible, default=(False, 0.0, 0, None),
+               key=lambda item: (item[0], 0 if item[0] else item[1], -item[2]))[3]
 
 
 def _anchors_share_local_context(left: list[str], right: list[str], distance: int = 2) -> bool:
@@ -491,6 +513,8 @@ class DeepSeekV4FlashObservationTool:
             "Do not mechanically concatenate a fixed template. Retain each supplied id verbatim. Use the supplied source "
             "excerpts only to recover a setting or action that the observation itself omits. Return exactly one rewritten "
             "claim per id and no other ids. Return the refined S/A/B/M/R fields together with the complete sentence. "
+            "For paragraph_anchor_ids, cite one or more IDs from that claim's supplied source excerpts. "
+            "Never cite anchor_claim IDs, invent IDs, or return an empty anchor list. "
             "Return {\"claims\":[{\"id\":\"...\",\"S\":\"...\",\"A\":\"...\",\"M\":\"...\",\"content\":\"...\","
             "\"paragraph_anchor_ids\":[\"...\"]}]}.\n\n"
             + json.dumps(selected, ensure_ascii=False)
@@ -510,6 +534,13 @@ class DeepSeekV4FlashObservationTool:
             raise ValueError("DeepSeek must return exactly one rewritten claim per selected id")
         normalized: list[JSONDict] = []
         seen: set[str] = set()
+        allowed_anchors = {
+            item["id"]: {
+                match.group(1) for excerpt in item.get("source_excerpts", [])
+                if isinstance(excerpt, str) and (match := re.match(r"\[([^\]]+)\]", excerpt))
+            }
+            for item in selected
+        }
         allowed_fields = {"id", "content", "paragraph_anchor_ids", *_OBSERVATION_COMPONENT_FIELDS}
         for item in items:
             if not isinstance(item, dict) or not set(item) <= allowed_fields:
@@ -525,6 +556,8 @@ class DeepSeekV4FlashObservationTool:
                 raise ValueError("rewritten claim content must be non-empty")
             if not isinstance(anchors, list) or not anchors or not all(isinstance(anchor, str) for anchor in anchors):
                 raise ValueError("rewritten claim requires paragraph anchors")
+            if not set(anchors) <= allowed_anchors[claim_id]:
+                raise ValueError(f"rewritten claim {claim_id} cites anchors outside its supplied source excerpts")
             seen.add(claim_id)
             refined = {"id": claim_id, "content": rewritten_content.strip(), "paragraph_anchor_ids": list(anchors)}
             for field in _OBSERVATION_COMPONENT_FIELDS:
@@ -554,9 +587,12 @@ class DeepSeekV4FlashObservationTool:
         if not api_key:
             raise RuntimeError("DEEPSEEK_API_KEY is not configured")
         base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+        prompt = self._rewrite_observation_prompt(selected)
+        if request.parameters.get("repair_feedback"):
+            prompt += "\n\nCorrect the previous validation failure: " + str(request.parameters["repair_feedback"])
         body = json.dumps({
             "model": self.model,
-            "messages": [{"role": "user", "content": self._rewrite_observation_prompt(selected)}],
+            "messages": [{"role": "user", "content": prompt}],
             "temperature": 0,
             "response_format": {"type": "json_object"},
         }, ensure_ascii=False).encode("utf-8")
@@ -2008,17 +2044,17 @@ def _rewrite_imported_observations(
             "source_anchor_ids": list(item.get("source_anchor_ids", [])),
             "source_excerpts": excerpts,
         })
+    missing = [item["id"] for item in selected if not item["source_excerpts"]]
+    if missing:
+        raise ValueError(f"imported observations lack paragraph anchors: {missing}")
     candidates = _experiment_candidates(paragraphs)
-    try:
-        normalized, draft = _tool_call(
-            context,
-            candidates,
-            call_number=1,
-            selected_claims=selected,
-            operation="rewrite_observations",
-        )
-    except Exception:
-        return [], []
+    normalized, draft = _tool_call(
+        context,
+        candidates,
+        call_number=1,
+        selected_claims=selected,
+        operation="rewrite_observations",
+    )
     claims = normalized.get("claims", [])
     if not isinstance(claims, list) or not all(isinstance(item, dict) for item in claims):
         raise ValueError("rewrite_observations returned invalid claims")
