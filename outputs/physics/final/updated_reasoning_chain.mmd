@@ -1,0 +1,46 @@
+flowchart LR
+  subgraph C1["第1链：材料条件 → Ising保护"]
+    O169["O16-9｜XRD实验<br/>衍射结果与4H_a结构的Rietveld精修吻合"] --> AX3a["AX3a｜材料基本事实<br/>4H_a不含反演中心"]
+    O161["O16-1｜Raman实验<br/>观察到D3h点群预期的拉曼模式"] --> AX3a
+    O166["O16-6｜Raman实验<br/>观察到A1′、E′和层间剪切模式"] --> AX3a
+    C1616["C16-16｜样品结构确认<br/>样品确认为非中心对称4H_a-NbSe₂"] --> AX3a
+
+    O164["O16-4｜DFT计算（非实验）<br/>经实验验证的4H_a结构在K点有约150 meV SOC劈裂"] --> AX3["AX3｜能带基本事实<br/>K点存在强自旋轨道劈裂"]
+    C162["C16-2｜DFT计算（非实验）<br/>K点Nb能带半劈裂ζ≈75 meV"] --> AX3
+
+    AX3a --> TH3["TH3｜物理规则<br/>Ising SOC抑制面内Zeeman破对"]
+    AX3 --> TH3
+  end
+
+  subgraph C2["第2链：临界场实验 → 排除普通Zeeman限速"]
+    C165["C16-5｜热容实验<br/>面内B_c2显著超过Pauli极限≈11.15 T"] --> L1a["L1a｜面内场观察<br/>B_c2∥超过裸Pauli标尺"]
+    C1613["C16-13｜热容实验<br/>面外B_c2⊥≈5.5 T，低于Pauli极限"] --> L1b["L1b｜面外场观察<br/>B_c2⊥较低"]
+    C1614["C16-14｜热容实验<br/>上临界场具有强方向各向异性"] --> L1a
+    C1614 --> L1b
+    C1615["C16-15｜热容实验<br/>Pauli极限破坏只出现在面内方向"] --> L1a
+  end
+
+  TH3 --> M1["M1｜中间判断<br/>Ising保护把Zeeman破对阈值推高<br/>Zeeman不是当前主限速"]
+  L1a --> M1
+  L1b --> M1
+
+  subgraph C3["第3链：热容外推 + 轨道模型 → 轨道场尺度"]
+    O167["O16-7｜热容数据与外推<br/>线性外推B_c2∥(0)≈31 T<br/>WHH外推约24 T"] --> L6["L6｜轨道场估计<br/>单带/斜率路线约20.5–22.4 T<br/>是量级基线，不是严格上限"]
+    AX5["AX5｜理论适用前提<br/>近T_c可用层状GL描述"] --> TH0["TH0｜主方程<br/>线性化能隙方程"]
+    TH0 --> TH2["TH2｜轨道规则<br/>B_c2,orb∥=Φ₀/(2πξ_aξ_c)"]
+    TH2 --> L6
+  end
+
+  M1 --> R1["R1｜主结论<br/>轨道/层间通道主导B_c2∥限速"]
+  L6 -.->|"第3链：提供轨道场量级<br/>保留外推与GL适用边界"| R1
+
+  classDef evidence fill:#E8F3FF,stroke:#3B82F6,color:#0F172A
+  classDef calculation fill:#F4F3FF,stroke:#7F56D9,color:#42307D
+  classDef premise fill:#F2F4F7,stroke:#667085,color:#344054
+  classDef inference fill:#FFF7ED,stroke:#F59E0B,color:#7C2D12
+  classDef conclusion fill:#ECFDF5,stroke:#10B981,color:#065F46
+  class O169,O161,O166,C1616,C165,C1613,C1614,C1615,O167 evidence
+  class O164,C162 calculation
+  class AX3a,AX3,AX5 premise
+  class TH3,L1a,L1b,TH0,TH2,L6,M1 inference
+  class R1 conclusion

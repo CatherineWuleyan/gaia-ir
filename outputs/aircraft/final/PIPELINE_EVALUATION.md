@@ -2,7 +2,7 @@
 
 日期：2026-10-17
 范围：`pipelines/merge/pipeline_merge_question`（新副本）与
-`outputs/question_domain_aircraft`（本次冻结图运行结果）
+`outputs/aircraft/final`（本次冻结图运行结果）
 
 > **2026-10-18 typed-edge revision（当前版本）**
 > 本文下面的原始运行记录保留为历史对照。当前图已按“具体类型优先、`infer`
@@ -89,7 +89,7 @@
 
 ## 1. 上一次为什么没有领域结论层
 
-本次输入 `weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/`
+本次输入 `outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/`
 的 `merge_summary.json` 明确记录了：
 
 ```json
@@ -124,14 +124,14 @@
 
 ## 3. 运行设置
 
-- 输入图：`weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json`
+- 输入图：`outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json`
   - 311 claims，208 edges，13 papers，222 connected claims，89 isolated claims。
 - 问题：`怎么完成飞机的仿真设计？`
 - 模型：`deepseek-v4-flash`（`agent/.env`，Step 3 同一调用通道）。
 - 根数量上限：5。
-- 输出：`outputs/question_domain_aircraft/`。
-- Viewer：`outputs/question_domain_aircraft/domain_viewer_question.html`。
-- 预览：`outputs/question_domain_aircraft/domain_viewer_question.preview.png`。
+- 输出：`outputs/aircraft/final/`。
+- Viewer：`outputs/aircraft/final/domain_viewer_question.html`。
+- 预览：`outputs/aircraft/final/domain_viewer_question.preview.png`。
 
 > 本次实际执行的是 `run_question_layer.py`，即对冻结 311 claim 图只跑 Step 6
 > 回答层。完整 `pipeline.question.json` 已通过 `pipeline_harness init` / `check`，
@@ -222,7 +222,7 @@ NASA 重量、Minion HIL），不是方法路线。本次生成的是**方法路
 4. **候选池有界**：每个根只把 44–60 条 claim 交给连接判断；池外相关 claim 会被
    判 none。这是成本控制，也意味着 36.5% 覆盖率不是“全图只有 36.5% 相关”，
    而是“本轮明确连上的比例”。
-5. **提示词敏感**：第一版（保存在 `outputs/question_domain_aircraft_v1/`）生成
+5. **提示词敏感**：第一版（保存在 `outputs/aircraft/final_v1/`）生成
    的 5 个根偏向较小的论文簇（飞行数据、嵌套 MDO、HIL、data-enhanced
    simulation、低成本 SITL/HIL），漏掉最大的集成设计环境和飞行动力学簇，且
    HIL 出现两次。调整 digest/prompt（每篇论文一个代表 + 工作流阶段覆盖要求）
@@ -245,17 +245,17 @@ completion 20,044）。没有触发重试。`usage.ndjson` 有逐次记录。
 
 ```bash
 python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
-  --view weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json \
-  --out outputs/question_domain_aircraft
+  --view outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json \
+  --out outputs/aircraft/final
 ```
 
 离线重放（不调用 LLM）：
 
 ```bash
 python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
-  --view weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json \
-  --fixture outputs/question_domain_aircraft/answer_fixture.json \
-  --out outputs/question_domain_aircraft_replay
+  --view outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json \
+  --fixture outputs/aircraft/final/answer_fixture.json \
+  --out outputs/aircraft/final_replay
 ```
 
 完整 pipeline（含 K 层）见
@@ -276,5 +276,5 @@ python3 pipelines/merge/pipeline_merge_question/run_question_layer.py \
 
 逐根典型支持链、每步边类型（dependency / enabling / instance / analogy /
 independent reproduction）、人工复核 action 与可靠性分级，见
-`outputs/question_domain_aircraft/CHAIN_RELIABILITY.md`；
-机器可读的链/边/claim 数据见 `outputs/question_domain_aircraft/typical_chains.json`。
+`outputs/aircraft/final/CHAIN_RELIABILITY.md`；
+机器可读的链/边/claim 数据见 `outputs/aircraft/final/typical_chains.json`。

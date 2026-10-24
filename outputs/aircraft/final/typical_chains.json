@@ -1,7 +1,7 @@
 {
  "schema": "question_domain_typical_chains",
  "version": "1",
- "source": "outputs/question_domain_aircraft/answer_layer.json",
+ "source": "outputs/aircraft/final/answer_layer.json",
  "roots": {
   "R1": {
    "statement": "Aircraft simulation design can be organized around an integrated conceptual-design and simulation-optimization environment that runs an end-to-end civil-airplane design case and uses an optimizer to minimize a design objective such as direct operating cost.",

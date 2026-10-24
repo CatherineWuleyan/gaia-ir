@@ -1,10 +1,10 @@
 # R1–R5 典型支持链与可靠性评估
 
 日期：2026-10-18
-对象：`outputs/question_domain_aircraft/answer_layer.json`（当前 311 claim 冻结图上的 5 个候选回答）
+对象：`outputs/aircraft/final/answer_layer.json`（当前 311 claim 冻结图上的 5 个候选回答）
 辅助材料：`typical_chains.json`、`domain_view_question.json`、
-`weekly_reports/out/domain_graph_aircraft_reviewed/audit.md`、
-`outputs/aircraft_domain_merge/run_20261013T093612Z_c7fc9087` 的 Step 3 artifact
+`outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/audit.md`、
+`outputs/aircraft/versions/02-native-311-2026-10-13` 的 Step 3 artifact
 
 > **2026-10-18 typed-edge update（当前图）**
 > 本报告的 R1–R5 深链现已被明确归类为 `exploratory_paths`，不再计入 support。
@@ -110,7 +110,7 @@
 
 ### 2.3 人工复核口径（关键）
 
-`weekly_reports/out/domain_graph_aircraft_reviewed/audit.md` 的 311 条处置：
+`outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/audit.md` 的 311 条处置：
 
 ```text
 note 149 / rewrite 77 / split 43 / merge 16 / keep 26
@@ -598,9 +598,9 @@ support 与 chain 分开统计，并把 chain 标注为“探索路径”，是�
 - `typical_chains.json`：R1–R5 典型链的路径、claim 文本、边类型、Step 3 expression、
   人工复核 action。
 - `answer_layer.json`：原始 roots/links/chains。
-- `weekly_reports/out/domain_graph_aircraft_reviewed/audit.md`：311→227 人工复核
+- `outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/audit.md`：311→227 人工复核
   的逐条处置。
-- `outputs/aircraft_domain_merge/run_20261013T093612Z_c7fc9087`：
+- `outputs/aircraft/versions/02-native-311-2026-10-13`：
   Step 3 proposals（weakpoint expression）与 Step 4/5 artifacts。
 - `domain_viewer_question.html`：当前 viewer；链节点详情只显示 direct reason，
   不显示 Step 3 expression。

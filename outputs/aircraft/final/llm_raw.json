@@ -3230,7 +3230,7 @@
  ],
  "run": {
   "generated_at": "2026-10-17T14:31:53.923518+00:00",
-  "view": "/Users/catherinewu/Documents/gaia-ir/weekly_reports/out/domain_graph_aircraft_reviewed/source_snapshot/domain_view_model.json",
+  "view": "/Users/catherinewu/Documents/gaia-ir/outputs/aircraft/versions/03-reviewed-handcrafted-2026-10-14/source_snapshot/domain_view_model.json",
   "max_roots": 5
  }
 }
