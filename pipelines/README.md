@@ -15,4 +15,4 @@ Run from the repository root:
 ./run_pipeline.sh merge /absolute/path/to/pipelines/merge/pipeline.test1-5.json
 ```
 
-The checked merge example is in [`example/`](../example/), with a self-contained Viewer, projected view model, and generated domain graph.
+The checked merge example is in [`outputs/lth/versions/01-v9-example/`](../outputs/lth/versions/01-v9-example/), with a self-contained Viewer, projected view model, and generated domain graph. The old `example/` copy was a duplicate of this one and has been removed.

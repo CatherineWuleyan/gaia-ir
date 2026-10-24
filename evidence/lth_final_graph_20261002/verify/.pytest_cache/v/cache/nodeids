@@ -1,0 +1,17 @@
+[
+  "test_final_graph.py::test_compact_model_payload_preserves_evidence_and_strips_viewer_metadata",
+  "test_final_graph.py::test_companion_knowledge_index_is_registered_with_the_matching_merge_ir",
+  "test_final_graph.py::test_declared_snapshot_is_bound_to_authoritative_graph",
+  "test_final_graph.py::test_final_graph_does_not_fabricate_missing_provenance",
+  "test_final_graph.py::test_matching_standalone_graph_index_is_accepted",
+  "test_final_graph.py::test_merge_html_is_the_locked_final_graph",
+  "test_final_graph.py::test_model_payload_can_exclude_summary_nodes_without_changing_authoritative_graph",
+  "test_final_graph.py::test_model_payload_contains_every_authoritative_node_and_edge",
+  "test_final_graph.py::test_provenance_sidecar_is_explicit_and_remains_derived",
+  "test_final_graph.py::test_provenance_sidecar_must_be_hash_bound_and_complete",
+  "test_final_graph.py::test_qualified_source_anchor_resolves_one_paper_path",
+  "test_final_graph.py::test_retrieval_session_allowlist_blocks_hidden_paper_records",
+  "test_final_graph.py::test_retrieval_session_records_budget_and_missing_provenance_warning",
+  "test_final_graph.py::test_search_and_neighbor_retrieval_are_deterministic",
+  "test_final_graph.py::test_stale_standalone_graph_index_is_rejected"
+]

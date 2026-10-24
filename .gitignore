@@ -89,3 +89,7 @@ node_modules/
 /weekly_reports/auth_login.json
 /weekly_reports/folder_listing.json
 /weekly_reports/*.png
+
+# Internal team material, and large generated aggregates
+/evidence/feishu/
+/outputs/aggregate/

@@ -1,0 +1,12 @@
+{
+  "run_id": "run_20260921T180006Z_c2c7a5cd",
+  "gaia_ir_artifact_id": "artifact_8c0807fe57194759b8a10d3c82e8850f",
+  "namespace": "integration",
+  "package_name": "lth_corpus",
+  "knowledge_count": 231,
+  "operator_count": 81,
+  "strategy_count": 33,
+  "source_sha256s": {
+    "gaia.ir": "291116ccc14eebf3204e0c09d55a680fa2325595c3f2af64a3cc195f9fb8b120"
+  }
+}

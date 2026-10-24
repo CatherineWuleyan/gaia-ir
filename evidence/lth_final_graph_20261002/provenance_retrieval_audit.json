@@ -1,0 +1,63 @@
+{
+  "schema_version": "provenance-retrieval-audit-v1",
+  "authoritative_graph": "merge.html",
+  "authoritative_graph_sha256": "3c7e9df131305d2e6326e24b97e3db7132c2c68aed5f8ba824c3960c126cd1bf",
+  "embedded_payload_sha256": "9c5442d726b4dee26471d724c84e18170f72550f3933d81dde9a53056484e5c4",
+  "canonical_payload_sha256": "9deaac0d4767d4f75e98f6383fc238513643708d37c7ed577e5bab68c629d74d",
+  "provenance_sidecar": "paper2ir_experiment_copy/evidence/lth_final_graph_20261002/provenance_mapping.json",
+  "provenance_sidecar_sha256": "0d2764f096c5097859ddc3363be1034b7362ab608f65a0858d1c6f3bbc548a4c",
+  "counts": {
+    "graph_nodes": 240,
+    "graph_edges": 235,
+    "nodes": {
+      "direct": {
+        "count": 0,
+        "multi_paper_count": 0,
+        "source_anchor_backed_count": 0
+      },
+      "derived": {
+        "count": 220,
+        "multi_paper_count": 158,
+        "source_anchor_backed_count": 220
+      },
+      "unresolved": {
+        "count": 20,
+        "multi_paper_count": 0,
+        "source_anchor_backed_count": 0
+      }
+    },
+    "edges": {
+      "direct": {
+        "count": 0,
+        "multi_paper_count": 0,
+        "source_anchor_backed_count": 0
+      },
+      "derived": {
+        "count": 125,
+        "multi_paper_count": 125,
+        "source_anchor_backed_count": 0
+      },
+      "unresolved": {
+        "count": 110,
+        "multi_paper_count": 99,
+        "source_anchor_backed_count": 0
+      }
+    },
+    "cross_paper_credit_eligible": {
+      "derived_or_direct_nodes": 158,
+      "direct_edges": 0,
+      "derived_edges_excluded_as_endpoint_closure": 125
+    }
+  },
+  "credit_policy": {
+    "direct_provenance": "Only source_anchor_ids stored on merge.html node/edge payload; current count is zero.",
+    "derived_provenance": "A returned graph node/edge may be labeled derived only when its ID is present in the explicit sidecar with provenance_class=derived and source_anchor_ids.",
+    "cross_paper_graph_use": "A returned derived/direct graph node counts as cross-paper only when it has at least two distinct source paper IDs. A direct graph edge would also qualify, but a derived edge does not: its paper_ids are inherited from endpoint closure and do not prove the relation itself.",
+    "edge_provenance": "Derived edge provenance is endpoint closure; it is not a direct source relation anchor."
+  },
+  "limitations": [
+    "The sidecar reverse closure supports audit navigation but does not upgrade merge.html provenance to direct.",
+    "Unresolved edges can retain paper_ids inherited from resolved endpoints; they receive no cross-paper credit under the item-level policy.",
+    "Scientific decision quality is not inferred from retrieval or provenance metrics."
+  ]
+}
