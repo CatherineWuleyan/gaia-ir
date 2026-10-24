@@ -86,6 +86,7 @@ step2_claim_completeness/ 目录下。
 import sys
 import re
 import json
+import os
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -95,7 +96,7 @@ for _p in (PROJECT_ROOT, SCRIPT_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from claude_api_call import call_claude  # noqa: E402  (需要先把PROJECT_ROOT加进sys.path再import)
+from claude_api_call import call_claude, _ordered_parallel_map  # noqa: E402
 from complete_claims_validator import validate_complete_claims_response  # noqa: E402
 
 DATA_DIR = PROJECT_ROOT / "data"
@@ -364,9 +365,26 @@ def main():
             r["需要更多上下文"] = None
             r["completion_status"] = None
 
+    cached = {}
+    if os.environ.get("_ARIADNE_RETRY_STEP") == Path(__file__).name:
+        for conc_short, all_parts, target_numbers in groups:
+            prior = [record_lookup[(conc_short, number)] for number in target_numbers]
+            allowed = {"ok", "ok_after_category_retry", "ok_after_retry_opus5_nothink", "ok_after_retry_sonnet5_nothink"}
+            if not all(item.get("completion_status") in allowed for item in prior):
+                continue
+            payload = {"results": [{"number": item["number"], "完整表述": item.get("完整表述"),
+                                    "需要更多上下文": item.get("需要更多上下文")} for item in prior]}
+            validated, _ = validate_complete_claims_response(
+                json.dumps(payload, ensure_ascii=False), set(target_numbers),
+                {part["number"]: part["label"] for part in all_parts},
+            )
+            if validated is not None:
+                cached[conc_short] = (validated, prior[0]["completion_status"])
+    pending = [group for group in groups if group[0] not in cached]
+    fresh = iter(_ordered_parallel_map(lambda group: process_conclusion(group[1], group[2]), pending))
     for conc_short, all_parts, target_numbers in groups:
         print(f"\n处理 {conc_short}({len(target_numbers)}条claim: {target_numbers}) ...")
-        completed, status = process_conclusion(all_parts, target_numbers)
+        completed, status = cached[conc_short] if conc_short in cached else next(fresh)
 
         for number, fields in completed.items():
             record_lookup[(conc_short, number)]["完整表述"] = fields["完整表述"]

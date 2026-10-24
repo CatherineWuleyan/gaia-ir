@@ -62,6 +62,8 @@ class Paper2IRRetryTest(unittest.TestCase):
         sleeper.assert_called_once()
         second_env = runner.call_args_list[1].kwargs["env"]
         self.assertEqual(second_env["DEEPSEEK_MODEL"], "deepseek-v4-flash")
+        self.assertNotIn("_ARIADNE_RETRY_STEP", runner.call_args_list[0].kwargs["env"])
+        self.assertEqual(second_env["_ARIADNE_RETRY_STEP"], "step.py")
 
     def test_cache_rejects_changed_inputs_and_pipeline(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

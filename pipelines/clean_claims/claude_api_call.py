@@ -114,11 +114,29 @@ call_claude() 支持透传任意额外的具名参数给 SDK 的 messages.create
 
 import json
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor
+from http.client import IncompleteRead
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 _client = None
 _DEFAULT_TIMEOUT_SECONDS = 600.0  # 10分钟,等同SDK自己的默认值,详见上面文档说明
+
+
+def _ordered_parallel_map(function, items):
+    """Bound independent DeepSeek calls; callers retain sole ownership of writes."""
+    if not os.environ.get("DEEPSEEK_MODEL"):
+        yield from map(function, items)
+        return
+    executor = ThreadPoolExecutor(max_workers=3)
+    futures = []
+    try:
+        futures = [executor.submit(function, item) for item in items]
+        for future in futures:
+            yield future.result()
+    finally:
+        executor.shutdown(wait=True, cancel_futures=True)
 
 
 def _record_usage(raw: dict, stage: str, model: str) -> None:
@@ -329,16 +347,27 @@ def call_claude(
             "Authorization": f"Bearer {key}", "Content-Type": "application/json",
         }, method="POST")
         try:
+            timeout_seconds = float(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "180"))
+        except ValueError:
+            timeout_seconds = 180.0
+        # Retry transport failures within this request, preserving other groups.
+        for attempt in range(3):
+            retry_delay = float(2 ** attempt)
             try:
-                timeout_seconds = float(os.environ.get("DEEPSEEK_TIMEOUT_SECONDS", "180"))
-            except ValueError:
-                timeout_seconds = 180.0
-            with urlopen(request, timeout=timeout_seconds) as response:
-                raw = json.loads(response.read().decode("utf-8"))
-        except HTTPError as exc:
-            raise RuntimeError(f"DeepSeek cleaning request failed with HTTP {exc.code}") from exc
-        except URLError as exc:
-            raise RuntimeError(f"DeepSeek cleaning connection failed: {exc.reason}") from exc
+                with urlopen(request, timeout=timeout_seconds) as response:
+                    raw = json.loads(response.read().decode("utf-8"))
+                break
+            except HTTPError as exc:
+                if exc.code not in (429, 500, 502, 503, 504) or attempt == 2:
+                    raise RuntimeError(f"DeepSeek cleaning request failed with HTTP {exc.code}") from exc
+                try:
+                    retry_delay = min(60.0, max(retry_delay, float(exc.headers.get("Retry-After", "0"))))
+                except (AttributeError, ValueError):
+                    pass
+            except (URLError, TimeoutError, ConnectionError, IncompleteRead):
+                if attempt == 2:
+                    raise
+            time.sleep(retry_delay)
         choice = raw["choices"][0]
         if choice.get("finish_reason") not in (None, "stop"):
             raise ValueError("DeepSeek cleaning response is incomplete")

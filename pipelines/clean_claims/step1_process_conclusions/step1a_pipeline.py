@@ -45,6 +45,7 @@ step1a_prompt_template.txt、label_validator.py、上一级目录里的 claude_a
 
 import sys
 import json
+import os
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -54,7 +55,7 @@ for _p in (PROJECT_ROOT, SCRIPT_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from claude_api_call import call_claude  # noqa: E402  (需要先把PROJECT_ROOT加进sys.path再import)
+from claude_api_call import call_claude, _ordered_parallel_map  # noqa: E402
 from label_validator import validate_and_correct  # noqa: E402  (需要先把SCRIPT_DIR加进sys.path再import)
 
 DATA_DIR = PROJECT_ROOT / "data"
@@ -166,12 +167,29 @@ def main():
     print(f"共找到 {len(conclusions)} 条 conclusion")
 
     out_path = paper_dir / "conclusions_labeled.json"
+    cached = {}
+    # Only an automatic retry of this same frozen script may reuse its output.
+    # Ordinary runs always recompute, even if an older output happens to exist.
+    if os.environ.get("_ARIADNE_RETRY_STEP") == Path(__file__).name and out_path.exists():
+        try:
+            previous = json.loads(out_path.read_text(encoding="utf-8"))
+            by_id = {item["id"]: item for item in previous if isinstance(item, dict)}
+            for conclusion in conclusions:
+                item = by_id.get(conclusion["id"], {})
+                if (item.get("labeling_status") in {"ok", "ok_after_retry_opus5", "ok_after_retry_sonnet5_nothink"}
+                        and all(item.get(key) == value for key, value in conclusion.items())
+                        and validate_and_correct(json.dumps(item.get("labeled_segments")), conclusion["content"]) is not None):
+                    cached[conclusion["id"]] = item
+        except (ValueError, TypeError, KeyError):
+            cached = {}
+    pending = [item for item in conclusions if item["id"] not in cached]
+    fresh = iter(_ordered_parallel_map(process_conclusion, pending))
     results = []
 
     for c in conclusions:
         name = c["id"].split("::")[-1]
         print(f"\n处理 {name} ...")
-        result = process_conclusion(c)
+        result = cached[c["id"]] if c["id"] in cached else next(fresh)
         results.append(result)
 
         # 每处理完一条就整体重写一次,避免中途被打断(比如卡在人工重试/跳过)导致进度丢失

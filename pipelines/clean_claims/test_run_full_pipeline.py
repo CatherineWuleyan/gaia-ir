@@ -19,6 +19,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import run_full_pipeline as pipeline
 
@@ -143,6 +144,168 @@ def test_noninteractive_step_receives_eof_instead_of_waiting_for_user():
         output = root / "partial.json"
         output.write_text("{}", encoding="utf-8")
         assert pipeline.run_step(script, output, "test", non_interactive=True) is False
+
+
+def test_deepseek_groups_run_three_at_a_time_and_keep_input_order():
+    import os
+    import threading
+    import claude_api_call as api
+
+    barrier = threading.Barrier(3, timeout=5)
+    lock = threading.Lock()
+    active = peak = 0
+
+    def work(value):
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        barrier.wait()
+        with lock:
+            active -= 1
+        return value
+
+    with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test"}):
+        assert list(api._ordered_parallel_map(work, range(6))) == list(range(6))
+    assert peak == 3
+
+
+def test_deepseek_retries_only_the_failed_transport_request():
+    import json
+    import os
+    import claude_api_call as api
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def read(self):
+            return json.dumps({"choices": [{"finish_reason": "stop", "message": {"content": "valid result"}}]}).encode()
+
+    with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test", "DEEPSEEK_API_KEY": "test"}), \
+            patch.object(api, "urlopen", side_effect=[TimeoutError("read timeout"), Response()]) as request, \
+            patch.object(api.time, "sleep"):
+        assert api.call_claude("test") == "valid result"
+        assert request.call_count == 2
+
+
+def test_label_retry_reuses_only_matching_validated_conclusions():
+    import json
+    import os
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "step1_process_conclusions"))
+    import step1a_pipeline as step
+
+    conclusions = [{"id": f"conclusion_{n}", "content": f"Claim {n}."} for n in range(1, 4)]
+
+    def result(item):
+        return dict(item, labeling_status="ok", labeled_segments={"segments": [
+            {"text": item["content"], "label": "assertion", "number": 1}]})
+
+    calls = []
+
+    def process(item):
+        calls.append(item["id"])
+        return result(item)
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        paper = root / "test"
+        paper.mkdir()
+        (paper / "graph.json").write_text("{}")
+        previous = [result(conclusions[0]), result(conclusions[1])]
+        previous[1]["labeled_segments"]["segments"][0]["text"] = "Wrong source text."
+        output = paper / "conclusions_labeled.json"
+        output.write_text(json.dumps(previous))
+        with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test", "_ARIADNE_RETRY_STEP": Path(step.__file__).name}), \
+                patch.object(step, "DATA_DIR", root), patch.object(step.sys, "argv", ["step", "test"]), \
+                patch.object(step, "extract_conclusions", return_value=conclusions), \
+                patch.object(step, "process_conclusion", side_effect=process):
+            step.main()
+        assert sorted(calls) == ["conclusion_2", "conclusion_3"]
+        assert [item["id"] for item in json.loads(output.read_text())] == [item["id"] for item in conclusions]
+        calls.clear()
+        with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test", "_ARIADNE_RETRY_STEP": ""}), \
+                patch.object(step, "DATA_DIR", root), patch.object(step.sys, "argv", ["step", "test"]), \
+                patch.object(step, "extract_conclusions", return_value=conclusions), \
+                patch.object(step, "process_conclusion", side_effect=process):
+            step.main()
+        assert sorted(calls) == [item["id"] for item in conclusions]
+
+
+def test_parallel_group_failure_is_not_converted_to_a_result():
+    import os
+    import claude_api_call as api
+
+    def work(value):
+        if value == 1:
+            raise RuntimeError("failed group")
+        return value
+
+    with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test"}):
+        try:
+            list(api._ordered_parallel_map(work, range(5)))
+        except RuntimeError as exc:
+            assert str(exc) == "failed group"
+        else:
+            raise AssertionError("worker failures must stop the stage")
+
+
+def test_deepseek_honors_rate_limit_delay_and_does_not_retry_auth_errors():
+    import os
+    from urllib.error import HTTPError
+    import claude_api_call as api
+
+    rate_limit = HTTPError("https://example.invalid", 429, "rate limit", {"Retry-After": "7"}, None)
+    unauthorized = HTTPError("https://example.invalid", 401, "unauthorized", {}, None)
+    with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test", "DEEPSEEK_API_KEY": "test"}), \
+            patch.object(api, "urlopen", side_effect=[rate_limit, unauthorized]) as request, \
+            patch.object(api.time, "sleep") as sleep:
+        try:
+            api.call_claude("test")
+        except RuntimeError as exc:
+            assert "401" in str(exc)
+        else:
+            raise AssertionError("authentication errors must fail")
+        assert request.call_count == 2
+        sleep.assert_called_once_with(7.0)
+
+
+def test_completion_retry_rejects_invalid_cached_references():
+    import json
+    import os
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "step2_claim_completeness"))
+    import step2b_complete_claims as step
+
+    calls = []
+
+    def process(parts, numbers):
+        calls.extend(numbers)
+        return {number: {"完整表述": f"Claim {number}.", "需要更多上下文": []} for number in numbers}, "ok"
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        paper = root / "test"
+        paper.mkdir()
+        organized = [{"id": f"paper::conclusion_{n}", "organized_parts": [
+            {"number": n, "label": "assertion", "content": f"Claim {n}."}]} for n in range(1, 4)]
+        records = [{"conclusion": f"conclusion_{n}", "number": n, "text": f"Claim {n}.",
+                    "是纯实验数据": False, "完整表述": f"Claim {n}.", "需要更多上下文": [],
+                    "completion_status": "ok" if n < 3 else "fallback_original"} for n in range(1, 4)]
+        records[1]["完整表述"] = "Self-reference 【2】."
+        (paper / "organized_content.json").write_text(json.dumps(organized))
+        output = paper / "claim_completeness_analysis.json"
+        output.write_text(json.dumps(records))
+        with patch.dict(os.environ, {"DEEPSEEK_MODEL": "test", "_ARIADNE_RETRY_STEP": Path(step.__file__).name}), \
+                patch.object(step, "DATA_DIR", root), patch.object(step.sys, "argv", ["step", "test"]), \
+                patch.object(step, "process_conclusion", side_effect=process):
+            step.main()
+        assert sorted(calls) == [2, 3]
+        result = json.loads(output.read_text())
+        assert [item["number"] for item in result] == [1, 2, 3]
+        assert all(item["completion_status"] == "ok" for item in result)
 
 
 if __name__ == "__main__":

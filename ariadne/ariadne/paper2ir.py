@@ -114,9 +114,12 @@ def _run_step(script: Path, pid: str, pipeline_dir: Path, python: str,
     fallback_model = os.environ.get("ARIADNE_FALLBACK_MODEL", "deepseek-v4-flash")
     for attempt in range(STEP_RETRIES + 1):
         env = dict(os.environ, PYTHONPATH=str(pipeline_dir))
+        env.pop("_ARIADNE_RETRY_STEP", None)
         if attempt > 0 and fallback_model:
             # A stalled/overloaded primary model should not consume every retry.
             env["DEEPSEEK_MODEL"] = fallback_model
+        if attempt > 0:
+            env["_ARIADNE_RETRY_STEP"] = script.name
         proc = run(
             [python, str(script), pid],
             cwd=pipeline_dir, env=env,
