@@ -65,9 +65,9 @@ question-first answer layer and deliverables.
 
 Prebuilt self-contained bundle (no clone needed):
 
-[ariadne-0.4.2-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/ariadne-0.4.2-bundle.tar.gz) ·
-[ariadne-0.4.2-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/ariadne-0.4.2-bundle.zip) ·
-[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.4.2/SHA256SUMS)
+[ariadne-0.5.0-bundle.tar.gz](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.5.0/ariadne-0.5.0-bundle.tar.gz) ·
+[ariadne-0.5.0-bundle.zip](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.5.0/ariadne-0.5.0-bundle.zip) ·
+[SHA256SUMS](https://github.com/CatherineWuleyan/gaia-ir/releases/download/v0.5.0/SHA256SUMS)
 
 The bundle includes Ariadne, the three pipelines, the offline aircraft demo,
 and `install.sh`. To build it yourself:

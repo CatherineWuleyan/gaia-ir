@@ -1,4 +1,4 @@
-# Ariadne 0.4.2
+# Ariadne 0.5.0
 
 **Question → LKM papers → graph → candidate answers.**
 
@@ -21,8 +21,8 @@ the offline aircraft demo, and an installer.
 ## 1. Install
 
 ```bash
-tar -xzf ariadne-0.4.2-bundle.tar.gz
-cd ariadne-0.4.2
+tar -xzf ariadne-0.5.0-bundle.tar.gz
+cd ariadne-0.5.0
 ./install.sh
 ```
 
