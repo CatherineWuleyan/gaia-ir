@@ -44,6 +44,39 @@ pipeline 内部实现，只负责编排、隔离每次运行，并补上问题�
 ./packaging/build_release.sh
 ```
 
+## 状态与边界
+
+引用下面任何数字之前先读这一节。
+
+- **图没有量化评估。** claim 抽取、关系类型、root 选择都没有 precision/recall
+  或标注一致性数据。`benchmark/e0` 只有 2 道题的 checker pilot，physics 示例
+  只有 1 张人工复核的图。本页的计数衡量的是规模，不是正确性。
+- **typed support chain 很稀有。** 冻结飞机图是 0 条，8 篇实时运行也是 0 条：
+  它导出的 17 条是阅读序列和 `infer` 路径。系统不会悄悄把任何边升级成
+  deduction，所以真正需要多步演绎的问题目前会显示空链。
+- **飞机图的跨论文改类型是 LLM 审计**，不是人工复核（`edge_roles.json` 记录了
+  模型）。只有 physics 示例是人工复核。
+- `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
+- 一次 8 篇飞机自动运行已端到端完成：**184 条 claim、105 条关系、5 个候选
+  答案、33 条 answer links、17 条导出路径**（5 条同论文序列 + 12 条图路径）。
+  这次用 `--top-k 8`；k 是调用时参数，不是硬编码的论文数。
+- 8 篇里有 3 篇的图是 `bohr lkm extract` 自动补出来的：Interactive Cockpit
+  （62 节点 / 15 conclusions）、Cybermatrix（46 / 10）、Flying-V（56 / 12）。
+  原生图和补建图走同一套 selection/materialise 流程。
+- 宽问题上仍有很多高相关候选是空原生图。IEEE/AIAA 等闭源 PDF、以及超过 50 页
+  的 PDF 会在 `selection.json` 里记录 `extract_skip_reason` 后跳过，不伪造图。
+- LKM 补建图路径也在真实 arXiv 论文（Maestro）上跑通：87 节点 / 88 边 /
+  19 conclusions。空原生图 → 补建图的判定有单元测试覆盖；只有存在 PDF/arXiv
+  源时才会触发。
+- `full` 在花钱前预检配置、Python、pipeline 文件和 Bohr 登录。建议先用
+  `--top-k 2 --no-fulltext` 检查质量和成本。
+- full 模式链条质量取决于 paper2ir、single、merge 和问题层。Ariadne 只报告这些
+  阶段产生的东西，不伪造缺失证据，也不把 `infer` 升级成 `deduction`。
+- viewer 默认显示全部图路径。能画出来不代表自动成为 support chain。
+- Physics 示例是复核过的静态图，不是一次新的实时运行；它展示答案层和复核界面
+  的形态。
+
+
 ## 示例
 
 ### 1. 怎么完成飞机的仿真设计？
@@ -53,20 +86,31 @@ pipeline 内部实现，只负责编排、隔离每次运行，并补上问题�
 
 ![飞机问题图](docs/images/aircraft-question-graph.png)
 
-冻结的飞机图包含 **13 篇论文、311 条 claim、258 条关系、93 条 integration
-delta、5 个候选答案**；链条导出器产出 **107 条多步链**。
+冻结的飞机图包含 **13 篇论文、311 条 claim、223 条边、93 条 integration
+delta、5 个候选答案**。
 
-| Root | 候选答案 | 链条数 |
-| --- | --- | ---: |
-| R1 | 集成概念设计环境 | 20 |
-| R2 | 嵌套多学科优化 | 26 |
-| R3 | 非线性飞行动力学建模 | 25 |
-| R4 | 飞行数据模型校正 | 21 |
-| R5 | 硬件在环验证 | 15 |
+**它包含 0 条 typed support chain。** 只有 deduction 可入链，而这张图没有任何
+deduction；导出器产出的是：
+
+- **7 条 same-paper 序列**：同一篇论文的直接支持 claim，按 claim 编号排列。
+  这是阅读顺序，不是证明；
+- **100 条 exploratory path**：`infer` 关系，作为上下文展示。
+
+| Root | 候选答案 | same-paper | exploratory | 判定 |
+| --- | --- | ---: | ---: | --- |
+| R1 | 集成概念设计环境 | 2 | 18 | multi-paper direct support（7 + 3 条） |
+| R2 | 嵌套多学科优化 | 2 | 24 | multi-paper direct support（5 + 3 条） |
+| R3 | 非线性飞行动力学建模 | 1 | 24 | single-paper core（7 + 1 条） |
+| R4 | 飞行数据模型校正 | 1 | 20 | single-paper core（9 + 1 条） |
+| R5 | 硬件在环验证 | 1 | 14 | single-paper core（8 + 1 条） |
+
+判定的依据是**第二篇论文贡献了多少条 claim**。R3–R5 结构上确实有 2 篇论文，
+但第二篇只提供 9 条里的 1 条，所以不构成跨论文互证；R1、R2 构成。
 
 看图时重点看：
 
-- 五个红色大 root，以及绿色 **support** 链接；
+- 两个红色大 root（多论文）和三个橙色 root（单论文核心）——颜色现在跟着判定走；
+- 绿色 **support** 链接；
 - **same-paper** 是按论文和 claim 编号排列的阅读顺序，不是逻辑证明；
 - 虚线 **analogy** / **infer** 是可见的上下文，但**不会**被升级成 deduction，
   也不构成 support chain。
@@ -697,28 +741,6 @@ Ariadne 封装的三套维护中 pipeline：
 | [`weekly_reports/export_single_artifacts.py`](../weekly_reports/export_single_artifacts.py) | 导出 single 运行产物给 merge |
 | [`outputs/aircraft/final/`](../outputs/aircraft/final/) | 冻结飞机 demo 数据 |
 | [`outputs/physics/final/`](../outputs/physics/final/) | 复核版 Physics 示例图 |
-
-## 状态与边界
-
-- `demo` 在冻结飞机图上做过离线测试，会产出两个交付物。
-- 一次 8 篇飞机自动运行已端到端完成：**184 条 claim、105 条关系、5 个候选
-  答案、33 条 answer links、17 条多步链**。这次用 `--top-k 8`；k 是调用时
-  参数，不是硬编码的论文数。
-- 8 篇里有 3 篇的图是 `bohr lkm extract` 自动补出来的：Interactive Cockpit
-  （62 节点 / 15 conclusions）、Cybermatrix（46 / 10）、Flying-V（56 / 12）。
-  原生图和补建图走同一套 selection/materialise 流程。
-- 宽问题上仍有很多高相关候选是空原生图。IEEE/AIAA 等闭源 PDF、以及超过 50 页
-  的 PDF 会在 `selection.json` 里记录 `extract_skip_reason` 后跳过，不伪造图。
-- LKM 补建图路径也在真实 arXiv 论文（Maestro）上跑通：87 节点 / 88 边 /
-  19 conclusions。空原生图 → 补建图的判定有单元测试覆盖；只有存在 PDF/arXiv
-  源时才会触发。
-- `full` 在花钱前预检配置、Python、pipeline 文件和 Bohr 登录。建议先用
-  `--top-k 2 --no-fulltext` 检查质量和成本。
-- full 模式链条质量取决于 paper2ir、single、merge 和问题层。Ariadne 只报告这些
-  阶段产生的东西，不伪造缺失证据，也不把 `infer` 升级成 `deduction`。
-- viewer 默认显示全部图路径。能画出来不代表自动成为 support chain。
-- Physics 示例是复核过的静态图，不是一次新的实时运行；它展示答案层和复核界面
-  的形态。
 
 ## 成本
 

@@ -76,6 +76,51 @@ and `install.sh`. To build it yourself:
 ./packaging/build_release.sh
 ```
 
+## Status and limits
+
+Read this before quoting any number below.
+
+- **There is no quantitative evaluation of the graph.** No precision, recall or
+  inter-annotator agreement is reported for claim extraction, relation typing or
+  root selection. `benchmark/e0` is a two-question checker pilot, and the
+  physics example is one hand-reviewed graph. The counts on this page measure
+  scale, not correctness.
+- **Typed support chains are rare.** The frozen aircraft graph has none, and the
+  live 8-paper run has none either: its 17 exported rows are reading sequences
+  and `infer` paths. Nothing is silently upgraded to deduction, so a question
+  with real multi-step deduction will currently show empty typed chains.
+- **The aircraft cross-paper relabelling is an LLM audit**, not a human review
+  (`edge_roles.json` records the model). Only the physics example had human
+  review.
+- `demo` is tested offline on the frozen aircraft graph and writes both
+  deliverables.
+- An 8-paper automatic aircraft run completed end-to-end: **184 claims, 105
+  relations, 5 candidate answers, 33 answer links, and 17 exported paths**
+  (5 same-paper sequences, 12 graph paths). It used `--top-k 8`; k is a runtime
+  option, not a hard-coded paper count.
+- Three of the eight graphs were built automatically by `bohr lkm extract`:
+  Interactive Cockpit (62 nodes / 15 conclusions), Cybermatrix (46 / 10), and
+  Flying-V (56 / 12). Native-graph papers and built graphs go through the same
+  selection/materialisation path.
+- On broad questions, many high-relevance candidates still have empty native
+  graphs. Closed-access publishers (IEEE/AIAA) and PDFs over 50 pages are
+  skipped with an explicit `extract_skip_reason` in `selection.json`; no
+  synthetic graph is invented.
+- The LKM extraction path was also exercised on a real arXiv paper (Maestro):
+  87 nodes / 88 edges / 19 conclusions. The empty-native-graph → extraction
+  decision is covered by unit tests; it only triggers when a PDF/arXiv source
+  is available.
+- `full` preflight-checks config, Python, pipeline files, and Bohr login before
+  spending. Start with `--top-k 2 --no-fulltext` while checking quality and cost.
+- The quality of full-mode chains depends on paper2ir, single, merge, and the
+  question layer. Ariadne reports what those stages produce; it does not invent
+  missing evidence or upgrade `infer` to `deduction`.
+- The viewer shows all graph paths by default. A drawable path is not
+  automatically a support chain.
+- The physics example is a reviewed static graph, not a fresh live run. It
+  demonstrates the shape of the answer layer and the review surface.
+
+
 ## Examples
 
 ### 1. How should aircraft simulation design be carried out?
@@ -86,21 +131,33 @@ and `install.sh`. To build it yourself:
 
 ![Aircraft question graph](docs/images/aircraft-question-graph.png)
 
-The frozen aircraft graph contains **13 papers, 311 claims, 258 relations,
-93 integration deltas, and 5 candidate answers**. The exporter produces
-**107 multi-step chains** to those answers.
+The frozen aircraft graph contains **13 papers, 311 claims, 223 edges,
+93 integration deltas, and 5 candidate answers**.
 
-| Root | Candidate answer | Chains |
-| --- | --- | ---: |
-| R1 | 集成概念设计环境 · integrated conceptual-design environment | 20 |
-| R2 | 嵌套多学科优化 · nested multidisciplinary optimization | 26 |
-| R3 | 非线性飞行动力学建模 · nonlinear flight-dynamics modeling | 25 |
-| R4 | 飞行数据模型校正 · flight-data model correction | 21 |
-| R5 | 硬件在环验证 · hardware-in-the-loop validation | 15 |
+**It contains zero typed support chains.** Deduction is the only chainable
+edge type, and this graph has none: what the exporter emits is
+
+- **7 same-paper sequences** — direct-support claims from one paper, ordered by
+  claim number. Reading order, not a proof;
+- **100 exploratory paths** — `infer` relations, shown as context.
+
+| Root | Candidate answer | same-paper | exploratory | verdict |
+| --- | --- | ---: | ---: | --- |
+| R1 | 集成概念设计环境 · integrated conceptual-design environment | 2 | 18 | multi-paper direct support (7 + 3 claims) |
+| R2 | 嵌套多学科优化 · nested multidisciplinary optimization | 2 | 24 | multi-paper direct support (5 + 3 claims) |
+| R3 | 非线性飞行动力学建模 · nonlinear flight-dynamics modeling | 1 | 24 | single-paper core (7 + 1 claims) |
+| R4 | 飞行数据模型校正 · flight-data model correction | 1 | 20 | single-paper core (9 + 1 claims) |
+| R5 | 硬件在环验证 · hardware-in-the-loop validation | 1 | 14 | single-paper core (8 + 1 claims) |
+
+The verdict counts the second paper's contribution. R3–R5 are structurally
+"two papers", but the second paper supplies one claim out of nine, so they are
+not cross-paper corroboration. R1 and R2 are.
 
 What to look at in the viewer:
 
-- the five large red roots and the green **support** links that reach them;
+- the two large red roots (multi-paper) and the three orange ones
+  (single-paper core) — colour now follows the verdict;
+- the green **support** links that reach each root;
 - the distinction between **same-paper** claim sequences (reading order, not a
   logical proof) and cross-paper support;
 - dashed **analogy** and **infer** relations: they are visible context, but
@@ -726,35 +783,6 @@ Local graph/text entries do not spend LKM calls. Entries with only an
 | [`weekly_reports/export_single_artifacts.py`](../weekly_reports/export_single_artifacts.py) | export single-run artifacts for merge |
 | [`outputs/aircraft/final/`](../outputs/aircraft/final/) | frozen aircraft demo dataset |
 | [`outputs/physics/final/`](../outputs/physics/final/) | reviewed physics example graph |
-
-## Status and limits
-
-- `demo` is tested offline on the frozen aircraft graph and writes both
-  deliverables.
-- An 8-paper automatic aircraft run completed end-to-end: **184 claims, 105
-  relations, 5 candidate answers, 33 answer links, and 17 chains**. It used
-  `--top-k 8`; k is a runtime option, not a hard-coded paper count.
-- Three of the eight graphs were built automatically by `bohr lkm extract`:
-  Interactive Cockpit (62 nodes / 15 conclusions), Cybermatrix (46 / 10), and
-  Flying-V (56 / 12). Native-graph papers and built graphs go through the same
-  selection/materialisation path.
-- On broad questions, many high-relevance candidates still have empty native
-  graphs. Closed-access publishers (IEEE/AIAA) and PDFs over 50 pages are
-  skipped with an explicit `extract_skip_reason` in `selection.json`; no
-  synthetic graph is invented.
-- The LKM extraction path was also exercised on a real arXiv paper (Maestro):
-  87 nodes / 88 edges / 19 conclusions. The empty-native-graph → extraction
-  decision is covered by unit tests; it only triggers when a PDF/arXiv source
-  is available.
-- `full` preflight-checks config, Python, pipeline files, and Bohr login before
-  spending. Start with `--top-k 2 --no-fulltext` while checking quality and cost.
-- The quality of full-mode chains depends on paper2ir, single, merge, and the
-  question layer. Ariadne reports what those stages produce; it does not invent
-  missing evidence or upgrade `infer` to `deduction`.
-- The viewer shows all graph paths by default. A drawable path is not
-  automatically a support chain.
-- The physics example is a reviewed static graph, not a fresh live run. It
-  demonstrates the shape of the answer layer and the review surface.
 
 ## Cost
 

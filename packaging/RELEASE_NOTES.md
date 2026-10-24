@@ -61,8 +61,13 @@ without writing files, calling a model, or uploading anything.
   rows are 7 same-paper reading sequences plus 100 `infer` exploratory paths.
   See `outputs/aircraft/final/CHAIN_RELIABILITY.md`.
 - Root verdicts are structural (how many claims and papers link to a root), not
-  a truth vote. All five aircraft roots currently share one verdict label, so
-  the label does not discriminate between them.
+  a truth vote. Since 0.5.0 the label also counts the second paper's
+  contribution, so the five aircraft roots split 2 `multi-paper` / 3
+  `single-paper core` instead of all sharing one label. That is a better label,
+  not better evidence.
+- No precision/recall or inter-annotator agreement is reported for claim
+  extraction, relation typing or root selection. The benchmark in `benchmark/e0`
+  is a two-question checker pilot.
 - The cross-paper relabelling in `outputs/aircraft/final/` is an **LLM audit**
   (`edge_roles.json` records the model), not a human review. The physics example
   is the one that had human review.
