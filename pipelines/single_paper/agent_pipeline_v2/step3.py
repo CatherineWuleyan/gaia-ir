@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -16,7 +17,7 @@ from pipeline_harness.store import atomic_write_json
 
 from .authoring import REASONING_TYPES, emit_formalization, weakpoint_target_ids
 from .step1 import PAPER_TEXT_KIND
-from .step2 import _request_budget
+from .step2 import _load_deepseek_env, _request_budget
 
 
 STEP_NAME = "step3_analyze_reasoning"
@@ -32,6 +33,18 @@ _OPERATOR_BY_EXPRESSION = (
     ("或", "disjunction"),
     ("非", "negation"),
 )
+
+
+def _classification_provider(context: StageContext) -> str:
+    if context.options.get("tool_plugin", WEAKPOINT_TOOL_SPEC) != WEAKPOINT_TOOL_SPEC:
+        return "custom"
+    _load_deepseek_env()
+    provider = os.environ.get("GAIA_RELATION_CLASSIFIER", "deepseek").strip().lower()
+    if provider not in {"deepseek", "jev"}:
+        raise ValueError("GAIA_RELATION_CLASSIFIER must be deepseek or jev")
+    if provider == "jev" and not os.environ.get("TYPESAFE_API_KEY"):
+        raise RuntimeError("TYPESAFE_API_KEY is not configured for Jev relation classification")
+    return provider
 
 
 def _latest_formalization(context: StageContext) -> JSONDict:
@@ -628,6 +641,11 @@ def _classify_weakpoints(context: StageContext, document: JSONDict, weakpoints: 
     tool = instantiate(spec)
     if not isinstance(tool, DomainTool):
         raise TypeError(f"{spec} does not implement DomainTool")
+    if _classification_provider(context) == "jev":
+        tool.name = "jev-weakpoint-classifier"
+        tool.model = os.environ.get("TYPESAFE_MODEL", "jev-1.14.0")
+        if not tool.model.startswith("jev-"):
+            raise ValueError("TYPESAFE_MODEL must name a Jev model")
     request = ToolCallRequest(
         call_id=f"semantic_step_3_{context.run_id}_{context.attempt}", tool_name=tool.name,
         tool_version=tool.version, operation="classify_weakpoints",
@@ -710,6 +728,7 @@ class Step3AnalyzeReasoningPlugin:
         findings: list[Finding] = []
         drafts: list[ArtifactDraft] = []
         try:
+            classifier_provider = _classification_provider(context)
             document = copy.deepcopy(_latest_formalization(context))
             workflow = document["workflow"]
             graph = document["graph"]
@@ -821,12 +840,15 @@ class Step3AnalyzeReasoningPlugin:
             # newly created weakpoints exactly like direct input weakpoints and
             # send them through the canonical classifier as well. Its validated
             # null label is valid evidence insufficiency; a failed call is not.
-            # Adopted claims_final weakpoints are deliberately excluded: they
-            # are already high-confidence and take no "does it hold" judgment.
+            # Legacy DeepSeek mode leaves trusted imports unclassified. An
+            # explicit Jev selection classifies their family only: retain their
+            # IDs, endpoints, expressions and protection from deletion.
             unclassified_existing = [
                 item for item in existing_weakpoints if item["payload"]["reasoning_type"] is None
             ]
-            classification_targets = [*unclassified_existing, *normalized_weakpoints]
+            classification_targets = [*unclassified_existing,
+                                      *(adopted_weakpoints if classifier_provider == "jev" else []),
+                                      *normalized_weakpoints]
             if classification_targets:
                 classifications, classification_draft = _classify_weakpoints(context, document, classification_targets)
                 drafts.append(classification_draft)
@@ -861,7 +883,7 @@ class Step3AnalyzeReasoningPlugin:
             workflow["non_reasoning_links"] = []
             reasoning_operator_count = sum(
                 1 for operator in operators if operator.get("type") not in {"equivalence"}
-            )
+            ) + sum(item["payload"]["reasoning_type"] in REASONING_TYPES for item in weakpoints)
             observation_count = sum(
                 1 for knowledge in document["knowledges"].values()
                 if knowledge.get("type") == "observation_claim"

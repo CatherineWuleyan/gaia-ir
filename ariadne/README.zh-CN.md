@@ -509,6 +509,9 @@ Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
 | `ARIADNE_MODEL_BASE_URL` / `DEEPSEEK_BASE_URL` / `OPENAI_BASE_URL` | endpoint |
 | `ARIADNE_MODEL` / `DEEPSEEK_MODEL` / `OPENAI_MODEL` | 模型名 |
 | `ARIADNE_MERGE_MODEL` / `DEEPSEEK_MERGE_MODEL` | merge 模型 |
+| `GAIA_RELATION_CLASSIFIER` | 单篇 Step 3 四分类：`deepseek`（默认）或 `jev` |
+| `TYPESAFE_API_KEY` | Jev 的 TypeSafe API key，仅用于关系类型分类 |
+| `TYPESAFE_MODEL` | Jev 模型，默认固定为 `jev-1.14.0` |
 | `ARIADNE_BOHR_ACCESS_KEY` / `BOHR_ACCESS_KEY` / `LKM_ACCESS_KEY` | Bohr key |
 | `ARIADNE_BOHR_PROFILE` | Bohr profile |
 | `ARIADNE_AUTO_APPROVE_SPEND` | `1` / `true` 表示自动批准计费调用 |
@@ -522,6 +525,16 @@ Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
 DEEPSEEK_API_KEY=... BOHR_ACCESS_KEY=... \
   ./ariadne/run.sh ask "..." --top-k 2 --yes
 ```
+
+要用 Jev 分类，在本地 `agent/.env` 设置 `GAIA_RELATION_CLASSIFIER=jev`、
+`TYPESAFE_MODEL=jev-1.14.0` 和 `TYPESAFE_API_KEY`，并将文件权限设为 `0600`。
+该文件已被 Git 忽略，密钥不要提交。Jev 只替换单篇 Step 3 的
+`deduction / abduction / analogy / null` 类型判断；保留导入关系的端点和顺序，
+同时为原先未分类的可信导入关系补做类型判断。候选关系规范化、推理展开及跨论文
+联合分析仍使用原来的生成模型。Jev 的原始概率和实际模型版本记录在既有工具审计中，
+不写为图上的先验概率，也不引入未经验证的置信度阈值。
+缺少密钥、鉴权失败或响应不合法时，该步骤明确失败，不静默回退为 DeepSeek 或 `null`。
+已有运行不会自动重算；更换模型后，从需要重新分类的单篇 Step 2 检查点建立恢复运行。
 
 ### 模型兼容性
 

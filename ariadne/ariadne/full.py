@@ -1,6 +1,7 @@
 """End-to-end Ariadne run: question -> LKM -> paper2ir -> single -> merge -> HTML/MD."""
 from __future__ import annotations
 
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -17,7 +18,7 @@ from .config import (
     resolve_runtime,
 )
 from .render import install_outputs, render_outputs
-from .util import AriadneError, REPO, new_run_dir, read_json, write_json
+from .util import AriadneError, REPO, new_run_dir, read_env_file, read_json, write_json
 
 REQUIRED_FILES = frozenset({
     "agent/pipeline_harness/__init__.py",
@@ -71,6 +72,19 @@ def _preflight(runtime: Runtime, paper_spec: Path | None) -> dict[str, Any]:
                 "OpenAI-compatible key instead."
             )
         raise AriadneError(message)
+    agent_env = read_env_file(REPO / "agent" / ".env")
+    classifier = os.environ.get(
+        "GAIA_RELATION_CLASSIFIER", agent_env.get("GAIA_RELATION_CLASSIFIER", "deepseek")
+    ).strip().lower()
+    if classifier not in {"deepseek", "jev"}:
+        raise AriadneError("GAIA_RELATION_CLASSIFIER must be deepseek or jev")
+    if classifier == "jev" and not os.environ.get(
+        "TYPESAFE_API_KEY", agent_env.get("TYPESAFE_API_KEY", "")
+    ).strip():
+        raise AriadneError(
+            "Jev relation classification requires TYPESAFE_API_KEY. "
+            "Set it in the environment or agent/.env before running Ariadne."
+        )
     details: dict[str, Any] = {
         "python_version": python_version(runtime.python),
         "model_key_source": runtime.sources.get("model_api_key", "missing"),

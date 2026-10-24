@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import tempfile
 import threading
 import unittest
@@ -13,7 +14,8 @@ from urllib.error import HTTPError
 from agent_pipeline_v2.authoring import emit_formalization
 from agent_pipeline_v2.step2 import DeepSeekV4FlashObservationTool
 from agent_pipeline_v2.step3 import (
-    _relation_clusters, _screen_classifications, _transitive_shortcut_indexes, _validate_cluster_result,
+    _relation_clusters, _screen_classifications,
+    _transitive_shortcut_indexes, _validate_cluster_result,
 )
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
@@ -647,6 +649,113 @@ class Step3Tests(unittest.TestCase):
         self.assertEqual("helpers", helper_node["layer"])
         self.assertEqual(["standard"], helper_node["visible_at"])
         self.assertFalse(any(document["title"] == helper for document in view.search_documents))
+
+
+    def _jev_store(self):
+        (self.root / "paper_text.md").write_text(
+            "[#result] Observed effect. Second observed effect. General mechanism.\n", encoding="utf-8")
+        return RunStore.create(self.root / "jev-runs", {
+            "pipeline_id": "jev-classification-test", "version": "1",
+            "stages": [
+                {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter"},
+                {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin"},
+                {"name": "step2", "plugin": "agent_pipeline_v2.step2:Step2ExtractObservationsPlugin",
+                 "options": {"tool_plugin": "agent_pipeline_v2.step2:DeepSeekV4FlashObservationTool"}},
+                {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin"},
+            ],
+        }, input_manifest=self.root / "manifest.json")
+
+    @staticmethod
+    def _latest_formalization(store):
+        ref = max((ref for ref in store.load_artifacts() if ref.kind == "formalization"),
+                  key=lambda ref: int(ref.metadata.get("step", 0)))
+        return json.loads(store.artifact_path(ref).read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _jev_answer(choice="abduction"):
+        return {"type": "choice", "choice": choice, "confidence": 1.0,
+                "probabilities": {key: float(key == choice) for key in ("deduction", "abduction", "analogy", "null")}}
+
+    def test_jev_classifies_trusted_import_without_changing_endpoints_and_preserves_raw_probabilities(self):
+        store = self._jev_store()
+        raw = {"model": "jev-1.14.0", "answers": {"w_0": self._jev_answer()}}
+        with patch.dict(os.environ, {"GAIA_RELATION_CLASSIFIER": "jev", "TYPESAFE_API_KEY": "test-typesafe-key",
+                                     "TYPESAFE_MODEL": "jev-1.14.0"}), \
+                patch("agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(json.dumps(raw).encode())) as send:
+            run = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", run.status, run.findings)
+        send.assert_called_once()
+        request = send.call_args.args[0]
+        self.assertEqual("https://api.typesafe.ai/v1/systemone", request.full_url)
+        self.assertEqual("Bearer test-typesafe-key", request.get_header("Authorization"))
+        body = json.loads(request.data)
+        self.assertEqual("jev-1.14.0", body["model"])
+        self.assertEqual({"model", "state", "questions"}, set(body))
+        self.assertEqual({"deduction", "abduction", "analogy", "null"}, set(body["questions"]["w_0"]["criteria"]))
+        self.assertEqual(["claim_1", "claim_2"], [c["claim_id"] for c in body["state"]["w_0"]["evidence_claims"]])
+        final = self._latest_formalization(store)
+        payload = final["workflow"]["weakpoints"][0]["payload"]
+        self.assertEqual("abduction", payload["reasoning_type"])
+        self.assertEqual(["claim_1", "claim_2"], payload["evidence_claim_ids"])
+        self.assertEqual(["claim_3"], payload["target_claim_id"])
+        audits = [a for a in self._semantic_audits(store) if a["request"]["operation"] == "classify_weakpoints"]
+        self.assertEqual(1, len(audits))
+        self.assertEqual("jev-weakpoint-classifier", audits[0]["request"]["tool_name"])
+        self.assertEqual(raw, audits[0]["response"]["raw"]["response"])
+        self.assertEqual("jev-1.14.0", audits[0]["response"]["metadata"]["model"])
+
+    def test_jev_null_maps_to_existing_null_without_deepseek_fallback(self):
+        store = self._jev_store()
+        raw = {"model": "jev-1.14.0", "answers": {"w_0": self._jev_answer("null")}}
+        with patch.dict(os.environ, {"GAIA_RELATION_CLASSIFIER": "jev", "TYPESAFE_API_KEY": "test-key"}), \
+                patch("agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(json.dumps(raw).encode())) as send:
+            run = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", run.status, run.findings)
+        send.assert_called_once()
+        self.assertIsNone(self._latest_formalization(store)["workflow"]["weakpoints"][0]["payload"]["reasoning_type"])
+
+    def test_jev_auth_error_fails_stage_and_is_audited_without_fallback(self):
+        store = self._jev_store()
+        error = HTTPError("https://api.typesafe.ai/v1/systemone", 401, "Unauthorized", {}, None)
+        with patch.dict(os.environ, {"GAIA_RELATION_CLASSIFIER": "jev", "TYPESAFE_API_KEY": "test-key"}), \
+                patch("agent_pipeline_v2.step2.urlopen", side_effect=error) as send:
+            run = run_pipeline(store.run_dir)
+        self.assertEqual("failed", run.status)
+        self.assertEqual("step3", run.current_stage)
+        send.assert_called_once()
+        audits = [a for a in self._semantic_audits(store) if a["request"]["operation"] == "classify_weakpoints"]
+        self.assertEqual("failed", audits[0]["response"]["status"])
+        self.assertEqual("HTTPError", audits[0]["response"]["error"]["type"])
+
+    def test_jev_missing_key_fails_before_any_network_request(self):
+        store = self._jev_store()
+        with patch.dict(os.environ, {"GAIA_RELATION_CLASSIFIER": "jev", "TYPESAFE_API_KEY": ""}), \
+                patch("agent_pipeline_v2.step2.urlopen") as send:
+            run = run_pipeline(store.run_dir)
+        self.assertEqual("failed", run.status)
+        self.assertTrue(any("TYPESAFE_API_KEY" in f["message"] for f in run.findings))
+        send.assert_not_called()
+
+    def test_jev_rejects_malformed_or_missing_decisions_instead_of_guessing(self):
+        from copy import deepcopy
+        tool = DeepSeekV4FlashObservationTool()
+        tool.name, tool.model = "jev-weakpoint-classifier", "jev-1.14.0"
+        request = ToolCallRequest("jev-test", tool.name, tool.version, "classify_weakpoints", [],
+                                  {"weakpoints": [{"weakpoint_id": "w1"}]})
+        valid = {"model": "jev-1.14.0", "answers": {"w_0": self._jev_answer()}}
+        variants = [dict(valid, answers={})]
+        for key, value in [("choice", "entailment"), ("confidence", float("nan")),
+                           ("probabilities", {"abduction": 1.0}),
+                           ("probabilities", {"deduction": 0.8, "abduction": 0.1, "analogy": 0.05, "null": 0.05})]:
+            raw = deepcopy(valid)
+            raw["answers"]["w_0"][key] = value
+            variants.append(raw)
+        for raw in variants:
+            with self.subTest(raw=raw), patch.dict(os.environ, {"TYPESAFE_API_KEY": "test-key"}), \
+                    patch("agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(json.dumps(raw).encode())) as send:
+                with self.assertRaises(ValueError):
+                    tool.invoke(request)
+                send.assert_called_once()
 
 
 if __name__ == "__main__":

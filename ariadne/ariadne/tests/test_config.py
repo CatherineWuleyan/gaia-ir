@@ -252,6 +252,35 @@ class ConfigCliTest(unittest.TestCase):
             self.assertTrue(checks["readiness"]["demo"])
 
 
+class RelationClassifierPreflightTest(unittest.TestCase):
+    def test_missing_jev_key_fails_before_external_checks(self) -> None:
+        from ariadne import full
+        from ariadne.util import AriadneError
+
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = Runtime(
+                config=Config.load(Path(tmp) / "config.json"),
+                model_api_key="deepseek-test-key", model_base_url="https://example.com/v1",
+                model="m", merge_model="m", python=sys.executable, bohr_bin="",
+            )
+            for settings in (
+                {"GAIA_RELATION_CLASSIFIER": "jev", "TYPESAFE_API_KEY": ""},
+                {"GAIA_RELATION_CLASSIFIER": "jev"},
+            ):
+                with self.subTest(settings=settings), \
+                        mock.patch.dict(os.environ, settings, clear=True), \
+                        mock.patch("ariadne.full._missing_files", return_value=[]), \
+                        mock.patch("ariadne.full.read_env_file", return_value={
+                            "GAIA_RELATION_CLASSIFIER": "jev", "TYPESAFE_API_KEY": "",
+                        }), \
+                        mock.patch("ariadne.full.bohr_status") as bohr, \
+                        mock.patch("ariadne.full.python_version") as python_check:
+                    with self.assertRaisesRegex(AriadneError, "TYPESAFE_API_KEY"):
+                        full._preflight(runtime, None)
+                    bohr.assert_not_called()
+                    python_check.assert_not_called()
+
+
 class ModelTestEndpointTest(unittest.TestCase):
     def test_model_test_does_not_echo_the_key(self) -> None:
         from ariadne import cli

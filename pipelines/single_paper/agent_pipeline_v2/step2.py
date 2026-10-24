@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import errno
 import json
+import math
 import os
 import random
 import socket
@@ -330,7 +331,8 @@ def _load_deepseek_env() -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        if key.strip() in {"DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL"}:
+        if key.strip() in {"DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL",
+                           "GAIA_RELATION_CLASSIFIER", "TYPESAFE_API_KEY", "TYPESAFE_MODEL"}:
             os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
 
 
@@ -621,11 +623,14 @@ class DeepSeekV4FlashObservationTool:
             raise ValueError("every weakpoint requires a non-empty weakpoint_id")
         if len(set(record_ids)) != len(record_ids):
             raise ValueError("weakpoint IDs must be unique")
-        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        use_jev = self.name == "jev-weakpoint-classifier"
+        key_name = "TYPESAFE_API_KEY" if use_jev else "DEEPSEEK_API_KEY"
+        api_key = os.environ.get(key_name)
         if not api_key:
-            raise RuntimeError("DEEPSEEK_API_KEY is not configured")
-        base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
-        prompt = (
+            raise RuntimeError(f"{key_name} is not configured")
+        base_url = ("https://api.typesafe.ai/v1" if use_jev else
+                    os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1").rstrip("/"))
+        instructions = (
             "Classify every weakpoint using only its supplied evidence claims, one or more target claims, expression, and "
             "evidence-anchor excerpts. Do not use outside knowledge or invent author intent, hidden premises, "
             "alternative explanations, mappings, or conditions.\n\n"
@@ -639,28 +644,69 @@ class DeepSeekV4FlashObservationTool:
             "- null: the supplied material cannot identify one of the above, even after allowing a source-grounded intermediate proposition or an explicit alternative explanation. Do not use null merely because the relation is empirical or the target is broader.\n\n"
             "Screening gate before any non-null label: every evidence and target ID must be distinct and grounded in at least one supplied original-paper excerpt; reject duplicate/equivalent endpoint content, mere topical co-occurrence, unsupported causal or quantitative leaps, and conclusions whose scope is plainly outside the supplied evidence. If the only problem is a recoverable intermediate rule/claim or an unresolved alternative explanation, keep deduction/abduction and let Step 4 expand it; otherwise return null.\n\n"
             "Do not emit separate cross-layer evidence relations from each atomic experiment to a claim that already summarizes those experiments; keep the adjacent summary relation only. Do not retain an A→C shortcut when the supplied relations already form A→B→C unless the paper explicitly states A→C.\n\n"
-            "Return JSON only: {\"classifications\":[{\"weakpoint_id\":\"...\",\"reasoning_type\":\"abduction|analogy|deduction|null\"}]}. "
-            "Return every supplied ID exactly once and no other fields.\n\n"
-            + ("Validation feedback from a previous attempt. Repair only the listed error and return the same IDs:\n"
-               + str(request.parameters.get("repair_feedback")) + "\n\n"
-               if request.parameters.get("repair_feedback") else "")
-            + f"Weakpoints:\n{json.dumps(records, ensure_ascii=False)}"
         )
-        body = json.dumps({
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0,
-            "response_format": {"type": "json_object"},
-        }, ensure_ascii=False).encode("utf-8")
+        feedback = ("Validation feedback from a previous attempt: " + str(request.parameters["repair_feedback"])
+                    if request.parameters.get("repair_feedback") else "")
+        if use_jev:
+            criteria = {
+                "deduction": "The source-grounded rule/definition/computation permits the target to follow, as defined in instructions.",
+                "abduction": "Observations support an explanatory hypothesis or general law, with alternatives unresolved.",
+                "analogy": "A source-domain structure or law is transferred through an identifiable mapping to a target domain.",
+                "null": "The supplied evidence cannot identify any of the three reasoning families without unsupported assumptions.",
+            }
+            state = {f"w_{index}": record for index, record in enumerate(records)}
+            questions = {
+                key: {"type": "choice", "instructions": instructions + feedback
+                      + f"\nClassify only state[{json.dumps(key)}]. Do not use facts from other state entries.",
+                      "criteria": criteria}
+                for key in state
+            }
+            body = {"model": self.model, "state": state, "questions": questions}
+        else:
+            prompt = instructions + (
+                "Return JSON only: {\"classifications\":[{\"weakpoint_id\":\"...\",\"reasoning_type\":\"abduction|analogy|deduction|null\"}]}. "
+                "Return every supplied ID exactly once and no other fields.\n\n"
+                + feedback + "\n\n"
+                + f"Weakpoints:\n{json.dumps(records, ensure_ascii=False)}"
+            )
+            body = {"model": self.model, "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0, "response_format": {"type": "json_object"}}
         http_request = Request(
-            f"{base_url}/chat/completions", data=body,
+            f"{base_url}/{'systemone' if use_jev else 'chat/completions'}",
+            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
         )
         raw = _request_json(http_request)
-        try:
-            payload = json.loads(_response_content(raw))
-        except json.JSONDecodeError as exc:
-            raise ValueError("DeepSeek weakpoint classification response is not valid JSON") from exc
+        if use_jev:
+            answers = raw.get("answers") if isinstance(raw, dict) else None
+            if not isinstance(answers, dict) or set(answers) != set(state):
+                raise ValueError("Jev must answer every weakpoint exactly once")
+            if not isinstance(raw.get("model"), str) or not raw["model"]:
+                raise ValueError("Jev response must identify the model")
+            classifications = []
+            for index, record_id in enumerate(record_ids):
+                answer = answers[f"w_{index}"]
+                if not isinstance(answer, dict) or answer.get("type") != "choice" or answer.get("choice") not in criteria:
+                    raise ValueError("Jev returned an invalid relation choice")
+                probabilities = answer.get("probabilities")
+                if (not isinstance(probabilities, dict) or set(probabilities) != set(criteria)
+                        or any(isinstance(p, bool) or not isinstance(p, (int, float))
+                               or not math.isfinite(p) or not 0 <= p <= 1 for p in probabilities.values())
+                        or not math.isclose(sum(probabilities.values()), 1, abs_tol=1e-3)
+                        or probabilities[answer["choice"]] < max(probabilities.values()) - 1e-6):
+                    raise ValueError("Jev returned invalid relation probabilities")
+                confidence = answer.get("confidence")
+                if (isinstance(confidence, bool) or not isinstance(confidence, (int, float))
+                        or not math.isfinite(confidence) or not 0 <= confidence <= 1):
+                    raise ValueError("Jev returned invalid confidence")
+                classifications.append({"weakpoint_id": record_id,
+                                        "reasoning_type": None if answer["choice"] == "null" else answer["choice"]})
+            payload = {"classifications": classifications}
+        else:
+            try:
+                payload = json.loads(_response_content(raw))
+            except json.JSONDecodeError as exc:
+                raise ValueError("DeepSeek weakpoint classification response is not valid JSON") from exc
         classifications = payload.get("classifications") if isinstance(payload, dict) else None
         if not isinstance(classifications, list) or len(classifications) != len(records):
             raise ValueError("DeepSeek must classify every weakpoint exactly once")
@@ -685,7 +731,7 @@ class DeepSeekV4FlashObservationTool:
         return ToolCallResponse(
             request.call_id, "succeeded", {"response": raw},
             {"classifications": [{"weakpoint_id": item, "reasoning_type": resolved[item]} for item in record_ids]},
-            metadata={"weakpoint_count": len(records), "model": self.model},
+            metadata={"weakpoint_count": len(records), "model": raw["model"] if use_jev else self.model},
         )
 
     def _normalize_weakpoint_clusters(self, request: ToolCallRequest) -> ToolCallResponse:
