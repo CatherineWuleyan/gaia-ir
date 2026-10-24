@@ -168,7 +168,9 @@ def _best_paragraph_anchor(content: str, paragraphs: list[JSONDict]) -> JSONDict
         # Scores and percentages distinguish short table observations. Keep
         # decimals whole instead of treating their digits as independent hits.
         text = text.replace("–", "-").replace("−", "-")
-        return [*_tokens(text), *re.findall(r"(?<![\w.-])\d+\.\d+(?![\w.])|(?<![\w.-])\d+(?:\.\d+)?%", text)]
+        return [*_tokens(text), *re.findall(
+            r"(?<![\w.])(?<![A-Za-z]-)(?:\d+\.\d+(?!\w|\.\d)|\d+(?:\.\d+)?%)", text,
+        )]
 
     query = anchor_tokens(content)
     if not query:

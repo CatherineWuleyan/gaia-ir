@@ -459,6 +459,16 @@ class Step2Tests(unittest.TestCase):
         ]
         self.assertEqual("errors", _best_paragraph_anchor("implicit stance about 20%,", paragraphs)["anchor_id"])
 
+    def test_anchor_matches_both_range_endpoints_without_treating_model_version_as_result(self) -> None:
+        paragraphs = [
+            {"anchor_id": "wrong", "text": "The confidence interval is 0.73–0.85."},
+            {"anchor_id": "right", "text": "The confidence interval is 0.73–0.81."},
+        ]
+        self.assertEqual("right", _best_paragraph_anchor(
+            "The confidence interval is 0.73-0.81.", paragraphs,
+        )["anchor_id"])
+        self.assertIsNone(_best_paragraph_anchor("GPT-4.1", [{"anchor_id": "model", "text": "GPT-4.1"}]))
+
     def test_missing_source_anchor_fails_before_sending_rewrite(self) -> None:
         (self.root / "paper_text.md").write_text("Completely unrelated source.\n", encoding="utf-8")
         with patch("agent_pipeline_v2.step2._tool_call") as call:
