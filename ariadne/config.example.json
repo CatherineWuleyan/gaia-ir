@@ -26,6 +26,11 @@
     "min_graph_nodes": 3,
     "min_relevance": 0.2,
     "use_lkm_extract": true,
-    "max_extractions": 5
+    "max_extractions": 5,
+    "cross_check": true,
+    "cross_check_sources": "openalex,crossref,arxiv,semantic_scholar",
+    "min_corroboration": 1,
+    "external_discovery": false,
+    "external_candidates": 4
   }
 }

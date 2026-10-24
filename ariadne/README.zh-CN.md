@@ -19,7 +19,7 @@ Ariadne 把领域问题变成一张可检查的图：论文、claim、候选答�
 
 ```text
 问题
-  -> LKM 查询规划 + 多查询检索 + 图探测选论文
+  -> LKM 查询规划 + 多查询检索 + 多信源交叉验证 + 图探测选论文
   -> paper2ir      (论文图 -> claims_final)
   -> single-paper  (claims -> Gaia IR package)
   -> merge         (多篇 package -> 领域图)
@@ -73,10 +73,10 @@ delta、5 个候选答案**；链条导出器产出 **107 条多步链**。
 
 交付物：
 
-- [飞机问题图 viewer](../outputs/question_domain_aircraft/domain_viewer_question.html)
-- [指向 R1–R5 的全部链条](../outputs/question_domain_aircraft/ALL_CHAINS_TO_ROOTS.md)
-- [答案层 JSON](../outputs/question_domain_aircraft/answer_layer.json)
-- [冻结 demo 数据](../outputs/question_domain_aircraft/)
+- [飞机问题图 viewer](../outputs/aircraft/final/domain_viewer_question.html)
+- [指向 R1–R5 的全部链条](../outputs/aircraft/final/ALL_CHAINS_TO_ROOTS.md)
+- [答案层 JSON](../outputs/aircraft/final/answer_layer.json)
+- [冻结 demo 数据](../outputs/aircraft/final/)
 
 离线运行（不需要 key，不调用 LKM）：
 
@@ -104,10 +104,10 @@ Physics 例子也展示了产品的诚实边界：图里有 9 条矛盾边，包
 
 交付物：
 
-- [Physics 复核版 viewer](../outputs/physics_domain/reviewed/domain_graph_full.reviewed.html)
-- [答案层 JSON](../outputs/physics_domain/reviewed/answer_layer.reviewed.json)
-- [Mentor 复核记录](../outputs/physics_domain/reviewed/MENTOR_REVIEW.md)
-- [目标问题](../outputs/physics_domain/target_question.json)
+- [Physics 复核版 viewer](../outputs/physics/final/domain_graph_full.reviewed.html)
+- [答案层 JSON](../outputs/physics/final/answer_layer.reviewed.json)
+- [Mentor 复核记录](../outputs/physics/final/MENTOR_REVIEW.md)
+- [目标问题](../outputs/physics/build/target_question.json)
 
 GitHub 会把 HTML 当源码显示。克隆后用浏览器打开，或在仓库根目录运行
 `python3 -m http.server` 再访问。
@@ -231,8 +231,9 @@ xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
 ```
 
 现在 Ariadne 会自己选论文：LLM 查询规划器把问题扩成多条 LKM 查询，候选论文
-去重排序后逐个探测论文图；空图、没有 conclusion 的图和过薄的图会被跳过，然后
-才进入 paper2ir。完整审计写在 `01_retrieval/selection.json`。
+经独立信源交叉验证后去重排序，再逐个探测论文图；空图、没有 conclusion 的图
+和过薄的图会被跳过，然后才进入 paper2ir。完整审计写在
+`01_retrieval/selection.json`。
 
 不花钱先看计划：
 
@@ -249,10 +250,50 @@ xdg-open outputs/ariadne_runs/run_*/domain_viewer_question.html  # Linux
 - `--no-fulltext` 跳过 arXiv PDF 下载/解析，改用图派生文本。
 - `--no-query-planner` 只用确定性 fallback 查询。
 - `--queries N` / `--candidate-limit N` 调整检索宽度和图探测数量。
+- `--no-cross-check` 关闭多信源交叉验证；`--external-discovery` 允许「多个独立
+  源一致、但 LKM 漏检」的论文进入候选池。
 - `--papers papers.json` 用本地 spec 替代自动检索（见
   [离线论文 spec](#离线论文-spec)）。
 
 ## 自动检索
+
+### 个人知识库与用户文档
+
+指定 `--library PATH` 后，Ariadne 会先召回库内相关命题，补齐前提、条件和反证，
+检查证据覆盖度。证据足够时只运行问题答案层；已有材料缺少关系时局部重整；
+材料不足时围绕缺口补检索，只处理新增或内容变化的论文，再增量接入相关局部。
+用户文档先导入，再检查是否需要补检索；`--papers` 仍保持显式指定的语料范围。
+每次最多补检索一轮，仍未解决的缺口会显示在答案 caveat 和 `run.json` 中。
+明确要求“最新”的问题会重新检索核验。
+
+```bash
+# 首次建立个人库；以后沿用同一路径，连续追问可复用已验证的包与关系
+./ariadne/run.sh ask "怎么完成飞机的仿真设计？" --library outputs/my_library --top-k 2 --yes
+./ariadne/run.sh ask "如何利用风洞数据校准模型？" --library outputs/my_library --yes
+
+# 选择自己的文件；可重复指定 --documents，也可一次列出多个文件
+./ariadne/run.sh ask "这些材料支持什么结论？" --library outputs/my_library \
+  --documents /absolute/path/paper.pdf /absolute/path/notes.md --yes
+
+# 只看计划；不写库、不上传、不调用模型
+./ariadne/run.sh ask "这些材料支持什么结论？" --library outputs/my_library \
+  --documents /absolute/path/notes.md --dry-run
+```
+
+导入依赖 `reportlab` 和 `pypdf`，已列入 `ariadne/requirements.txt`。PDF 必须未加密、
+不超过 64 MiB／50 页。Markdown 使用保留原始文本与公式源码的 PDF 作为 LKM 传输
+格式，原始 Markdown 继续用于单篇处理；不会读取文档中的远程链接或图片。
+PDF 上传后走现有 `bohr lkm extract`，不是把文件发布到全局可搜索论文库；本地
+知识库可立即使用抽取结果。相同内容的已验证文档可复用，不重复上传。
+
+库的 `manifest.json` 只记录既有运行产物的引用、hash、处理版本和编译后的集成包。
+论文事实仍由 Gaia 包保存，索引和 viewer 不成为第二份事实源。输入、代码、提示模板、
+模型或编译器版本变化时，相应缓存不再复用；旧问题的候选答案不会进入新问题的证据。
+并发更新会检测冲突，不覆盖另一轮更新；失败保留旧库和失败运行记录。
+
+请保留 manifest 引用的运行目录；删除这些目录会使对应缓存失效。不同用户使用不同的
+库目录。既有运行不会自动迁移或覆盖；省略 `--library`／`--documents` 就继续使用原来的
+完整流程。`--papers` 仍可与 `--library` 配合，用明确选择的本地图／文本构建知识库。
 
 full 模式不需要你手动选论文。检索阶段是：
 
@@ -260,33 +301,65 @@ full 模式不需要你手动选论文。检索阶段是：
    方法/系统、评估场景；英文问题和确定性关键词查询始终作为 fallback 保留。
 2. **多查询检索**：最多执行 `retrieval.queries` 次 hybrid LKM 搜索
    （`conclusion,abstract` scope），按 LKM id 合并论文。
-3. **候选排序**：综合命中查询数、LKM rerank 分数、轻量词面相关性和
-   （探测后的）图规模排序。
-4. **图探测**：逐篇取论文图；空图、没有 conclusion 节点的图、过薄的图直接
+3. **多信源交叉验证**：把前 2 条计划查询同时发给 OpenAlex、Crossref、arXiv、
+   Semantic Scholar 四个免费索引，按 DOI、arXiv id 或标题相似度记录每个候选
+   被哪些独立信源确认（`corroboration`）。候选没出现在搜索结果里时，再用
+   DOI 直接回查（最多 4 篇）。单个信源 429、超时或返回坏数据只记为不可用，
+   不会中断检索。
+4. **候选排序**：综合命中查询数、LKM rerank 分数、轻量词面相关性、独立信源
+   确证数和（探测后的）图规模排序。
+5. **图探测**：逐篇取论文图；空图、没有 conclusion 节点的图、过薄的图直接
    跳过。第一轮不够 `min_papers` 时会继续扩展探测，而不是整次失败。
-5. **补建缺失图**：论文没有原生 LKM 图、但有 arXiv/DOI PDF 时，可以用
-   `bohr lkm extract` 建图（`--format graph`）。每次成功 1.00 CNY（缓存命中
-   0.10 CNY），由 `retrieval.max_extractions` 限制（默认 3），
+6. **补建缺失图**：论文没有原生 LKM 图时，Ariadne 会依次从 arXiv、DOI 落地页
+   （`citation_pdf_url`）、OpenAlex、Unpaywall、Semantic Scholar、Crossref 和
+   MDPI CDN 解析 PDF；先下载 PDF，再并行跑最多 `retrieval.max_extractions` 个
+   `bohr lkm extract`（3 个 worker）。闭源 PDF 和超过 LKM 50 页限制的 PDF 会
+   记录为跳过，不消耗补图预算。每次成功 1.00 CNY（缓存命中 0.10 CNY），
    `--no-lkm-extract` 可关闭。
-6. **选择与审计**：选出有图且相关的论文，并继续用其余候选补足 `--top-k`；
-   把每条查询、候选、探测结果、跳过原因、相关性分数、提取任务和最终选择
-   写入 `01_retrieval/selection.json`。
+7. **选择与审计**：优先选有图、相关、且被 `retrieval.min_corroboration` 个
+   独立源确认的论文；确认不足时逐级回退到「仅相关」再到全体有图候选，不会
+   因为外部 API 限流而失败。把每条查询、候选、交叉验证结果、探测结果、跳过
+   原因、相关性分数、提取任务和最终选择写入 `01_retrieval/selection.json`。
 
-这条路径专门处理 LKM 的真实情况：很多论文被索引了，但没有可抽取的知识图。
-`--papers ...` 仍会完全绕过自动检索，适合你已经知道语料的情况。
+### 多信源交叉验证
+
+LKM 是唯一的论文图来源，但单一索引会有漏检和元数据错配。Ariadne 因此把 LKM
+当作**主索引**，把 OpenAlex / Crossref / arXiv / Semantic Scholar 当作
+**独立证人**：被独立源确认的候选在排序和选择时优先。默认
+`retrieval.min_corroboration = 1`，即「LKM + 至少 1 个独立源」；调到 2 就是
+要求两个独立源同时确认。
+
+- 每个候选的确认来源、匹配方式和状态写在 `selection.json` 的 `cross_check`
+  字段，汇总在 `01_retrieval/sources.json`，原始返回按源保存在
+  `01_retrieval/sources/<source>.json`。
+- `--no-cross-check` 或 `retrieval.cross_check=false` 完全关闭这一步（离线、
+  内网或信源不可达时用）。`retrieval.cross_check_sources` 选择参与的源，例如
+  `openalex,crossref`。
+- `--external-discovery`（配置 `retrieval.external_discovery`）把「至少 2 个
+  独立源都返回、但 LKM 没返回」的论文加入候选池补召回。它们没有 LKM 原生图，
+  因此和缺图论文一样走 PDF → `bohr lkm extract`，受 `retrieval.max_extractions`
+  预算限制，会多花提取费用。
+- 这些元数据 API 免费、只读，不产生 LKM 费用。Semantic Scholar 有限流，可以
+  设置 `S2_API_KEY` 提高配额；Ariadne 默认只用前 2 条查询访问它们。
+
+`--papers ...` 仍会完全绕过自动检索和交叉验证，适合你已经知道语料的情况。
 
 调参：
 
 ```bash
 ./ariadne/run.sh ask "..." --queries 5 --candidate-limit 16
 ./ariadne/run.sh ask "..." --no-query-planner   # 只用确定性查询
+./ariadne/run.sh ask "..." --no-cross-check     # 关闭多信源交叉验证
+./ariadne/run.sh ask "..." --external-discovery # 用独立信源补充召回
 ./ariadne/run.sh config set retrieval.min_relevance 0.2
+./ariadne/run.sh config set retrieval.min_corroboration 2
 ```
 
 如果选出来的论文不对，先看 `selection.json`：`queries.json` 是查询计划，
 `candidates.json` 是排序后的候选池，`search_raw_*.json` 是每次 LKM 原始响应，
-`extract/*/submit.json` 和 `result.json` 是补建图的审计。选择会尽量补足
-`--top-k`；相关性只是偏好，不是硬上限。
+`sources.json` 是各独立信源的查询与候选确认记录，`extract/*/submit.json` 和
+`result.json` 是补建图的审计。选择会尽量补足 `--top-k`；相关性和独立确认
+都是偏好，不是硬上限。
 
 ## 配置
 
@@ -376,7 +449,12 @@ Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
 | `retrieval.min_graph_nodes` | 低于该节点数的图视为过薄（默认 3） |
 | `retrieval.min_relevance` | 优先论文的词面相关性门槛（默认 0.2） |
 | `retrieval.use_lkm_extract` | 是否用 `bohr lkm extract` 补建缺失图（默认 true） |
-| `retrieval.max_extractions` | 每次运行最多补建几篇（默认 3，0 关闭） |
+| `retrieval.max_extractions` | 每次运行最多补建几篇（默认 5，0 关闭） |
+| `retrieval.cross_check` | 是否用独立信源交叉验证候选（默认 true） |
+| `retrieval.cross_check_sources` | 参与验证的源，逗号分隔（默认全部四个） |
+| `retrieval.min_corroboration` | 优先选择需要的独立源数（默认 1，0 关闭门槛） |
+| `retrieval.external_discovery` | 是否把多源一致但 LKM 漏检的论文加入候选（默认 false） |
+| `retrieval.external_candidates` | 每次最多补充几篇外部论文（默认 4） |
 
 ### 环境变量
 
@@ -392,6 +470,7 @@ Windows 下如果设置了 `APPDATA`，使用 `%APPDATA%\ariadne\config.json`。
 | `ARIADNE_AUTO_APPROVE_SPEND` | `1` / `true` 表示自动批准计费调用 |
 | `ARIADNE_PAYMENT_SOURCE` | `photon` 或 `balance` |
 | `ARIADNE_PYTHON` | Ariadne 及其子进程使用的解释器 |
+| `S2_API_KEY` | 可选的 Semantic Scholar key，提高交叉验证的限流额度 |
 
 环境变量优先于配置文件，所以 CI 可以完全不写配置文件：
 
@@ -470,6 +549,9 @@ venv 不叫 `.venv` 时建议显式指定：
 | `ask ... --no-query-planner` | 关闭 LLM 查询规划器，只用 fallback 查询 |
 | `ask ... --no-lkm-extract` | 不用 `bohr lkm extract` 补建图 |
 | `ask ... --max-extractions N` | 本次运行最多补建几篇 |
+| `ask ... --no-cross-check` | 关闭多信源交叉验证 |
+| `ask ... --min-corroboration N` | 优先选择需要的独立信源数 |
+| `ask ... --external-discovery` | 用独立信源补充 LKM 漏检的论文 |
 | `ask ... --yes` | 授权本次计费 LKM 调用 |
 | `ask ... --no-fulltext` | 跳过 PDF 解析，改用图派生文本 |
 | `demo` | 离线飞机示例 |
@@ -506,9 +588,9 @@ venv 不叫 `.venv` 时建议显式指定：
 full 运行会保留中间阶段：
 
 ```text
-01_retrieval/   queries.json、candidates.json、selection.json、
-                search_raw_*.json、extract/<paper>/submit.json|result.json、
-                每篇 graph.json + ocr.md
+01_retrieval/   queries.json、candidates.json、selection.json、sources.json、
+                sources/<source>.json、search_raw_*.json、
+                extract/<paper>/submit.json|result.json、每篇 graph.json + ocr.md
 02_paper2ir/    run-local clean_claims 副本、每篇 claims_final.json
 03_single/      Gaia IR package、formalization.json、knowledge.index.json
 04_merge/       merge run、view_model.json
@@ -522,7 +604,7 @@ full 运行会保留中间阶段：
 
 | 阶段 | 做什么 | 实现 |
 | --- | --- | --- |
-| `01_retrieval` | 规划多条 LKM 查询、合并排序候选、探测论文图、跳过空图/无 conclusion/过薄图，再取全文或用图派生文本 | [`ariadne/retrieval.py`](ariadne/retrieval.py) |
+| `01_retrieval` | 规划多条 LKM 查询、合并排序候选、用独立信源交叉验证、探测论文图、跳过空图/无 conclusion/过薄图，再取全文或用图派生文本 | [`ariadne/retrieval.py`](ariadne/retrieval.py)、[`ariadne/sources.py`](ariadne/sources.py) |
 | `02_paper2ir` | 14 步 paper2ir：LKM 图 + 文本 → `claims_final.json` | [`pipelines/clean_claims`](../pipelines/clean_claims/)（run-local 副本） |
 | `03_single` | 维护中的 single pipeline：claims → `gaia.ir.json`、`formalization.json`、`knowledge.index.json` | [`pipelines/single_paper`](../pipelines/single_paper/) + harness |
 | `04_merge` | 把多篇 package 合成一张领域图，含 K conclusions 和 Step 6 答案 root/link | [`pipelines/merge/pipeline.question.json`](../pipelines/merge/pipeline.question.json) |
@@ -613,8 +695,8 @@ Ariadne 封装的三套维护中 pipeline：
 | [`pipelines/single_paper/`](../pipelines/single_paper/) | claims → 单篇 Gaia IR |
 | [`pipelines/merge/`](../pipelines/merge/) | 多 package → 领域图 + 问题层 |
 | [`weekly_reports/export_single_artifacts.py`](../weekly_reports/export_single_artifacts.py) | 导出 single 运行产物给 merge |
-| [`outputs/question_domain_aircraft/`](../outputs/question_domain_aircraft/) | 冻结飞机 demo 数据 |
-| [`outputs/physics_domain/reviewed/`](../outputs/physics_domain/reviewed/) | 复核版 Physics 示例图 |
+| [`outputs/aircraft/final/`](../outputs/aircraft/final/) | 冻结飞机 demo 数据 |
+| [`outputs/physics/final/`](../outputs/physics/final/) | 复核版 Physics 示例图 |
 
 ## 状态与边界
 
@@ -649,8 +731,9 @@ Ariadne 封装的三套维护中 pipeline：
 两篇论文的自动运行最多产生 `retrieval.queries` 次 search 加图探测
 （第一轮最多 `retrieval.candidate_limit` 次，图不够才扩展），然后才进入
 LLM pipeline。缺图的论文最多补建 `retrieval.max_extractions` 次，每次成功
-1.00 CNY（缓存命中 0.10 CNY）。用 `--dry-run` 看上限计划，用 `--no-fulltext`
-跳过 PDF 解析。
+1.00 CNY（缓存命中 0.10 CNY）。多信源交叉验证只调用免费的元数据 API，
+不产生 LKM 或模型费用；开启 `--external-discovery` 后补回来的论文才可能
+消耗提取预算。用 `--dry-run` 看上限计划，用 `--no-fulltext` 跳过 PDF 解析。
 
 ## License
 

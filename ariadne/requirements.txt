@@ -6,6 +6,8 @@
 #   pip install -e agent
 gaia-lang==0.5.0a7
 jsonschema>=4.21
+reportlab>=4.2
+pypdf>=5.0
 
 # Optional: the paper2ir cleaner can fall back to Anthropic, but the bundled
 # single/merge stages require an OpenAI-compatible endpoint.  Ariadne's
