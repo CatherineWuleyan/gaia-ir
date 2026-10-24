@@ -93,3 +93,8 @@ node_modules/
 # Internal team material, and large generated aggregates
 /evidence/feishu/
 /outputs/aggregate/
+
+# weekly_reports/ is local scratch: reports, logs and one-off research scripts.
+# The single-paper exporter it used to hold now lives in
+# pipelines/single_paper/export_artifacts.py.
+/weekly_reports/
