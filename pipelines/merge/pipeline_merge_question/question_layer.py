@@ -183,7 +183,10 @@ def chain_up_adjacency(
     up: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for edge in edges:
         rel = str(edge.get("semantic_type") or edge.get("label") or "")
-        if rel != "infer":
+        # Legacy projections used the display label infer for every directed
+        # edge; native projections retain deduction as the label as well as
+        # the audited role. Both must reach the same role gate.
+        if rel not in {"infer", "deduction"}:
             continue
         role = roles.get(str(edge.get("id")))
         if role is not None:
