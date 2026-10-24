@@ -42,6 +42,12 @@
      "paper_aec49f8f",
      "paper_c6f44cb4"
     ],
+    "support_paper_counts": {
+     "paper_aec49f8f": 7,
+     "paper_c6f44cb4": 3
+    },
+    "second_paper_support": 3,
+    "multi_paper_corroborated": true,
     "chain_count": 0,
     "leaf_count": 0,
     "max_depth": 0,
@@ -647,6 +653,12 @@
      "paper_9c2fb427",
      "paper_c6f44cb4"
     ],
+    "support_paper_counts": {
+     "paper_c6f44cb4": 5,
+     "paper_9c2fb427": 3
+    },
+    "second_paper_support": 3,
+    "multi_paper_corroborated": true,
     "chain_count": 0,
     "leaf_count": 0,
     "max_depth": 0,
@@ -1436,9 +1448,9 @@
     "knowledge:papers:paper_014abc68::claim_21",
     "knowledge:papers:paper_014abc68::claim_6"
    ],
-   "verdict_class": "primary",
-   "verdict": "multi-paper direct support",
-   "color": "#b42318",
+   "verdict_class": "partial",
+   "verdict": "single-paper core",
+   "color": "#b54708",
    "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
    "stats": {
     "support_claim_count": 8,
@@ -1447,6 +1459,12 @@
      "paper_014abc68",
      "paper_26dddb44"
     ],
+    "support_paper_counts": {
+     "paper_014abc68": 7,
+     "paper_26dddb44": 1
+    },
+    "second_paper_support": 1,
+    "multi_paper_corroborated": false,
     "chain_count": 0,
     "leaf_count": 0,
     "max_depth": 0,
@@ -2450,9 +2468,9 @@
     "knowledge:papers:paper_066432fe::claim_8",
     "knowledge:papers:paper_53166ac1::claim_6"
    ],
-   "verdict_class": "primary",
-   "verdict": "multi-paper direct support",
-   "color": "#b42318",
+   "verdict_class": "partial",
+   "verdict": "single-paper core",
+   "color": "#b54708",
    "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
    "stats": {
     "support_claim_count": 10,
@@ -2461,6 +2479,12 @@
      "paper_066432fe",
      "paper_53166ac1"
     ],
+    "support_paper_counts": {
+     "paper_066432fe": 9,
+     "paper_53166ac1": 1
+    },
+    "second_paper_support": 1,
+    "multi_paper_corroborated": false,
     "chain_count": 0,
     "leaf_count": 0,
     "max_depth": 0,
@@ -3186,9 +3210,9 @@
     "knowledge:papers:paper_26dddb44::claim_15",
     "knowledge:papers:paper_755906eb::claim_10"
    ],
-   "verdict_class": "primary",
-   "verdict": "multi-paper direct support",
-   "color": "#b42318",
+   "verdict_class": "partial",
+   "verdict": "single-paper core",
+   "color": "#b54708",
    "caveat": "Candidate answer generated from the merged claim graph; support counts are structural links, not a truth vote. Read the linked claims before relying on it.",
    "stats": {
     "support_claim_count": 9,
@@ -3197,6 +3221,12 @@
      "paper_26dddb44",
      "paper_755906eb"
     ],
+    "support_paper_counts": {
+     "paper_26dddb44": 8,
+     "paper_755906eb": 1
+    },
+    "second_paper_support": 1,
+    "multi_paper_corroborated": false,
     "chain_count": 0,
     "leaf_count": 0,
     "max_depth": 0,
@@ -9063,8 +9093,8 @@
  "chainable_edge_count": 0,
  "generation": {
   "prompt_version": "question-answer-v1",
-  "model": "deepseek-v4-flash",
-  "generated_at": "2026-10-18T06:31:44.917748+00:00",
+  "model": "deepseek-v4-flash-vision-exp",
+  "generated_at": "2026-10-24T03:49:13.779387+00:00",
   "root_count": 5,
   "answer_edge_count": 50,
   "chain_count": 0,

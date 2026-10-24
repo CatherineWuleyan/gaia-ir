@@ -105,8 +105,9 @@
 | R5 | `26dddb44`（8）联合 HIL | `755906eb`（1）低成本 SITL/HITL | 1（755906eb） |
 
 “2 篇论文”在结构上成立，但**第二篇大多只贡献 1 条直接支持**；R1 的 3 条
-`c6f44cb4` 是另一套 MDO 框架，不是 CACDS 的同一系统。把每个根称为
-“multi-paper support”会高估跨论文共识。
+`c6f44cb4` 是另一套 MDO 框架，不是 CACDS 的同一系统。把每个根都称为
+“multi-paper support”会高估跨论文共识——这也是 2026-10-24 规则修订的原因：
+R3/R4/R5 不再标为 multi-paper，R1/R2 因第二篇各贡献 3 条而保留该标签。
 
 ### 2.3 人工复核口径（关键）
 
@@ -489,23 +490,25 @@ chain enumerator 在利用图的连通性，而不是在验证三个不同的回
 
 ### 4.4 “primary”标签只反映计数
 
-当前 verdict 规则：
+当前 verdict 规则（2026-10-24 修订后）：
 
 - `contested`：有 oppose；
-- `primary`：support ≥3 且跨 ≥2 篇论文；
-- `partial`：有 support 但未达 multi-paper；
+- `primary`：support ≥3、跨 ≥2 篇论文，且**第二篇论文至少贡献 2 条 claim**；
+- `partial`（展示名 `single-paper core`）：有 support 但未达 multi-paper；
 - `exploratory`：无 support。
 
-5 个根都是 `primary`，因为每个根都有 2 篇论文、≥8 条 support。但这个规则：
+修订前 5 个根都是 `primary`，因为旧规则只看“跨 2 篇”，不看第二篇贡献多少。
+修订后 R1、R2 仍是 `primary`（7+3、5+3），R3/R4/R5 降为 `partial`
+（7+1、9+1、8+1）。每篇论文的条数写在 `stats.support_paper_counts`，
+`stats.second_paper_support` 给出第二篇的条数。但即使修订后，这个规则：
 
-- 不区分主论文 7–9 条 vs 边缘论文 1–3 条；
-- 不区分 support claim 是 keep/note/split/rewrite；
-- 不区分 direct support 与深链；
-- 不要求 oppose 存在；
-- 不要求同一对象/条件。
+- 仍不区分 support claim 是 keep/note/split/rewrite；
+- 仍不区分 direct support 与深链；
+- 仍不要求 oppose 存在；
+- 仍不要求同一对象/条件。
 
-所以 `primary` 应读作“**至少两个论文簇的 claim 被 LLM 连到了这个根**”，
-而不是“多论文已证实”。
+所以 `primary` 应读作“**至少两个论文簇的 claim 被 LLM 连到了这个根，
+且第二篇不是一条边缘 citation**”，而不是“多论文已证实”。
 
 ### 4.5 人工复核的 86 条跨论文边
 

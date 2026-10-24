@@ -51,7 +51,7 @@ VERDICT_COLORS = {
 }
 VERDICT_LABELS = {
     "primary": "multi-paper direct support",
-    "partial": "single-paper direct support",
+    "partial": "single-paper core",
     "contested": "opposed in the graph",
     "exploratory": "exploratory",
 }
@@ -743,11 +743,16 @@ def build_answer_layer(
         total_chains += len(chains)
         total_exploratory += len(exploratory)
 
-        support_papers = sorted({
-            paper
-            for link in supported
-            for paper in papers_of_node(nodes_by_id.get(str(link["claim_id"]), {}))
-        })
+        paper_support: Counter[str] = Counter()
+        for link in supported:
+            for paper in papers_of_node(nodes_by_id.get(str(link["claim_id"]), {})):
+                paper_support[paper] += 1
+        support_papers = sorted(paper_support)
+        # How much the second-largest supporting paper contributes.  A second
+        # paper that supplies one claim out of ten does not corroborate the
+        # root; labelling that "multi-paper direct support" overstates it.
+        ranked_support = sorted(paper_support.values(), reverse=True)
+        second_paper_support = ranked_support[1] if len(ranked_support) > 1 else 0
         support_claims = [str(link["claim_id"]) for link in supported]
         leaves = {chain["leaf"] for chain in chains}
         depth = max((chain["depth"] for chain in chains), default=0)
@@ -755,7 +760,8 @@ def build_answer_layer(
         exploratory_depth = max((chain["depth"] for chain in exploratory), default=0)
         if opposes:
             verdict_class = "contested"
-        elif len(support_papers) >= 2 and len(supported) >= 3:
+        elif (len(support_papers) >= 2 and len(supported) >= 3
+              and second_paper_support >= 2):
             verdict_class = "primary"
         elif supported and support_papers:
             verdict_class = "partial"
@@ -773,6 +779,13 @@ def build_answer_layer(
                 "support_claim_count": len(supported),
                 "support_paper_count": len(support_papers),
                 "support_papers": support_papers,
+                "support_paper_counts": dict(sorted(
+                    paper_support.items(), key=lambda item: item[1], reverse=True
+                )),
+                "second_paper_support": second_paper_support,
+                "multi_paper_corroborated": (
+                    len(support_papers) >= 2 and second_paper_support >= 2
+                ),
                 "chain_count": len(chains),
                 "leaf_count": len(leaves),
                 "max_depth": depth,

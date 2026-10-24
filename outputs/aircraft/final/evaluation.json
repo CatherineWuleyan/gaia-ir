@@ -118,7 +118,7 @@
    "code": "R3",
    "title_zh": "非线性飞行动力学建模",
    "title_en": "Nonlinear flight-dynamics formulation",
-   "verdict_class": "primary",
+   "verdict_class": "partial",
    "support_claim_count": 8,
    "support_paper_count": 2,
    "support_papers": [
@@ -153,7 +153,7 @@
    "code": "R4",
    "title_zh": "飞行数据模型校正",
    "title_en": "Flight-data model calibration",
-   "verdict_class": "primary",
+   "verdict_class": "partial",
    "support_claim_count": 10,
    "support_paper_count": 2,
    "support_papers": [
@@ -188,7 +188,7 @@
    "code": "R5",
    "title_zh": "硬件在环验证",
    "title_en": "Hardware-in-the-loop validation",
-   "verdict_class": "primary",
+   "verdict_class": "partial",
    "support_claim_count": 9,
    "support_paper_count": 2,
    "support_papers": [

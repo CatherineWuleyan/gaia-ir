@@ -33,13 +33,15 @@
 - 边角色分布：`analogy 52 / infer 148 / conjunction 18 / bounds 4 / special_case 1`，
   chainable 0；没有 deduction。`conjunction` 是对称算子，不是 reasoning type，单独计数。
   跨论文边 101 条全部保留并默认可见：`analogy 52 / infer 26 / conjunction 18 /
-  bounds 4 / special_case 1`；其中 54 条经过人工审阅改类型，详见
-  `CROSS_PAPER_AUDIT.md` / `cross_paper_audit.json`。
+  bounds 4 / special_case 1`。其中 54 条改过类型，改类型这一步由
+  **LLM 审计**完成（`edge_roles.json` 记录 `model: deepseek-v4-flash`），
+  人工只做了抽查；详见 `CROSS_PAPER_AUDIT.md` / `cross_paper_audit.json`。
+  这份修正与 `outputs/physics/final/MENTOR_REVIEW.md` 的人工复核不是一回事。
 - 这不是 bug：冻结图的 **68 条 cross-paper weakpoint 全是 `infer`**，
   原因是 Step 3 把它们用于 “needs/requires/can represent/instance” 等关系；
   当前规则下没有一条被证明为 deduction，因此没有 typed support chain。
 
-### 0.3 跨论文边人工审阅
+### 0.3 跨论文边类型审计（LLM 审计 + 人工抽查）
 
 - 101 条跨论文边全部保留，默认显示，不隐藏；
 - 52 条标为 `analogy`（跨飞机/跨框架方法迁移，不是 support）；
@@ -84,8 +86,9 @@
 - 当前冻结图**没有 K（领域结论）层**；本次回答直接连 claim。完整 pipeline
   配置已把 `summarize_conclusions` 改为 `true`，下次完整 run 会先产出 K，
   Step 6 可以优先把回答连到 K。
-- 主要不足：所有根都是 `primary`（2 篇论文直接支持），没有 `contested`；
-  直接支持仍偏向每篇论文的 dominant evidence；候选池有界，连接召回不是全量。
+- 主要不足：修订前所有根都是 `primary`；修订后 2 个 `primary`、3 个
+  `single-paper core`，仍没有 `contested`；直接支持偏向每篇论文的 dominant
+  evidence；候选池有界，连接召回不是全量。
 
 ## 1. 上一次为什么没有领域结论层
 
@@ -210,9 +213,12 @@ NASA 重量、Minion HIL），不是方法路线。本次生成的是**方法路
 
 ### 需要警惕的地方
 
-1. **所有根都是 `primary`**：因为判定规则是“≥3 support 且 ≥2 paper”，5 个根
-   都满足。这个标签只说明“有多篇论文的直接支持”，不说明回答正确，也不区分
-   支持强度。R1/R4 有 10 条 support，R3 只有 8 条，但 verdict 相同。
+1. **`primary` 曾经是常数**：旧规则是“≥3 support 且 ≥2 paper”，5 个根全部
+   满足，标签不区分任何东西。现在的规则额外要求**第二篇论文至少贡献 2 条
+   claim**：R3/R4/R5 的第二篇只有 1 条，因此降为 `single-paper core`
+   （R3 7+1、R4 9+1、R5 8+1），R1/R2 保持 `primary`（7+3、5+3）。
+   每篇论文的实际条数写在 `answer_layer.json` 的
+   `stats.support_paper_counts` 里，可直接核对。
 2. **没有 oppose**：当前图只有 infer/conjunction，没有 contradiction；LLM 也没
    找到可辩护的反对关系。这与 reviewed 物理图里 `contested` 的候选不同，不能
    把“没有 oppose”读成“回答无争议”。

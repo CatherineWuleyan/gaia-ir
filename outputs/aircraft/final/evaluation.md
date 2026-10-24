@@ -32,7 +32,7 @@
 
 ### R3 · 非线性飞行动力学建模 / Nonlinear flight-dynamics formulation
 
-- Verdict: primary
+- Verdict: partial
 - Support: 8 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 24 (31 nodes)
 - Boundary: 2 · Oppose: 0
@@ -41,7 +41,7 @@
 
 ### R4 · 飞行数据模型校正 / Flight-data model calibration
 
-- Verdict: primary
+- Verdict: partial
 - Support: 10 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 20 (24 nodes)
 - Boundary: 0 · Oppose: 0
@@ -50,7 +50,7 @@
 
 ### R5 · 硬件在环验证 / Hardware-in-the-loop validation
 
-- Verdict: primary
+- Verdict: partial
 - Support: 9 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 14 (20 nodes)
 - Boundary: 1 · Oppose: 0

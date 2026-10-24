@@ -158,6 +158,30 @@ class QuestionPaperProvenanceTests(unittest.TestCase):
         self.assertEqual(result["base"]["paper_count"], 2)
         self.assertEqual(result["answer_layer"]["claims_per_paper"], {"paper_a": 2, "paper_b": 2})
 
+    def test_a_single_marginal_second_paper_is_not_multi_paper_support(self):
+        # Nine claims from one paper plus one from another is a single-paper
+        # result with a marginal second citation, not cross-paper support.
+        nodes = [self.node(f"knowledge:papers:paper_a::claim_{i}") for i in range(1, 10)]
+        nodes.append(self.node("knowledge:papers:paper_b::claim_1"))
+        view, layer = self.layer(nodes)
+        root = layer["roots"][0]
+        self.assertEqual(root["stats"]["support_paper_count"], 2)
+        self.assertEqual(root["stats"]["second_paper_support"], 1)
+        self.assertEqual(root["stats"]["support_paper_counts"], {"paper_a": 9, "paper_b": 1})
+        self.assertFalse(root["stats"]["multi_paper_corroborated"])
+        self.assertEqual(root["verdict_class"], "partial")
+        self.assertEqual(root["verdict"], "single-paper core")
+
+    def test_two_real_second_paper_claims_restore_primary(self):
+        nodes = [self.node(f"knowledge:papers:paper_a::claim_{i}") for i in range(1, 4)]
+        nodes += [self.node("knowledge:papers:paper_b::claim_1"),
+                  self.node("knowledge:papers:paper_b::claim_2")]
+        view, layer = self.layer(nodes)
+        root = layer["roots"][0]
+        self.assertEqual(root["stats"]["second_paper_support"], 2)
+        self.assertTrue(root["stats"]["multi_paper_corroborated"])
+        self.assertEqual(root["verdict_class"], "primary")
+
     def test_unknown_or_malformed_provenance_is_not_a_paper(self):
         for provenance in (None, [], ["other", "papers:other", "papers:", "candidate_K_1", 4],
                            "papers:paper_a", {"papers:paper_a": True}):
