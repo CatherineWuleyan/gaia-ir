@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import io
 import json
 import tempfile
 import threading
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 from agent_pipeline_v2.authoring import emit_formalization
+from agent_pipeline_v2.step2 import DeepSeekV4FlashObservationTool
 from agent_pipeline_v2.step3 import (
     _relation_clusters, _screen_classifications, _transitive_shortcut_indexes, _validate_cluster_result,
 )
@@ -109,6 +113,301 @@ class Step3Tests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def _recovery_store(self, name: str, *, compile_output: bool = False) -> RunStore:
+        stages = [
+            {"name": "import", "plugin": "agent_pipeline_v2.step1:ClaimsFinalInputImporter", "options": {}},
+            {"name": "step1", "plugin": "agent_pipeline_v2.step1:Step1ImportClaimsFinalPlugin", "options": {}},
+            {"name": "strip", "plugin": f"{__name__}:StripClaimsFinalSourcePlugin", "options": {}},
+            {"name": "step3", "plugin": "agent_pipeline_v2.step3:Step3AnalyzeReasoningPlugin",
+             "options": {"tool_plugin": f"{__name__}:FakeWeakpointClassifier"}},
+        ]
+        if compile_output:
+            stages.extend([
+                {"name": "step4", "plugin": "agent_pipeline_v2.step4:Step4FormalizeReasoningPlugin", "options": {}},
+                {"name": "step5", "plugin": "pipeline_harness.domain.compiler:Step5CompileGaiaIRPlugin",
+                 "options": {"compiler_plugin": "pipeline_harness.domain.compiler:Gaia05OfficialCompilerTool"}},
+            ])
+        return RunStore.create(
+            self.root / name, {"pipeline_id": "step3-recovery-test", "version": "1", "stages": stages},
+            input_manifest=self.root / "manifest.json",
+        )
+
+    def _semantic_audits(self, store: RunStore) -> list[dict]:
+        return [
+            json.loads(store.artifact_path(ref).read_text(encoding="utf-8"))
+            for ref in store.load_artifacts() if ref.kind == "tool.semantic_review.response"
+        ]
+
+    def test_cluster_validation_repair_keeps_frozen_input(self) -> None:
+        FakeWeakpointClassifier.calls = []
+        original = FakeWeakpointClassifier.invoke
+
+        def invoke(tool, request):
+            response = original(tool, request)
+            if request.operation == "normalize_weakpoint_clusters" and "repair_feedback" not in request.parameters:
+                response.normalized["clusters"][0]["weakpoints"][0].pop("expression")
+            return response
+
+        store = self._recovery_store("cluster-repair")
+        with patch.object(FakeWeakpointClassifier, "invoke", invoke):
+            result = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", result.status)
+        requests = [call for call in FakeWeakpointClassifier.calls if call.operation == "normalize_weakpoint_clusters"]
+        self.assertEqual(2, len(requests))
+        self.assertEqual(requests[0].inputs, requests[1].inputs)
+        self.assertEqual(requests[0].parameters["clusters"], requests[1].parameters["clusters"])
+        self.assertIn("fields", requests[1].parameters["repair_feedback"])
+        audits = self._semantic_audits(store)
+        self.assertTrue(all(audit["response"]["status"] == "succeeded" for audit in audits))
+        cluster_audit = next(audit for audit in audits if audit["request"]["operation"] == "normalize_weakpoint_clusters")
+        self.assertEqual(requests[1].to_dict(), cluster_audit["request"])
+        self.assertEqual(cluster_audit["request"]["call_id"], cluster_audit["response"]["call_id"])
+
+    def test_classification_json_and_missing_id_failures_are_repaired(self) -> None:
+        original = FakeWeakpointClassifier.invoke
+        for malformed in ("invalid_json", "missing_id"):
+            with self.subTest(malformed=malformed):
+                FakeWeakpointClassifier.calls = []
+                classification_requests = []
+
+                def invoke(tool, request):
+                    response = original(tool, request)
+                    if request.operation == "classify_weakpoints":
+                        classification_requests.append(request)
+                        return DeepSeekV4FlashObservationTool()._classify_weakpoints(request)
+                    return response
+
+                def transport(request, *, timeout):
+                    if len(classification_requests) == 1:
+                        content = "{invalid" if malformed == "invalid_json" else '{"classifications":[]}'
+                    else:
+                        content = json.dumps({"classifications": [
+                            {"weakpoint_id": item["weakpoint_id"], "reasoning_type": None}
+                            for item in classification_requests[-1].parameters["weakpoints"]
+                        ]})
+                    return io.BytesIO(json.dumps({"choices": [{"message": {"content": content}}]}).encode())
+
+                store = self._recovery_store(malformed)
+                with (
+                    patch.object(FakeWeakpointClassifier, "invoke", invoke),
+                    patch("agent_pipeline_v2.step2._load_deepseek_env"),
+                    patch.dict("os.environ", {"DEEPSEEK_API_KEY": "test-key", "DEEPSEEK_BASE_URL": "https://unused.invalid"}),
+                    patch("agent_pipeline_v2.step2.urlopen", side_effect=transport) as http,
+                ):
+                    result = run_pipeline(store.run_dir)
+                self.assertEqual("succeeded", result.status)
+                self.assertEqual(2, http.call_count)
+                self.assertEqual(classification_requests[0].inputs, classification_requests[1].inputs)
+                self.assertEqual(classification_requests[0].parameters["weakpoints"], classification_requests[1].parameters["weakpoints"])
+                self.assertTrue(classification_requests[1].parameters["repair_feedback"])
+                self.assertEqual(1, sum(call.operation == "normalize_weakpoint_clusters" for call in FakeWeakpointClassifier.calls))
+
+    def test_transport_and_auth_failures_are_not_semantically_retried(self) -> None:
+        original = FakeWeakpointClassifier.invoke
+        for operation in ("normalize_weakpoint_clusters", "classify_weakpoints"):
+            for message in ("transport retries exhausted", "DeepSeek request failed with HTTP 401"):
+                with self.subTest(operation=operation, message=message):
+                    FakeWeakpointClassifier.calls = []
+
+                    def invoke(tool, request):
+                        response = original(tool, request)
+                        if request.operation == operation:
+                            raise RuntimeError(message)
+                        return response
+
+                    store = self._recovery_store(f"failure-{operation}-{message.split()[-1]}", compile_output=True)
+                    with patch.object(FakeWeakpointClassifier, "invoke", invoke):
+                        result = run_pipeline(store.run_dir)
+                    self.assertEqual("failed", result.status)
+                    failed_calls = [call for call in FakeWeakpointClassifier.calls if call.operation == operation]
+                    self.assertEqual(1, len(failed_calls))
+                    self.assertNotIn("repair_feedback", failed_calls[0].parameters)
+                    refs = store.load_artifacts()
+                    self.assertFalse(any(ref.kind == "formalization" and ref.metadata.get("step") == 3 for ref in refs))
+                    self.assertFalse(any(ref.kind == "gaia.ir" for ref in refs))
+                    audits = self._semantic_audits(store)
+                    failed_audits = [audit for audit in audits if audit["response"]["status"] == "failed"]
+                    self.assertEqual(1, len(failed_audits))
+                    self.assertIn(message, failed_audits[0]["response"]["error"]["message"])
+                    self.assertFalse(any(audit["response"].get("metadata", {}).get("fallback") for audit in audits))
+                    self.assertTrue(any(item["severity"] == "error" and item["stage"] == "step3" for item in result.findings))
+
+    def test_transport_and_semantic_repair_share_four_request_budget(self) -> None:
+        FakeWeakpointClassifier.calls = []
+        original = FakeWeakpointClassifier.invoke
+
+        def invoke(tool, request):
+            response = original(tool, request)
+            if request.operation == "classify_weakpoints":
+                return DeepSeekV4FlashObservationTool()._classify_weakpoints(request)
+            return response
+
+        def unavailable():
+            return HTTPError("https://unused.invalid", 503, "Unavailable", {}, io.BytesIO(b"temporary outage"))
+
+        invalid = io.BytesIO(json.dumps({"choices": [{"message": {"content": "{invalid"}}]}).encode())
+        store = self._recovery_store("shared-request-budget", compile_output=True)
+        with (
+            patch.object(FakeWeakpointClassifier, "invoke", invoke),
+            patch("agent_pipeline_v2.step2._load_deepseek_env"),
+            patch.dict("os.environ", {"DEEPSEEK_API_KEY": "test-key", "DEEPSEEK_BASE_URL": "https://unused.invalid"}),
+            patch("agent_pipeline_v2.step2.urlopen", side_effect=[unavailable(), unavailable(), invalid, unavailable()]) as http,
+            patch("agent_pipeline_v2.step2.time.sleep") as sleep,
+        ):
+            result = run_pipeline(store.run_dir)
+        self.assertEqual("failed", result.status)
+        self.assertEqual(4, http.call_count)
+        self.assertEqual(2, sleep.call_count)
+        classification_requests = [call for call in FakeWeakpointClassifier.calls if call.operation == "classify_weakpoints"]
+        self.assertEqual(2, len(classification_requests))
+        self.assertIn("JSON", classification_requests[1].parameters["repair_feedback"])
+        failed_audit = next(audit for audit in self._semantic_audits(store) if audit["response"]["status"] == "failed")
+        self.assertIn("budget exhausted", failed_audit["response"]["error"]["message"].lower())
+        self.assertFalse(any(ref.kind == "gaia.ir" for ref in store.load_artifacts()))
+
+    def test_one_malformed_cluster_does_not_retry_a_successful_cluster(self) -> None:
+        claims = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))
+        claims["relation"].append({"connects": [2, 1], "expression": "[2] 推出 [1]"})
+        atomic_write_json(self.root / "claims_final.json", claims)
+        FakeWeakpointClassifier.calls = []
+        original = FakeWeakpointClassifier.invoke
+
+        def invoke(tool, request):
+            response = original(tool, request)
+            if request.operation == "normalize_weakpoint_clusters":
+                relations = request.parameters["clusters"][0]["candidate_relations"]
+                if any(item["relation_id"] == "relation_3" for item in relations) and "repair_feedback" not in request.parameters:
+                    response.normalized["clusters"][0]["weakpoints"][0].pop("expression")
+            return response
+
+        store = self._recovery_store("partial-cluster-repair")
+        with patch.object(FakeWeakpointClassifier, "invoke", invoke):
+            result = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", result.status)
+        calls_by_cluster = {}
+        for call in FakeWeakpointClassifier.calls:
+            if call.operation == "normalize_weakpoint_clusters":
+                cluster = call.parameters["clusters"][0]
+                calls_by_cluster.setdefault(cluster["cluster_id"], []).append(call)
+        self.assertEqual([1, 2], sorted(len(calls) for calls in calls_by_cluster.values()))
+        self.assertEqual(1, sum(call.operation == "classify_weakpoints" for call in FakeWeakpointClassifier.calls))
+        self.assertEqual(3, len(self._semantic_audits(store)))
+
+    def test_failed_stage_resumes_from_prior_checkpoint_and_can_compile(self) -> None:
+        from pipeline_harness.checks import check_run
+        from weekly_reports.export_single_artifacts import export_run
+
+        FakeWeakpointClassifier.calls = []
+        original = FakeWeakpointClassifier.invoke
+        store = self._recovery_store("resume-after-outage", compile_output=True)
+        with patch.object(FakeWeakpointClassifier, "invoke", side_effect=RuntimeError("transport retries exhausted")):
+            failed = run_pipeline(store.run_dir)
+        self.assertEqual("failed", failed.status)
+        self.assertEqual(3, failed.next_stage_index)
+        prior_checkpoint = failed.last_checkpoint_id
+        prior_artifact_ids = {ref.artifact_id for ref in store.load_artifacts() if ref.producer_stage != "step3"}
+        self.assertFalse(any(ref.kind == "gaia.ir" for ref in store.load_artifacts()))
+
+        def valid_null_classification(tool, request):
+            response = original(tool, request)
+            if request.operation == "classify_weakpoints":
+                for item in response.normalized["classifications"]:
+                    item["reasoning_type"] = None
+            return response
+
+        with patch.object(FakeWeakpointClassifier, "invoke", valid_null_classification):
+            recovered = run_pipeline(store.run_dir)
+        self.assertEqual("succeeded", recovered.status)
+        self.assertEqual({"import": 1, "step1": 1, "strip": 1, "step3": 2, "step4": 1, "step5": 1}, recovered.attempts)
+        self.assertNotEqual(prior_checkpoint, recovered.last_checkpoint_id)
+        self.assertTrue(prior_artifact_ids <= {ref.artifact_id for ref in store.load_artifacts()})
+        exported = export_run(store.run_dir, "recovered-paper", self.root / "export")
+        self.assertEqual({"gaia.ir", "formalization", "knowledge.index"}, set(exported))
+        self.assertTrue(all(path.is_file() for path in exported.values()))
+        compile_ref = next(ref for ref in store.load_artifacts() if ref.kind == "tool.gaia_compile.response")
+        compile_audit = json.loads(store.artifact_path(compile_ref).read_text(encoding="utf-8"))
+        self.assertEqual("succeeded", compile_audit["response"]["status"])
+        self.assertEqual("official", compile_audit["response"]["metadata"]["contract_status"])
+        self.assertEqual([], [finding.to_dict() for finding in check_run(store.run_dir) if finding.severity == "error"])
+
+    def test_failed_cluster_preserves_other_successful_cluster_audit(self) -> None:
+        claims = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))
+        claims["relation"].append({"connects": [2, 1], "expression": "[2] 推出 [1]"})
+        atomic_write_json(self.root / "claims_final.json", claims)
+        FakeWeakpointClassifier.calls = []
+        original = FakeWeakpointClassifier.invoke
+
+        def invoke(tool, request):
+            response = original(tool, request)
+            if request.operation == "normalize_weakpoint_clusters":
+                relations = request.parameters["clusters"][0]["candidate_relations"]
+                if any(item["relation_id"] == "relation_3" for item in relations):
+                    raise RuntimeError("transport retries exhausted")
+            return response
+
+        store = self._recovery_store("partial-cluster-outage")
+        with patch.object(FakeWeakpointClassifier, "invoke", invoke):
+            result = run_pipeline(store.run_dir)
+        self.assertEqual("failed", result.status)
+        self.assertEqual(2, len(FakeWeakpointClassifier.calls))
+        self.assertTrue(all(call.operation == "normalize_weakpoint_clusters" for call in FakeWeakpointClassifier.calls))
+        audits = self._semantic_audits(store)
+        self.assertEqual(["failed", "succeeded"], sorted(audit["response"]["status"] for audit in audits))
+        self.assertFalse(any(ref.kind == "formalization" and ref.metadata.get("step") == 3 for ref in store.load_artifacts()))
+
+    def test_cluster_requests_stay_within_four_concurrent_calls(self) -> None:
+        atomic_write_json(self.root / "claims_final.json", {
+            "claim": [
+                {"number": index, "conclusion": "c", "text": f"Independent observation {index}.", "is_pure_data": False}
+                for index in range(1, 10)
+            ],
+            "note": [],
+            "relation": [
+                {"connects": [index, 9], "expression": f"[{index}] 是 [9] 的例子或证据"}
+                for index in range(1, 9)
+            ],
+        })
+        FakeWeakpointClassifier.calls = []
+        original = FakeWeakpointClassifier.invoke
+        lock = threading.Lock()
+        first_four_started = threading.Event()
+        overflow = threading.Event()
+        release = threading.Event()
+        active = 0
+        peak = 0
+
+        def invoke(tool, request):
+            nonlocal active, peak
+            if request.operation != "normalize_weakpoint_clusters":
+                return original(tool, request)
+            with lock:
+                active += 1
+                peak = max(peak, active)
+                if active == 4:
+                    first_four_started.set()
+                if active > 4:
+                    overflow.set()
+            try:
+                if not release.wait(timeout=5):
+                    raise RuntimeError("test did not release request barrier")
+                return original(tool, request)
+            finally:
+                with lock:
+                    active -= 1
+
+        store = self._recovery_store("bounded-cluster-concurrency")
+        with patch.object(FakeWeakpointClassifier, "invoke", invoke), ThreadPoolExecutor(max_workers=1) as caller:
+            future = caller.submit(run_pipeline, store.run_dir)
+            try:
+                self.assertTrue(first_four_started.wait(timeout=3))
+                self.assertFalse(overflow.wait(timeout=0.1))
+            finally:
+                release.set()
+            result = future.result(timeout=5)
+        self.assertEqual("succeeded", result.status)
+        self.assertEqual(4, peak)
+        self.assertEqual(8, sum(call.operation == "normalize_weakpoint_clusters" for call in FakeWeakpointClassifier.calls))
+
     def test_transitive_shortcut_requires_full_source_coverage(self) -> None:
         # A chain that only covers a subset of a hyperedge's sources must not
         # remove the direct edge, or the uncovered observations are orphaned.
@@ -182,6 +481,9 @@ class Step3Tests(unittest.TestCase):
             final["graph"]["operators"][0],
         )
         self.assertEqual(2, len([item for item in store.load_artifacts() if item.kind == "tool.semantic_review.response"]))
+        finding_codes = {item["code"] for item in result.findings}
+        self.assertIn("STEP3_REJECTED_WEAKPOINT", finding_codes)
+        self.assertIn("STEP3_NO_OBSERVATION_CLAIM", finding_codes)
 
     def test_claims_final_relations_are_adopted_without_llm_and_in_order(self) -> None:
         claims_final = json.loads((self.root / "claims_final.json").read_text(encoding="utf-8"))

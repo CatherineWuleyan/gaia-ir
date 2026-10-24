@@ -5,7 +5,8 @@ import copy
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable
 
 from pipeline_harness.domain.stages import _expression_tokens, _parse_expression
 from pipeline_harness.domain.tools import DomainTool, ToolCallRequest, ToolCallResponse, validate_tool_response
@@ -15,10 +16,12 @@ from pipeline_harness.store import atomic_write_json
 
 from .authoring import REASONING_TYPES, emit_formalization, weakpoint_target_ids
 from .step1 import PAPER_TEXT_KIND
+from .step2 import _request_budget
 
 
 STEP_NAME = "step3_analyze_reasoning"
 WEAKPOINT_TOOL_SPEC = "agent_pipeline_v2.step2:DeepSeekV4FlashObservationTool"
+_MAX_PARALLEL_CLUSTERS = 4
 _OPERATOR_BY_EXPRESSION = (
     ("不可同时成立", "contradiction"),
     ("矛盾", "contradiction"),
@@ -575,6 +578,51 @@ def _validate_cluster_result(document: JSONDict, clusters: list[JSONDict], norma
     return weakpoints
 
 
+def _invoke_semantic(
+    tool: DomainTool, request: ToolCallRequest, response_path: Path,
+    validate: Callable[[Any], Any],
+) -> tuple[Any, ArtifactDraft]:
+    """Repair invalid responses once, sharing the transport request budget.
+
+    Transport/auth failures are already handled by the tool's HTTP boundary.
+    They must not trigger a second transport budget disguised as prompt repair.
+    """
+    current_request = request
+    result = None
+    with _request_budget():
+        for attempt in range(2):
+            response = None
+            try:
+                response = tool.invoke(current_request)
+                if not isinstance(response, ToolCallResponse):
+                    raise TypeError(f"semantic tool returned {type(response).__name__}, not ToolCallResponse")
+                validate_tool_response(current_request, response)
+                if response.status != "succeeded":
+                    break
+                result = validate(response.normalized)
+                break
+            except Exception as exc:
+                raw = response.raw if isinstance(response, ToolCallResponse) else None
+                response = ToolCallResponse(
+                    current_request.call_id, "failed", raw,
+                    error={"type": type(exc).__name__, "message": str(exc)},
+                )
+                if attempt == 0 and isinstance(exc, ValueError):
+                    current_request = ToolCallRequest(
+                        f"{request.call_id}_repair", request.tool_name, request.tool_version,
+                        request.operation, request.inputs,
+                        {**copy.deepcopy(request.parameters), "repair_feedback": str(exc)},
+                    )
+                    continue
+                break
+    atomic_write_json(response_path, {"request": current_request.to_dict(), "response": response.to_dict()})
+    draft = ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
+        "schema_version": "1.0.0", "step": 3, "tool_call_id": current_request.call_id,
+        "tool_name": request.tool_name, "tool_version": request.tool_version, "status": response.status,
+    })
+    return result, draft
+
+
 def _classify_weakpoints(context: StageContext, document: JSONDict, weakpoints: list[JSONDict]) -> tuple[dict[str, str | None], ArtifactDraft]:
     spec = str(context.options.get("tool_plugin", WEAKPOINT_TOOL_SPEC))
     tool = instantiate(spec)
@@ -586,38 +634,32 @@ def _classify_weakpoints(context: StageContext, document: JSONDict, weakpoints: 
         inputs=[{"artifact_id": ref.artifact_id, "kind": ref.kind, "sha256": ref.sha256} for ref in context.inputs],
         parameters={"weakpoints": _classification_records(context, document, weakpoints)},
     )
-    response: ToolCallResponse | None = None
-    error_message = ""
-    for attempt in range(2):
-        current_request = request if attempt == 0 else ToolCallRequest(
-            f"{request.call_id}_repair", tool.name, tool.version, "classify_weakpoints",
-            request.inputs, {**copy.deepcopy(request.parameters), "repair_feedback": error_message},
-        )
-        try:
-            response = tool.invoke(current_request)
-            if not isinstance(response, ToolCallResponse):
-                raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
-            validate_tool_response(current_request, response)
-            if response.status != "succeeded":
-                raise ValueError(str((response.error or {}).get("message", "Step 3 semantic tool failed")))
-            break
-        except Exception as exc:
-            error_message = str(exc)
-            response = ToolCallResponse(current_request.call_id, "failed", None,
-                                        error={"type": type(exc).__name__, "message": error_message})
-    assert response is not None
-    response_path = context.work_dir / "semantic_step_3_tool_response.json"
-    atomic_write_json(response_path, {"request": request.to_dict(), "response": response.to_dict()})
-    draft = ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
-        "schema_version": "1.0.0", "step": 3, "tool_call_id": request.call_id,
-        "tool_name": tool.name, "tool_version": tool.version, "status": response.status,
-    })
-    if response.status != "succeeded" or not isinstance(response.normalized, dict):
-        return {}, draft
-    classifications = response.normalized.get("classifications")
-    if not isinstance(classifications, list):
-        raise ValueError("Step 3 semantic tool returned no classifications")
-    return {str(item["weakpoint_id"]): item["reasoning_type"] for item in classifications if isinstance(item, dict)}, draft
+    expected = {str(item["id"]) for item in weakpoints}
+
+    def validate(normalized: Any) -> dict[str, str | None]:
+        if not isinstance(normalized, dict) or set(normalized) != {"classifications"}:
+            raise ValueError("Step 3 semantic tool must return only classifications")
+        classifications = normalized["classifications"]
+        if not isinstance(classifications, list):
+            raise ValueError("Step 3 semantic tool returned no classifications")
+        resolved: dict[str, str | None] = {}
+        for item in classifications:
+            if not isinstance(item, dict) or set(item) != {"weakpoint_id", "reasoning_type"}:
+                raise ValueError("Step 3 classification fields are invalid")
+            key, label = item["weakpoint_id"], item["reasoning_type"]
+            if not isinstance(key, str) or key not in expected or key in resolved:
+                raise ValueError("Step 3 classification has an unknown or duplicate weakpoint ID")
+            if label is not None and (not isinstance(label, str) or label not in REASONING_TYPES):
+                raise ValueError("Step 3 classification has an unsupported reasoning_type")
+            resolved[key] = label
+        if set(resolved) != expected:
+            raise ValueError("Step 3 must classify every supplied weakpoint exactly once")
+        return resolved
+
+    classifications, draft = _invoke_semantic(
+        tool, request, context.work_dir / "semantic_step_3_tool_response.json", validate,
+    )
+    return classifications or {}, draft
 
 
 def _normalize_clusters(
@@ -628,7 +670,7 @@ def _normalize_clusters(
     frozen_clusters = copy.deepcopy(clusters)
     inputs = [{"artifact_id": ref.artifact_id, "kind": ref.kind, "sha256": ref.sha256} for ref in context.inputs]
 
-    def normalize_one(index_and_cluster: tuple[int, JSONDict]) -> tuple[JSONDict, ArtifactDraft]:
+    def normalize_one(index_and_cluster: tuple[int, JSONDict]) -> tuple[Any, ArtifactDraft]:
         index, cluster = index_and_cluster
         tool = instantiate(spec)
         if not isinstance(tool, DomainTool):
@@ -638,67 +680,27 @@ def _normalize_clusters(
             tool_name=tool.name, tool_version=tool.version, operation="normalize_weakpoint_clusters",
             inputs=inputs, parameters={"clusters": [copy.deepcopy(cluster)]},
         )
-        error_message = ""
-        response: ToolCallResponse | None = None
-        for attempt in range(2):
-            current_request = request if attempt == 0 else ToolCallRequest(
-                f"{request.call_id}_repair", tool.name, tool.version, "normalize_weakpoint_clusters",
-                inputs, {"clusters": [copy.deepcopy(cluster)], "repair_feedback": error_message},
-            )
-            try:
-                response = tool.invoke(current_request)
-                if not isinstance(response, ToolCallResponse):
-                    raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
-                validate_tool_response(current_request, response)
-                if response.status != "succeeded":
-                    raise ValueError(str((response.error or {}).get("message", "Step 3 cluster tool failed")))
-                _validate_cluster_result(frozen_document, [cluster], response.normalized)
-                break
-            except Exception as exc:
-                error_message = str(exc)
-                response = ToolCallResponse(
-                    current_request.call_id, "failed", None,
-                    error={"type": type(exc).__name__, "message": error_message},
-                )
-        if response is None or response.status != "succeeded":
-            # Deterministic conservative fallback: retain each supplied
-            # non-reasoning relation as an unresolved weakpoint.  This keeps
-            # the graph complete without inventing a merge, direction, or
-            # reasoning family after both LLM attempts failed.
-            weakpoints = []
-            for relation in cluster["candidate_relations"]:
-                sources = list(relation["sources"])
-                target = str(relation["target"])
-                endpoints = [*sources, target]
-                weakpoints.append({
-                    "member_relation_ids": [relation["relation_id"]],
-                    "evidence_claim_ids": sources,
-                    "target_claim_id": [target], "reasoning_type": None,
-                    "expression": " 推出 ".join(f"[{key}]" for key in endpoints),
-                })
-            response = ToolCallResponse(
-                request.call_id, "succeeded", None,
-                {"clusters": [{"cluster_id": cluster["cluster_id"], "weakpoints": weakpoints, "rejected_relation_ids": []}]},
-                metadata={"fallback": "unresolved_weakpoints", "error": error_message},
-            )
-        response_path = context.work_dir / f"semantic_step_3_cluster_tool_response_{index}.json"
-        atomic_write_json(response_path, {"request": request.to_dict(), "response": response.to_dict()})
-        draft = ArtifactDraft(response_path, "tool.semantic_review.response", "application/json", {
-            "schema_version": "1.0.0", "step": 3, "tool_call_id": request.call_id,
-            "tool_name": tool.name, "tool_version": tool.version, "status": response.status,
-        })
-        if response.status != "succeeded" or not isinstance(response.normalized, dict):
-            raise ValueError(str((response.error or {}).get("message", "Step 3 cluster tool failed")))
-        result_clusters = response.normalized.get("clusters")
-        if not isinstance(result_clusters, list) or len(result_clusters) != 1:
-            raise ValueError("Step 3 cluster tool must return exactly its frozen cluster")
-        return result_clusters[0], draft
 
-    with ThreadPoolExecutor() as executor:
+        def validate(normalized: Any) -> JSONDict:
+            _validate_cluster_result(frozen_document, [cluster], normalized)
+            return normalized["clusters"][0]
+
+        return _invoke_semantic(
+            tool, request, context.work_dir / f"semantic_step_3_cluster_tool_response_{index}.json", validate,
+        )
+
+    if not frozen_clusters:
+        return [], []
+    # Each job owns its retry budget. A failed job never resubmits successful
+    # neighbours; collect every audit before deciding whether the stage can advance.
+    with ThreadPoolExecutor(max_workers=min(_MAX_PARALLEL_CLUSTERS, len(frozen_clusters))) as executor:
         results = list(executor.map(normalize_one, enumerate(frozen_clusters, 1)))
+    drafts = [draft for _, draft in results]
+    if any(draft.metadata["status"] != "succeeded" for draft in drafts):
+        return [], drafts
     normalized = {"clusters": [item for item, _ in results]}
     weakpoints = _validate_cluster_result(frozen_document, frozen_clusters, normalized)
-    return weakpoints, [draft for _, draft in results]
+    return weakpoints, drafts
 
 
 class Step3AnalyzeReasoningPlugin:
@@ -706,6 +708,7 @@ class Step3AnalyzeReasoningPlugin:
 
     def run(self, context: StageContext) -> StageResult:
         findings: list[Finding] = []
+        drafts: list[ArtifactDraft] = []
         try:
             document = copy.deepcopy(_latest_formalization(context))
             workflow = document["workflow"]
@@ -800,45 +803,24 @@ class Step3AnalyzeReasoningPlugin:
                             },
                         })
                         known_weakpoint_ids.add(fallback_id)
-            drafts: list[ArtifactDraft] = []
             clusters = _relation_clusters(context, frozen_step2, frozen_step2["workflow"]["non_reasoning_links"])
             normalized_weakpoints: list[JSONDict] = []
             if clusters:
-                try:
-                    normalized_weakpoints, cluster_drafts = _normalize_clusters(context, frozen_step2, clusters)
-                    drafts.extend(cluster_drafts)
-                except Exception as exc:
-                    findings.append(Finding("STEP3_CLUSTER_PARTIAL_FAILURE", "warning", f"Cluster normalization partially failed: {exc}"))
-                    for cluster in clusters:
-                        for relation in cluster:
-                            relation_id = str(relation["id"])
-                            sources = list(relation.get("sources", []))
-                            target = str(relation.get("target", ""))
-                            anchors = list(dict.fromkeys(
-                                anchor
-                                for source in sources
-                                for anchor in document["knowledges"].get(source, {}).get("source_anchor_ids", [])
-                            ))
-                            if anchors:
-                                normalized_weakpoints.append({
-                                    "id": f"weakpoint_{relation_id}",
-                                    "payload": {
-                                        "evidence_claim_ids": sources,
-                                        "target_claim_id": target,
-                                        "reasoning_type": None,
-                                        "evidence_anchor_ids": anchors,
-                                        "expression": str(relation.get("metadata", {}).get("relation", {}).get("expression", "")) or f"{sources} 推出 {target}",
-                                    },
-                                })
+                normalized_weakpoints, cluster_drafts = _normalize_clusters(context, frozen_step2, clusters)
+                drafts.extend(cluster_drafts)
+                failed = [draft for draft in cluster_drafts if draft.metadata["status"] != "succeeded"]
+                if failed:
+                    messages = [json.loads(draft.path.read_text(encoding="utf-8"))["response"]["error"]["message"]
+                                for draft in failed]
+                    raise RuntimeError("Step 3 cluster normalization did not recover: " + "; ".join(messages))
                 added.extend(item["id"] for item in normalized_weakpoints)
             # High-confidence claims_final weakpoints are kept first, in their
             # original document order, ahead of the LLM-normalized candidates.
             weakpoints = [*existing_weakpoints, *adopted_weakpoints, *normalized_weakpoints]
             # Cluster normalization only groups/orients endpoints.  Treat its
             # newly created weakpoints exactly like direct input weakpoints and
-            # send them through the canonical classifier as well.  If that
-            # second call fails, retain any non-null cluster label as a safe
-            # fallback and leave only genuinely unresolved items as null.
+            # send them through the canonical classifier as well. Its validated
+            # null label is valid evidence insufficiency; a failed call is not.
             # Adopted claims_final weakpoints are deliberately excluded: they
             # are already high-confidence and take no "does it hold" judgment.
             unclassified_existing = [
@@ -846,30 +828,22 @@ class Step3AnalyzeReasoningPlugin:
             ]
             classification_targets = [*unclassified_existing, *normalized_weakpoints]
             if classification_targets:
-                try:
-                    classifications, classification_draft = _classify_weakpoints(context, document, classification_targets)
-                except Exception as exc:
-                    classifications, classification_draft = {}, None
-                    findings.append(Finding("STEP3_UNRESOLVED_CLASSIFICATION", "warning", str(exc)))
-                if classification_draft is not None:
-                    drafts.append(classification_draft)
-                expected = {str(item["id"]) for item in classification_targets}
-                if set(classifications) != expected:
-                    findings.append(Finding(
-                        "STEP3_UNRESOLVED_CLASSIFICATION", "warning",
-                        "Retained weakpoints whose reasoning classification could not be completed"))
-                else:
-                    classifications, rejected_ids = _screen_classifications(document, classification_targets, classifications)
-                    rejected_ids -= protected_ids
-                    if rejected_ids:
-                        weakpoints = [item for item in weakpoints if str(item["id"]) not in rejected_ids]
-                        findings.extend(
-                            Finding("STEP3_REJECTED_WEAKPOINT", "warning", f"Deleted {item_id}: screening gate rejected the relation")
-                            for item_id in sorted(rejected_ids)
-                        )
-                    for weakpoint in classification_targets:
-                        if str(weakpoint["id"]) not in rejected_ids:
-                            weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
+                classifications, classification_draft = _classify_weakpoints(context, document, classification_targets)
+                drafts.append(classification_draft)
+                if classification_draft.metadata["status"] != "succeeded":
+                    error = json.loads(classification_draft.path.read_text(encoding="utf-8"))["response"]["error"]
+                    raise RuntimeError("Step 3 classification did not recover: " + str(error["message"]))
+                classifications, rejected_ids = _screen_classifications(document, classification_targets, classifications)
+                rejected_ids -= protected_ids
+                if rejected_ids:
+                    weakpoints = [item for item in weakpoints if str(item["id"]) not in rejected_ids]
+                    findings.extend(
+                        Finding("STEP3_REJECTED_WEAKPOINT", "warning", f"Deleted {item_id}: screening gate rejected the relation")
+                        for item_id in sorted(rejected_ids)
+                    )
+                for weakpoint in classification_targets:
+                    if str(weakpoint["id"]) not in rejected_ids:
+                        weakpoint["payload"]["reasoning_type"] = classifications[str(weakpoint["id"])]
             flattened_ids = _flatten_redundant_premises(weakpoints, frozenset(protected_ids))
             weakpoints, transitive_ids = _remove_transitive_shortcuts(weakpoints, frozenset(protected_ids))
             if flattened_ids:
@@ -912,8 +886,11 @@ class Step3AnalyzeReasoningPlugin:
             return StageResult(
                 emitted.status,
                 [*emitted.artifacts, *drafts],
-                emitted.findings,
+                [*findings, *emitted.findings],
                 emitted.metadata,
             )
         except Exception as exc:
-            return StageResult("failed", findings=[Finding("STEP3_CLASSIFICATION_FAILED", "error", str(exc))])
+            return StageResult(
+                "failed", artifacts=drafts,
+                findings=[*findings, Finding("STEP3_CLASSIFICATION_FAILED", "error", str(exc))],
+            )

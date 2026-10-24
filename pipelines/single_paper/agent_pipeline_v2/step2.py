@@ -2,13 +2,23 @@
 from __future__ import annotations
 
 import copy
+import errno
 import json
 import os
+import random
+import socket
+import ssl
 import time
 import re
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
+from datetime import timezone
+from email.utils import parsedate_to_datetime
+from http.client import HTTPException, IncompleteRead, RemoteDisconnected
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, Iterator
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -36,22 +46,114 @@ from .step1 import INPUT_BUNDLE_KIND, PAPER_TEXT_KIND
 STEP_NAME = "step2_complete_observations"
 MODEL_NAME = "deepseek-v4-flash"
 _API_RETRIES = 3
+_REQUEST_LIMIT = 4
+_REQUEST_DEADLINE_SECONDS = 600
 _CANDIDATE_CALL_SLOTS = 4
 _MAX_PARALLEL_CANDIDATES = 4
 
 
-def _urlopen_with_retry(request: Request, *, timeout: int = 180):
-    """Retry transient DNS/transport failures without masking HTTP errors."""
-    last_error = None
-    for attempt in range(_API_RETRIES):
-        try:
-            return urlopen(request, timeout=timeout)  # noqa: S310
-        except URLError as exc:
-            last_error = exc
-            if attempt == _API_RETRIES - 1:
-                raise
-            time.sleep(2 ** attempt)
-    raise last_error  # pragma: no cover
+class _RequestBudgetExceeded(RuntimeError):
+    """The logical task cannot send another request or wait for another retry."""
+
+
+@dataclass
+class _RequestBudget:
+    deadline: float
+    attempts: int = 0
+
+
+_ACTIVE_REQUEST_BUDGET: ContextVar[_RequestBudget | None] = ContextVar(
+    "single_paper_request_budget", default=None,
+)
+
+
+@contextmanager
+def _request_budget() -> Iterator[_RequestBudget]:
+    """Share one bounded budget across a task's initial call and semantic repair."""
+    active = _ACTIVE_REQUEST_BUDGET.get()
+    if active is not None:
+        yield active
+        return
+    budget = _RequestBudget(time.monotonic() + _REQUEST_DEADLINE_SECONDS)
+    token = _ACTIVE_REQUEST_BUDGET.set(budget)
+    try:
+        yield budget
+    finally:
+        _ACTIVE_REQUEST_BUDGET.reset(token)
+
+
+def _retryable_transport_error(error: BaseException) -> bool:
+    if isinstance(error, HTTPError):
+        return error.code in {408, 429, 500, 502, 503, 504}
+    reason = error.reason if isinstance(error, URLError) else error
+    if isinstance(reason, (TimeoutError, ConnectionError, IncompleteRead, RemoteDisconnected, ssl.SSLEOFError)):
+        return True
+    if isinstance(reason, socket.gaierror):
+        return reason.errno == socket.EAI_AGAIN
+    if isinstance(reason, OSError):
+        return reason.errno in {
+            errno.ECONNRESET, errno.ECONNABORTED, errno.ECONNREFUSED,
+            errno.EPIPE, errno.ETIMEDOUT, errno.ENETUNREACH,
+            errno.EHOSTUNREACH, errno.ENETRESET, errno.ENETDOWN,
+        }
+    # urllib also accepts textual reasons. Do not retry certificate, URL,
+    # configuration, or other permanent errors just because they are URLError.
+    return isinstance(reason, str) and any(marker in reason.lower() for marker in (
+        "timed out", "timeout", "connection reset", "connection aborted",
+        "connection refused", "temporary failure in name resolution",
+        "remote end closed connection", "broken pipe",
+    ))
+
+
+def _retry_after(error: BaseException) -> float:
+    if not isinstance(error, HTTPError) or error.headers is None:
+        return 0.0
+    value = error.headers.get("Retry-After")
+    if not value:
+        return 0.0
+    value = str(value).strip()
+    if value.isdigit():
+        return float(value)
+    try:
+        retry_at = parsedate_to_datetime(value)
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        return max(0.0, retry_at.timestamp() - time.time())
+    except (TypeError, ValueError, OverflowError):
+        return 0.0
+
+
+def _request_json(request: Request, timeout: float = 180) -> Any:
+    """Read a complete JSON response, retrying only transient transport errors.
+
+    Invalid JSON is a semantic repair input, not a reason to resend the same
+    request. Final transport exceptions retain their original type and value.
+    """
+    with _request_budget() as budget:
+        for attempt in range(_API_RETRIES):
+            remaining = budget.deadline - time.monotonic()
+            if budget.attempts >= _REQUEST_LIMIT or remaining <= 0:
+                raise _RequestBudgetExceeded("Request budget exhausted (4 attempts / 600 seconds)")
+            budget.attempts += 1
+            try:
+                with urlopen(request, timeout=min(timeout, remaining)) as response:  # noqa: S310
+                    return json.loads(response.read().decode("utf-8"))
+            except (URLError, OSError, HTTPException) as exc:
+                if not _retryable_transport_error(exc) or attempt == _API_RETRIES - 1:
+                    raise
+                delay = max(2 ** attempt + random.uniform(0, 0.5), _retry_after(exc))
+                remaining = max(0.0, budget.deadline - time.monotonic())
+                if budget.attempts >= _REQUEST_LIMIT or delay >= remaining:
+                    reason = (f"HTTP {exc.code}" if isinstance(exc, HTTPError)
+                              else f"{type(exc).__name__} ({type(exc.reason).__name__})"
+                              if isinstance(exc, URLError) and isinstance(exc.reason, BaseException)
+                              else type(exc).__name__)
+                    limit = ("4 network attempts already used" if budget.attempts >= _REQUEST_LIMIT
+                             else f"retry requires {delay:.1f}s but only {remaining:.1f}s remain")
+                    raise _RequestBudgetExceeded(f"Request budget exhausted after {reason}: {limit}") from exc
+                time.sleep(delay)
+
+
 _IMAGE_PATTERN = re.compile(r"!\[[^]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
 _FIGURE_REFERENCE_PATTERN = re.compile(r"\b(?:fig(?:ure)?\.?)\s*([0-9]+[a-z]?)\b", re.IGNORECASE)
 _PARAGRAPH_ANCHOR_PATTERN = re.compile(r"^anchor_paragraph_p(\d+)$")
@@ -252,13 +354,7 @@ class DeepSeekV4FlashObservationTool:
                 headers={"Authorization": f"Bearer {os.environ['DEEPSEEK_API_KEY']}", "Content-Type": "application/json"},
                 method="POST",
             )
-            try:
-                with _urlopen_with_retry(relation_request) as response:  # noqa: S310
-                    relation_raw: Any = json.loads(response.read().decode("utf-8"))
-            except HTTPError as exc:
-                raise RuntimeError(f"DeepSeek relation request failed with HTTP {exc.code}") from exc
-            except URLError as exc:
-                raise RuntimeError(f"DeepSeek relation request failed: {exc.reason}") from exc
+            relation_raw = _request_json(relation_request)
             raw_responses.append(relation_raw)
             try:
                 relations.extend(cls._normalize_group_relations(_response_content(relation_raw), component))
@@ -347,15 +443,7 @@ class DeepSeekV4FlashObservationTool:
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 method="POST",
             )
-            try:
-                with _urlopen_with_retry(http_request) as response:  # noqa: S310
-                    raw: Any = json.loads(response.read().decode("utf-8"))
-            except HTTPError as exc:
-                detail = exc.read().decode("utf-8", errors="replace").strip()
-                suffix = f": {detail[:2000]}" if detail else ""
-                raise RuntimeError(f"DeepSeek request failed with HTTP {exc.code}{suffix}") from exc
-            except URLError as exc:
-                raise RuntimeError(f"DeepSeek request failed: {exc.reason}") from exc
+            raw = _request_json(http_request)
             raw_responses.append(raw)
             try:
                 normalized = self._normalize(
@@ -476,13 +564,7 @@ class DeepSeekV4FlashObservationTool:
             f"{base_url}/chat/completions", data=body,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
         )
-        try:
-            with _urlopen_with_retry(http_request) as response:
-                raw = json.loads(response.read().decode("utf-8"))
-        except HTTPError as exc:
-            raise RuntimeError(f"DeepSeek rewrite request failed with HTTP {exc.code}") from exc
-        except URLError as exc:
-            raise RuntimeError(f"DeepSeek rewrite request failed: {exc.reason}") from exc
+        raw = _request_json(http_request)
         claims = self._normalize_rewritten_observations(_response_content(raw), selected)
         return ToolCallResponse(
             request.call_id, "succeeded", {"responses": [raw]},
@@ -536,15 +618,7 @@ class DeepSeekV4FlashObservationTool:
             f"{base_url}/chat/completions", data=body,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
         )
-        try:
-            with _urlopen_with_retry(http_request) as response:  # noqa: S310
-                raw: Any = json.loads(response.read().decode("utf-8"))
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace").strip()
-            suffix = f": {detail[:2000]}" if detail else ""
-            raise RuntimeError(f"DeepSeek weakpoint classification failed with HTTP {exc.code}{suffix}") from exc
-        except URLError as exc:
-            raise RuntimeError(f"DeepSeek weakpoint classification failed: {exc.reason}") from exc
+        raw = _request_json(http_request)
         try:
             payload = json.loads(_response_content(raw))
         except json.JSONDecodeError as exc:
@@ -624,15 +698,7 @@ class DeepSeekV4FlashObservationTool:
             f"{base_url}/chat/completions", data=body,
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST",
         )
-        try:
-            with _urlopen_with_retry(http_request) as response:  # noqa: S310
-                raw: Any = json.loads(response.read().decode("utf-8"))
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace").strip()
-            suffix = f": {detail[:2000]}" if detail else ""
-            raise RuntimeError(f"DeepSeek weakpoint cluster normalization failed with HTTP {exc.code}{suffix}") from exc
-        except URLError as exc:
-            raise RuntimeError(f"DeepSeek weakpoint cluster normalization failed: {exc.reason}") from exc
+        raw = _request_json(http_request)
         try:
             payload = json.loads(_response_content(raw))
         except json.JSONDecodeError as exc:
@@ -1277,12 +1343,15 @@ def _tool_call(
     response: ToolCallResponse | None = None
     current_request = request
     for attempt in range(2):
+        repairable = False
         try:
             response = tool.invoke(current_request)
             if not isinstance(response, ToolCallResponse):
                 raise TypeError(f"{spec} returned {type(response).__name__}, not ToolCallResponse")
             validate_tool_response(current_request, response)
+            repairable = (response.error or {}).get("type") in {"ValueError", "JSONDecodeError"}
         except Exception as exc:
+            repairable = isinstance(exc, ValueError)
             response = ToolCallResponse(
                 current_request.call_id,
                 "failed",
@@ -1293,9 +1362,9 @@ def _tool_call(
             break
         message = str((response.error or {}).get("message", ""))
         # Validation/content failures are actionable prompt violations and
-        # should be repaired by the model once. Billing/auth failures are not
-        # prompt problems and must not be retried repeatedly.
-        if attempt == 0 and message and not re.search(r"HTTP (401|402|403)\b|not configured|Insufficient Balance", message, re.I):
+        # should be repaired by the model once. Transport failures retain their
+        # original exception types and must not get another transport retry set.
+        if attempt == 0 and message and repairable:
             current_request = ToolCallRequest(
                 f"{request.call_id}_repair", request.tool_name, request.tool_version,
                 request.operation, request.inputs,
@@ -1720,9 +1789,8 @@ def _judge_duplicate_observations(
         method="POST",
     )
     try:
-        with _urlopen_with_retry(http_request, timeout=180) as response:
-            raw = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, OSError, json.JSONDecodeError):
+        raw = _request_json(http_request, timeout=180)
+    except (HTTPError, URLError, OSError, HTTPException, json.JSONDecodeError, _RequestBudgetExceeded):
         return []
     try:
         result = json.loads(_response_content(raw))

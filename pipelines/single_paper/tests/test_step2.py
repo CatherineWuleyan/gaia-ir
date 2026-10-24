@@ -3,20 +3,192 @@ from __future__ import annotations
 import copy
 import io
 import json
+import ssl
 import tempfile
 import unittest
+from email.utils import formatdate
+from http.client import IncompleteRead
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
+from urllib.error import HTTPError, URLError
+from urllib.request import Request
 
 from agent_pipeline_v2.compiler_projection import project_for_official_compiler
 from agent_pipeline_v2.step2 import (
     DeepSeekV4FlashObservationTool, MODEL_NAME, _best_paragraph_anchor,
     _deduplicate_extractions, _experiment_candidates, _observation_binding,
+    _request_budget, _request_json, _RequestBudgetExceeded,
+    _judge_duplicate_observations, _tool_call,
 )
 from pipeline_harness.domain.tools import ToolCallRequest, ToolCallResponse
 from pipeline_harness.runner import run_pipeline
 from pipeline_harness.store import RunStore, atomic_write_json, read_json
 from pipeline_harness.view.projector import project_run
+
+
+class RequestJsonTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.request = Request("https://example.invalid/chat/completions", data=b"{}")
+        self.clock = self.enterContext(patch("agent_pipeline_v2.step2.time.monotonic", return_value=100.0))
+        self.enterContext(patch("agent_pipeline_v2.step2.time.time", return_value=1700000000.0))
+        self.sleep = self.enterContext(patch("agent_pipeline_v2.step2.time.sleep"))
+        self.enterContext(patch("agent_pipeline_v2.step2.random.uniform", return_value=0.25))
+
+    def test_rate_limit_respects_retry_after_seconds_and_http_date(self) -> None:
+        for retry_after in ("7", formatdate(1700000007, usegmt=True)):
+            with self.subTest(retry_after=retry_after):
+                self.sleep.reset_mock()
+                limited = HTTPError(self.request.full_url, 429, "rate limited", {"Retry-After": retry_after}, None)
+                with patch("agent_pipeline_v2.step2.urlopen", side_effect=[limited, io.BytesIO(b'{"ok":true}')]) as send:
+                    self.assertEqual({"ok": True}, _request_json(self.request))
+                self.assertEqual(2, send.call_count)
+                self.sleep.assert_called_once_with(7.0)
+
+    def test_read_timeout_and_incomplete_body_retry_the_whole_request(self) -> None:
+        class BrokenResponse(io.BytesIO):
+            def __init__(self, error: Exception) -> None:
+                super().__init__(b"")
+                self.error = error
+
+            def read(self, *args: object, **kwargs: object) -> bytes:
+                raise self.error
+
+        for failure in (TimeoutError("read timed out"), IncompleteRead(b'{"ok":', 5)):
+            with self.subTest(failure=type(failure).__name__):
+                self.sleep.reset_mock()
+                broken = BrokenResponse(failure)
+                with patch("agent_pipeline_v2.step2.urlopen", side_effect=[broken, io.BytesIO(b'{"ok":true}')]) as send:
+                    self.assertEqual({"ok": True}, _request_json(self.request))
+                self.assertTrue(broken.closed)
+                self.assertEqual(2, send.call_count)
+                self.sleep.assert_called_once_with(1.25)
+
+    def test_permanent_http_and_certificate_failures_are_not_retried(self) -> None:
+        failures = [HTTPError(self.request.full_url, code, "permanent", {}, None)
+                    for code in (400, 401, 402, 403, 404, 501)]
+        failures.append(URLError(ssl.SSLCertVerificationError("certificate verify failed")))
+        for failure in failures:
+            with self.subTest(failure=str(failure)):
+                with patch("agent_pipeline_v2.step2.urlopen", side_effect=failure) as send:
+                    with self.assertRaises(type(failure)) as raised:
+                        _request_json(self.request)
+                self.assertIs(failure, raised.exception)
+                self.assertEqual(1, send.call_count)
+        self.sleep.assert_not_called()
+
+    def test_transient_transport_exhaustion_preserves_third_exception(self) -> None:
+        failures = [URLError(TimeoutError(f"timeout {index}")) for index in range(3)]
+        with patch("agent_pipeline_v2.step2.urlopen", side_effect=failures) as send:
+            with self.assertRaises(URLError) as raised:
+                _request_json(self.request)
+        self.assertIs(failures[-1], raised.exception)
+        self.assertEqual(3, send.call_count)
+        self.assertEqual([1.25, 2.25], [call.args[0] for call in self.sleep.call_args_list])
+
+    def test_recoverable_http_statuses_are_retried(self) -> None:
+        for code in (408, 500, 502, 503, 504):
+            with self.subTest(code=code):
+                failure = HTTPError(self.request.full_url, code, "transient", {}, None)
+                with patch("agent_pipeline_v2.step2.urlopen", side_effect=[failure, io.BytesIO(b'{}')]) as send:
+                    self.assertEqual({}, _request_json(self.request))
+                self.assertEqual(2, send.call_count)
+
+    def test_initial_call_and_repair_share_four_attempt_limit(self) -> None:
+        responses = [TimeoutError("first"), TimeoutError("second"), io.BytesIO(b'{}'), io.BytesIO(b'{}')]
+        with patch("agent_pipeline_v2.step2.urlopen", side_effect=responses) as send:
+            with _request_budget():
+                self.assertEqual({}, _request_json(self.request))
+                with _request_budget():
+                    self.assertEqual({}, _request_json(self.request))
+                with self.assertRaises(_RequestBudgetExceeded) as raised:
+                    _request_json(self.request)
+            self.assertNotIsInstance(raised.exception, ValueError)
+            self.assertEqual(4, send.call_count)
+        # A completed task does not consume the next task's budget.
+        with patch("agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(b'{}')) as send:
+            self.assertEqual({}, _request_json(self.request))
+            send.assert_called_once()
+
+    def test_invalid_json_is_not_transport_retried_and_can_be_repaired(self) -> None:
+        with patch("agent_pipeline_v2.step2.urlopen", side_effect=[io.BytesIO(b'{'), io.BytesIO(b'{"fixed":true}')]) as send:
+            with _request_budget():
+                with self.assertRaises(json.JSONDecodeError):
+                    _request_json(self.request)
+                self.assertEqual(1, send.call_count)
+                self.assertEqual({"fixed": True}, _request_json(self.request))
+        self.sleep.assert_not_called()
+
+    def test_deadline_bounds_new_request_timeout_and_blocks_later_calls(self) -> None:
+        with patch("agent_pipeline_v2.step2.urlopen", return_value=io.BytesIO(b'{}')) as send:
+            with _request_budget():
+                self.clock.return_value = 699.5
+                self.assertEqual({}, _request_json(self.request))
+                send.assert_called_once_with(self.request, timeout=0.5)
+                self.clock.return_value = 700.0
+                with self.assertRaises(_RequestBudgetExceeded):
+                    _request_json(self.request)
+                self.assertEqual(1, send.call_count)
+
+    def test_retry_after_beyond_deadline_fails_without_early_retry(self) -> None:
+        failure = HTTPError(self.request.full_url, 429, "rate limited", {"Retry-After": "601"}, None)
+        with patch("agent_pipeline_v2.step2.urlopen", side_effect=failure) as send:
+            with self.assertRaises(_RequestBudgetExceeded) as raised:
+                _request_json(self.request)
+        self.assertIs(failure, raised.exception.__cause__)
+        self.assertIn("HTTP 429", str(raised.exception))
+        self.assertIn("601.0s", str(raised.exception))
+        self.assertIn("600.0s remain", str(raised.exception))
+        send.assert_called_once()
+        self.sleep.assert_not_called()
+
+    def test_step2_does_not_prompt_repair_auth_or_exhausted_transport(self) -> None:
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        context = SimpleNamespace(options={"tool_plugin": "unused:tool"}, run_id="test", attempt=1,
+                                  inputs=[], work_dir=root)
+        self.enterContext(patch("agent_pipeline_v2.step2._load_deepseek_env"))
+        self.enterContext(patch.dict("os.environ", {"DEEPSEEK_API_KEY": "test-key"}))
+        self.enterContext(patch("agent_pipeline_v2.step2.instantiate", return_value=DeepSeekV4FlashObservationTool()))
+        failures = [(HTTPError(self.request.full_url, code, "denied", {}, None), 1) for code in (401, 402, 403)]
+        failures.append((URLError(TimeoutError("read timed out")), 3))
+        for failure, attempts in failures:
+            with self.subTest(failure=str(failure)):
+                with patch("agent_pipeline_v2.step2.urlopen", side_effect=failure) as send:
+                    with self.assertRaises(ValueError):
+                        _tool_call(context, [], call_number=1, operation="rewrite_observations",
+                                   selected_claims=[{"id": "claim_1", "content": "Measured improvement."}])
+                self.assertEqual(attempts, send.call_count)
+                audit = read_json(root / "semantic_step_2_tool_response_1.json")
+                self.assertEqual(type(failure).__name__, audit["response"]["error"]["type"])
+                self.assertEqual(str(failure), audit["response"]["error"]["message"])
+
+    def test_step2_still_repairs_invalid_json_once(self) -> None:
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        context = SimpleNamespace(options={"tool_plugin": "unused:tool"}, run_id="test", attempt=1,
+                                  inputs=[], work_dir=root)
+        content = {"claims": [{"id": "claim_1", "content": "Measured improvement.",
+                                "paragraph_anchor_ids": ["anchor_1"]}]}
+        raw = {"choices": [{"message": {"content": json.dumps(content)}}]}
+        with patch("agent_pipeline_v2.step2._load_deepseek_env"), \
+                patch.dict("os.environ", {"DEEPSEEK_API_KEY": "test-key"}), \
+                patch("agent_pipeline_v2.step2.instantiate", return_value=DeepSeekV4FlashObservationTool()), \
+                patch("agent_pipeline_v2.step2.urlopen", side_effect=[io.BytesIO(b'{'), io.BytesIO(json.dumps(raw).encode())]) as send:
+            normalized, _ = _tool_call(context, [], call_number=1, operation="rewrite_observations",
+                                      selected_claims=[{"id": "claim_1", "content": "Measured improvement."}])
+        self.assertEqual(2, send.call_count)
+        self.assertEqual("claim_1", normalized["claims"][0]["id"])
+        self.sleep.assert_not_called()
+
+    def test_optional_dedup_judge_keeps_observations_when_retry_budget_expires(self) -> None:
+        observations = {key: {"content": {"canonical": "Measured improvement."}}
+                        for key in ("claim_1", "claim_2")}
+        failure = HTTPError(self.request.full_url, 429, "rate limited", {"Retry-After": "601"}, None)
+        with patch("agent_pipeline_v2.step2._load_deepseek_env"), \
+                patch.dict("os.environ", {"DEEPSEEK_API_KEY": "test-key"}), \
+                patch("agent_pipeline_v2.step2.urlopen", side_effect=failure) as send:
+            self.assertEqual([], _judge_duplicate_observations(None, observations, [("claim_1", "claim_2")]))
+        send.assert_called_once()
+        self.sleep.assert_not_called()
 
 
 class FakeObservationTool:
