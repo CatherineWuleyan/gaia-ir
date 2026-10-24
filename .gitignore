@@ -67,3 +67,25 @@ node_modules/
 /dist/ariadne-*/
 /dist/*.tar.gz
 /dist/*.zip
+
+# Hidden-benchmark design notes and gold answers: local only, never commit.
+/docs/hidden-paper-*
+/docs/worktree-*summary*.md
+/docs/reliable-sample-registry-*.md
+
+# Local research scratch (captures, logs, credentials)
+/weekly_reports/logs/
+/weekly_reports/raw/
+/weekly_reports/raw.zip
+/weekly_reports/pdf/
+/weekly_reports/lkm_evidence/
+/weekly_reports/manifests/
+/weekly_reports/pipelines/
+/weekly_reports/lkm/
+/weekly_reports/domain/
+/weekly_reports/figures/
+/weekly_reports/*.log
+/weekly_reports/merge_init.txt
+/weekly_reports/auth_login.json
+/weekly_reports/folder_listing.json
+/weekly_reports/*.png
