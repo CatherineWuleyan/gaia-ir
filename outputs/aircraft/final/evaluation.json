@@ -49,12 +49,18 @@
    "title_zh": "集成概念设计环境",
    "title_en": "Integrated conceptual design environment",
    "verdict_class": "primary",
+   "verdict": "multi-paper direct support",
    "support_claim_count": 10,
    "support_paper_count": 2,
    "support_papers": [
     "paper_aec49f8f",
     "paper_c6f44cb4"
    ],
+   "support_paper_counts": {
+    "paper_aec49f8f": 7,
+    "paper_c6f44cb4": 3
+   },
+   "second_paper_support": 3,
    "boundary_count": 0,
    "oppose_count": 0,
    "chain_count": 0,
@@ -84,12 +90,18 @@
    "title_zh": "嵌套多学科优化",
    "title_en": "Nested multidisciplinary optimization",
    "verdict_class": "primary",
+   "verdict": "multi-paper direct support",
    "support_claim_count": 8,
    "support_paper_count": 2,
    "support_papers": [
     "paper_9c2fb427",
     "paper_c6f44cb4"
    ],
+   "support_paper_counts": {
+    "paper_c6f44cb4": 5,
+    "paper_9c2fb427": 3
+   },
+   "second_paper_support": 3,
    "boundary_count": 2,
    "oppose_count": 0,
    "chain_count": 0,
@@ -119,12 +131,18 @@
    "title_zh": "非线性飞行动力学建模",
    "title_en": "Nonlinear flight-dynamics formulation",
    "verdict_class": "partial",
+   "verdict": "single-paper core",
    "support_claim_count": 8,
    "support_paper_count": 2,
    "support_papers": [
     "paper_014abc68",
     "paper_26dddb44"
    ],
+   "support_paper_counts": {
+    "paper_014abc68": 7,
+    "paper_26dddb44": 1
+   },
+   "second_paper_support": 1,
    "boundary_count": 2,
    "oppose_count": 0,
    "chain_count": 0,
@@ -154,12 +172,18 @@
    "title_zh": "飞行数据模型校正",
    "title_en": "Flight-data model calibration",
    "verdict_class": "partial",
+   "verdict": "single-paper core",
    "support_claim_count": 10,
    "support_paper_count": 2,
    "support_papers": [
     "paper_066432fe",
     "paper_53166ac1"
    ],
+   "support_paper_counts": {
+    "paper_066432fe": 9,
+    "paper_53166ac1": 1
+   },
+   "second_paper_support": 1,
    "boundary_count": 0,
    "oppose_count": 0,
    "chain_count": 0,
@@ -189,12 +213,18 @@
    "title_zh": "硬件在环验证",
    "title_en": "Hardware-in-the-loop validation",
    "verdict_class": "partial",
+   "verdict": "single-paper core",
    "support_claim_count": 9,
    "support_paper_count": 2,
    "support_papers": [
     "paper_26dddb44",
     "paper_755906eb"
    ],
+   "support_paper_counts": {
+    "paper_26dddb44": 8,
+    "paper_755906eb": 1
+   },
+   "second_paper_support": 1,
    "boundary_count": 1,
    "oppose_count": 0,
    "chain_count": 0,

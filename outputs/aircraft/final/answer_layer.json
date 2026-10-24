@@ -9094,7 +9094,7 @@
  "generation": {
   "prompt_version": "question-answer-v1",
   "model": "deepseek-v4-flash-vision-exp",
-  "generated_at": "2026-10-24T03:49:13.779387+00:00",
+  "generated_at": "2026-10-24T03:54:30.782527+00:00",
   "root_count": 5,
   "answer_edge_count": 50,
   "chain_count": 0,

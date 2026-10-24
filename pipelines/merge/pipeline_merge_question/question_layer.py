@@ -1005,9 +1005,12 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "title_zh": root.get("title_zh"),
             "title_en": root.get("title_en"),
             "verdict_class": root.get("verdict_class"),
+            "verdict": root.get("verdict"),
             "support_claim_count": len(support),
             "support_paper_count": len(root.get("stats", {}).get("support_papers") or []),
             "support_papers": root.get("stats", {}).get("support_papers") or [],
+            "support_paper_counts": root.get("stats", {}).get("support_paper_counts") or {},
+            "second_paper_support": root.get("stats", {}).get("second_paper_support", 0),
             "boundary_count": len(boundaries),
             "oppose_count": len(opposes),
             "chain_count": len(chains),
@@ -1097,12 +1100,17 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
         "",
     ]
     for root in result.get("roots") or []:
+        counts = root.get("support_paper_counts") or {}
+        distribution = " / ".join(str(value) for value in counts.values())
         lines.extend([
             f"### {root.get('code')} · {root.get('title_zh')} / {root.get('title_en')}",
             "",
-            f"- Verdict: {root.get('verdict_class')}",
+            f"- Verdict: {root.get('verdict_class')} — {root.get('verdict')}",
             f"- Support: {root.get('support_claim_count')} claims from "
-            f"{root.get('support_paper_count')} papers; typed chains: {root.get('chain_count')} "
+            f"{root.get('support_paper_count')} papers"
+            + (f" ({distribution}, so the second paper contributes "
+               f"{root.get('second_paper_support', 0)}); " if distribution else "; ")
+            + f"typed chains: {root.get('chain_count')} "
             f"({root.get('chain_status')}; leaves {root.get('leaf_count')}, max depth {root.get('max_depth')})",
             f"- Exploratory (non-evidential) paths: {root.get('exploratory_path_count')} "
             f"({root.get('exploratory_node_count')} nodes)",

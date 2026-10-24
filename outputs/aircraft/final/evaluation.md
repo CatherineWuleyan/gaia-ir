@@ -14,8 +14,8 @@
 
 ### R1 · 集成概念设计环境 / Integrated conceptual design environment
 
-- Verdict: primary
-- Support: 10 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
+- Verdict: primary — multi-paper direct support
+- Support: 10 claims from 2 papers (7 / 3, so the second paper contributes 3); typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 18 (20 nodes)
 - Boundary: 0 · Oppose: 0
 - Chain nodes: 0
@@ -23,8 +23,8 @@
 
 ### R2 · 嵌套多学科优化 / Nested multidisciplinary optimization
 
-- Verdict: primary
-- Support: 8 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
+- Verdict: primary — multi-paper direct support
+- Support: 8 claims from 2 papers (5 / 3, so the second paper contributes 3); typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 24 (23 nodes)
 - Boundary: 2 · Oppose: 0
 - Chain nodes: 0
@@ -32,8 +32,8 @@
 
 ### R3 · 非线性飞行动力学建模 / Nonlinear flight-dynamics formulation
 
-- Verdict: partial
-- Support: 8 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
+- Verdict: partial — single-paper core
+- Support: 8 claims from 2 papers (7 / 1, so the second paper contributes 1); typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 24 (31 nodes)
 - Boundary: 2 · Oppose: 0
 - Chain nodes: 0
@@ -41,8 +41,8 @@
 
 ### R4 · 飞行数据模型校正 / Flight-data model calibration
 
-- Verdict: partial
-- Support: 10 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
+- Verdict: partial — single-paper core
+- Support: 10 claims from 2 papers (9 / 1, so the second paper contributes 1); typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 20 (24 nodes)
 - Boundary: 0 · Oppose: 0
 - Chain nodes: 0
@@ -50,8 +50,8 @@
 
 ### R5 · 硬件在环验证 / Hardware-in-the-loop validation
 
-- Verdict: partial
-- Support: 9 claims from 2 papers; typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
+- Verdict: partial — single-paper core
+- Support: 9 claims from 2 papers (8 / 1, so the second paper contributes 1); typed chains: 0 (no_typed_chain; leaves 0, max depth 0)
 - Exploratory (non-evidential) paths: 14 (20 nodes)
 - Boundary: 1 · Oppose: 0
 - Chain nodes: 0
