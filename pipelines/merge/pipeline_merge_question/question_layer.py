@@ -31,6 +31,7 @@ import json
 import os
 import re
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Any, Callable, Iterable, Mapping
 
@@ -41,6 +42,28 @@ SCHEMA_VERSION = "0.1.0"
 PROMPT_VERSION = "question-answer-v1"
 ANSWER_TYPES = {"method_route", "modeling_choice", "design_decision", "validation_route"}
 LINK_RELATIONS = {"support", "oppose", "bounds"}
+# How the claims are put to the judge.
+#   routed: one call per claim, every candidate in context. The claim is asked
+#           to pick the route it bears on.
+#           Measured with a route and its negation in the same candidate set:
+#           the model linked the same claim to both, but as support for one and
+#           OPPOSE for the other, and never supported two candidates at once.
+#           Seeing the opposite is what lets it fix the polarity -- judged alone,
+#           the negated route collected 7 of 9 supports instead. The audit keeps
+#           both counts apart: same claim on several routes, and same claim
+#           *supporting* several.
+#   budget: legacy -- one call per candidate, bounded pool, at most ten links.
+#           Kept so frozen runs and old configurations stay reproducible.
+LINK_PROTOCOL = "routed"
+LINK_PROTOCOL_CHOICES = ("routed", "budget")
+LINK_WORKERS_DEFAULT = 8
+LINK_POOL_LIMIT = 44
+SECOND_OPINION_LIMIT = 2
+# A second paper must carry at least this share of the dominant paper's support
+# before a root counts as corroborated. Routing hands every route a usable set
+# of claims, so an absolute count no longer separates a route one paper carries
+# from a route several papers carry.
+VERDICT_DOMINANCE_FLOOR = 0.2
 LINK_LABELS = {"support": "supports", "oppose": "opposes", "bounds": "bounds"}
 VERDICT_CLASSES = {"primary", "partial", "contested", "exploratory"}
 VERDICT_COLORS = {
@@ -92,12 +115,20 @@ def papers_of_node(node: Mapping[str, Any]) -> list[str]:
     details = node.get("details") if isinstance(node.get("details"), Mapping) else {}
     metadata = details.get("metadata") if isinstance(details.get("metadata"), Mapping) else {}
     provenance = metadata.get("package_provenance") or []
+    if not isinstance(provenance, list):
+        provenance = []
     papers = sorted({
-        str(item).replace("papers:", "")
+        match.group(1)
         for item in provenance
-        if isinstance(item, str) and item.startswith("papers:")
+        if isinstance(item, str)
+        and (match := re.fullmatch(r"papers:([^:]+)", item))
+        and match.group(1) != "other"
     })
-    return papers or [paper_of(str(node.get("id")))]
+    if papers:
+        return papers
+    # "other" is a grouping fallback, never an independently sourced paper.
+    match = re.match(r"^(?:knowledge:)?papers:([^:]+)::", str(node.get("id")))
+    return [match.group(1)] if match and match.group(1) != "other" else []
 
 
 def primary_paper_of_node(node: Mapping[str, Any]) -> str:
@@ -175,7 +206,10 @@ def chain_up_adjacency(
     up: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for edge in edges:
         rel = str(edge.get("semantic_type") or edge.get("label") or "")
-        if rel != "infer":
+        # Legacy projections used the display label infer for every directed
+        # edge; native projections retain deduction as the label as well as
+        # the audited role. Both must reach the same role gate.
+        if rel not in {"infer", "deduction"}:
             continue
         role = roles.get(str(edge.get("id")))
         if role is not None:
@@ -320,6 +354,32 @@ CLAIMS={json.dumps(digest['claims'], ensure_ascii=False, sort_keys=True)}
 """
 
 
+def _seed_overlap(seeds: list[str], statement: str, view: Mapping[str, Any]) -> dict[str, Any]:
+    """Lexical agreement between a root's statement and the seeds it cites."""
+    by_id = {str(node.get("id")): node for node in view.get("nodes") or []}
+    statement_tokens = tokens(statement)
+    overlaps: list[float] = []
+    for seed in seeds:
+        node = by_id.get(seed)
+        if node is None:
+            continue
+        seed_tokens = tokens(node_text(node))
+        if not seed_tokens or not statement_tokens:
+            overlaps.append(0.0)
+            continue
+        overlaps.append(len(statement_tokens & seed_tokens) / max(1, len(seed_tokens)))
+    if not overlaps:
+        return {"mean": 0.0, "min": 0.0, "max": 0.0, "seeds_measured": 0,
+                "seeds_with_overlap": 0}
+    return {
+        "mean": round(sum(overlaps) / len(overlaps), 3),
+        "min": round(min(overlaps), 3),
+        "max": round(max(overlaps), 3),
+        "seeds_measured": len(overlaps),
+        "seeds_with_overlap": sum(1 for value in overlaps if value > 0),
+    }
+
+
 def _fallback_seeds(root: Mapping[str, Any], view: Mapping[str, Any], limit: int = 5) -> list[str]:
     query = tokens(" ".join(str(root.get(key) or "") for key in ("title_en", "title_zh", "statement", "criteria")))
     scored = []
@@ -376,6 +436,11 @@ def generate_roots(
         seeds = [str(item) for item in raw.get("seed_claim_ids") or [] if str(item) in known]
         if not seeds:
             seeds = _fallback_seeds(raw, view)
+        # Seeds are written by the same call that wrote the statement, so citing
+        # them proves nothing by itself. Measure the lexical overlap and record
+        # it: a root that names six seeds of which none share a term with its own
+        # statement is a root whose grounding should be read, not counted.
+        seed_overlap = _seed_overlap(seeds, statement, view)
         title_zh = str(raw.get("title_zh") or raw.get("title") or "").strip()
         title_en = str(raw.get("title_en") or raw.get("title") or code).strip()
         roots.append({
@@ -388,6 +453,7 @@ def generate_roots(
             "scope": str(raw.get("scope") or "").strip(),
             "criteria": str(raw.get("criteria") or "").strip(),
             "seed_claim_ids": list(dict.fromkeys(seeds))[:8],
+            "seed_overlap": seed_overlap,
         })
     if not roots:
         raise ValueError("root generation returned no usable answer")
@@ -512,20 +578,21 @@ def _normalize_links(
     raw_links = response.get("links") if isinstance(response, Mapping) else None
     if not isinstance(raw_links, list):
         return []
-    links: list[dict[str, str]] = []
-    seen_claims: set[str] = set()
+    # Collect first, decide after. Keeping only the first link per claim made the
+    # outcome depend on the order the judge happened to emit, which is neither
+    # meaningful nor reproducible.
+    collected: list[dict[str, str]] = []
     for raw in raw_links:
         if not isinstance(raw, Mapping):
             continue
         claim_id = str(raw.get("claim_id") or raw.get("id") or "")
         relation = str(raw.get("relation") or "").strip().lower()
-        if claim_id not in allowed or relation not in LINK_RELATIONS or claim_id in seen_claims:
+        if claim_id not in allowed or relation not in LINK_RELATIONS:
             continue
         reason = re.sub(r"\s+", " ", str(raw.get("reason") or "")).strip()
         if not reason:
             continue
-        seen_claims.add(claim_id)
-        links.append({
+        collected.append({
             "claim_id": claim_id,
             "relation": relation,
             "reason": reason[:300],
@@ -533,10 +600,18 @@ def _normalize_links(
     # A support and an oppose on the same claim means the judge did not decide;
     # keep neither rather than drawing a contradictory pair.
     by_claim: dict[str, set[str]] = defaultdict(set)
-    for link in links:
+    for link in collected:
         by_claim[link["claim_id"]].add(link["relation"])
     conflicting = {claim for claim, rels in by_claim.items() if len(rels) > 1}
-    return [link for link in links if link["claim_id"] not in conflicting][:12]
+    kept: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for link in collected:
+        key = (link["claim_id"], link["relation"])
+        if link["claim_id"] in conflicting or key in seen:
+            continue
+        seen.add(key)
+        kept.append(link)
+    return kept[:12]
 
 
 def link_roots(
@@ -546,7 +621,23 @@ def link_roots(
     *,
     call_json: Callable[[str], Any] = _post_json,
     broaden_retry: bool = True,
+    protocol: str | None = None,
+    multi_route: bool = True,
+    workers: int | None = None,
 ) -> tuple[dict[str, list[dict[str, str]]], list[dict[str, Any]]]:
+    """Link claims to candidates with the configured protocol.
+
+    ``routed`` (default) asks each claim where it belongs; ``budget`` keeps the
+    original per-candidate, ten-link behaviour for frozen runs.
+    """
+    chosen = protocol or os.environ.get("ARIADNE_LINK_PROTOCOL", LINK_PROTOCOL)
+    if chosen not in LINK_PROTOCOL_CHOICES:
+        raise ValueError(f"unknown link protocol: {chosen}")
+    if chosen == "routed":
+        return link_roots_routed(
+            view, question, roots, call_json=call_json,
+            multi_route=multi_route, workers=workers,
+        )
     links_by_root: dict[str, list[dict[str, str]]] = {}
     raw_calls: list[dict[str, Any]] = []
     for root in roots:
@@ -567,6 +658,259 @@ def link_roots(
                 candidates = wider
         links_by_root[root["code"]] = links
     return links_by_root, raw_calls
+
+
+_LINK_RUBRIC = """A claim can bear on a candidate in exactly one way:
+- support: the claim states a method, result, or design fact that directly supports this route. Same topic alone is not enough; the reason must name what the claim contributes.
+- oppose: the claim reports a result that is incompatible with the route under compatible conditions. Do not infer opposition from a different aircraft, dataset, model, or condition.
+- bounds: the claim gives a condition, scope limit, or assumption that constrains when the route holds.
+- none: topical only, not enough information, or the claim argues for a different recommendation."""
+
+
+def build_routed_prompt(question: Mapping[str, str], claim: Mapping[str, Any],
+                        roots: list[Mapping[str, Any]]) -> str:
+    """One claim, every candidate: the claim has to pick where it belongs."""
+    routes = [
+        {"code": str(root.get("code")), "statement": str(root.get("statement") or "")}
+        for root in roots
+    ]
+    return f"""Judge ONE claim against EVERY candidate route at once.
+
+QUESTION (zh): {question.get('zh', '')}
+QUESTION (en): {question.get('en', '') or '(not supplied)'}
+
+{_LINK_RUBRIC}
+
+Candidates compete: if the claim argues for one route, it does not support the
+route that says the opposite. A claim may bear on more than one candidate only
+when it genuinely bears on each; otherwise name the one it bears on.
+
+CLAIM {claim.get('code')}: {claim.get('content')}
+
+CANDIDATES={json.dumps(routes, ensure_ascii=False, sort_keys=True)}
+
+Return JSON only, with one entry per candidate you can justify (an empty list is allowed):
+{{"claim_id": {json.dumps(str(claim.get('id')))}, "links": [{{"candidate": "R1", "relation": "support|oppose|bounds", "reason": "one short sentence"}}]}}"""
+
+
+def build_second_opinion_prompt(question: Mapping[str, str], claim: Mapping[str, Any],
+                                root: Mapping[str, Any]) -> str:
+    """One claim, one neighbouring route: does it also bear on this one?"""
+    answer = {"id": root.get("code"), "statement": root.get("statement") or ""}
+    return f"""Judge ONE claim against ONE candidate route.
+
+QUESTION (zh): {question.get('zh', '')}
+QUESTION (en): {question.get('en', '') or '(not supplied)'}
+ANSWER={json.dumps(answer, ensure_ascii=False, sort_keys=True)}
+
+{_LINK_RUBRIC}
+
+The claim is already evidence for a neighbouring route. Judge only whether it
+ALSO bears on this one. Answering none is the normal outcome.
+
+CLAIM {claim.get('code')}: {claim.get('content')}
+
+Return JSON only:
+{{"claim_id": {json.dumps(str(claim.get('id')))}, "relation": "support|oppose|bounds|none", "reason": "one short sentence"}}"""
+
+
+def _parse_routed(response: Any, allowed: set[str]) -> dict[str, dict[str, str]]:
+    raw = response.get("links") if isinstance(response, Mapping) else None
+    picked: dict[str, dict[str, str]] = {}
+    for item in raw or []:
+        if not isinstance(item, Mapping):
+            continue
+        code = str(item.get("candidate") or item.get("candidate_id") or "")
+        relation = str(item.get("relation") or "").strip().lower()
+        reason = re.sub(r"\s+", " ", str(item.get("reason") or "")).strip()
+        if code not in allowed or relation not in LINK_RELATIONS or not reason or code in picked:
+            continue
+        picked[code] = {"relation": relation, "reason": reason[:300]}
+    return picked
+
+
+def _parse_second_opinion(response: Any) -> dict[str, str] | None:
+    if not isinstance(response, Mapping):
+        return None
+    relation = str(response.get("relation") or "").strip().lower()
+    reason = re.sub(r"\s+", " ", str(response.get("reason") or "")).strip()
+    if relation not in LINK_RELATIONS or not reason:
+        return None
+    return {"relation": relation, "reason": reason[:300]}
+
+
+def link_workers(explicit: int | None = None) -> int:
+    raw = explicit
+    if raw is None:
+        env = os.environ.get("ARIADNE_LINK_WORKERS", "").strip()
+        raw = int(env) if env.isdigit() else LINK_WORKERS_DEFAULT
+    return max(1, int(raw))
+
+
+def _closest_route(roots: list[Mapping[str, Any]]) -> dict[str, str]:
+    """For each route, the most similar other route by statement wording.
+
+    The paper-overlap rule alone never fires for a paper whose claims all landed
+    on one route, which is exactly where a shared claim is most likely to be
+    missed. This adds a deterministic fallback so every routed claim gets at
+    least one second look.
+    """
+    by_code = {str(root.get("code")): tokens(str(root.get("statement") or ""))
+               for root in roots}
+    closest: dict[str, str] = {}
+    for code, statement in by_code.items():
+        best, best_score = "", 0.0
+        for other, other_statement in by_code.items():
+            if other == code:
+                continue
+            score = len(statement & other_statement) / max(1, len(statement | other_statement))
+            if score > best_score or (score == best_score and best and other < best):
+                best, best_score = other, score
+        if best and best_score > 0:
+            closest[code] = best
+    return closest
+
+
+def _paper_owners(view: Mapping[str, Any],
+                  decisions: Iterable[tuple[str, str]]) -> dict[str, set[str]]:
+    """Which routes already own a claim from the same paper."""
+    by_id = {str(node.get("id")): node for node in view.get("nodes") or []}
+    owned: dict[str, set[str]] = defaultdict(set)
+    for (code, claim_id) in decisions:
+        node = by_id.get(str(claim_id))
+        if node is None:
+            continue
+        for paper in papers_of_node(node):
+            owned[paper].add(code)
+    return owned
+
+
+def link_roots_routed(
+    view: Mapping[str, Any],
+    question: Mapping[str, str],
+    roots: list[Mapping[str, Any]],
+    *,
+    call_json: Callable[[str], Any] = _post_json,
+    multi_route: bool = True,
+    workers: int | None = None,
+    pool_limit: int = LINK_POOL_LIMIT,
+) -> tuple[dict[str, list[dict[str, str]]], list[dict[str, Any]]]:
+    """Route every pooled claim to the candidate it bears on.
+
+    One call per claim instead of one per candidate, and no link budget: the
+    claim decides, and a claim that fits nothing answers with an empty list.
+    """
+    codes = [str(root.get("code")) for root in roots]
+    pools: dict[str, dict[str, Mapping[str, Any]]] = {}
+    for root in roots:
+        items = candidate_pool(view, root, limit=pool_limit)
+        pools[str(root.get("code"))] = {str(item["id"]): item for item in items}
+    claim_ids = list(dict.fromkeys(
+        claim_id for code in codes for claim_id in pools.get(code, {})
+    ))
+    if not claim_ids:
+        return {code: [] for code in codes}, []
+
+    by_id = {str(node.get("id")): node for node in view.get("nodes") or []}
+    claims: dict[str, dict[str, Any]] = {}
+    for claim_id in claim_ids:
+        node = by_id.get(claim_id)
+        if node is None:
+            continue
+        claims[claim_id] = {"id": claim_id, "code": node_code(node),
+                            "content": short_text(node_text(node), 300)}
+
+    allowed = set(codes)
+    decisions: dict[tuple[str, str], dict[str, str]] = {}
+    calls: list[dict[str, Any]] = []
+    worker_count = link_workers(workers)
+
+    def route(claim_id: str) -> tuple[str, dict[str, dict[str, str]]]:
+        prompt = build_routed_prompt(question, claims[claim_id], roots)
+        return claim_id, _parse_routed(call_json(prompt), allowed)
+
+    if worker_count > 1 and len(claims) > 1:
+        with ThreadPoolExecutor(max_workers=worker_count) as pool:
+            futures = {pool.submit(route, claim_id): claim_id for claim_id in claims}
+            for future in as_completed(futures):
+                routed_id, picked = future.result()
+                for code, value in picked.items():
+                    decisions[(code, routed_id)] = value
+    else:
+        for claim_id in claims:
+            routed_id, picked = route(claim_id)
+            for code, value in picked.items():
+                decisions[(code, routed_id)] = value
+    assigned: Counter[str] = Counter(claim_id for (_, claim_id) in decisions)
+    supported: Counter[str] = Counter(
+        claim_id for (_, claim_id), value in decisions.items()
+        if value["relation"] == "support"
+    )
+    calls.append({"stage": "route", "claims": len(claims),
+                  "workers": worker_count, "decisions": len(decisions),
+                  "claims_routed_to_several": sum(1 for n in assigned.values() if n > 1),
+                  "claims_supporting_several": sum(1 for n in supported.values() if n > 1),
+                  "claims_routed_to_nothing": len(claims) - len(assigned)})
+
+    if multi_route and decisions:
+        # A routed claim lands on one route by construction. Ask the neighbouring
+        # routes separately, or evidence two routes genuinely share is dropped.
+        owned = _paper_owners(view, decisions)
+        closest = _closest_route(roots)
+        extra: list[tuple[str, str]] = []
+        seen: set[tuple[str, str]] = set()
+        for (code, claim_id) in decisions:
+            node = by_id.get(str(claim_id))
+            if node is None:
+                continue
+            neighbours: set[str] = set()
+            for paper in papers_of_node(node):
+                neighbours |= owned.get(paper, set())
+            fallback = closest.get(code)
+            if fallback:
+                neighbours.add(fallback)
+            for candidate_code in sorted(neighbours - {code}):
+                pair = (candidate_code, claim_id)
+                if pair not in decisions and pair not in seen:
+                    seen.add(pair)
+                    extra.append(pair)
+        extra = extra[: len(decisions) * SECOND_OPINION_LIMIT]
+        root_by_code = {str(root.get("code")): root for root in roots}
+
+        def second_opinion(pair: tuple[str, str]
+                           ) -> tuple[tuple[str, str], dict[str, str] | None]:
+            code, claim_id = pair
+            prompt = build_second_opinion_prompt(question, claims[claim_id],
+                                                 root_by_code[code])
+            return pair, _parse_second_opinion(call_json(prompt))
+
+        accepted = 0
+        if extra:
+            if worker_count > 1 and len(extra) > 1:
+                with ThreadPoolExecutor(max_workers=worker_count) as pool:
+                    futures = {pool.submit(second_opinion, pair): pair for pair in extra}
+                    for future in as_completed(futures):
+                        pair, value = future.result()
+                        if value is not None:
+                            decisions[pair] = value
+                            accepted += 1
+            else:
+                for pair in extra:
+                    pair, value = second_opinion(pair)
+                    if value is not None:
+                        decisions[pair] = value
+                        accepted += 1
+            calls.append({"stage": "second_opinion", "asked": len(extra),
+                          "accepted": accepted})
+
+    links_by_root: dict[str, list[dict[str, str]]] = {code: [] for code in codes}
+    for (code, claim_id), value in sorted(decisions.items()):
+        links_by_root.setdefault(code, []).append({
+            "claim_id": claim_id,
+            "relation": value["relation"],
+            "reason": value["reason"],
+        })
+    return links_by_root, calls
 
 
 # ---------------------------------------------------------------------------
@@ -750,12 +1094,17 @@ def build_answer_layer(
         depth = max((chain["depth"] for chain in chains), default=0)
         exploratory_leaves = {chain["leaf"] for chain in exploratory}
         exploratory_depth = max((chain["depth"] for chain in exploratory), default=0)
+        dominant_paper_support = ranked_support[0] if ranked_support else 0
+        second_paper_share = (
+            round(second_paper_support / dominant_paper_support, 3)
+            if dominant_paper_support else 0.0
+        )
         if opposes:
             verdict_class = "contested"
-        elif (len(support_papers) >= 2 and len(supported) >= 3
-              and second_paper_support >= 2):
+        elif (len(support_papers) >= 2 and second_paper_support >= 2
+              and second_paper_share >= VERDICT_DOMINANCE_FLOOR):
             verdict_class = "primary"
-        elif supported:
+        elif supported and support_papers:
             verdict_class = "partial"
         else:
             verdict_class = "exploratory"
@@ -775,6 +1124,8 @@ def build_answer_layer(
                     paper_support.items(), key=lambda item: item[1], reverse=True
                 )),
                 "second_paper_support": second_paper_support,
+                "dominant_paper_support": dominant_paper_support,
+                "second_paper_share": second_paper_share,
                 "multi_paper_corroborated": (
                     len(support_papers) >= 2 and second_paper_support >= 2
                 ),
@@ -1017,6 +1368,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "chain_node_count": len(root_chain_nodes),
             "direct_ids": sorted(support | boundaries | opposes),
             "statement": root.get("statement"),
+            "seed_overlap": root.get("seed_overlap"),
         })
     linked_or_chained = linked | chain_nodes
     linked_or_chained_with_exploratory = linked_or_chained | exploratory_nodes
@@ -1026,7 +1378,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
         if node_id in by_id:
             papers = papers_of_node(by_id[node_id])
             touched_papers.update(papers)
-            count_by_paper[papers[0]] += 1
+            count_by_paper.update(papers)
     multi_root = Counter()
     for root in answer_layer.get("roots") or []:
         for node_id in set(root.get("support_ids") or []):
@@ -1037,7 +1389,7 @@ def evaluate(view: Mapping[str, Any], answer_layer: Mapping[str, Any]) -> dict[s
             "node_count": len(nodes),
             "edge_count": len(edges),
             "connected_claim_count": len(connected),
-            "paper_count": len({papers_of_node(node)[0] for node in nodes}),
+            "paper_count": len({paper for node in nodes for paper in papers_of_node(node)}),
         },
         "answer_layer": {
             "root_count": len(answer_layer.get("roots") or []),
@@ -1092,24 +1444,31 @@ def evaluation_markdown(result: Mapping[str, Any], answer_layer: Mapping[str, An
         "",
     ]
     for root in result.get("roots") or []:
+        counts = root.get("support_paper_counts") or {}
+        distribution = " / ".join(str(value) for value in counts.values())
         lines.extend([
             f"### {root.get('code')} · {root.get('title_zh')} / {root.get('title_en')}",
             "",
             f"- Verdict: {root.get('verdict_class')} — {root.get('verdict')}",
             f"- Support: {root.get('support_claim_count')} claims from "
             f"{root.get('support_paper_count')} papers"
-            + (f" ({' / '.join(str(v) for v in (root.get('support_paper_counts') or {}).values())}, "
-               f"so the second paper contributes {root.get('second_paper_support', 0)})"
-               if root.get("support_paper_counts") else "")
-            + f"; typed chains: {root.get('chain_count')} "
+            + (f" ({distribution}, so the second paper contributes "
+               f"{root.get('second_paper_support', 0)}); " if distribution else "; ")
+            + f"typed chains: {root.get('chain_count')} "
             f"({root.get('chain_status')}; leaves {root.get('leaf_count')}, max depth {root.get('max_depth')})",
             f"- Exploratory (non-evidential) paths: {root.get('exploratory_path_count')} "
             f"({root.get('exploratory_node_count')} nodes)",
             f"- Boundary: {root.get('boundary_count')} · Oppose: {root.get('oppose_count')}",
             f"- Chain nodes: {root.get('chain_node_count')}",
-            f"- Statement: {root.get('statement')}",
-            "",
         ])
+        seed_overlap = root.get("seed_overlap") or {}
+        if seed_overlap.get("seeds_measured"):
+            lines.append(
+                f"- Seed agreement: {seed_overlap.get('seeds_with_overlap')}/"
+                f"{seed_overlap.get('seeds_measured')} seeds share terms with the "
+                f"statement (mean {seed_overlap.get('mean')})"
+            )
+        lines.extend([f"- Statement: {root.get('statement')}", ""])
     lines.extend([
         "## Reading the numbers",
         "",
