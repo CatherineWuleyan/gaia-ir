@@ -68,6 +68,7 @@ STOPWORDS = {
 _MAX_CHAINS_PER_ROOT = 90
 _MAX_CHAIN_DEPTH = 8
 _MAX_TOTAL_CHAINS = 320
+_LINK_BATCH_SIZE = 64
 
 
 # ---------------------------------------------------------------------------
@@ -418,6 +419,11 @@ def candidate_pool(
     limit: int = 44,
     broaden: bool = False,
 ) -> list[dict[str, Any]]:
+    """Rank every available claim; a larger limit preserves the smaller prefix.
+
+    ``broaden`` remains accepted for callers using the previous interface.
+    Expansion now changes the limit, not the ranking or the evidence text.
+    """
     nodes = [node for node in view.get("nodes") or [] if node.get("kind") != "answer_root"]
     by_id = {str(node.get("id")): node for node in nodes}
     degree = degree_map(view.get("edges") or [])
@@ -442,20 +448,24 @@ def candidate_pool(
         if score > 0:
             lexical.append((score, -degree[str(node.get("id"))], str(node.get("id"))))
     lexical.sort(key=lambda item: (-item[0], item[1], item[2]))
-    for _, _, node_id in lexical[: (34 if broaden else 16)]:
+    for _, _, node_id in lexical:
         add(node_id)
     by_paper: dict[str, list[tuple[int, str]]] = defaultdict(list)
     for node in nodes:
         by_paper[primary_paper_of_node(node)].append((degree[str(node.get("id"))], str(node.get("id"))))
     for paper in sorted(by_paper):
-        for _, node_id in sorted(by_paper[paper], key=lambda item: (-item[0], item[1]))[: (3 if broaden else 2)]:
+        for _, node_id in sorted(by_paper[paper], key=lambda item: (-item[0], item[1]))[:2]:
             add(node_id)
     delta = sorted(
         (node for node in nodes if node.get("layer") == "weakpoints"),
         key=lambda node: (-degree[str(node.get("id"))], node_code(node)),
     )
-    for node in delta[: (8 if broaden else 5)]:
+    for node in delta:
         add(str(node.get("id")))
+    # Lexical overlap and graph degree are ordering hints, not eligibility
+    # gates. A complete scan must also visit low-degree and non-English claims.
+    for node_id in sorted(by_id):
+        add(node_id)
     seeds = {str(node_id) for node_id in root.get("seed_claim_ids") or []}
     result = []
     for node_id in picked[:limit]:
@@ -467,7 +477,7 @@ def candidate_pool(
             "layer": str(node.get("layer") or "claims"),
             "degree": degree[node_id],
             "seed": node_id in seeds,
-            "content": short_text(node_text(node), 300),
+            "content": re.sub(r"\s+", " ", node_text(node)).strip(),
         })
     return result
 
@@ -493,19 +503,23 @@ QUESTION (en): {question.get('en', '') or '(not supplied)'}
 ANSWER={json.dumps(answer, ensure_ascii=False, sort_keys=True)}
 
 For each CLAIM decide whether it bears on the answer:
-- support: the claim states a method, result, or design fact that directly supports this answer route. Same topic alone is not enough; the reason must name what the claim contributes.
+- support: the claim directly states an implementation, equation structure, observation, or result of an explicit component of this answer route under compatible conditions. A claim need not prove the entire answer alone. Same topic, a prerequisite, or a possible use is not support.
 - oppose: the claim reports a result that is incompatible with the answer under compatible conditions. Do not infer opposition from a different aircraft, dataset, model, or condition.
 - bounds: the claim gives a condition, scope limit, or assumption that constrains when the answer holds.
 - none: topical only, or not enough information.
 
 Rules:
+- read the statement, criteria and scope together; preserve every condition rather than treating a conditional fit or mechanism as an established result.
+- check the object/material, model type, workflow operation, and experimental conditions in the claim before choosing a relation. A different object can illustrate a GENERIC method only when the claim explicitly implements the same operation. Do not transfer its numerical results, fitted parameters, validation success, or material mechanism to a named target without explicit transfer premises in the supplied evidence.
+- do not invent missing links: having an equation does not demonstrate integration, calibration or hardware validation; computing dynamics in a simulator does not establish a particular equation structure; a linearized model does not directly support a nonlinear formulation.
+- an alternative, approximation or special-case reduction with additional assumptions is bounds, not direct support for the unrestricted formulation. Use none if even its applicability is not established.
 - use exact claim_id values from CANDIDATES; never invent an id.
 - if a K domain conclusion is among the candidates, prefer it over a raw claim that merely restates the same proposition; the raw claim can still be used as a chain premise.
-- return at most 10 links, and at least one support only if the graph genuinely supports the answer.
+- inspect EVERY supplied claim independently and return ALL defensible links in this batch. Do not rank, select a top ten, or omit a correct link to make room for another.
 - a claim may receive at most one relation; if it is ambiguous, use none.
 - reason: one short English sentence (<= 25 words) naming the contribution of the claim.
-- the candidate set is deliberately bounded. A missing claim is not evidence that the answer is unsupported; use none.
-- if there is no defensible support, return an empty links list; the answer will be marked exploratory.
+- the candidates are one batch of a larger graph. Judge only the supplied evidence; missing context is not permission to fill in a premise.
+- links may contain only oppose or bounds; never invent support to avoid an empty answer. If no claim bears on the answer, return an empty links list.
 
 Return JSON only:
 {{"root_id":{json.dumps(root['code'])}, "links":[{{"claim_id":"...","relation":"support|oppose|bounds","reason":"..."}}]}}
@@ -520,22 +534,26 @@ def _normalize_links(
     candidates: list[Mapping[str, Any]],
 ) -> list[dict[str, str]]:
     allowed = {str(item["id"]) for item in candidates}
+    codes: dict[str, set[str]] = defaultdict(set)
+    for item in candidates:
+        if item.get("code"):
+            codes[str(item["code"])].add(str(item["id"]))
     raw_links = response.get("links") if isinstance(response, Mapping) else None
     if not isinstance(raw_links, list):
         return []
     links: list[dict[str, str]] = []
-    seen_claims: set[str] = set()
     for raw in raw_links:
         if not isinstance(raw, Mapping):
             continue
         claim_id = str(raw.get("claim_id") or raw.get("id") or "")
+        if claim_id not in allowed and len(codes.get(claim_id, set())) == 1:
+            claim_id = next(iter(codes[claim_id]))
         relation = str(raw.get("relation") or "").strip().lower()
-        if claim_id not in allowed or relation not in LINK_RELATIONS or claim_id in seen_claims:
+        if claim_id not in allowed or relation not in LINK_RELATIONS:
             continue
         reason = re.sub(r"\s+", " ", str(raw.get("reason") or "")).strip()
         if not reason:
             continue
-        seen_claims.add(claim_id)
         links.append({
             "claim_id": claim_id,
             "relation": relation,
@@ -547,7 +565,11 @@ def _normalize_links(
     for link in links:
         by_claim[link["claim_id"]].add(link["relation"])
     conflicting = {claim for claim, rels in by_claim.items() if len(rels) > 1}
-    return [link for link in links if link["claim_id"] not in conflicting][:12]
+    unique: dict[str, dict[str, str]] = {}
+    for link in links:
+        if link["claim_id"] not in conflicting:
+            unique.setdefault(link["claim_id"], link)
+    return list(unique.values())
 
 
 def link_roots(
@@ -558,25 +580,49 @@ def link_roots(
     call_json: Callable[[str], Any] = _post_json,
     broaden_retry: bool = True,
 ) -> tuple[dict[str, list[dict[str, str]]], list[dict[str, Any]]]:
+    """Visit the whole graph in bounded batches without a per-answer link cap.
+
+    ``broaden_retry`` remains accepted for source compatibility. There is no
+    smaller candidate subset to retry: all claims already reach the judge.
+    A failed call propagates rather than returning a silently partial answer.
+    """
     links_by_root: dict[str, list[dict[str, str]]] = {}
     raw_calls: list[dict[str, Any]] = []
     for root in roots:
-        candidates = candidate_pool(view, root)
-        prompt = build_link_prompt(question, root, candidates)
-        response = call_json(prompt)
-        links = _normalize_links(response, root, candidates)
-        raw_calls.append({"root": root["code"], "prompt": prompt, "response": response, "candidates": candidates})
-        if not any(link["relation"] == "support" for link in links) and broaden_retry:
-            wider = candidate_pool(view, root, limit=60, broaden=True)
-            retry_prompt = build_link_prompt(question, root, wider)
-            retry = call_json(retry_prompt)
-            retry_links = _normalize_links(retry, root, wider)
-            raw_calls.append({"root": root["code"], "retry": True, "prompt": retry_prompt,
-                              "response": retry, "candidates": wider})
-            if any(link["relation"] == "support" for link in retry_links):
-                links = retry_links
-                candidates = wider
-        links_by_root[root["code"]] = links
+        candidates = candidate_pool(view, root, limit=len(view.get("nodes") or []))
+        links: list[dict[str, str]] = []
+        for offset in range(0, len(candidates), _LINK_BATCH_SIZE):
+            batch = candidates[offset:offset + _LINK_BATCH_SIZE]
+            prompt = build_link_prompt(question, root, batch)
+            response = call_json(prompt)
+            links.extend(_normalize_links(response, root, batch))
+            raw_calls.append({"root": root["code"], "prompt": prompt,
+                              "response": response, "candidates": batch})
+        # A complete scan raises recall, but also exposes more tempting
+        # examples from other objects or adjacent workflow stages. Confirm
+        # proposed support against the full claim and answer conditions in a
+        # separate call. Bounds/opposition are not promoted by this pass.
+        support_ids = {link["claim_id"] for link in links if link["relation"] == "support"}
+        proposed = [item for item in candidates if item["id"] in support_ids]
+        confirmed: set[str] = set()
+        for offset in range(0, len(proposed), _LINK_BATCH_SIZE):
+            batch = proposed[offset:offset + _LINK_BATCH_SIZE]
+            prompt = (
+                "This is an independent check of proposed support, not a request to defend an earlier decision.\n"
+                "Retain support only when the supplied claim actually states a component of the answer's "
+                "method or result with compatible object, model, and conditions. Check the full text, "
+                "including qualifications at its end. A required input, nearby task, different model type, "
+                "or another object's numerical success is not a substitute. Omit unsupported proposals; "
+                "do not invent a transfer premise or assume a validation step occurred.\n\n"
+                + build_link_prompt(question, root, batch)
+            )
+            response = call_json(prompt)
+            confirmed.update(link["claim_id"] for link in _normalize_links(response, root, batch)
+                             if link["relation"] == "support")
+            raw_calls.append({"root": root["code"], "prompt": prompt,
+                              "response": response, "candidates": batch})
+        links = [link for link in links if link["relation"] != "support" or link["claim_id"] in confirmed]
+        links_by_root[root["code"]] = _normalize_links({"links": links}, root, candidates)
     return links_by_root, raw_calls
 
 

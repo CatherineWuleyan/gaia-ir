@@ -1,11 +1,104 @@
 """Regression tests for the question-led merge pipeline."""
 from pathlib import Path
+import json
 import shutil
 import subprocess
 import unittest
 
 from pipeline_merge_question.step4 import _package_name
-from pipeline_merge_question.question_layer import build_answer_layer, evaluate, papers_of_node
+from pipeline_merge_question.question_layer import (
+    _normalize_links, build_answer_layer, candidate_pool, evaluate, link_roots, papers_of_node,
+)
+
+
+class QuestionEvidenceCoverageTests(unittest.TestCase):
+    @staticmethod
+    def root():
+        return {"code": "R1", "title_zh": "模型", "title_en": "Nonlinear model",
+                "statement": "A nonlinear model", "criteria": "Nonlinear equations",
+                "scope": "The specified system", "answer_type": "modeling_choice",
+                "seed_claim_ids": []}
+
+    @staticmethod
+    def view(count=145):
+        return {"nodes": [{"id": f"knowledge:papers:paper_a::claim_{i}",
+                           "display_label": f"P{i}", "kind": "claim", "layer": "claims",
+                           "summary": "完整证据，不依赖英文字面重合。"}
+                          for i in range(count)], "edges": []}
+
+    def test_every_claim_is_visited_and_more_than_twelve_links_survive(self):
+        view = self.view()
+        visited = []
+
+        def call(prompt):
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            visited.extend(item["id"] for item in batch)
+            return {"links": [{"claim_id": item["id"], "relation": "support",
+                               "reason": "States the specified model."} for item in batch]}
+
+        result, raw = link_roots(view, {"en": "Model?"}, [self.root()], call_json=call)
+        expected = {item["id"] for item in view["nodes"]}
+        self.assertEqual(set(visited), expected)
+        self.assertEqual(len(visited), 2 * len(expected))
+        self.assertEqual({item["claim_id"] for item in result["R1"]}, expected)
+        self.assertGreater(len(raw), 1)
+        self.assertTrue(all(len(item["candidates"]) <= 64 for item in raw))
+
+    def test_support_must_survive_the_separate_evidence_check(self):
+        view = self.view(2)
+        calls = []
+
+        def call(prompt):
+            calls.append(prompt)
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            selected = batch if len(calls) == 1 else batch[:1]
+            return {"links": [{"claim_id": item["id"], "relation": "support", "reason": "Evidence."}
+                               for item in selected]}
+
+        result, _ = link_roots(view, {"en": "Model?"}, [self.root()], call_json=call)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(result["R1"]), 1)
+
+    def test_expanding_a_pool_preserves_its_prefix_and_full_qualifications(self):
+        view = self.view(80)
+        view["nodes"][0]["summary"] = "Background " * 50 + "Only valid for a different material."
+        view["nodes"][0]["details"] = {"relevance_role": "TEST_ANSWER_DO_NOT_SEND"}
+        narrow = candidate_pool(view, self.root(), limit=44)
+        wider = candidate_pool(view, self.root(), limit=60, broaden=True)
+        self.assertEqual(narrow, wider[:len(narrow)])
+        complete = candidate_pool(view, self.root(), limit=80)
+        claim = next(item for item in complete if item["id"] == view["nodes"][0]["id"])
+        self.assertTrue(claim["content"].endswith("Only valid for a different material."))
+        self.assertNotIn("TEST_ANSWER_DO_NOT_SEND", json.dumps(claim))
+
+    def test_a_unique_display_code_is_resolved_but_ambiguous_codes_are_not(self):
+        candidates = [{"id": "a", "code": "P1"}, {"id": "b", "code": "duplicate"},
+                      {"id": "c", "code": "duplicate"}]
+        response = {"links": [{"claim_id": code, "relation": "support", "reason": "Evidence."}
+                              for code in ("P1", "duplicate", "unknown")]}
+        links = _normalize_links(response, self.root(), candidates)
+        self.assertEqual([item["claim_id"] for item in links], ["a"])
+
+    def test_conflicting_relations_are_dropped_before_deduplication(self):
+        response = {"links": [
+            {"claim_id": "a", "relation": relation, "reason": "Evidence."}
+            for relation in ("support", "oppose")] + [
+            {"claim_id": "b", "relation": "support", "reason": "Evidence."}] * 2}
+        links = _normalize_links(response, self.root(), [{"id": "a"}, {"id": "b"}])
+        self.assertEqual([(item["claim_id"], item["relation"]) for item in links], [("b", "support")])
+
+    def test_batch_failure_does_not_return_a_partial_success(self):
+        calls = []
+
+        def call(prompt):
+            calls.append(prompt)
+            if len(calls) > 1:
+                raise RuntimeError("API unavailable")
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            return {"links": [{"claim_id": batch[0]["id"], "relation": "support", "reason": "Evidence."}]}
+
+        with self.assertRaisesRegex(RuntimeError, "API unavailable"):
+            link_roots(self.view(), {"en": "Model?"}, [self.root()], call_json=call)
 
 
 class QuestionStep4Tests(unittest.TestCase):
