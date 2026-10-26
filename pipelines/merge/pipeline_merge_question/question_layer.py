@@ -38,7 +38,7 @@ from .step3 import _post_json
 
 SCHEMA_NAME = "gaia.integration.question_answer_layer"
 SCHEMA_VERSION = "0.1.0"
-PROMPT_VERSION = "question-answer-v1"
+PROMPT_VERSION = "question-answer-v5"
 ANSWER_TYPES = {"method_route", "modeling_choice", "design_decision", "validation_route"}
 LINK_RELATIONS = {"support", "oppose", "bounds"}
 LINK_LABELS = {"support": "supports", "oppose": "opposes", "bounds": "bounds"}
@@ -496,6 +496,16 @@ def build_link_prompt(
         "scope": root["scope"],
         "answer_type": root["answer_type"],
     }
+    model_note = (
+        "- if the criteria request a model-based target interpretation, an interpretation explicitly "
+        "stated for that target is a model-level result even when phrased as 'can explain' or 'can "
+        "provide'. Preserve that conditional model level; do not demand an independently isolated "
+        "experiment or claim a unique mechanism. A general formula, definition, or applicability "
+        "condition alone is not a target interpretation. Judge each claim's own stated contribution; "
+        "do not borrow another candidate's parameters or conclusion to turn a general formula into "
+        "a completed target application.\n"
+        if root.get("answer_type") == "modeling_choice" else ""
+    )
     return f"""You are auditing which claims in a merged cross-paper graph actually bear on ONE candidate answer.
 
 QUESTION (zh): {question.get('zh', '')}
@@ -505,19 +515,25 @@ ANSWER={json.dumps(answer, ensure_ascii=False, sort_keys=True)}
 For each CLAIM decide whether it bears on the answer:
 - support: the claim directly states an implementation, equation structure, observation, or result of an explicit component of this answer route under compatible conditions. A claim need not prove the entire answer alone. Same topic, a prerequisite, or a possible use is not support.
 - oppose: the claim reports a result that is incompatible with the answer under compatible conditions. Do not infer opposition from a different aircraft, dataset, model, or condition.
-- bounds: the claim gives a condition, scope limit, or assumption that constrains when the answer holds.
+- bounds: the claim directly constrains when this answer holds under compatible object and model conditions. A restriction belonging only to another material or model is not a bound on this answer without an explicit applicable connection in the supplied evidence.
 - none: topical only, or not enough information.
 
 Rules:
 - read the statement, criteria and scope together; preserve every condition rather than treating a conditional fit or mechanism as an established result.
+{model_note}- apply the evidence criteria BEFORE accepting a component. A component means an operation, structure or result requested by those criteria, not any calculation useful in the surrounding field. Do not replace the specified model or workflow with a broader, easier claim.
+- identify the particular answer component established by the claim. An implemented data connection, control-feedback step, model-identification result, or validation comparison can support that component without establishing every other step in the answer. Do not require a complete workflow demonstration from each component claim.
+- distinguish a conditional result from a condition alone: an actual implementation or reported result under explicit compatible conditions is support WITH those conditions. Use bounds when the claim only supplies a scope limit, prerequisite, or applicability condition without establishing the requested component.
 - check the object/material, model type, workflow operation, and experimental conditions in the claim before choosing a relation. A different object can illustrate a GENERIC method only when the claim explicitly implements the same operation. Do not transfer its numerical results, fitted parameters, validation success, or material mechanism to a named target without explicit transfer premises in the supplied evidence.
+- apply the same object/model check to bounds and oppose as to support. Do not use bounds to retain related background: the claim must actually state a condition that limits this answer, not merely describe a different case. Use none if that connection is missing.
 - do not invent missing links: having an equation does not demonstrate integration, calibration or hardware validation; computing dynamics in a simulator does not establish a particular equation structure; a linearized model does not directly support a nonlinear formulation.
+- an equation can establish an answer about its stated equation structure; a general formula or input parameter alone does not establish a target-specific application, completed fit, or mechanism attribution. A baseline failure alone does not establish successful correction. An available software capability or low-level infrastructure alone does not establish the requested operation.
+- when a particular equation formulation is requested, a fitted coefficient, fitting score, operating-point calculation or convenience property alone does not establish that formulation. Its equation/input structure must be explicitly present or tied to that formulation in the supplied claim; do not supply that connection from general knowledge. Conversely, an explicitly requested model-input structure is not merely an auxiliary numerical input.
 - an alternative, approximation or special-case reduction with additional assumptions is bounds, not direct support for the unrestricted formulation. Use none if even its applicability is not established.
 - use exact claim_id values from CANDIDATES; never invent an id.
 - if a K domain conclusion is among the candidates, prefer it over a raw claim that merely restates the same proposition; the raw claim can still be used as a chain premise.
 - inspect EVERY supplied claim independently and return ALL defensible links in this batch. Do not rank, select a top ten, or omit a correct link to make room for another.
 - a claim may receive at most one relation; if it is ambiguous, use none.
-- reason: one short English sentence (<= 25 words) naming the contribution of the claim.
+- reason: one short English sentence (<= 25 words) naming the stated contribution and any necessary condition. Ground support in an operation or result actually present in the claim, not an assumed missing step.
 - the candidates are one batch of a larger graph. Judge only the supplied evidence; missing context is not permission to fill in a premise.
 - links may contain only oppose or bounds; never invent support to avoid an empty answer. If no claim bears on the answer, return an empty links list.
 
@@ -590,38 +606,63 @@ def link_roots(
     raw_calls: list[dict[str, Any]] = []
     for root in roots:
         candidates = candidate_pool(view, root, limit=len(view.get("nodes") or []))
+
+        def judge(batch: list[dict[str, Any]], instruction: str = "") -> list[dict[str, str]]:
+            prompt = instruction + build_link_prompt(question, root, batch)
+            response = call_json(prompt)
+            raw_calls.append({"root": root["code"], "prompt": prompt,
+                              "response": response, "candidates": batch})
+            if not isinstance(response, Mapping) or not isinstance(response.get("links"), list):
+                raise ValueError("The evidence judge must return an object with a links array")
+            return _normalize_links(response, root, batch)
+
         links: list[dict[str, str]] = []
         for offset in range(0, len(candidates), _LINK_BATCH_SIZE):
             batch = candidates[offset:offset + _LINK_BATCH_SIZE]
-            prompt = build_link_prompt(question, root, batch)
-            response = call_json(prompt)
-            links.extend(_normalize_links(response, root, batch))
-            raw_calls.append({"root": root["code"], "prompt": prompt,
-                              "response": response, "candidates": batch})
+            links.extend(judge(batch))
         # A complete scan raises recall, but also exposes more tempting
         # examples from other objects or adjacent workflow stages. Confirm
         # proposed support against the full claim and answer conditions in a
         # separate call. Bounds/opposition are not promoted by this pass.
         support_ids = {link["claim_id"] for link in links if link["relation"] == "support"}
         proposed = [item for item in candidates if item["id"] in support_ids]
-        confirmed: set[str] = set()
-        for offset in range(0, len(proposed), _LINK_BATCH_SIZE):
-            batch = proposed[offset:offset + _LINK_BATCH_SIZE]
-            prompt = (
-                "This is an independent check of proposed support, not a request to defend an earlier decision.\n"
-                "Retain support only when the supplied claim actually states a component of the answer's "
-                "method or result with compatible object, model, and conditions. Check the full text, "
-                "including qualifications at its end. A required input, nearby task, different model type, "
-                "or another object's numerical success is not a substitute. Omit unsupported proposals; "
-                "do not invent a transfer premise or assume a validation step occurred.\n\n"
-                + build_link_prompt(question, root, batch)
-            )
-            response = call_json(prompt)
-            confirmed.update(link["claim_id"] for link in _normalize_links(response, root, batch)
+        confirmed: dict[str, dict[str, str]] = {}
+        instruction = (
+            "This is an independent check of proposed support, not a request to defend an earlier decision.\n"
+            "Apply the answer criteria first. Identify the requested operation, model structure or "
+            "target-specific result, then check whether this claim explicitly establishes it under "
+            "compatible conditions. A related computation, fitting score or useful model property "
+            "does not establish a specified equation formulation. A general equation alone does not "
+            "establish a target-specific mechanism or completed fit. "
+            "Keep a qualifying component even when other answer components are absent; preserve "
+            "conditions on actual results. Reject a prerequisite alone, an unrelated model or object, "
+            "and any conclusion requiring an unstated transfer or validation step. "
+            "Read each full claim and ground the reason in its actual contribution.\n\n"
+        )
+        # Small verification batches reduce competition between valid components.
+        # Workflow steps can be checked in isolation when a batch omits them.
+        # Model/design choices instead retain the batch decision: another isolated
+        # vote must not promote a merely compatible equation or mechanism.
+        # A single-claim empty links array never permits implicit retention.
+        check_size = min(16, _LINK_BATCH_SIZE)
+        for offset in range(0, len(proposed), check_size):
+            batch = proposed[offset:offset + check_size]
+            verified = judge(batch, instruction)
+            confirmed.update((link["claim_id"], link) for link in verified
                              if link["relation"] == "support")
-            raw_calls.append({"root": root["code"], "prompt": prompt,
-                              "response": response, "candidates": batch})
-        links = [link for link in links if link["relation"] != "support" or link["claim_id"] in confirmed]
+            if len(batch) > 1 and root.get("answer_type") in {"method_route", "validation_route"}:
+                for item in batch:
+                    if item["id"] in confirmed:
+                        continue
+                    single = judge([item],
+                        "Decide this ONE claim independently against the answer criteria. Return its "
+                        "justified relation, or an empty links array if the required contribution is "
+                        "not established. Do not substitute a related calculation for the specified "
+                        "operation or model. Do not fill in missing premises.\n\n" + instruction)
+                    confirmed.update((link["claim_id"], link) for link in single
+                                     if link["relation"] == "support")
+        links = [confirmed[link["claim_id"]] if link["relation"] == "support" else link
+                 for link in links if link["relation"] != "support" or link["claim_id"] in confirmed]
         links_by_root[root["code"]] = _normalize_links({"links": links}, root, candidates)
     return links_by_root, raw_calls
 

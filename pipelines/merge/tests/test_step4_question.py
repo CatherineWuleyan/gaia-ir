@@ -19,6 +19,12 @@ class QuestionEvidenceCoverageTests(unittest.TestCase):
                 "scope": "The specified system", "answer_type": "modeling_choice",
                 "seed_claim_ids": []}
 
+    @classmethod
+    def workflow_root(cls):
+        root = cls.root()
+        root["answer_type"] = "method_route"
+        return root
+
     @staticmethod
     def view(count=145):
         return {"nodes": [{"id": f"knowledge:papers:paper_a::claim_{i}",
@@ -51,13 +57,86 @@ class QuestionEvidenceCoverageTests(unittest.TestCase):
         def call(prompt):
             calls.append(prompt)
             batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
-            selected = batch if len(calls) == 1 else batch[:1]
+            selected = batch if len(calls) == 1 else batch[:1] if len(calls) == 2 else []
             return {"links": [{"claim_id": item["id"], "relation": "support", "reason": "Evidence."}
                                for item in selected]}
 
-        result, _ = link_roots(view, {"en": "Model?"}, [self.root()], call_json=call)
-        self.assertEqual(len(calls), 2)
+        result, _ = link_roots(view, {"en": "Model?"}, [self.workflow_root()], call_json=call)
+        self.assertEqual(len(calls), 3)
         self.assertEqual(len(result["R1"]), 1)
+
+    def test_sparse_verification_is_resolved_with_individual_decisions(self):
+        calls = []
+
+        def call(prompt):
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            calls.append(batch)
+            if len(calls) == 1:
+                return {"links": [{"claim_id": item["id"], "relation": "support", "reason": "Proposed."}
+                                   for item in batch]}
+            if len(calls) == 2:
+                return {"links": []}
+            return {"links": [{"claim_id": batch[0]["id"],
+                               "relation": "support" if len(calls) == 3 else "bounds",
+                               "reason": "Reports the implemented component under the stated condition."}]}
+
+        result, raw = link_roots(self.view(2), {"en": "Model?"}, [self.workflow_root()], call_json=call)
+        self.assertEqual([len(batch) for batch in calls], [2, 2, 1, 1])
+        self.assertEqual(len(raw), 4)
+        self.assertEqual([link["claim_id"] for link in result["R1"]], [calls[2][0]["id"]])
+        self.assertIn("stated condition", result["R1"][0]["reason"])
+
+    def test_a_single_claim_rejection_is_not_retried_or_implicitly_retained(self):
+        calls = []
+
+        def call(prompt):
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            calls.append(batch)
+            return {"links": [{"claim_id": batch[0]["id"], "relation": "support", "reason": "Proposed."}]
+                    if len(calls) == 1 else []}
+
+        result, _ = link_roots(self.view(1), {"en": "Model?"}, [self.root()], call_json=call)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(result["R1"], [])
+
+    def test_model_choices_do_not_promote_unconfirmed_claims_through_isolated_votes(self):
+        calls = []
+
+        def call(prompt):
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            calls.append(batch)
+            if len(calls) == 1:
+                return {"links": [{"claim_id": item["id"], "relation": "support", "reason": "Proposed."}
+                                   for item in batch]}
+            if len(calls) == 2:
+                return {"links": []}
+            self.fail("Model choices must not seek another isolated vote after batch rejection")
+
+        result, _ = link_roots(self.view(2), {"en": "Model?"}, [self.root()], call_json=call)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(result["R1"], [])
+
+    def test_malformed_judge_output_is_not_treated_as_semantic_rejection(self):
+        for response in ({}, {"links": None}, []):
+            with self.subTest(response=response):
+                with self.assertRaisesRegex(ValueError, "links array"):
+                    link_roots(self.view(1), {"en": "Model?"}, [self.root()], call_json=lambda _: response)
+
+    def test_individual_review_failure_does_not_return_partial_success(self):
+        calls = []
+
+        def call(prompt):
+            calls.append(prompt)
+            batch = json.loads(prompt.split("\nCANDIDATES=", 1)[1])
+            if len(calls) == 1:
+                return {"links": [{"claim_id": item["id"], "relation": "support", "reason": "Proposed."}
+                                   for item in batch]}
+            if len(calls) == 2:
+                return {"links": []}
+            raise RuntimeError("API unavailable")
+
+        with self.assertRaisesRegex(RuntimeError, "API unavailable"):
+            link_roots(self.view(2), {"en": "Model?"}, [self.workflow_root()], call_json=call)
 
     def test_expanding_a_pool_preserves_its_prefix_and_full_qualifications(self):
         view = self.view(80)
